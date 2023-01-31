@@ -1,0 +1,80 @@
+unit CFX.Utilities;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, Registry, System.UITypes,
+  Types, Vcl.Graphics;
+
+  function GetAppsUseDarkTheme: Boolean;
+  function GetAccentColor(brightencolor: boolean): TColor;
+  function ChangeColorSat(clr: TColor; perc: integer): TColor;
+
+
+
+implementation
+
+function GetAppsUseDarkTheme: Boolean;
+var
+  R: TRegistry;
+begin
+  Result := False;
+  R := TRegistry.Create;
+  try
+    R.RootKey := HKEY_CURRENT_USER;
+    if R.OpenKeyReadOnly('Software\Microsoft\Windows\CurrentVersion\Themes\Personalize\') and R.ValueExists('AppsUseLightTheme') then begin
+      Result := R.ReadInteger('AppsUseLightTheme') <> 1;
+    end;
+  finally
+    R.Free;
+  end;
+end;
+
+function GetAccentColor(brightencolor: boolean = true): TColor;
+var
+  R: TRegistry;
+  ARGB: Cardinal;
+begin
+  Result := $D77800;  //  Default value on error
+  R := TRegistry.Create;
+  try
+    R.RootKey := HKEY_CURRENT_USER;
+    if R.OpenKeyReadOnly('Software\Microsoft\Windows\DWM\') and R.ValueExists('AccentColor') then begin
+      ARGB := R.ReadInteger('AccentColor');
+      Result := ARGB mod $FF000000; //  ARGB to RGB
+    end;
+  finally
+    R.Free;
+  end;
+
+  if brightencolor then
+    Result := ChangeColorSat(Result, 50);
+end;
+
+function ChangeColorSat(clr: TColor; perc: integer): TColor;
+var
+  RBGval: longint;
+  R, G, B: integer;
+begin
+  RBGval := ColorToRGB(clr);
+  R := GetRValue(RBGval);
+  G := GetGValue(RBGval);
+  B := GetBValue(RBGval);
+
+  R := R + perc;
+  G := G + perc;
+  B := B + perc;
+
+  if R < 0 then R := 0;
+  if G < 0 then G := 0;
+  if B < 0 then B := 0;
+
+  if R > 255 then R := 255;
+  if G > 255 then G := 255;
+  if B > 255 then B := 255;
+
+  Result := RGB(r,g,b);
+end;
+
+end.
+

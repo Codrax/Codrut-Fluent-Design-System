@@ -1,0 +1,13 @@
+unit CFX.Classes;
+
+interface
+  uses
+    Vcl.Graphics;
+
+  type
+    FXPImageKind = (ikFontIcon, ikImage);
+    FXControlState = (csLeave, csHover, csPress);
+
+implementation
+
+end.

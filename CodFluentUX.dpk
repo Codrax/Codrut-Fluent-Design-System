@@ -1,0 +1,74 @@
+{*============================================*}
+{           Codrut Fluent UX Library           }
+{                                              }
+{              Petculescu Codrut               }
+{               Copyright 2022                 }
+{                                              }
+{                                              }
+{                                              }
+{                    v0.1                      }
+{*============================================*}
+
+package CodFluentUX;
+
+{$R *.res}
+{$R 'Icons.dcr'}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  vcl,
+  vclimg,
+  vclwinx,
+  IndySystem,
+  IndyProtocols,
+  IndyCore;
+
+contains
+  CFX.RegisterClass in 'Source\CFX.RegisterClass.pas',
+  CFX.Colors in 'Source\CFX.Colors.pas',
+  CFX.Classes in 'Source\CFX.Classes.pas',
+  CFX.VarHelpers in 'Source\CFX.VarHelpers.pas',
+  CFX.AnimColection in 'Source\CFX.AnimColection.pas',
+  CFX.Animations in 'Source\CFX.Animations.pas',
+  CFX.Graphics in 'Source\CFX.Graphics.pas',
+  CFX.UIConsts in 'Source\CFX.UIConsts.pas',
+  CFX.Utilities in 'Source\CFX.Utilities.pas',
+  CFX.Dialogs in 'Source\CFX.Dialogs.pas',
+  CFX.ThemeManager in 'Source\CFX.ThemeManager.pas',
+  CFX.ToolTip in 'Source\CFX.ToolTip.pas',
+  CFX.Forms in 'Source\CFX.Forms.pas',
+  CFX.Button in 'Source\CFX.Button.pas',
+  CFX.Checkbox in 'Source\CFX.Checkbox.pas',
+  CFX.Panels in 'Source\CFX.Panels.pas',
+  CFX.StandardIcons in 'Source\CFX.StandardIcons.pas',
+  CFX.Slider in 'Source\CFX.Slider.pas',
+  CFX.Math in 'Source\CFX.Math.pas';
+
+end.
+
+

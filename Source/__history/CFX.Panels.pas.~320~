@@ -1,0 +1,643 @@
+﻿unit CFX.Panels;
+
+interface
+
+uses
+  SysUtils,
+  Classes,
+  Winapi.Windows,
+  Winapi.Messages,
+  Vcl.Controls,
+  Vcl.Graphics,
+  Vcl.ExtCtrls,
+  CFX.Colors,
+  CFX.UIConsts,
+  CFX.Classes,
+  CFX.ThemeManager;
+
+type
+
+  FXPanel = class(TPanel, FXControl)
+    private
+      FCustomColors: FXColorSets;
+
+      FDrawColors: FXColorSet;
+
+    protected
+      procedure Paint; override;
+
+    published
+      property CustomColors: FXColorSets read FCustomColors write FCustomColors;
+
+    public
+      constructor Create(AOwner : TComponent); override;
+      destructor Destroy; override;
+
+      // Interface
+      function IsContainer: Boolean;
+      procedure UpdateTheme(const UpdateChildren: Boolean);
+  end;
+
+  FXMinimisePanel = class(FXPanel, FXControl)
+      constructor Create(AOwner : TComponent); override;
+      destructor Destroy; override;
+    private
+      var
+      FCustomColors: FXCompleteColorSets;
+      FCustomHandleColor: FXColorStateSets;
+
+      FHandleColor: FXColorStateSet;
+      FDrawColors: FXCompleteColorSet;
+
+      FHandleSize: integer;
+      FHandleRound: integer;
+
+      FText: string;
+      FSkipRedrawFill: boolean;
+
+      FContentFill: boolean;
+
+      FMinimised: boolean;
+      FAnimation: boolean;
+      FControlState: FXControlState;
+      FMouseInHandle: boolean;
+
+      FFluentIcon: char;
+
+      FAutoCursor: boolean;
+
+      FBitmap: TBitMap;
+
+      FAnGoTo, FAnStart: integer;
+      FAnimTimer: TTimer;
+
+      FSizeBeforeMin: integer;
+
+      procedure SetState(AState: FXControlState);
+      procedure SetHandleSize(const Value: integer);
+      procedure SetHandleRound(const Value: integer);
+      procedure StartToggle;
+      procedure SetMinimiseState(statemin: boolean; instant: boolean = false);
+      procedure SetMinimised(const Value: boolean);
+      procedure AnimOnTimer(Sender: TObject);
+      procedure SetBitMap(const Value: TBitMap);
+      procedure SetText(const Value: string);
+      procedure SetContentFill(const Value: boolean);
+      procedure SetFluentIcon(const Value: char);
+
+    protected
+      procedure Paint; override;
+
+      procedure PaintHandle;
+
+      procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+      procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+      procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+
+    published
+      property OnMouseEnter;
+      property OnMouseLeave;
+      property OnMouseDown;
+      property OnMouseUp;
+      property OnMouseMove;
+      property OnClick;
+
+      property Align;
+      property Anchors;
+      property Cursor;
+      property Visible;
+      property Enabled;
+      property Constraints;
+      property DoubleBuffered;
+
+      property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors;
+      property HandleCustomColors: FXColorStateSets read FCustomHandleColor write FCustomHandleColor;
+
+      property HandleText: string read FText write SetText;
+      property HandleSize: integer read FHandleSize write SetHandleSize default 60;
+      property HandleRoundness: integer read FHandleRound write SetHandleRound default 15;
+
+      property FluentIcon: char read FFluentIcon write SetFluentIcon;
+      property IsMinimised: boolean read FMinimised write SetMinimised;
+
+      property Animation: boolean read FAnimation write FAnimation default false;
+      property Icon: TBitMap read FBitmap write SetBitMap;
+
+      property ContentFill: boolean read FContentFill write SetContentFill default true;
+      property DynamicCursor: boolean read FAutoCursor write FAutoCursor default true;
+
+    public
+      procedure ToggleMinimised;
+      procedure ChangeMinimised(Minimised: boolean);
+
+      // Interface
+      function IsContainer: Boolean;
+      procedure UpdateTheme(const UpdateChildren: Boolean);
+
+  end;
+
+implementation
+
+
+{ CProgress }
+
+procedure FXMinimisePanel.AnimOnTimer(Sender: TObject);
+var
+  speed: integer;
+  I: Integer;
+begin
+  // Set Speed
+  speed := 1;
+  try
+    speed := trunc(abs(FAnGoTo - Height) / abs(FAnGoTo - FAnStart) * FSizeBeforeMin / 15);
+  except end;
+
+  if speed <= 0 then
+    speed := 1;
+
+  // Change Position
+  if FAnGoTo < Height then
+    Height := Height + speed * -1;
+
+  if FAnGoTo > Height then
+    Height := Height + speed;
+
+  // Disable Timer
+  if FAnGoTo = Height then
+    begin
+      FAnimTimer.Enabled := false;
+
+      for I := 0 to ControlCount - 1 do
+        Controls[I].Invalidate;
+    end;
+end;
+
+procedure FXMinimisePanel.ChangeMinimised(Minimised: boolean);
+begin
+  SetMinimiseState(Minimised);
+end;
+
+constructor FXMinimisePanel.Create(AOwner: TComponent);
+begin
+  inherited;
+  Width := 350;
+  Height := 200;
+
+  ParentColor := true;
+  ParentBackground := true;
+  ShowCaption := false;
+  TabStop := true;
+
+  FSkipRedrawFill := true;
+
+  // Theme Manager building
+  FCustomColors := FXCompleteColorSets.Create;
+  FDrawColors := FXCompleteColorSet.Create(ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
+  FCustomHandleColor := FXColorStateSets.Create;
+  FHandleColor := FXColorStateSet.Create(FCustomHandleColor, ThemeManager.DarkTheme);
+
+  FAnimTimer := TTimer.Create(Self);
+  with FAnimTimer do begin
+    Interval := 1;
+    Enabled := false;
+    OnTimer := AnimOnTimer;
+  end;
+
+  // Default Font
+  Font.Size := 11;
+  Font.Name := 'Segoe UI Semibold';
+
+  if FBitMap = nil then
+    FBitMap := TBitMap.Create;
+
+  // Default Handle
+  FHandleRound := MINIMISE_PANEL_ROUND;
+  FHandleSize := MINIMISE_PANEL_SIZE;
+  FContentFill := true;
+
+  FAutoCursor := true;
+
+  FAnimation := false;
+  FText := 'Minimised Panel';
+end;
+
+destructor FXMinimisePanel.Destroy;
+begin
+  FAnimTimer.Enabled := false;
+  FreeAndNil(FAnimTimer);
+  FreeAndNil(FCustomHandleColor);
+  FreeAndNil(FCustomColors);
+  FBitMap.Free;
+  inherited;
+end;
+
+
+function FXMinimisePanel.IsContainer: Boolean;
+begin
+  Result := true;
+end;
+
+procedure FXMinimisePanel.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
+  Y: integer);
+begin
+  inherited;
+  if FMouseInHandle then
+    SetState(FXControlState.csPress);
+end;
+
+procedure FXMinimisePanel.MouseMove(Shift: TShiftState; X, Y: Integer);
+begin
+  inherited;
+  FMouseInHandle := (Y <= FHandleSize);
+
+  if FAutoCursor then
+    begin
+      if FMouseInHandle then
+        Cursor := crHandPoint
+      else
+        Cursor := crDefault;
+    end;
+
+  if FMouseInHandle and (FControlState <> csHover) then
+    SetState(csHover)
+      else
+        if (not FMouseInHandle) and (FControlState <> csNone) then
+          SetState(csNone)
+end;
+
+procedure FXMinimisePanel.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
+  Y: integer);
+begin
+  inherited;
+
+  SetState(FXControlState.csHover);
+
+  if FMouseInHandle then
+    StartToggle;
+end;
+
+procedure FXMinimisePanel.Paint;
+var
+  tmp: TBitMap;
+  TmpFont: TFont;
+  IconRect: TRect;
+  DrawRect: TRect;
+  TrimEdges: boolean;
+  TLeft: integer;
+  I: string;
+begin
+  inherited;
+  // Handle
+  PaintHandle;
+
+  // Prepare Settings
+  DrawRect := Rect(0, 0, Width, Height - FHandleSize - HANDLE_SEPARATOR);
+
+  // Exit running useless code
+  if DrawRect.Height <=0 then
+    Exit;
+
+  // Canvas
+  tmp := TBitMap.Create;
+  tmp.Width := DrawRect.Width;
+  tmp.Height := DrawRect.Height;
+
+  Self.Color := FDrawColors.BackGround;
+
+  TrimEdges := (not (FMinimised and not FAnimTimer.Enabled)) and FContentFill;
+
+  // TMP Canvas
+  with tmp.canvas do begin
+    Brush.Color := FDrawColors.BackGround;
+    FillRect(cliprect);
+
+    // Font
+    Font.Assign(Self.Font);
+    Font.Color := FDrawColors.ForeGround;
+
+    Pen.Style := psClear;
+
+    // Color
+    if FContentFill then
+      begin
+        Brush.Color := FDrawColors.BackGroundInterior;
+
+        RoundRect(0, 0, DrawRect.Width, DrawRect.Height, FHandleRound, FHandleRound);
+
+        { Secondary }
+        if TrimEdges then
+          Rectangle(0, 0, DrawRect.Width, DrawRect.Height div 2);
+      end;
+  end;
+
+  canvas.CopyRect(Rect(0, abs(DrawRect.Height-Height), Width, Height), tmp.Canvas, tmp.Canvas.ClipRect);
+
+  tmp.Free;
+end;
+
+procedure FXMinimisePanel.PaintHandle;
+var
+  tmp: TBitMap;
+  TmpFont: TFont;
+  IconRect: TRect;
+  DrawRect: TRect;
+  TrimEdges: boolean;
+  TLeft: integer;
+  I: string;
+begin
+  inherited;
+  // Prepare Settings
+  DrawRect := Rect(0, 0, Width, FHandleSize);
+
+  tmp := TBitMap.Create;
+  tmp.Height := DrawRect.Height;
+  tmp.Width := DrawRect.Width;
+
+  TrimEdges := (not (FMinimised and not FAnimTimer.Enabled)) and FContentFill;
+
+  // TMP Canvas
+  with tmp.canvas do begin
+    Brush.Color := FDrawColors.BackGround;
+    FillRect(cliprect);
+
+    // Font
+    Font.Assign(Self.Font);
+    Font.Color := FDrawColors.ForeGround;
+
+    Pen.Style := psClear;
+
+    // Handle
+    Brush.Color := FHandleColor.GetColor(false, FControlState);
+
+    //Brush.Color := FDrawColors.BackGroundInterior;
+
+    RoundRect(0, 0, Width, FHandleSize, FHandleRound, FHandleRound);
+
+    { Square Next to contentfill }
+    if TrimEdges then
+      Rectangle(0, FHandleSize div 2, Width, FHandleSize);
+
+    // Icon
+    if not ( (FBitMap.Empty) and (FFluentIcon = '') ) then
+    begin
+      TLeft := FHandleSize div 2 + MINIMISE_ICON_MARGIN * 2;
+
+      IconRect := Rect(MINIMISE_ICON_MARGIN, FHandleSize div 4, TLeft - MINIMISE_ICON_MARGIN, FHandleSize - FHandleSize div 4);
+
+      if not FBitMap.Empty then
+        begin
+          { BitMap }
+          FBitMap.Transparent := true;
+          FBitMap.TransparentMode := tmAuto;
+
+          StretchDraw(IconRect, FBitMap);
+        end
+      else
+        begin
+          { Font Icon }
+          TmpFont := TFont.Create;
+          try
+            TmpFont.Assign(Font);
+
+            Font := TFont.Create;
+            Font.Name := FORM_ICON_FONT_NAME;
+            Font.Color := FDrawColors.ForeGround;
+            Font.Size := round(Self.FHandleSize / 4);;
+
+            I := FFluentIcon;
+            TextRect(IconRect, I, [tfSingleLine, tfVerticalCenter, tfCenter]);
+
+            Font.Assign(TmpFont);
+          finally
+            TmpFont.Free
+          end;
+        end;
+    end
+      else
+        TLeft := MINIMISE_ICON_MARGIN;
+
+    // Text
+    Brush.Style := bsClear;
+    TextOut(tleft, FHandleSize div 2 - TextHeight(FText) div 2, FText);
+
+    Pen.Style := psSolid;
+
+    // Icon
+    Font := TFont.Create;
+    if FMinimised then
+      i := ''
+    else
+      i := '';
+
+    Font.Size := round(Self.FHandleSize / 6);
+    Font.Name := FORM_ICON_FONT_NAME;
+    Font.Color := FDrawColors.ForeGround;
+
+    IconRect := Rect(Width - FHandleSize, 0, Width, FHandleSize);
+    TextRect(IconRect, i, [tfSingleLine, tfVerticalCenter, tfCenter]);
+    // TextOut(Width - TextWidth(i) - MINIMISE_ICON_MARGIN * 2, FHandleSize div 2 - TextHeight(i) div 2 - 3, i);
+
+    // Reset Settings
+    FSkipRedrawFill := false;
+  end;
+
+  canvas.CopyRect(DrawRect, tmp.Canvas, DrawRect);
+end;
+
+procedure FXMinimisePanel.SetBitMap(const Value: TBitMap);
+begin
+  FBitmap.Assign(Value);
+
+  Paint;
+end;
+
+procedure FXMinimisePanel.SetContentFill(const Value: boolean);
+begin
+  FContentFill := Value;
+end;
+
+procedure FXMinimisePanel.SetFluentIcon(const Value: char);
+begin
+  FFluentIcon := Value;
+
+  Paint;
+end;
+
+procedure FXMinimisePanel.SetHandleRound(const Value: integer);
+begin
+  FHandleRound := Value;
+
+  Paint;
+end;
+
+procedure FXMinimisePanel.SetHandleSize(const Value: integer);
+begin
+  FHandleSize := Value;
+
+  if FMinimised then
+    Self.Height := Value;
+end;
+
+procedure FXMinimisePanel.SetMinimised(const Value: boolean);
+begin
+  FMinimised := Value;
+
+  SetMinimiseState(Value, true);
+end;
+
+procedure FXMinimisePanel.SetMinimiseState(statemin: boolean; instant: boolean);
+begin
+  // Exit if already Minimised
+  if statemin = FMinimised then
+    Exit;
+
+  FMinimised := NOT FMinimised;
+
+  if FAnimTimer.Enabled then
+  begin
+    if statemin then
+      FAnGoTo := FHandleSize
+    else
+      FAnGoTo := FSizeBeforeMin;
+
+    Exit;
+  end;
+
+  if statemin then
+    FSizeBeforeMin := Height;
+
+  // Instant or No Animation
+  if (NOT FAnimation) or Instant then
+  begin
+    if statemin then
+      Height := FHandleSize
+    else
+      Height := FSizeBeforeMin;
+  end
+    else
+  // Animated
+  begin
+    FAnStart := Height;
+
+    if statemin then
+      FAnGoTo := FHandleSize
+    else
+      FAnGoTo := FSizeBeforeMin;
+
+    FAnimTimer.Enabled := true;
+  end;
+end;
+
+procedure FXMinimisePanel.SetState(AState: FXControlState);
+begin
+  FControlState := AState;
+
+  FSkipRedrawFill := true;
+  PaintHandle;
+end;
+
+procedure FXMinimisePanel.SetText(const Value: string);
+begin
+  FText := Value;
+
+  Paint;
+end;
+
+procedure FXMinimisePanel.StartToggle;
+begin
+  if not FAnimTimer.Enabled then
+    SetMinimiseState(NOT FMinimised)
+end;
+
+procedure FXMinimisePanel.ToggleMinimised;
+begin
+  StartToggle;
+end;
+
+procedure FXMinimisePanel.UpdateTheme(const UpdateChildren: Boolean);
+var
+  I: integer;
+begin
+  // Access Theme Manager
+  if FCustomColors.Enabled then
+    FDrawColors := FXCompleteColorSet.Create( FCustomColors, ThemeManager.DarkTheme )
+  else
+    FDrawColors := FXCompleteColorSet.Create( ThemeManager.SystemColorSet, ThemeManager.DarkTheme );
+
+  if FCustomHandleColor.Enabled then
+    FHandleColor := FXColorStateSet.Create(FCustomHandleColor, ThemeManager.DarkTheme)
+  else
+    begin
+      FHandleColor := FXColorStateSet.Create;
+      FHandleColor.ForeGroundNone := FDrawColors.ForeGround;
+      FHandleColor.ForeGroundHover := FDrawColors.ForeGround;
+      FHandleColor.ForeGroundPress := ChangeColorLight( FDrawColors.ForeGround, -20);
+
+      FHandleColor.BackGroundNone := FDrawColors.BackGroundInterior;
+      FHandleColor.BackGroundHover := ChangeColorLight( FDrawColors.BackGroundInterior, 5);
+      FHandleColor.BackGroundPress := ChangeColorLight( FDrawColors.BackGroundInterior, -5);
+    end;
+
+  Self.Paint;
+
+  // Update Children
+  if IsContainer and UpdateChildren then
+    begin
+      for i := 0 to ControlCount - 1 do
+        if Supports(Controls[i], FXControl) then
+          (Controls[i] as FXControl).UpdateTheme(UpdateChildren);
+    end;
+end;
+
+{ FXPanel }
+
+constructor FXPanel.Create(AOwner: TComponent);
+begin
+  inherited;
+
+  FCustomColors := FXColorSets.Create();
+  FDrawColors := FXColorSet.Create(ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
+
+  BevelKind := bkNone;
+  BevelOuter := bvNone;
+end;
+
+destructor FXPanel.Destroy;
+begin
+
+  inherited;
+end;
+
+function FXPanel.IsContainer: Boolean;
+begin
+  Result := true;
+end;
+
+procedure FXPanel.Paint;
+begin
+
+  inherited;
+end;
+
+procedure FXPanel.UpdateTheme(const UpdateChildren: Boolean);
+var
+  I: integer;
+begin
+  // Access Theme Manager
+  if FCustomColors.Enabled then
+    FDrawColors := FXColorSet.Create( FCustomColors, ThemeManager.DarkTheme )
+  else
+    FDrawColors := FXColorSet.Create( ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
+
+  Self.Paint;
+
+  // Update Children
+  if IsContainer and UpdateChildren then
+    begin
+      for i := 0 to ControlCount - 1 do
+        if Supports(Controls[i], FXControl) then
+          (Controls[i] as FXControl).UpdateTheme(UpdateChildren);
+    end;
+end;
+
+end.

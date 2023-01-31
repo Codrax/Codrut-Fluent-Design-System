@@ -1,0 +1,19 @@
+unit CFX.RegisterClass;
+
+interface
+  uses Classes,
+       CFX.Button, CFX.Checkbox,;
+
+
+procedure Register;
+
+implementation
+
+procedure Register;
+begin
+    RegisterComponents(REGISTER_CLASS_NAME,[FXMinimisePanel, FXPanel]);
+    RegisterComponents(REGISTER_CLASS_NAME, [FXButton]);
+    RegisterComponents(REGISTER_CLASS_NAME, [FXCheckBox]);
+end;
+
+end.

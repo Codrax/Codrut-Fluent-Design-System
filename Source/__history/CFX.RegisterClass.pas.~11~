@@ -1,0 +1,18 @@
+unit CFX.RegisterClass;
+
+interface
+  uses Classes,
+       CFX.Button, CFX.Checkbox;
+
+
+procedure Register;
+
+implementation
+
+procedure Register;
+begin
+    RegisterComponents('Cods Fluent UX', [FXButton]);
+    //RegisterComponents('Cods Fluent UX', [FXCheckBox]);
+end;
+
+end.

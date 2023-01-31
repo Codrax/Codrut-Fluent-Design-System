@@ -1,0 +1,11 @@
+unit UIConsts;
+
+interface
+
+implementation
+
+const
+  FORM_FONT_NAME = 'Segoe UI';
+  FORM_FONT_SIZE = 10;
+
+end.

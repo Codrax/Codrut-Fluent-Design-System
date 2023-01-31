@@ -1,0 +1,12 @@
+unit CFX.Classes;
+
+interface
+  uses
+    Vcl.Graphics.
+
+  type
+    TUImageKind = (ikFontIcon, ikImage);
+
+implementation
+
+end.

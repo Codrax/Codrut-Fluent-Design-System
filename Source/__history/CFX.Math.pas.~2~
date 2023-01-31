@@ -1,0 +1,20 @@
+unit CFX.Math;
+
+interface
+
+  function PercOf(number: integer; percentage: integer): integer;
+  function PercOfR(number: Real; percentage: integer): real;
+
+implementation
+
+function PercOf(number: integer; percentage: integer): integer;
+begin
+  Result := trunc(percentage / 100 * number);
+end;
+
+function PercOfR(number: Real; percentage: integer): real;
+begin
+  Result := percentage / 100 * number;
+end;
+
+end.

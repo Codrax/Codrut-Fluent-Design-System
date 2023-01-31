@@ -1,0 +1,14 @@
+unit CFX.Utilities;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, Registry, System.UITypes,
+  Types, Vcl.Graphics, CFX.Colors;
+
+
+implementation
+
+
+end.
+

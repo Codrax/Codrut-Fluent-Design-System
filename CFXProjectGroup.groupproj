@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{54EBF4A5-D10E-4E74-8905-F51DC4399505}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="FluentUXDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="CodFluentUX.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="FluentUXDemo">
+        <MSBuild Projects="FluentUXDemo.dproj"/>
+    </Target>
+    <Target Name="FluentUXDemo:Clean">
+        <MSBuild Projects="FluentUXDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FluentUXDemo:Make">
+        <MSBuild Projects="FluentUXDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="CodFluentUX">
+        <MSBuild Projects="CodFluentUX.dproj"/>
+    </Target>
+    <Target Name="CodFluentUX:Clean">
+        <MSBuild Projects="CodFluentUX.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CodFluentUX:Make">
+        <MSBuild Projects="CodFluentUX.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="FluentUXDemo;CodFluentUX"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="FluentUXDemo:Clean;CodFluentUX:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="FluentUXDemo:Make;CodFluentUX:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
