@@ -1,0 +1,176 @@
+unit CFX.Utilities;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, Registry, System.UITypes,
+  Types, Vcl.Graphics, CFX.Colors, CFX.Classes, CFX.Registry;
+
+  function GetAppsUseDarkTheme: Boolean;
+  function GetAccentColor( brightencolor: boolean = true ): TColor;
+  function GetNTKernelVersion: single;
+
+  function GetUserNameString: string;
+
+  // File
+  function GetFileSize(FileName: WideString): Int64;
+
+  function ReplaceWinPath(SrcString: string): string;
+  function GetUserShellLocation(ShellLocation: FXUserShellLocation): string;
+
+  // Screen
+  procedure QuickScreenShot(var Bild: TBitMap);
+
+implementation
+
+function GetNTKernelVersion: single;
+begin
+  Result := Win32MajorVersion + Win32MinorVersion / 10;
+end;
+
+function GetAppsUseDarkTheme: Boolean;
+var
+  R: TRegistry;
+begin
+  Result := False;
+  R := TRegistry.Create;
+  try
+    R.RootKey := HKEY_CURRENT_USER;
+    if R.OpenKeyReadOnly('Software\Microsoft\Windows\CurrentVersion\Themes\Personalize\') and R.ValueExists('AppsUseLightTheme') then begin
+      Result := R.ReadInteger('AppsUseLightTheme') <> 1;
+    end;
+  finally
+    R.Free;
+  end;
+end;
+
+function GetAccentColor( brightencolor: boolean = true ): TColor;
+var
+  R: TRegistry;
+  ARGB: Cardinal;
+begin
+  Result := $D77800;  //  Default value on error
+  R := TRegistry.Create;
+  try
+    R.RootKey := HKEY_CURRENT_USER;
+    if R.OpenKeyReadOnly('Software\Microsoft\Windows\DWM\') and R.ValueExists('AccentColor') then begin
+      ARGB := R.ReadInteger('AccentColor');
+      Result := ARGB mod $FF000000; //  ARGB to RGB
+    end;
+  finally
+    R.Free;
+  end;
+
+  if brightencolor then
+    Result := ChangeColorLight(Result, 50);
+end;
+
+function GetUserNameString: string;
+var
+  nSize: DWord;
+begin
+ nSize := 1024;
+ SetLength(Result, nSize);
+ if GetUserName(PChar(Result), nSize) then
+   SetLength(Result, nSize-1)
+ else
+   RaiseLastOSError;
+end;
+
+function GetFileSize(FileName: WideString): Int64;
+var
+  sr : TSearchRec;
+begin
+  if FindFirst(fileName, faAnyFile, sr ) = 0 then
+    result := Int64(sr.FindData.nFileSizeHigh) shl Int64(32) + Int64(sr.FindData.nFileSizeLow)
+  else
+    result := -1;
+  FindClose(sr);
+end;
+
+function ReplaceWinPath(SrcString: string): string;
+var
+  RFlags: TReplaceFlags;
+begin
+  RFlags := [rfReplaceAll, rfIgnoreCase];
+
+  Result := SrcString;
+
+  // Remove "
+  Result := Result.Replace('"', '');
+
+  // Windows Vista 2008 and above
+  Result := StringReplace(Result, '%AppData%', 'C:\Users' + GetUserNameString + '\AppData\Roaming', RFlags);
+  Result := StringReplace(Result, '%LocalAppData%', 'C:\Users\' + GetUserNameString + '\AppData\Local', RFlags);
+  Result := StringReplace(Result, '%Public%', 'C:\Users\Public', RFlags);
+  Result := StringReplace(Result, '%Temp%', 'C:\Users\' + GetUserNameString + '\AppData\Local\Temp', RFlags);
+  Result := StringReplace(Result, '%Tmp%', 'C:\Users\' + GetUserNameString + '\AppData\Local\Temp', RFlags);
+  Result := StringReplace(Result, '%HomePath%', 'C:\Users\' + GetUserNameString + '\', RFlags);
+  Result := StringReplace(Result, '%UserProfile%', 'C:\Users\' + GetUserNameString + '\', RFlags);
+
+  // General
+  Result := StringReplace(Result, '%AllUsersProfile%', 'C:\ProgramData', RFlags);
+  Result := StringReplace(Result, '%CommonProgramFiles%', 'C:\Program Files\Common Files', RFlags);
+  Result := StringReplace(Result, '%CommonProgramFiles(x86)%', 'C:\Program Files (x86)\Common Files', RFlags);
+  Result := StringReplace(Result, '%HomeDrive%', 'C:\', RFlags);
+  Result := StringReplace(Result, '%ProgramData%', 'C:\ProgramData', RFlags);
+  Result := StringReplace(Result, '%ProgramFiles%', 'C:\Program Files', RFlags);
+  Result := StringReplace(Result, '%ProgramFiles(x86)%', 'C:\Program Files (x86)', RFlags);
+  Result := StringReplace(Result, '%SystemDrive%', 'C:', RFlags);
+  Result := StringReplace(Result, '%SystemRoot%', 'C:\Windows', RFlags);
+  Result := StringReplace(Result, '%OneDrive%', 'C:\Users\' + GetUserNameString + '\Onedrive\', RFlags);
+  Result := StringReplace(Result, '%OneDriveConsumer%', 'C:\Users\' + GetUserNameString + '\Onedrive\', RFlags);
+
+  // Custom additions
+  Result := StringReplace(Result, '%WindowsApps%', 'C:\Program Files\WindowsApps', RFlags);
+  Result := StringReplace(Result, '%UserWindowsApps%', 'C:\Users\' + GetUserNameString + '\AppData\Local\Microsoft\WindowsApps\', RFlags);
+end;
+
+
+function GetUserShellLocation(ShellLocation: FXUserShellLocation): string;
+var
+  RegString, RegValue: string;
+begin
+  case ShellLocation of
+    shlUser: Exit( ReplaceWinPath('%USERPROFILE%') );
+    shlAppData: RegValue := 'AppData';
+    shlAppDataLocal: RegValue := 'Local AppData';
+    shlDocuments: RegValue := 'Personal';
+    shlPictures: RegValue := 'My Pictures';
+    shlDesktop: RegValue := 'Desktop';
+    shlMusic: RegValue := 'My Music';
+    shlVideos: RegValue := 'My Video';
+    shlNetwork: RegValue := 'NetHood';
+    shlRecent: RegValue := 'Recent';
+    shlStartMenu: RegValue := 'Start Menu';
+    shlPrograms: RegValue := 'Programs';
+    shlStartup: RegValue := 'Startup';
+    shlDownloads: RegValue := '{374DE290-123F-4565-9164-39C4925E467B}';
+  end;
+
+  RegString := FXRegistry.GetStringValue(RegValue, 'Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders', HKEY_CURRENT_USER, false);
+
+  Result := ReplaceWinPath(RegString);
+end;
+
+procedure QuickScreenShot(var Bild: TBitMap);
+var
+  c: TCanvas;
+  r: TRect;
+begin
+  c := TCanvas.Create;
+  c.Handle := GetWindowDC(GetDesktopWindow);
+  try
+    r := Rect(0, 0, Screen.Width, Screen.Height);
+    Bild.Width := Screen.Width;
+    Bild.Height := Screen.Height;
+    Bild.Canvas.CopyRect(r, c, r);
+  finally
+    ReleaseDC(0, c.Handle);
+    c.Free;
+  end;
+end;
+
+
+end.
+

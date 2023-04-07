@@ -64,6 +64,8 @@ type
 
     private
       var FStep: Byte;
+    function GetEndValue: Integer;
+    function GetRunning: boolean;
       var AniFunction: TAniFunction;
 
       FOnSync: TAniSyncProc;
@@ -85,17 +87,20 @@ type
       procedure Execute; override;
 
     public
+      constructor Create; overload;
       constructor Create(
         FreeOnFinish: Boolean;
         aAniKind: TAniKind; aAniFunctionKind: TAniFunctionKind;
         aStartValue, aDeltaValue: Integer;
-        aSyncProc: TAniSyncProc; aDoneProc: TAniDoneProc);
+        aSyncProc: TAniSyncProc; aDoneProc: TAniDoneProc); overload;
 
       //  Events
       property OnSync: TAniSyncProc read FOnSync write FOnSync;
       property OnDone: TAniDoneProc read FOnDone write FOnDone;
 
       //  Props
+      property Running: boolean read GetRunning;
+
       property Step: Byte read FStep write FStep default 25;
       property AniKind: TAniKind read FAniKind write FAniKind default akIn;
       property AniFunctionKind: TAniFunctionKind read FAniFunctionKind write FAniFunctionKind default afkLinear;
@@ -103,6 +108,7 @@ type
       property DelayStartTime: Cardinal read FDelayStartTime write FDelayStartTime default 0;
       property Duration: Cardinal read FDuration write FDuration default 400;
       property StartValue: Integer read FStartValue write FStartValue default 0;
+      property EndValue: Integer read GetEndValue;
       property DeltaValue: Integer read FDeltaValue write FDeltaValue default 0;
   end;
 
@@ -316,7 +322,41 @@ begin
   Synchronize(DoneControl);
 end;
 
+function TIntAni.GetEndValue: Integer;
+begin
+  Result := FStartValue + FDeltaValue;
+end;
+
+function TIntAni.GetRunning: boolean;
+begin
+  Result := Started and not Finished;
+end;
+
 { PROCS }
+
+constructor TIntAni.Create;
+begin
+  inherited Create(true);
+
+  //  Internal
+  CurrentValue := 0;
+  AniFunction := nil;
+
+  //  New props
+  FStep := 25;
+  FAniKind := akIn;
+  FAniFunctionKind := afkLinear;
+
+  FDelayStartTime := 0;
+  FDuration := 400;
+  FStartValue := 0;
+  FDeltaValue := 0;
+
+  //  Old props
+  FreeOnTerminate := False;
+
+  UpdateFunction;
+end;
 
 procedure TIntAni.DoneControl;
 begin

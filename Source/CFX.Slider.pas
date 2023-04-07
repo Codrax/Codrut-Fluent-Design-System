@@ -17,6 +17,8 @@ uses
   System.Messaging,
   CFX.Colors,
   CFX.ThemeManager,
+  CFX.Types,
+  CFX.Controls,
   CFX.Classes;
 
 type
@@ -54,7 +56,7 @@ type
       property DynamicBorder : boolean read FDynamicBorder write FDynamicBorder;
   end;
 
-  FXSlider = class(TCustomTransparentControl, FXControl)
+  FXSlider = class(FXTransparentControl, FXControl)
     private
       FAuthor, FSite, FVersion: string;
 
@@ -122,6 +124,7 @@ type
       property Enabled;
       property Constraints;
       property DoubleBuffered;
+      property PopupMenu;
 
       property Color;
       property ParentBackground;

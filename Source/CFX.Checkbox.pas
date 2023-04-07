@@ -2,9 +2,9 @@ unit CFX.Checkbox;
 
 interface
 uses
-  Classes, Messages, Windows, Vcl.Controls, Vcl.Graphics,
+  Classes, Messages, Windows, Vcl.Controls, Vcl.Graphics, Types,
   CFX.Colors, CFX.ThemeManager, CFX.Graphics, CFX.UIConsts, SysUtils,
-  CFX.Classes;
+  CFX.Classes, CFX.Types;
 type
   FXCheckBoxState = (cbsChecked, cbsUnchecked, cbsGrayed);
 
@@ -233,7 +233,7 @@ constructor FXCheckBox.Create(aOwner: TComponent);
 begin
   inherited;
   FIconFont := TFont.Create;
-  FIconFont.Name := FORM_ICON_FONT_NAME;
+  FIconFont.Name := ThemeManager.IconFont;
   FIconFont.Size := 12;
   FAllowGrayed := false;
   FState := cbsUnchecked;

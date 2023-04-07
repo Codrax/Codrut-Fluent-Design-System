@@ -20,7 +20,7 @@ interface
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, IdHTTP,
   VCL.Graphics, Winapi.ActiveX, URLMon, IOUtils, System.Generics.Collections,
   System.Generics.Defaults, Vcl.Imaging.pngimage,
-  WinApi.GdipObj, WinApi.GdipApi, Win.Registry;
+  WinApi.GdipObj, WinApi.GdipApi, Win.Registry, CFX.GDI, CFX.Types;
 
   type
     // Requirements
@@ -35,38 +35,6 @@ interface
     public
       function ToString: string; overload; inline;
       function ToInteger: integer; overload; inline;
-    end;
-
-    // TArray colection
-    TArrayUtils<T> = class
-    public
-      class function Contains(const x : T; const anArray : array of T) : boolean;
-      class function GetIndex(const x : T; const anArray : array of T) : integer;
-    end;
-
-    // TArray generic types
-    TArrayArrayHelper = record helper for TArray<TArray>
-    public
-      function Count: integer; overload; inline;
-      procedure SetToLength(ALength: integer);
-    end;
-
-    TStringArrayHelper = record helper for TArray<string>
-    public
-      function Count: integer; overload; inline;
-      procedure SetToLength(ALength: integer);
-    end;
-
-    TIntegerArrayHelper = record helper for TArray<integer>
-    public
-      function Count: integer; overload; inline;
-      procedure SetToLength(ALength: integer);
-    end;
-
-    TRealArrayHelper = record helper for TArray<real>
-    public
-      function Count: integer; overload; inline;
-      procedure SetToLength(ALength: integer);
     end;
 
     // TFont
@@ -84,6 +52,14 @@ interface
 
       procedure StretchDraw(DestRect, SrcRect: TRect; Bitmap: TBitmap; Opacity: Byte); overload;
       procedure StretchDraw(Rect: TRect; Graphic: TGraphic; Opacity: Byte); overload;
+
+      procedure GDITint(Rectangle: TRect; Color: TColor; Opacity: byte = 75);
+      procedure GDIRectangle(Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen);
+      procedure GDIRoundRect(RoundRect: TRoundRect; Brush: TGDIBrush; Pen: TGDIPen);
+      procedure GDICircle(Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen);
+      procedure GDIPolygon(Points: TArray<TPoint>; Brush: TGDIBrush; Pen: TGDIPen);
+      procedure GDILine(Line: TLine; Pen: TGDIPen);
+      procedure GDIGraphic(Graphic: TGraphic; Rect: TRect);
     end;
 
     // Registry
@@ -102,39 +78,6 @@ interface
 
 implementation
 
-{ TArrayUtils<T> }
-
-class function TArrayUtils<T>.Contains(const x: T; const anArray: array of T): boolean;
-var
-  y : T;
-  lComparer: IEqualityComparer<T>;
-begin
-  lComparer := TEqualityComparer<T>.Default;
-  for y in anArray do
-  begin
-    if lComparer.Equals(x, y) then
-      Exit(True);
-  end;
-  Exit(False);
-end;
-
-class function TArrayUtils<T>.GetIndex(const x : T; const anArray : array of T) : integer;
-var
-  I: Integer;
-  y: T;
-  lComparer: IEqualityComparer<T>;
-begin
-  lComparer := TEqualityComparer<T>.Default;
-  for I := Low(anArray) to High(anArray) do
-    begin
-      y := anArray[I];
-
-      if lComparer.Equals(x, y) then
-        Exit(I);
-    end;
-    Exit(-1);
-end;
-
 // Color
 function TColorHelper.ToString: string;
 begin
@@ -144,48 +87,6 @@ end;
 function TColorHelper.ToInteger: integer;
 begin
   Result := ColorToRgb( Self );
-end;
-
-// TArray Generic Helpers
-
-function TArrayArrayHelper.Count: integer;
-begin
-  Result := length(Self);
-end;
-
-function TStringArrayHelper.Count: integer;
-begin
-  Result := length(Self);
-end;
-
-function TIntegerArrayHelper.Count: integer;
-begin
-  Result := length(Self);
-end;
-
-function TRealArrayHelper.Count: integer;
-begin
-  Result := length(Self);
-end;
-
-procedure TArrayArrayHelper.SetToLength(ALength: integer);
-begin
-  SetLength(Self, ALength);
-end;
-
-procedure TStringArrayHelper.SetToLength(ALength: integer);
-begin
-  SetLength(Self, ALength);
-end;
-
-procedure TIntegerArrayHelper.SetToLength(ALength: integer);
-begin
-  SetLength(Self, ALength);
-end;
-
-procedure TRealArrayHelper.SetToLength(ALength: integer);
-begin
-  SetLength(Self, ALength);
 end;
 
 // TFont
@@ -433,6 +334,41 @@ begin
       end;
     Changed;
   end;
+end;
+
+procedure TCanvasHelper.GDITint(Rectangle: TRect; Color: TColor; Opacity: byte = 75);
+begin
+  TintPicture(Self, Rectangle, Color, Opacity);
+end;
+
+procedure TCanvasHelper.GDIRectangle(Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen);
+begin
+  DrawRectangle(Self, Rectangle, Brush, Pen);
+end;
+
+procedure TCanvasHelper.GDIRoundRect(RoundRect: TRoundRect; Brush: TGDIBrush; Pen: TGDIPen);
+begin
+  DrawRoundRect(Self, RoundRect, Brush, Pen);
+end;
+
+procedure TCanvasHelper.GDICircle(Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen);
+begin
+  DrawCircle(Self, Rectangle, Brush, Pen);
+end;
+
+procedure TCanvasHelper.GDIPolygon(Points: TArray<TPoint>; Brush: TGDIBrush; Pen: TGDIPen);
+begin
+  DrawPolygon(Self, Points, Brush, Pen);
+end;
+
+procedure TCanvasHelper.GDILine(Line: TLine; Pen: TGDIPen);
+begin
+  DrawLine(Self, Line, Pen);
+end;
+
+procedure TCanvasHelper.GDIGraphic(Graphic: TGraphic; Rect: TRect);
+begin
+  DrawGraphic(Self, Graphic, Rect);
 end;
 
 { TRegHelper }

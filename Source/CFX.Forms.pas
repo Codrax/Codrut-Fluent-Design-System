@@ -5,7 +5,8 @@ interface
 uses
   SysUtils, Classes, Windows, CFX.ToolTip, Vcl.Forms, Vcl.Controls, Vcl.Graphics,
   Vcl.Dialogs, Messages, CFX.ThemeManager, CFX.Colors, CFX.UIConsts,
-  Vcl.TitleBarCtrls, CFX.Animations, CFX.Utilities, Vcl.ExtCtrls;
+  Vcl.TitleBarCtrls, CFX.Animations, CFX.Utilities, Vcl.ExtCtrls, CFX.Classes,
+  CFX.Types;
 
 type
   FXFormProcedure = procedure(Sender: TObject) of object;
@@ -183,8 +184,8 @@ var
 begin
   // Settings
   FCustomColors := FXColorSets.Create();
-  Font.Name := FORM_FONT_NAME;
-  Font.Size := FORM_FONT_SIZE;
+  Font.Name := ThemeManager.FormFont;
+  Font.Height := ThemeManager.FormFontHeight;
 
   // Effects
   MicaEffect := true;
@@ -241,6 +242,7 @@ function FXForm.GetTitlebarHeight: integer;
 var
   I: Integer;
 begin
+  Result := 0;
   for I := 0 to ControlCount - 1 do
     if Controls[I] is TTitlebarPanel then
       Result := TTitlebarPanel(Controls[I]).Height;
@@ -363,9 +365,6 @@ begin
   else
     ThemeReason := fttRedraw;
 
-  if Assigned(FThemeChange) then
-    FThemeChange(Self, ThemeReason, ThemeManager.DarkTheme, ThemeManager.AccentColor);
-
   // Start Transition
   if Self.Visible and FAllowThemeChangeAnim then
     begin
@@ -402,13 +401,21 @@ begin
   else
     HintWindowClass := FXLightTooltip;
 
+  // Legacy Control Support
+  if ThemeManager.LegacyFontColor then
+    Font.Color := FntColor;
+
+  // Notify Theme Change
+  if Assigned(FThemeChange) then
+    FThemeChange(Self, ThemeReason, ThemeManager.DarkTheme, ThemeManager.AccentColor);
+
   //  Update children
   if IsContainer and UpdateChildren then
     begin
       LockWindowUpdate(Handle);
-      for i := 0 to ControlCount - 1 do
-        if Supports(Controls[i], FXControl) then
-          (Controls[i] as FXControl).UpdateTheme(UpdateChildren);
+      for i := 0 to ComponentCount -1 do
+        if Supports(Components[i], FXControl) then
+          (Components[i] as FXControl).UpdateTheme(UpdateChildren);
       LockWindowUpdate(0);
     end;
 end;

@@ -2,11 +2,16 @@ unit CFX.Math;
 
 interface
 
+  uses
+    SysUtils;
+
   function PercOf(number: integer; percentage: integer): integer;
   function PercOfR(number: Real; percentage: integer): real;
 
   function EqualApprox(number1, number2: integer; span: real = 1): boolean; overload;
   function EqualApprox(number1, number2: real; span: real = 1): boolean; overload;
+
+  function IntToStrIncludePrefixZeros(Value: integer; NumbersCount: integer): string;
 
 implementation
 
@@ -34,6 +39,24 @@ begin
     Result := true
   else
     Result := false;
+end;
+
+function IntToStrIncludePrefixZeros(Value: integer; NumbersCount: integer): string;
+var
+  ResLength: integer;
+  I: Integer;
+begin
+  Result := IntToStr( abs(Value) );
+
+  ResLength := Length( Result );
+  if ResLength < NumbersCount then
+    begin
+      for I := 1 to NumbersCount - ResLength do
+        Result := '0' + Result;
+
+      if Value < 0 then
+        Result := '-' + Result;
+    end;
 end;
 
 end.

@@ -25,7 +25,8 @@ interface
         FTextFont: TFont;
         FButtonDesign: FXButton;
         FFormColor: TColor;
-        FFooterColor: TColor;
+
+        FParent: TForm;
 
         FTitlebarHeight: integer;
         FButtonOffset: integer;
@@ -35,15 +36,13 @@ interface
         PromptCreation: boolean;
         DialogUnits: TPoint;
         HasButtons: boolean;
+        FScreenCenter: boolean;
 
         // Inherited Creation
         Form: FXForm;
         MainPrompt,
         Prompt,
         Footer: TLabel;
-
-        // Settings
-        function ApplyTitleBarSettings(Form: TForm; FormColor: TColor; EnableButtons: boolean): integer;
 
         // Utils
         function GetTextWidth(Text: string; Font: TFont): integer;
@@ -68,6 +67,9 @@ interface
 
         procedure HighlightDefaultButton;
 
+        property Parent: TForm read FParent write FParent;
+        property ScreenCenter: boolean read FScreenCenter write FScreenCenter;
+
         // Execute
         procedure ExecuteInherited; virtual;
         function ModalExecution: integer;
@@ -82,7 +84,7 @@ interface
 
 
       public
-        constructor Create;
+        constructor Create; override;
         destructor Destroy; override;
 
         procedure Execute; overload;
@@ -94,7 +96,7 @@ interface
         FButtons: TMsgDlgButtons;
 
       public
-        constructor Create;
+        constructor Create; override;
         destructor Destroy; override;
 
         function Execute: integer; overload;
@@ -113,7 +115,7 @@ interface
       public
         DialogResult: FXInputBoxResult;
 
-        constructor Create;
+        constructor Create; override;
         destructor Destroy; override;
 
         function Execute: string; overload;
@@ -321,55 +323,6 @@ end;
 
 { FXDialogBox }
 
-function FXDialogBox.ApplyTitleBarSettings(Form: TForm; FormColor: TColor;
-  EnableButtons: boolean): integer;
-var
-  TextColor: TColor;
-  ttl: TTitleBarPanel;
-begin
-  Exit;
-
-  with Form do begin
-    // Buttons
-    if NOT EnableButtons then
-      Form.BorderIcons := [];
-
-    // Text Color
-    if GetColorLight(FormColor) > 65 then
-      TextColor := clBlack
-    else
-      TextColor := clWhite;
-
-    // Create component
-    ttl := TTitleBarPanel.Create(Form);
-    with ttl do begin
-      Parent := Form;
-      Result := Height;
-    end;
-
-    // Apply settings
-    with Form.CustomTitleBar do begin
-      Enabled := true;
-      Control := ttl;
-
-      SystemColors := false;
-      SystemButtons := false;
-
-      BackGroundColor := FormColor;
-      InactiveBackgroundColor := BackgroundColor;
-
-      ForegroundColor := TextColor;
-      InactiveForegroundColor := TextColor;
-
-      ButtonBackgroundColor := BackgroundColor;
-      ButtonInactiveBackgroundColor := BackgroundColor;
-      ButtonForegroundColor := ForegroundColor;
-      ButtonInactiveForegroundColor := ForegroundColor;
-    end;
-
-  end;
-end;
-
 function FXDialogBox.ButtonTypeToModal(AType: TMsgDlgBtn): integer;
 begin
   case AType of
@@ -385,6 +338,7 @@ begin
     TMsgDlgBtn.mbYesToAll: Result := mrYesToAll;
     TMsgDlgBtn.mbHelp: Result := mrHelp;
     TMsgDlgBtn.mbClose: Result := mrClose;
+    else Result := mrNone;
   end;
 end;
 
@@ -440,7 +394,7 @@ var
   ATop: integer;
 begin
   // Prepare Values
-  Right := Form.Width - FButtonOffset;
+  Right := Form.Width - FButtonOffset * 2;
   ATop := Form.ClientHeight - FButtonHeight - FButtonOffset;
 
   // Create
@@ -504,11 +458,8 @@ end;
 procedure FXDialogBox.ExecuteInherited;
 var
   TextLength,
-  TxtUnits_X,
-  TxtUnits_Y,
-  FontIncBy: integer;
+  TxtUnits_X: integer;
   PureValue: double;
-  I: FXForm;
 begin
   // Styled Form
   if FFormColor = clWindow then
@@ -554,7 +505,7 @@ begin
         begin
           TextLength := Length ( FText );
           PureValue := TextLength / 80;
-          TxtUnits_Y := ceil( PureValue );
+          //TxtUnits_Y := ceil( PureValue );
 
           if PureValue <= 1 then
             TxtUnits_X := TextLength
@@ -591,6 +542,12 @@ begin
 
             Constraints.MaxWidth := MulDiv(TxtUnits_X, DialogUnits.X, 1);
             WordWrap := True;
+
+            // Respect title
+            Constraints.MinWidth := MainPrompt.Width;
+
+            if MainPrompt.Caption = '' then
+              Top := MainPrompt.Top;
           end;
 
           // Add Prompt Size
@@ -636,6 +593,7 @@ function FXDialogBox.FindButton(ModalResult: integer): FXButton;
 var
   I: Integer;
 begin
+  Result := nil;
   for I := 0 to Form.ControlCount - 1 do
     if Form.Controls[I] is FXButton then
       if FXButton(Form.Controls[I]).ModalResult = ModalResult then
@@ -699,6 +657,23 @@ begin
   Form.Constraints.MaxWidth := Form.Width;
   Form.Constraints.MinHeight := Form.Height;
   Form.Constraints.MaxHeight := Form.Height;
+
+  // Position
+  if not ScreenCenter then
+    begin
+      Form.Position := poDesigned;
+
+      if Assigned(Parent) then
+        begin
+          Form.Left := Parent.Left + Parent.Width div 2 - Form.Width div 2;
+          Form.Top := Parent.Top + Parent.Height div 2 - Form.Height div 2;
+        end
+      else
+        begin
+          Form.Left := Application.MainForm.Left + Application.MainForm.Width div 2 - Form.Width div 2;
+          Form.Top := Application.MainForm.Top + Application.MainForm.Height div 2 - Form.Height div 2;
+        end;
+    end;
 
   // Execute Modal & Return value
   try

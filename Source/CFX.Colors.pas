@@ -6,12 +6,17 @@ interface
 
 uses
   Winapi.Windows, Vcl.Graphics, Types, UITypes, Classes, Vcl.Forms, Math,
-  CFX.Classes;
+  CFX.Types, TypInfo;
 
   type
     FXPersistentColor = class(TPersistent)
+    private
       Owner : TPersistent;
+
+    public
       constructor Create(AOwner : TPersistent); overload; virtual;
+
+      procedure Assign(Source: TPersistent); override;
     end;
 
     { Complete Color State Set }
@@ -569,6 +574,30 @@ begin
 end;
 
 { FXPersistentColor }
+
+procedure FXPersistentColor.Assign(Source: TPersistent);
+var
+  PropList: PPropList;
+  PropCount, i: Integer;
+begin
+  if Source is FXPersistentColor then
+  begin
+    PropCount := GetPropList(Source.ClassInfo, tkProperties, nil);
+    if PropCount > 0 then
+    begin
+      GetMem(PropList, PropCount * SizeOf(PPropInfo));
+      try
+        GetPropList(Source.ClassInfo, tkProperties, PropList);
+        for i := 0 to PropCount - 1 do
+          SetPropValue(Self, string(PropList^[i]^.Name), GetPropValue(Source, string(PropList^[i]^.Name)));
+      finally
+        FreeMem(PropList);
+      end;
+    end;
+  end
+  else
+    inherited Assign(Source);
+end;
 
 constructor FXPersistentColor.Create(AOwner: TPersistent);
 begin

@@ -1,0 +1,10 @@
+unit CFX.BlurFunctions;
+
+interface
+  UITypes, Types, CFX.UIConsts, VCl.GraphUtil, Winapi.Windows,
+  Classes, Vcl.Themes, Vcl.Controls, Vcl.Graphics,
+  CFX.Classes;
+
+implementation
+
+end.

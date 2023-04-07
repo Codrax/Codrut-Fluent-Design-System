@@ -3,53 +3,40 @@ unit CFX.Graphics;
 interface
 
 uses
-  Vcl.Graphics, UITypes, Types, CFX.UIConsts, VCl.GraphUtil, Winapi.Windows,
-  Classes, Vcl.Themes, Vcl.Controls;
+  UITypes, Types, CFX.UIConsts, VCl.GraphUtil, Winapi.Windows,
+  Classes, Vcl.Themes, Vcl.Controls, Vcl.Graphics,
+  CFX.VarHelpers, CFX.Types, CFX.BlurFunctions;
 
   type
     TPent = array[0..4] of TPoint;
 
-    TCorners = (crTopLeft, crTopRight, crBottomLeft, crBottomRight);
+  // Graphic Utilities
+  procedure GetCenterPos(Width, Height: Integer; Rect: TRect; out X, Y: Integer);
+  function CreateSolidBrushWithAlpha(Color: TColor; Alpha: Byte = $FF): HBRUSH;
 
-    TLine = record
-      Point1: TPoint;
-      Point2: TPoint;
+  // Text Draw Functions
+  function GetMaxFontHeight(Canvas: TCanvas; Text: string; MaxWidth, MaxHeight: Integer): integer;
 
-      function Center: TPoint;
-    end;
+  // Drawing Functions
+  procedure DrawTextRect(const Canvas: TCanvas; HAlign: TAlignment;
+                         VAlign: TVerticalAlignment; Rect: TRect; Text: string;
+                         TextOnGlass: Boolean);
+  procedure DrawBorder(const Canvas: TCanvas; R: TRect; Color: TColor;
+                       Thickness: Byte; Roundness: integer = 10);
+  procedure CopyRoundRect(FromCanvas: TCanvas; FromRect: TRoundRect;
+                          DestCanvas: TCanvas; DestRect: TRect;
+                          shrinkborder: integer = 0);
 
-    TRoundRect = record
-      public
-        Rect: TRect;
+  // Draw Rectangles
+  function GetDrawModeRects(Rect: TRect; Image: TGraphic; DrawMode: TDrawMode; ImageMargin:
+                            integer = 0): TArray<TRect>;
+  function GetDrawModeRect(Rect: TRect; Image: TGraphic; DrawMode: TDrawMode;
+                            ImageMargin: integer = 0): TRect;
+  procedure DrawImageInRect(Canvas: TCanvas; Rect: TRect; Image: TGraphic;
+                            DrawMode: TDrawMode; ImageMargin: integer = 0);
 
-        RoundY: integer;
-        RoundX: integer;
-
-        Corners: TCorners;
-
-        function Left: integer;
-        function Right: integer;
-        function Top: integer;
-        function Bottom: integer;
-        function TopLeft: TPoint;
-        function BottomRight: TPoint;
-        function Height: integer;
-        function Width: integer;
-
-        procedure SetXYRoundness(Value: integer);
-
-        procedure Create(TopLeft, BottomRight: TPoint; RndX, RndY: integer); overload;
-        procedure Create(SRect: TRect; RndX, RndY: integer); overload;
-        procedure Create(Left, Top, Right, Bottom: integer; RndX, RndY: integer); overload;
-    end;
-
-// Canvas Graphic Utilities
-procedure GetCenterPos(Width, Height: Integer; Rect: TRect; out X, Y: Integer);
-procedure DrawTextRect(const Canvas: TCanvas; HAlign: TAlignment; VAlign: TVerticalAlignment; Rect: TRect; Text: string; TextOnGlass: Boolean);
-function CreateSolidBrushWithAlpha(Color: TColor; Alpha: Byte = $FF): HBRUSH;
-procedure DrawBorder(const Canvas: TCanvas; R: TRect; Color: TColor; Thickness: Byte; Roundness: integer = 10);
-procedure CopyRoundRect(FromCanvas: TCanvas; FromRect: TRoundRect; DestCanvas: TCanvas; DestRect: TRect; shrinkborder: integer);
-function RoundRect(SRect: TRect; RndX, RndY: integer): TRoundRect;
+  // Bitmap Manipulation
+  procedure FastBlur(Bitmap: TBitmap; Radius: Real; BlurScale: Integer; HighQuality: Boolean = True);
 
 const
   HAlignments: Array[TAlignment] of Longint = (DT_LEFT, DT_RIGHT, DT_CENTER);
@@ -63,12 +50,216 @@ begin
   Y := Rect.Top + (Rect.Height - Height) div 2;
 end;
 
-function RoundRect(SRect: TRect; RndX, RndY: integer): TRoundRect;
+function GetDrawModeRects(Rect: TRect; Image: TGraphic; DrawMode: TDrawMode; ImageMargin: integer): TArray<TRect>;
 var
-  rec: TRoundRect;
+  A, B, C: real;
+  TMPRect: TRect;
+  I, W, H: Integer;
 begin
-  rec.Create(SRect, RndX, RndY);
-  Result := rec;
+  if Image.Empty then
+    Exit;
+
+  SetLength(Result, 1);
+  if Image <> nil then
+  case DrawMode of
+    // Fill
+    TDrawMode.dmFill: begin
+      Result[0] := Rect;
+
+      A := Result[0].Width / Image.Width ;
+      B := Image.Height * A;
+
+      if B < Result[0].Height then
+        begin
+          C := Result[0].Height / Image.Height;
+
+          Result[0].Width := trunc(Image.Width * C);
+        end
+          else
+            Result[0].Height := trunc(B);
+    end;
+    // Fit
+    TDrawMode.dmFit: begin
+      Result[0] := Rect;
+
+      A := Result[0].Width / Image.Width ;
+      B := Image.Height * A;
+
+      if B > Result[0].Height then
+        begin
+          C := Result[0].Height / Image.Height;
+
+          Result[0].Width := trunc(Image.Width * C);
+        end
+          else
+            Result[0].Height := trunc(B);
+    end;
+    // Stretch
+    TDrawMode.dmStretch: begin
+      Result[0] := Rect;
+    end;
+    // Center
+    TDrawMode.dmCenter: begin
+      Result[0].Left := Rect.CenterPoint.X - Image.Width div 2;
+      Result[0].Right := Rect.CenterPoint.X + Image.Width div 2;
+
+      Result[0].Top := Rect.CenterPoint.Y - Image.Height div 2;
+      Result[0].Bottom := Rect.CenterPoint.Y + Image.Height div 2;
+    end;
+    // Center Fill
+    TDrawMode.dmCenterFill: begin
+      Result[0] := Rect;
+
+      A := Result[0].Width / Image.Width ;
+      B := Image.Height * A;
+
+      if B < Result[0].Height then
+        begin
+          C := Result[0].Height / Image.Height;
+
+          Result[0].Width := trunc(Image.Width * C);
+        end
+          else
+            Result[0].Height := trunc(B);
+
+      W := Result[0].Width;
+      H := Result[0].Height;
+
+      Result[0].Left := Result[0].Left - (W - Rect.Width) div 2;
+      Result[0].Right := Result[0].Right - (W - Rect.Width) div 2;
+      Result[0].Top := Result[0].Top - (H - Rect.Height) div 2;
+      Result[0].Bottom := Result[0].Bottom - (H - Rect.Height) div 2;
+    end;
+    // Center Fill
+    TDrawMode.dmCenter3Fill: begin
+      Result[0] := Rect;
+
+      A := Result[0].Width / Image.Width ;
+      B := Image.Height * A;
+
+      if B < Result[0].Height then
+        begin
+          C := Result[0].Height / Image.Height;
+
+          Result[0].Width := trunc(Image.Width * C);
+        end
+          else
+            Result[0].Height := trunc(B);
+
+      W := Result[0].Width;
+      H := Result[0].Height;
+
+      Result[0].Left := Result[0].Left - (W - Rect.Width) div 3;
+      Result[0].Right := Result[0].Right - (W - Rect.Width) div 3;
+      Result[0].Top := Result[0].Top - (H - Rect.Height) div 3;
+      Result[0].Bottom := Result[0].Bottom - (H - Rect.Height) div 3;
+    end;
+    // Center Fit
+    TDrawMode.dmCenterFit: begin
+      Result[0] := Rect;
+
+      A := Result[0].Width / Image.Width ;
+      B := Image.Height * A;
+
+      if B > Result[0].Height then
+        begin
+          C := Result[0].Height / Image.Height;
+
+          Result[0].Width := trunc(Image.Width * C);
+        end
+          else
+            Result[0].Height := trunc(B);
+
+      W := Result[0].Width;
+      H := Result[0].Height;
+
+      Result[0].Left := Result[0].Left + (Rect.Width - W) div 2;
+      Result[0].Right := Result[0].Right + (Rect.Width - W) div 2;
+      Result[0].Top := Result[0].Top + (Rect.Height - H) div 2;
+      Result[0].Bottom := Result[0].Bottom + (Rect.Height - H) div 2;
+    end;
+    // Normal
+    TDrawMode.dmNormal: begin
+      Result[0].Left := Rect.Left;
+      Result[0].Right := Result[0].Left + Image.Width;
+
+      Result[0].Top := Rect.Top;
+      Result[0].Bottom := Result[0].Bottom + Image.Height;
+    end;
+    // Tile
+    TDrawMode.dmTile: begin
+      SetLength(Result, 0);
+      A := Rect.Top;
+      repeat
+        B := Rect.Left;
+        repeat
+          SetLength(Result, Length(Result) + 1);
+
+          TMPRect.TopLeft := Point(trunc(B), trunc(A));
+          TMPRect.Width := Image.Width;
+          TMPRect.Height := Image.Height;
+
+          Result[Length(Result) - 1] := TMPRect;
+
+          B := B + Image.Width;
+        until (B >= Rect.Width);
+
+        A := A + Image.Height;
+      until (A >= Rect.Height);
+    end;
+  end;
+
+  if ImageMargin <> 0 then
+    for I := 0 to High( Result ) do
+      with Result[I] do
+        begin
+          Left := Left + ImageMargin;
+          Top := Top + ImageMargin;
+          Right := Right - ImageMargin;
+          Bottom := Bottom - ImageMargin;
+        end;
+end;
+
+function GetDrawModeRect(Rect: TRect; Image: TGraphic; DrawMode: TDrawMode; ImageMargin: integer): TRect;
+begin
+  Result := GetDrawModeRects(Rect, Image, DrawMode, ImageMargin)[0];
+end;
+
+procedure DrawImageInRect(Canvas: TCanvas; Rect: TRect; Image: TGraphic; DrawMode: TDrawMode; ImageMargin: integer);
+var
+  Rects: TArray<TRect>;
+  I: integer;
+begin
+  Rects := GetDrawModeRects(Rect, Image, DrawMode, ImageMargin);
+
+  for I := 0 to High( Rects ) do
+    Canvas.StretchDraw( Rects[I], Image, 255 );
+end;
+
+procedure FastBlur(Bitmap: TBitmap; Radius: Real; BlurScale: Integer; HighQuality: Boolean = True);
+begin
+  CFX.BlurFunctions.FastBlur( Bitmap, Radius, BlurScale, HighQuality );
+end;
+
+function GetMaxFontHeight(Canvas: TCanvas; Text: string; MaxWidth, MaxHeight: Integer): integer;
+var
+  Ext: TSize;
+begin
+  Result := 0;
+  if Text = '' then
+    Exit;
+
+  Canvas.Font.Height := -10;
+  repeat
+    Canvas.Font.Height := Canvas.Font.Height - 1;
+    Ext := Canvas.TextExtent(Text);
+  until ((Ext.cx >= MaxWidth) or (Ext.cy >= MaxHeight));
+  repeat
+    Canvas.Font.Height := Canvas.Font.Height + 1;
+    Ext := Canvas.TextExtent(Text);
+  until ((Ext.cx <= MaxWidth) and (Ext.cy <= MaxHeight)) or (Canvas.Font.Height = 1);
+
+  Result := Canvas.Font.Height;
 end;
 
 procedure DrawTextRect(const Canvas: TCanvas; HAlign: TAlignment; VAlign: TVerticalAlignment; Rect: TRect; Text: string; TextOnGlass: Boolean);
@@ -149,10 +340,9 @@ begin
   end;
 
   // Adjust Sizing
-  if FromRect.RoundY > FromRect.Rect.Height then
-    FromRect.RoundY  := FromRect.Rect.Height;
-  if FromRect.RoundX > FromRect.Rect.Width then
-    FromRect.RoundX  := FromRect.Rect.Width;
+  if FromRect.GetRoundness > FromRect.Rect.Height then
+    FromRect.SetRoundness( FromRect.Rect.Height );
+
   m := 0;
   if (FromRect.Rect.Height > m) then
     m := FromRect.Rect.Height;
@@ -263,85 +453,6 @@ begin
       else
         Canvas.RoundRect(TL, TL, R.Width - BR, R.Height - BR, RoundNess, RoundNess);
     end;
-end;
-
-{ TRoundRect }
-
-procedure TRoundRect.Create(TopLeft, BottomRight: TPoint; RndX, RndY: integer);
-begin
-  Rect := TRect.Create(TopLeft, BottomRight);
-
-  RoundX := RndX;
-  RoundY := RndY;
-end;
-
-procedure TRoundRect.Create(SRect: TRect; RndX, RndY: integer);
-begin
-  Rect := SRect;
-
-  RoundX := RndX;
-  RoundY := RndY;
-end;
-
-function TRoundRect.Bottom: integer;
-begin
-  Result := Rect.Bottom;
-end;
-
-function TRoundRect.BottomRight: TPoint;
-begin
-  Result := Rect.BottomRight;
-end;
-
-procedure TRoundRect.Create(Left, Top, Right, Bottom, RndX, RndY: integer);
-begin
-  Rect := TRect.Create(Left, Top, Right, Bottom);
-
-  RoundX := RndX;
-  RoundY := RndY;
-end;
-
-function TRoundRect.Height: integer;
-begin
-  Result := Rect.Height;
-end;
-
-function TRoundRect.Left: integer;
-begin
-  Result := Rect.Left;
-end;
-
-function TRoundRect.Right: integer;
-begin
-  Result := Rect.Right;
-end;
-
-procedure TRoundRect.SetXYRoundness(Value: integer);
-begin
-  RoundX := Value;
-  RoundY := Value;
-end;
-
-function TRoundRect.Top: integer;
-begin
-  Result := Rect.Top;
-end;
-
-function TRoundRect.TopLeft: TPoint;
-begin
-  Result := Rect.TopLeft;
-end;
-
-function TRoundRect.Width: integer;
-begin
-  Result := Rect.Width;
-end;
-
-{ TLine }
-
-function TLine.Center: TPoint;
-begin
-  Result := Point( (Point1.X + Point2.X) div 2, (Point1.Y + Point2.Y) div 2);
 end;
 
 end.

@@ -7,7 +7,8 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, Registry, System.UITypes,
   Types, Vcl.Graphics, CFX.Colors, CFX.Utilities, Vcl.ExtCtrls, Vcl.Dialogs,
-  Vcl.Forms, Classes, Vcl.Themes, Vcl.Styles, CFX.UIConsts;
+  Vcl.Forms, Classes, Vcl.Themes, Vcl.Styles, CFX.UIConsts,
+  CFX.Types;
 
   type
     // Define Control type to identify on update
@@ -17,20 +18,6 @@ uses
       procedure UpdateTheme(const UpdateChidlren: Boolean);
     end;
 
-    // Theme Change Detection
-    FXThemeType = (fttRedraw, fttColorization, fttAppTheme);
-    FXThemeChange = procedure(Sender: TObject; ThemeChange: FXThemeType; DarkTheme: boolean; Accent: TColor) of object;
-
-    // Persistent
-      TMPersistent = class(TPersistent)
-        Owner : TPersistent;
-        constructor Create(AOwner : TPersistent); overload; virtual;
-      end;
-
-    // Color Types
-    FXColorType = (fctForeground, fctAccent, fctBackGround, fctContent);
-    FXDarkSetting = (fdsAuto, fdsForceDark, fdsForceLight);
-
     // Theme Manager
     FXThemeManager = class
     private
@@ -39,30 +26,50 @@ uses
       FDarkTheme: boolean;
       FDarkThemeMode: FXDarkSetting;
 
+      FFormFont,
+      FIconFont: string;
+      FFormFontHeight: integer;
+
+      FLegacyFontColor: boolean;
+
       // Private Declarations
       procedure RegMonitorProc(Sender: TObject);
       procedure SetDarkTheme(const Value: boolean);
       procedure SetDarkMode(const Value: FXDarkSetting);
 
     published
+      (* Theme Settings *)
       property DarkTheme: boolean read FDarkTheme write SetDarkTheme;
       property DarkThemeMode: FXDarkSetting read FDarkThemeMode write SetDarkMode;
+
+      (* Global Font Settings *)
+      property FormFont: string read FFormFont write FFormFont;
+      property FormFontHeight: integer read FFormFontHeight write FFormFontHeight;
+      property IconFont: string read FIconFont write FIconFont;
+      property LegacyFontColor: boolean read FLegacyFontColor write FLegacyFontColor;
 
     public
       constructor Create;
       destructor Destroy; override;
 
-      // Global Colors
+      (* Global Colors *)
       var
       SystemColorSet: FXCompleteColorSets;
       SystemColor: FXCompleteColorSet;
       SystemGrayControl: FXSingleColorStateSets;
       SystemAccentInteractStates: FXSingleColorStateSet;
 
-      // Tool Tip
+      (* Tool Tip *)
       ToolTip: FXCompleteColorSets;
 
+      (* Functions *)
       function AccentColor: TColor;
+
+      function GetThemePrimaryColor: TColor;
+
+      procedure LoadFontSettings;
+
+      procedure UpdateThemeInformation;
 
       procedure UpdateColors;
       procedure UpdateSettings;
@@ -91,15 +98,6 @@ end;
 // Get Theme Manager
 function ThemeManager: FXThemeManager;
 begin
-  { Application free attempt }
-  {if (csDestroying in Application.ComponentState) and false then
-    begin
-      if ThemeMgr <> nil then
-        ThemeMgr.Free;
-
-      Abort;
-    end; }
-
   { Create Theme Manager }
     if ThemeMgr = nil then
       ThemeMgr := FXThemeManager.Create;
@@ -140,7 +138,12 @@ begin
     FDarkTheme := CFX.Utilities.GetAppsUseDarkTheme;
 
   DarkThemeMode := fdsAuto;
-  
+
+  FLegacyFontColor := true;
+
+  // Load Font
+  LoadFontSettings;
+
   // Default Color Sets
   SystemColorSet := FXCompleteColorSets.Create;
   SystemColor := FXCompleteColorSet.Create(SystemColorSet, DarkTheme);
@@ -180,21 +183,33 @@ begin
   FreeAndNil( SystemGrayControl );
 end;
 
+function FXThemeManager.GetThemePrimaryColor: TColor;
+begin
+  if FDarkTheme then
+    Result := 0
+  else
+    Result := TColors.White;
+end;
+
+procedure FXThemeManager.LoadFontSettings;
+begin
+  if Screen.Fonts.IndexOf(FORM_ICON_FONT_NAME_NEW) <> -1 then
+    FIconFont := FORM_ICON_FONT_NAME_NEW
+  else
+    FIconFont := FORM_ICON_FONT_NAME_LEGACY;
+
+  FFormFont := FORM_FONT_NAME;
+  FFormFontHeight := FORM_FONT_HEIGHT;
+end;
+
 procedure FXThemeManager.RegMonitorProc(Sender: TObject);
-var
-  DrkMode: boolean;
 begin
   // Manual theme override
   if FDarkThemeMode <> fdsAuto then
     Exit;
 
   // Check registry
-  DrkMode := GetAppsUseDarkTheme;
-
-  if DrkMode <> DarkTheme then
-    begin
-      DarkTheme := DrkMode;
-    end;
+  UpdateThemeInformation;
 end;
 
 procedure FXThemeManager.SetDarkMode(const Value: FXDarkSetting);
@@ -242,12 +257,17 @@ begin
         (Screen.Forms[i] as FXControl).UpdateTheme(true);
 end;
 
-{ TMPersistent }
-
-constructor TMPersistent.Create(AOwner: TPersistent);
+procedure FXThemeManager.UpdateThemeInformation;
+var
+  DrkMode: boolean;
 begin
-  inherited Create;
-  Owner := AOwner;
+  // Get current dark theme state
+  DrkMode := GetAppsUseDarkTheme;
+
+  if DrkMode <> DarkTheme then
+    begin
+      DarkTheme := DrkMode;
+    end;
 end;
 
 end.

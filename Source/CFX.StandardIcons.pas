@@ -13,6 +13,7 @@ uses
   Vcl.Themes,
   CFX.Graphics,
   CFX.UIConsts,
+  UITypes,
   Windows;
 
 type
