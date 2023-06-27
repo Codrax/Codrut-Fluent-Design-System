@@ -1,0 +1,379 @@
+unit CFX.ThemeManager;
+
+{$TYPEINFO ON}
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, Win.Registry, System.UITypes,
+  Types, Vcl.Graphics, CFX.Colors, CFX.Utilities, Vcl.ExtCtrls, Vcl.Dialogs,
+  Vcl.Forms, Classes, Vcl.Themes, Vcl.Styles, CFX.UIConsts,
+  CFX.Types, DateUtils, CFX.Linker;
+
+  type
+    // Theme Manager
+    FXThemeManager = class
+    private
+      FRegistryMonitor: TTimer;
+
+      FDarkTheme: boolean;
+      FDarkThemeMode: FXDarkSetting;
+
+      FFormFont,
+      FIconFont: string;
+      FFormFontHeight: integer;
+
+      FAccentColor: TColor;
+      FAutoAccentColor: boolean;
+
+      FLegacyFontColor: boolean;
+
+      LastUpdate: TTime;
+      FDesigning: boolean;
+
+      // Private Declarations
+      procedure RegMonitorProc(Sender: TObject);
+      procedure SetDarkTheme(const Value: boolean);
+      procedure SetDarkMode(const Value: FXDarkSetting);
+      procedure UpdateAccentColor;
+      function LoadAccentColor: TColor;
+      procedure SaveAccentColor(const Value: TColor);
+      procedure SetAutoAccent(const Value: boolean);
+
+    published
+      (* Theme Settings *)
+      property DarkTheme: boolean read FDarkTheme write SetDarkTheme;
+      property DarkThemeMode: FXDarkSetting read FDarkThemeMode write SetDarkMode;
+
+      (* Global Font Settings *)
+      property FormFont: string read FFormFont write FFormFont;
+      property FormFontHeight: integer read FFormFontHeight write FFormFontHeight;
+      property IconFont: string read FIconFont write FIconFont;
+      property LegacyFontColor: boolean read FLegacyFontColor write FLegacyFontColor;
+      { Legacy Font Color defines if the Form should change It's font to accomodate inheritable font properties }
+
+      (* Accent Color *)
+      property AccentColor: TColor read LoadAccentColor write SaveAccentColor;
+      property AutoAccentColor: boolean read FAutoAccentColor write SetAutoAccent;
+
+      (* Utils *)
+      property Designing: boolean read FDesigning;
+
+    public
+      constructor Create;
+      destructor Destroy; override;
+
+      (* Global Colors *)
+      var
+      SystemColorSet: FXCompleteColorSets;
+      SystemColor: FXCompleteColorSet;
+      SystemGrayControl: FXSingleColorStateSets;
+      SystemAccentInteractStates: FXSingleColorStateSet;
+
+      (* Tool Tip *)
+      FSystemToolTip: FXCompleteColorSets;
+
+      (* Load Colors *)
+      procedure LoadColorSet(var ColorSet: FXColorSet); overload;
+      procedure LoadColorSet(var ColorSet: FXColorSets); overload;
+      procedure LoadColorSet(var ColorSet: FXCompleteColorSet); overload;
+      procedure LoadColorSet(var ColorSet: FXCompleteColorSets); overload;
+
+      (* Functions *)
+      function GetThemePrimaryColor: TColor;
+
+      procedure LoadFontSettings;
+
+      procedure UpdateThemeInformation;
+
+      procedure UpdateColors;
+      procedure UpdateSettings;
+
+      (* Time Limited *)
+      procedure MeasuredUpdateSettings;
+    end;
+
+  // Functions
+  function IsDesigning: boolean;
+
+  function ExtractColor(ColorSet: FXColorSet; ClrType: FXColorType): TColor; overload;
+  function ExtractColor(ColorSet: FXColorSets; ClrType: FXColorType): TColor; overload;
+
+  var
+    ThemeManager: FXThemeManager;
+
+implementation
+
+// In Design Mode
+function IsDesigning: boolean;
+begin
+  if TStyleManager.ActiveStyle.Name = 'Mountain_Mist' then
+    Result := true
+  else
+    Result := false;
+end;
+
+function ExtractColor(ColorSet: FXColorSet; ClrType: FXColorType): TColor; overload;
+begin
+  Result := 0;
+  case ClrType of
+    FXColorType.Foreground: Result := ColorSet.ForeGround;
+    FXColorType.BackGround: Result := ColorSet.BackGround;
+    FXColorType.Accent: Result := ColorSet.Accent;
+    FXColorType.Content: if ColorSet is FXCompleteColorSet then
+      Result := FXCompleteColorSet(ColorSet).BackGroundInterior;
+  end
+end;
+
+function ExtractColor(ColorSet: FXColorSets; ClrType: FXColorType): TColor;
+begin
+  Result := 0;
+  if ThemeManager.DarkTheme then
+  case ClrType of
+    FXColorType.Foreground: Result := ColorSet.DarkForeGround;
+    FXColorType.BackGround: Result := ColorSet.DarkBackGround;
+    FXColorType.Accent: Result := ColorSet.Accent;
+    FXColorType.Content: if ColorSet is FXCompleteColorSets then
+      Result := FXCompleteColorSets(ColorSet).DarkBackGroundInterior;
+  end
+    else
+  case ClrType of
+    FXColorType.Foreground: Result := ColorSet.LightForeGround;
+    FXColorType.BackGround: Result := ColorSet.LightBackGround;
+    FXColorType.Accent: Result := ColorSet.Accent;
+    FXColorType.Content: if ColorSet is FXCompleteColorSets then
+      Result := FXCompleteColorSets(ColorSet).LightBackGroundInterior;
+  end;
+end;
+
+{ FXThemeManager }
+
+procedure FXThemeManager.UpdateAccentColor;
+begin
+  if FAutoAccentColor then
+    FAccentColor := GetAccentColor;
+end;
+
+constructor FXThemeManager.Create;
+begin
+  // Designing
+  FDesigning := IsDesigning;
+
+  // Load Settings
+  if Designing then
+    FDarkTheme := false
+  else
+    FDarkTheme := CFX.Utilities.GetAppsUseDarkTheme;
+
+  FDarkThemeMode := FXDarkSetting.Auto;
+  FAutoAccentColor := true;
+  FLegacyFontColor := false;
+
+  // Update Time
+  LastUpdate := Now;
+
+  // Load Font
+  LoadFontSettings;
+
+  // Default Color Sets
+  SystemColorSet := FXCompleteColorSets.Create;
+  SystemColor := FXCompleteColorSet.Create(SystemColorSet, DarkTheme);
+  SystemGrayControl := FXSingleColorStateSets.Create;
+  SystemAccentInteractStates := FXSingleColorStateSet.Create(SystemGrayControl, DarkTheme);
+
+  UpdateColors;
+
+  FSystemToolTip := FXCompleteColorSets.Create;
+
+  // IDE Theme
+  if IsDesigning then
+    DarkThemeMode := FXDarkSetting.ForceLight;
+
+  { IGNORE IF IDE MODE! }
+  if not IsDesigning then
+    begin
+      // Registry Monitor
+      FRegistryMonitor := TTimer.Create(nil);
+      with FRegistryMonitor do
+        begin
+          Enabled := true;
+          Interval := 100;
+
+          OnTimer := RegMonitorProc;
+        end;
+    end;
+end;
+
+destructor FXThemeManager.Destroy;
+begin
+  if FRegistryMonitor <> nil then
+    begin
+      FRegistryMonitor.Enabled := false;
+      FreeAndNil( FRegistryMonitor );
+    end;
+
+  FreeAndNil( FSystemToolTip );
+  FreeAndNil( SystemColor );
+  FreeAndNil( SystemColorSet );
+  FreeAndNil( SystemGrayControl );
+end;
+
+function FXThemeManager.LoadAccentColor: TColor;
+begin
+  Result := FAccentColor;
+end;
+
+procedure FXThemeManager.LoadColorSet(var ColorSet: FXColorSet);
+begin
+  ColorSet.Assign( SystemColor );
+end;
+
+procedure FXThemeManager.LoadColorSet(var ColorSet: FXColorSets);
+begin
+  ColorSet.Assign( SystemColorSet );
+end;
+
+procedure FXThemeManager.LoadColorSet(var ColorSet: FXCompleteColorSet);
+begin
+  ColorSet.Assign( SystemColor );
+end;
+
+procedure FXThemeManager.LoadColorSet(var ColorSet: FXCompleteColorSets);
+begin
+  ColorSet.Assign( SystemColorSet );
+end;
+
+function FXThemeManager.GetThemePrimaryColor: TColor;
+begin
+  if FDarkTheme then
+    Result := 0
+  else
+    Result := TColors.White;
+end;
+
+procedure FXThemeManager.LoadFontSettings;
+begin
+  if Screen.Fonts.IndexOf(FORM_ICON_FONT_NAME_NEW) <> -1 then
+    FIconFont := FORM_ICON_FONT_NAME_NEW
+  else
+    FIconFont := FORM_ICON_FONT_NAME_LEGACY;
+
+  FFormFont := FORM_FONT_NAME;
+  FFormFontHeight := FORM_FONT_HEIGHT;
+end;
+
+procedure FXThemeManager.MeasuredUpdateSettings;
+begin
+  if SecondsBetween(LastUpdate, Now) < 1 then
+    Exit;
+
+  UpdateSettings;
+end;
+
+procedure FXThemeManager.RegMonitorProc(Sender: TObject);
+begin
+  // Manual theme override
+  if FDarkThemeMode = FXDarkSetting.Auto then
+    // Check registry
+    UpdateThemeInformation;
+end;
+
+procedure FXThemeManager.SaveAccentColor(const Value: TColor);
+begin
+  FAutoAccentColor := false;
+  FAccentColor := Value;
+
+  UpdateSettings;
+end;
+
+procedure FXThemeManager.SetAutoAccent(const Value: boolean);
+begin
+  FAutoAccentColor := Value;
+
+  if Value then
+    UpdateSettings;
+end;
+
+procedure FXThemeManager.SetDarkMode(const Value: FXDarkSetting);
+var
+  DarkModeValue: boolean;
+begin
+  // Set new state
+  FDarkThemeMode := Value;
+
+  // Get dark mode value
+  if Value = FXDarkSetting.Auto then
+    DarkModeValue := DarkTheme
+  else
+    DarkModeValue := Value = FXDarkSetting.ForceDark;
+
+  // Update UI
+  if FDarkTheme <> DarkModeValue then
+    begin
+      FDarkTheme := DarkModeValue;
+
+      UpdateSettings;
+    end;
+end;
+
+procedure FXThemeManager.SetDarkTheme(const Value: boolean);
+begin
+  if FDarkTheme <> Value then
+  begin
+    FDarkTheme := Value;
+
+    UpdateSettings;
+  end;
+end;
+
+procedure FXThemeManager.UpdateColors;
+begin
+  SystemColor := FXCompleteColorSet.Create(SystemColorSet, FDarkTheme);
+
+  // Update Accent
+  UpdateAccentColor;
+
+  // Get Accent
+  SystemColor.Accent := AccentColor;
+
+  // Create System Defaults
+  SystemColorSet.Accent := AccentColor;
+  SystemGrayControl.Accent := AccentColor;
+  SystemAccentInteractStates := FXSingleColorStateSet.Create(AccentColor,
+                                                      ChangeColorLight(AccentColor, ACCENT_DIFFERENTIATE_CONST),
+                                                      ChangeColorLight(AccentColor, -ACCENT_DIFFERENTIATE_CONST));
+end;
+
+procedure FXThemeManager.UpdateSettings;
+var
+  I: Integer;
+begin
+  LastUpdate := Now;
+
+  UpdateColors;
+
+  for I := 0 to Screen.FormCount - 1 do
+    if Screen.Forms[i] <> nil then    
+      if Supports(Screen.Forms[i], FXControl) then
+        (Screen.Forms[i] as FXControl).UpdateTheme(true);
+end;
+
+procedure FXThemeManager.UpdateThemeInformation;
+var
+  DrkMode: boolean;
+begin
+  // Get current dark theme state
+  DrkMode := GetAppsUseDarkTheme;
+
+  if DrkMode <> DarkTheme then
+    begin
+      DarkTheme := DrkMode;
+    end;
+end;
+
+initialization
+  ThemeManager := FXThemeManager.Create;
+finalization
+  ThemeManager.Free;
+end.
+

@@ -35,6 +35,7 @@ uses
   CFX.FontIcons,
   CFX.Button,
   CFX.PopupMenu,
+  CFX.ImageList,
 
   // Property Editor
   DesignEditors,
@@ -85,6 +86,23 @@ uses
 
     // Popup Menu Items
     TFXPopupItemsProperty = class(TPropertyEditor)
+    private
+      Form: FXEditForm;
+      Item: FXPopupItems;
+
+    public
+      procedure Edit; override;
+      function GetAttributes: TPropertyAttributes; override;
+      function GetValue: string; override;
+      procedure SetValue(const Value: string); override;
+    end;
+
+    // FXPictureImages Items
+    TFXPictureImagesProperty = class(TPropertyEditor)
+    private
+      Form: FXEditForm;
+      Item: FXPictureImages;
+
     public
       procedure Edit; override;
       function GetAttributes: TPropertyAttributes; override;
@@ -127,39 +145,37 @@ implementation
 
 procedure TFXPopupItemsProperty.Edit;
 var
-  PropValue: TValue;
-  PropInfo: PPropInfo;
-  Items: FXPopupItems;
-  Form: TForm;
-  V: Variant;
+  Menu: FXPopupItem;
 begin
-  // get the current value of the property
-  PropValue := GetValue;
+  inherited;
+  // Item
+  Item := FXPopupItems(Self.GetOrdValue);
 
-  // get the property info
-  PropInfo := TypInfo.GetPropInfo(GetComponent(0).ClassInfo, 'FXPopupItems');
-
-  if PropValue.IsEmpty then
-    Items := []
-  else
-    // cast the property value to the appropriate type
-    Items := FXPopupItems(Pointer(PropValue.GetReferenceToRawData)^);
-
-  ShowMessage( Length(ITems).ToString );
-
-  // modify the items
-  SetLength(Items, 0);
-
-  ShowMessage( Length(ITems).ToString );
-
-  // create a variant from the items
-  V := TValue.From<FXPopupItems>(Items).AsVariant;
-
-  // set the value of the property
-  SetValue(V);
-
-  // notify the designer that the property has been modified
   Modified;
+  Form := FXEditForm.CreateNew(Application);
+  try
+    // Edit
+    Menu := FXPopupItem.Create(TComponent(Item.Owner));
+    with Menu do
+      begin
+        Text := 'Copy';
+        ShortCut := 'Ctrl+C';
+
+        Image.Enabled := true;
+        Image.IconType := FXIconType.SegoeIcon;
+        Image.SelectSegoe := #$E709;
+      end;
+
+    Item.Add(Menu);
+
+    // Data
+    Form.SubTitle := 'SubControl count: ' + Item.Count.ToString;
+
+    // Form
+    Form.ShowModal;
+  finally
+    Form.Free;
+  end;
 end;
 
 function TFXPopupItemsProperty.GetAttributes: TPropertyAttributes;
@@ -233,7 +249,7 @@ begin
     5: begin
       with TSavePictureDialog.Create(nil) do
         begin
-          FileName := 'BitMap.bmp';
+          FileName := 'Bitmap.bmp';
           Filter := 'Bitmaps (*.bmp)|*.bmp|All Files|*';
 
           if Execute then
@@ -259,7 +275,7 @@ begin
   Item.Enabled := FXButton(Sender).Tag <> 1;
 
   if Item.Enabled then
-    Item.IconType := FXImageType(FXButton(Sender).Tag-2);
+    Item.IconType := FXIconType(FXButton(Sender).Tag-2);
 
   for I := 0 to FXButton(Sender).Parent.ControlCount - 1 do
     if FXButton(Sender).Parent.Controls[I] is FXButton then
@@ -281,9 +297,6 @@ begin
   ItemOrig := FXIconSelect(Self.GetOrdValue);
   Item := FXIconSelect.Create(nil);
   Item.Assign(ItemOrig);
-
-  // Update Theme
-  ThemeManager.UpdateThemeInformation;
 
   // Form
   Form := FXEditForm.CreateNew(Application);
@@ -316,7 +329,7 @@ begin
           begin
             Parent := ListPanel;
 
-            BSegoeIcon := #$F714;
+            Image.SelectSegoe := #$F714;
             Text := 'Font Icon';
             Tag := 5;
           end;
@@ -325,7 +338,7 @@ begin
           begin
             Parent := ListPanel;
 
-            BSegoeIcon := #$E8B9;
+            Image.SelectSegoe := #$E8B9;
             Text := 'Image List';
             Tag := 4;
           end;
@@ -334,7 +347,7 @@ begin
           begin
             Parent := ListPanel;
 
-            BSegoeIcon := #$E8BA;
+            Image.SelectSegoe := #$E8BA;
             Text := 'Bitmap';
             Tag := 3;
           end;
@@ -343,7 +356,7 @@ begin
           begin
             Parent := ListPanel;
 
-            BSegoeIcon := #$EB9F;
+            Image.SelectSegoe := #$EB9F;
             Text := 'Picture';
             Tag := 2;
           end;
@@ -352,7 +365,7 @@ begin
           begin
             Parent := ListPanel;
 
-            BSegoeIcon := #$E711;
+            Image.SelectSegoe := #$E711;
             Text := 'None';
             Tag := 1;
           end;
@@ -428,8 +441,11 @@ begin
 
                   Text := 'Browse';
 
-                  ButtonIcon := cicSegoeFluent;
-                  BSegoeIcon := #$E7C5;
+                  Image.Enabled := true;
+                  Image.IconType := FXIconType.SegoeIcon;
+                  Image.SelectSegoe := #$E7C5;
+
+                  ParentColor := true;
 
                   Tag := 1;
                   OnClick := ButtonImageAction;
@@ -446,8 +462,11 @@ begin
 
                   Text := 'Save';
 
-                  ButtonIcon := cicSegoeFluent;
-                  BSegoeIcon := #$EA35;
+                  Image.Enabled := true;
+                  Image.IconType := FXIconType.SegoeIcon;
+                  Image.SelectSegoe:= #$EA35;
+
+                  ParentColor := true;
 
                   Tag := 2;
                   OnClick := ButtonImageAction;
@@ -464,8 +483,11 @@ begin
 
                   Text := 'Clear';
 
-                  ButtonIcon := cicSegoeFluent;
-                  BSegoeIcon := #$ED62;
+                  Image.Enabled := true;
+                  Image.IconType := FXIconType.SegoeIcon;
+                  Image.SelectSegoe := #$ED62;
+
+                  ParentColor := true;
 
                   Tag := 3;
                   OnClick := ButtonImageAction;
@@ -542,8 +564,11 @@ begin
 
                   Text := 'Browse';
 
-                  ButtonIcon := cicSegoeFluent;
-                  BSegoeIcon := #$E7C5;
+                  Image.Enabled := true;
+                  Image.IconType := FXIconType.SegoeIcon;
+                  Image.SelectSegoe := #$E7C5;
+
+                  ParentColor := true;
 
                   Tag := 4;
                   OnClick := ButtonImageAction;
@@ -560,8 +585,11 @@ begin
 
                   Text := 'Save';
 
-                  ButtonIcon := cicSegoeFluent;
-                  BSegoeIcon := #$EA35;
+                  Image.Enabled := true;
+                  Image.IconType := FXIconType.SegoeIcon;
+                  Image.SelectSegoe := #$EA35;
+
+                  ParentColor := true;
 
                   Tag := 5;
                   OnClick := ButtonImageAction;
@@ -578,8 +606,11 @@ begin
 
                   Text := 'Clear';
 
-                  ButtonIcon := cicSegoeFluent;
-                  BSegoeIcon := #$ED62;
+                  Image.Enabled := true;
+                  Image.IconType := FXIconType.SegoeIcon;
+                  Image.SelectSegoe := #$ED62;
+
+                  ParentColor := true;
 
                   Tag := 6;
                   OnClick := ButtonImageAction;
@@ -671,9 +702,12 @@ begin
               begin
                 Align := alLeft;
                 AlignWithMargins := true;
-                ButtonIcon := cicSegoeFluent;
+                Image.Enabled := true;
+                Image.IconType := FXIconType.SegoeIcon;
 
-                BImageLayout := cpTop;
+                ParentColor := true;
+
+                ImageLayout := cpTop;
 
                 Width := ListPanel.Width div 5 - Margins.Left * 2;
 
@@ -700,9 +734,35 @@ procedure TFXIconSelectProperty.EditInteract(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
   Icon: string;
+  StrLen: integer;
+  ValidContender: boolean;
 begin
   try
-    if Length(FontIcon.Text) = 4 then
+    // Obtain length
+    StrLen := Length(FontIcon.Text);
+
+    // Validate for unicode conversion
+    ValidContender := false;
+    if (not (ssAlt in Shift)) and (Key <> 18) then
+      if (StrLen >= 4) and (StrLen <= 5) then
+        begin
+          if StrLen = 4 then
+            ValidContender := true
+          else
+            if (StrLen = 5) and (FontIcon.Text[1] = '#') then
+              begin
+                FontIcon.Text := Copy(FontIcon.Text, 2, 4);
+
+                ValidContender := true;
+              end;
+
+          // Alpha Numeric Unicode Point
+          if not IsStringAlphaNumeric(FontIcon.Text) then
+            ValidContender := false;
+        end;
+
+    // Convert to character
+    if ValidContender then
       begin
         Icon := UnicodeToString(FontIcon.Text);
 
@@ -753,6 +813,9 @@ constructor FXEditForm.CreateNew(AOwner: TComponent; Dummy: Integer);
 begin
   inherited;
 
+  // Update Theme
+  ThemeManager.DarkThemeMode := FXDarkSetting.ForceLight;
+
   // Defaults
   FMainTitle := 'Title';
   FSubTitle := 'Sub title';
@@ -772,10 +835,10 @@ begin
 
   // Theme
   if Styled then
-    if GetAppsUseDarkTheme then
+    if ThemeManager.DarkTheme then
       begin
-        Color := DEFAULT_DARK_BACKGROUND_COLOR;
-        Font.Color := DEFAULT_DARK_FOREGROUND_COLOR;
+        Color := ThemeManager.SystemColor.BackGround;
+        Font.Color := ThemeManager.SystemColor.ForeGround;
       end;
 
   // Labels
@@ -813,7 +876,11 @@ begin
       Top := Self.ClientHeight - Height - ZONE_MARGIN div 2;
 
       Text := 'Save';
-      ButtonIcon := cicYes;
+      Image.Enabled := true;
+      Image.IconType := FXIconType.SegoeIcon;
+      Image.SelectSegoe := #$E73E;
+
+      ParentColor := true;
 
       Default := true;
 
@@ -831,7 +898,11 @@ begin
       Top := Self.ClientHeight - Height - ZONE_MARGIN div 2;
 
       Text := 'Close';
-      ButtonIcon := cicNo;
+      Image.Enabled := true;
+      Image.IconType := FXIconType.SegoeIcon;
+      Image.SelectSegoe := #$E8BB;
+
+      ParentColor := true;
 
       Cancel := true;
 
@@ -894,11 +965,53 @@ begin
   FButtonClose.Visible := FAllowCancel;
 end;
 
-{ Initialize }
+{ TFXPictureImagesProperty }
+
+procedure TFXPictureImagesProperty.Edit;
+begin
+  inherited;
+  // Item
+  Item := FXPictureImages(Self.GetOrdValue);
+
+  Modified;
+  Form := FXEditForm.CreateNew(Application);
+  try
+    // Edit
+    Item.AddNewFromFile('F:\Assets\By Me\Arrow Left.png');
+
+    // Data
+    Form.Title := 'Edit Image list';
+    Form.SubTitle := 'Pictures Count: ' + Item.Count.ToString;
+
+    // Form
+    Form.ShowModal;
+  finally
+    Form.Free;
+  end;
+end;
+
+function TFXPictureImagesProperty.GetAttributes: TPropertyAttributes;
+begin
+  Result := inherited GetAttributes + [paDialog];
+end;
+
+function TFXPictureImagesProperty.GetValue: string;
+begin
+  // Return the current value of the property as a string
+  Result := '(FXPictureImages)';
+end;
+
+procedure TFXPictureImagesProperty.SetValue(const Value: string);
+begin
+  inherited;
+end;
+
 initialization
+  { Initialize }
   RegisterPropertyEditor(TypeInfo(FXIconSelect), nil, '', TFXIconSelectProperty);
 
   RegisterPropertyEditor(TypeInfo(FXPopupItems), nil, '', TFXPopupItemsProperty);
+  RegisterPropertyEditor(TypeInfo(FXPictureImages), nil, '', TFXPictureImagesProperty);
   (*
   Parameter 1: Edited Class for Property Edit
   Parameter 2: Compoent to work with. Enter nil for it to work with all

@@ -3,9 +3,9 @@ unit CFX.Utilities;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, Registry, System.UITypes,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, Win.Registry, System.UITypes,
   Types, Vcl.Forms, Vcl.Graphics, CFX.Colors, CFX.Registry,
-  CFX.Types, IOUTils;
+  CFX.Types, IOUTils, RegularExpressions;
 
   function GetAppsUseDarkTheme: Boolean;
   function GetAccentColor( brightencolor: boolean = true ): TColor;
@@ -13,11 +13,14 @@ uses
 
   function GetUserNameString: string;
 
+  // String
+  function IsStringAlphaNumeric(const S: string): Boolean;
+
   // File
   function GetFileSize(FileName: WideString): Int64;
 
   function ReplaceWinPath(SrcString: string): string;
-  function GetUserShellLocation(ShellLocation: FXUserShellLocation): string;
+  function GetUserShellLocation(ShellLocation: FXUserShell): string;
 
   function GetFileBytesString(FileName: string; FirstCount: integer): TArray<string>;
   function ReadFileSignature(FileName: string): TFileType;
@@ -51,14 +54,14 @@ end;
 function GetAccentColor( brightencolor: boolean = true ): TColor;
 var
   R: TRegistry;
-  ARGB: Cardinal;
+  ARGB: cardinal;
 begin
   Result := $D77800;  //  Default value on error
   R := TRegistry.Create;
   try
     R.RootKey := HKEY_CURRENT_USER;
     if R.OpenKeyReadOnly('Software\Microsoft\Windows\DWM\') and R.ValueExists('AccentColor') then begin
-      ARGB := R.ReadInteger('AccentColor');
+      ARGB := R.ReadCardinal('AccentColor');
       Result := ARGB mod $FF000000; //  ARGB to RGB
     end;
   finally
@@ -79,6 +82,11 @@ begin
    SetLength(Result, nSize-1)
  else
    RaiseLastOSError;
+end;
+
+function IsStringAlphaNumeric(const S: string): Boolean;
+begin
+  Result := TRegEx.IsMatch(S, '^[a-zA-Z0-9]+$');
 end;
 
 function GetFileSize(FileName: WideString): Int64;
@@ -133,28 +141,28 @@ begin
 end;
 
 
-function GetUserShellLocation(ShellLocation: FXUserShellLocation): string;
+function GetUserShellLocation(ShellLocation: FXUserShell): string;
 var
   RegString, RegValue: string;
 begin
   case ShellLocation of
-    shlUser: Exit( ReplaceWinPath('%USERPROFILE%') );
-    shlAppData: RegValue := 'AppData';
-    shlAppDataLocal: RegValue := 'Local AppData';
-    shlDocuments: RegValue := 'Personal';
-    shlPictures: RegValue := 'My Pictures';
-    shlDesktop: RegValue := 'Desktop';
-    shlMusic: RegValue := 'My Music';
-    shlVideos: RegValue := 'My Video';
-    shlNetwork: RegValue := 'NetHood';
-    shlRecent: RegValue := 'Recent';
-    shlStartMenu: RegValue := 'Start Menu';
-    shlPrograms: RegValue := 'Programs';
-    shlStartup: RegValue := 'Startup';
-    shlDownloads: RegValue := '{374DE290-123F-4565-9164-39C4925E467B}';
+    FXUserShell.User: Exit( ReplaceWinPath('%USERPROFILE%') );
+    FXUserShell.AppData: RegValue := 'AppData';
+    FXUserShell.AppDataLocal: RegValue := 'Local AppData';
+    FXUserShell.Documents: RegValue := 'Personal';
+    FXUserShell.Pictures: RegValue := 'My Pictures';
+    FXUserShell.Desktop: RegValue := 'Desktop';
+    FXUserShell.Music: RegValue := 'My Music';
+    FXUserShell.Videos: RegValue := 'My Video';
+    FXUserShell.Network: RegValue := 'NetHood';
+    FXUserShell.Recent: RegValue := 'Recent';
+    FXUserShell.StartMenu: RegValue := 'Start Menu';
+    FXUserShell.Programs: RegValue := 'Programs';
+    FXUserShell.Startup: RegValue := 'Startup';
+    FXUserShell.Downloads: RegValue := '{374DE290-123F-4565-9164-39C4925E467B}';
   end;
 
-  RegString := FXRegistry.GetStringValue(RegValue, 'Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders', HKEY_CURRENT_USER, false);
+  RegString := FXQuickReg.GetStringValue('HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders', RegValue);
 
   Result := ReplaceWinPath(RegString);
 end;
@@ -238,7 +246,7 @@ begin
     end;
 end;
 begin
-  Result := dftText;
+  Result := TFileType.Text;
 
   // Get File
   HexArray := GetFileBytesString( FileName, MAX_READ_BUFF );
@@ -257,82 +265,82 @@ begin
 
   (* Picture Types *)
   if HasSignature(HEX, BMP_SIGN) then
-    Exit( dftBMP );
+    Exit( TFileType.BMP );
 
   if HasSignature(HEX, PNG_SIGN) then
-    Exit( dftPNG );
+    Exit( TFileType.PNG );
 
   if HasSignature(HEX, JPEG_SIGN) then
-    Exit( dftJPEG );
+    Exit( TFileType.JPEG );
 
   if HasSignature(HEX, GIF_SIGN) then
-    Exit( dftGIF );
+    Exit( TFileType.GIF );
 
   if HasSignature(HEX, TIFF_SIGN) then
-    Exit( dftTIFF );
+    Exit( TFileType.TIFF );
 
   (* Video/Audio Media *)
   if HasSignature(HEX, MP3_SIGN) then
-    Exit( dftMP3 );
+    Exit( TFileType.MP3 );
 
   if HasSignature(HEX, FLAC_SIGN) then
-    Exit( dftFlac );
+    Exit( TFileType.Flac );
 
   if HasSignature(HEX, MDI_SIGN) then
-    Exit( dftMDI );
+    Exit( TFileType.MDI );
 
   if HasSignature(HEX, OGG_SIGN) then
-    Exit( dftOGG );
+    Exit( TFileType.OGG );
 
   if HasSignature(HEX, SND_SIGN) then
-    Exit( dftSND );
+    Exit( TFileType.SND );
 
   if HasSignature(HEX, M3U8_SIGN) then
-    Exit( dftM3U8 );
+    Exit( TFileType.M3U8 );
 
   (* Executable *)
   if HasSignature(HEX, EXE_SIGN) then
-    Exit( dftEXE );
+    Exit( TFileType.EXE );
 
   if HasSignature(HEX, MSI_SIGN) then
-    Exit( dftMSI );
+    Exit( TFileType.MSI );
 
   (* Zip *)
   if HasSignature(HEX, ZIP_SIGN) then
-    Exit( dftZip );
+    Exit( TFileType.Zip );
 
   if HasSignature(HEX, GZIP_SIGN) then
-    Exit( dftGZip );
+    Exit( TFileType.GZip );
 
   if HasSignature(HEX, ZIP7_SIGN) then
-    Exit( dft7Zip );
+    Exit( TFileType.Zip7 );
 
   if HasSignature(HEX, CABINET_SIGN) then
-    Exit( dftCabinet );
+    Exit( TFileType.Cabinet );
 
   if HasSignature(HEX, TAR_SIGN) then
-    Exit( dftTAR );
+    Exit( TFileType.TAR );
 
   if HasSignature(HEX, RAR_SIGN) then
-    Exit( dftRAR );
+    Exit( TFileType.RAR );
 
   if HasSignature(HEX, LZIP_SIGN) then
-    Exit( dftLZIP );
+    Exit( TFileType.LZIP );
 
   (* ISO *)
   if HasSignature(HEX, ISO_SIGN) then
-    Exit( dftISO );
+    Exit( TFileType.ISO );
 
   (* PDF *)
   if HasSignature(HEX, PDF_SIGN) then
-    Exit( dftPDF );
+    Exit( TFileType.PDF );
 
   (* Help File *)
   if HasSignature(HEX, HLP_SIGN) then
-    Exit( dftHLP );
+    Exit( TFileType.HLP );
 
   if HasSignature(HEX, CHM_SIGN) then
-    Exit( dftCHM );
+    Exit( TFileType.CHM );
 end;
 
 

@@ -18,8 +18,8 @@ unit CFX.VarHelpers;
 interface
   uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, IdHTTP,
-  VCL.Graphics, Winapi.ActiveX, URLMon, IOUtils, System.Generics.Collections,
-  System.Generics.Defaults, Vcl.Imaging.pngimage,
+  VCL.Graphics, Winapi.ActiveX, Winapi.URLMon, IOUtils, System.Generics.Collections,
+  System.Generics.Defaults, Vcl.Imaging.pngimage, CFX.UIConsts,
   WinApi.GdipObj, WinApi.GdipApi, Win.Registry, CFX.GDI, CFX.Types;
 
   type
@@ -52,6 +52,8 @@ interface
 
       procedure StretchDraw(DestRect, SrcRect: TRect; Bitmap: TBitmap; Opacity: Byte); overload;
       procedure StretchDraw(Rect: TRect; Graphic: TGraphic; Opacity: Byte); overload;
+
+      procedure DrawFocusedLine(ARect: TRect);
 
       procedure GDITint(Rectangle: TRect; Color: TColor; Opacity: byte = 75);
       procedure GDIRectangle(Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen);
@@ -104,6 +106,16 @@ end;
 procedure TCanvasHelper.DrawHighQuality(ARect: TRect; Bitmap: TBitmap; Opacity: Byte = 255; HighQuality: Boolean = False);
 begin
   DrawBitmapHighQuality(Handle, ARect, Bitmap, Opacity, HighQuality);
+end;
+
+procedure TCanvasHelper.DrawFocusedLine(ARect: TRect);
+begin
+  Pen.Style := psSolid;
+  Pen.Color := clWhite;
+  Pen.Width := FOCUS_LINE_SIZE;
+  Brush.Style := bsClear;
+
+  RoundRect(ARect, GENERAL_ROUND, GENERAL_ROUND);
 end;
 
 procedure TCanvasHelper.DrawHighQuality(ARect: TRect; Graphic: TGraphic; Opacity: Byte = 255; HighQuality: Boolean = False);

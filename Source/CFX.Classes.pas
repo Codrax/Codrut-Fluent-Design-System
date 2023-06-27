@@ -28,7 +28,7 @@ interface
     private
       FEnabled: boolean;
 
-      FType: FXImageType;
+      FType: FXIconType;
       FPicture: TPicture;
       FBitMap: TBitMap;
       FSegoeText: string;
@@ -39,7 +39,7 @@ interface
 
     published
       property Enabled: boolean read FEnabled write FEnabled default False;
-      property IconType: FXImageType read FType write FType default fitSegoeIcon;
+      property IconType: FXIconType read FType write FType default FXIconType.SegoeIcon;
 
       property SelectPicture: TPicture read FPicture write SetPicture;
       property SelectBitmap: TBitMap read FBitMap write SetBitMap;
@@ -52,7 +52,7 @@ interface
 
       procedure Assign(Source: TPersistent); override;
 
-      procedure DrawIcon(Canvas: TCanvas; Rectangle: TRect);
+      procedure DrawIcon(Canvas: TCanvas; ARectangle: TRect);
 
       procedure FreeUnusedAssets;
     end;
@@ -84,7 +84,7 @@ begin
   FPicture := TPicture.Create;
   FBitMap := TBitMap.Create;
 
-  IconType := fitSegoeIcon;
+  IconType := FXIconType.SegoeIcon;
   FSegoeText := SEGOE_UI_STAR;
 end;
 
@@ -96,30 +96,44 @@ begin
   inherited;
 end;
 
-procedure FXIconSelect.DrawIcon(Canvas: TCanvas; Rectangle: TRect);
+procedure FXIconSelect.DrawIcon(Canvas: TCanvas; ARectangle: TRect);
 var
   TextDraw: string;
+  FontPrevious: TFont;
 begin
   case IconType of
-    fitImage: DrawImageInRect( Canvas, Rectangle, SelectPicture.Graphic, dmCenterFit );
-    fitBitMap: DrawImageInRect( Canvas, Rectangle, SelectBitmap, dmCenterFit );
-    fitImageList: (* Work In Progress;*);
-    fitSegoeIcon: begin
+    FXIconType.Image: DrawImageInRect( Canvas, ARectangle, SelectPicture.Graphic, FXDrawMode.CenterFit );
+    FXIconType.BitMap: DrawImageInRect( Canvas, ARectangle, SelectBitmap, FXDrawMode.CenterFit );
+    FXIconType.ImageList: (* Work In Progress;*);
+    FXIconType.SegoeIcon: begin
       TextDraw := SelectSegoe;
 
-      Canvas.Font.Name := ThemeManager.IconFont;
+      with Canvas do
+        begin
+          FontPrevious := TFont.Create;
+          try
+            FontPrevious.Assign(Font);
 
-      Canvas.TextRect( Rectangle, TextDraw, [tfSingleLine, tfCenter, tfVerticalCenter] )
+            // Draw
+            Font.Name := ThemeManager.IconFont;
+            Font.Height := GetMaxFontHeight(Canvas, TextDraw, ARectangle.Width, ARectangle.Height);
+            TextRect( ARectangle, TextDraw, [tfSingleLine, tfCenter, tfVerticalCenter] );
+
+            Font.Assign(FontPrevious);
+          finally
+            FontPrevious.Free;
+          end;
+        end;
     end;
   end;
 end;
 
 procedure FXIconSelect.FreeUnusedAssets;
 begin
-  if (IconType <> fitImage) and (FPicture <> nil) and (not FPicture.Graphic.Empty) then
+  if (IconType <> FXIconType.Image) and (FPicture <> nil) and (not FPicture.Graphic.Empty) then
     FPicture.Free;
 
-  if (IconType <> fitBitMap) and (FBitMap <> nil) and (not FBitMap.Empty) then
+  if (IconType <> FXIconType.BitMap) and (FBitMap <> nil) and (not FBitMap.Empty) then
     FBitMap.Free;
 end;
 

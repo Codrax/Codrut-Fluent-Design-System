@@ -67,7 +67,6 @@ contains
   CFX.Checkbox in 'Source\CFX.Checkbox.pas',
   CFX.Panels in 'Source\CFX.Panels.pas',
   CFX.StandardIcons in 'Source\CFX.StandardIcons.pas',
-  CFX.Slider in 'Source\CFX.Slider.pas',
   CFX.Math in 'Source\CFX.Math.pas',
   CFX.BlurMaterial in 'Source\CFX.BlurMaterial.pas',
   CFX.Registry in 'Source\CFX.Registry.pas',
@@ -77,8 +76,21 @@ contains
   CFX.PopupMenu in 'Source\CFX.PopupMenu.pas',
   CFX.PropertyEditors in 'Source\CFX.PropertyEditors.pas',
   CFX.Controls in 'Source\CFX.Controls.pas',
-  CFX.FontIcons in 'Source\CFX.FontIcons.pas';
+  CFX.FontIcons in 'Source\CFX.FontIcons.pas',
+  CFX.ImageList in 'Source\CFX.ImageList.pas',
+  CFX.Slider in 'Source\CFX.Slider.pas',
+  CFX.Hint in 'Source\CFX.Hint.pas',
+  CFX.Test in 'Source\CFX.Test.pas',
+  CFX.TypeInfo in 'Source\CFX.TypeInfo.pas',
+  CFX.Linker in 'Source\CFX.Linker.pas',
+  CFX.Labels in 'Source\CFX.Labels.pas',
+  CFX.StringUtils in 'Source\CFX.StringUtils.pas',
+  CFX.RadioButton in 'Source\CFX.RadioButton.pas',
+  CFX.ScrollBox in 'Source\CFX.ScrollBox.pas',
+  CFX.Scrollbar in 'Source\CFX.Scrollbar.pas',
+  CFX.Selector in 'Source\CFX.Selector.pas';
 
 end.
+
 
 

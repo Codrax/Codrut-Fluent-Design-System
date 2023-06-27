@@ -16,6 +16,7 @@ uses
   CFX.Classes,
   CFX.Types,
   CFX.Animations,
+  CFX.Linker,
   CFX.ThemeManager;
 
 type
@@ -35,6 +36,9 @@ type
     protected
       procedure Paint; override;
 
+      // Inherited
+      procedure Resize; override;
+
     published
       property CustomColors: FXColorSets read FCustomColors write FCustomColors;
       property AccentLine: boolean read FAccentLine write SetAccentLine default False;
@@ -44,9 +48,14 @@ type
       constructor Create(AOwner : TComponent); override;
       destructor Destroy; override;
 
+      // Draw
+      procedure DrawAccentLine; virtual;
+
       // Interface
       function IsContainer: Boolean;
       procedure UpdateTheme(const UpdateChildren: Boolean);
+
+      function Background: TColor;
   end;
 
   FXMinimisePanel = class(FXPanel, FXControl)
@@ -75,16 +84,16 @@ type
 
       FAutoCursor: boolean;
 
-
       FAnim: TIntAni;
       FAnGoTo, FAnStart: integer;
-      //FAnimTimer: TTimer;
 
       FDefaultHeight: integer;
 
+      // UI
       function TrimEdges: boolean;
       procedure AnimateTranzition;
 
+      // Set
       procedure SetState(AState: FXControlState);
       procedure SetHandleSize(const Value: integer);
       procedure SetHandleRound(const Value: integer);
@@ -98,7 +107,12 @@ type
     protected
       procedure Paint; override;
 
+      // Paint
       procedure PaintHandle;
+      procedure PaintAccentLine;
+
+      // Override
+      procedure Resize; override;
 
       procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
       procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
@@ -140,6 +154,9 @@ type
       constructor Create(AOwner : TComponent); override;
       destructor Destroy; override;
 
+      procedure DrawAccentLine; override;
+
+      // State
       procedure ToggleMinimised;
       procedure ChangeMinimised(Minimised: boolean);
 
@@ -147,6 +164,7 @@ type
       function IsContainer: Boolean;
       procedure UpdateTheme(const UpdateChildren: Boolean);
 
+      function Background: TColor;
   end;
 
 implementation
@@ -192,6 +210,8 @@ begin
       begin
         for I := 0 to ControlCount - 1 do
           Controls[I].Invalidate;
+
+        PaintHandle;
       end);
   end;
 
@@ -199,6 +219,14 @@ begin
   FAnim.FreeOnTerminate := false;
 
   FAnim.Start;
+end;
+
+function FXMinimisePanel.Background: TColor;
+begin
+  if FContentFill then
+    Result := FDrawColors.BackGroundInterior
+  else
+    Result := FDrawColors.BackGround;
 end;
 
 procedure FXMinimisePanel.ChangeMinimised(Minimised: boolean);
@@ -218,6 +246,8 @@ begin
   TabStop := true;
 
   FSkipRedrawFill := true;
+
+  FullRepaint := false;
 
   // Theme Manager building
   FCustomColors := FXCompleteColorSets.Create;
@@ -256,6 +286,11 @@ begin
 end;
 
 
+procedure FXMinimisePanel.DrawAccentLine;
+begin
+  // No nothing
+end;
+
 function FXMinimisePanel.IsContainer: Boolean;
 begin
   Result := true;
@@ -266,7 +301,7 @@ procedure FXMinimisePanel.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
 begin
   inherited;
   if FMouseInHandle then
-    SetState(FXControlState.csPress);
+    SetState(FXControlState.Press);
 end;
 
 procedure FXMinimisePanel.MouseMove(Shift: TShiftState; X, Y: Integer);
@@ -282,11 +317,11 @@ begin
         Cursor := crDefault;
     end;
 
-  if FMouseInHandle and (FControlState = csNone) then { Cant be csPress, as if you hold the button while dragging it will hide the effect! }
-    SetState(csHover)
+  if FMouseInHandle and (FControlState = FXControlState.None) then { Cant be csPress, as if you hold the button while dragging it will hide the effect! }
+    SetState(FXControlState.Hover)
       else
-        if (not FMouseInHandle) and (FControlState <> csNone) then
-          SetState(csNone)
+        if (not FMouseInHandle) and (FControlState <> FXControlState.None) then
+          SetState(FXControlState.None)
 end;
 
 procedure FXMinimisePanel.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
@@ -294,7 +329,7 @@ procedure FXMinimisePanel.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
 begin
   inherited;
 
-  SetState(FXControlState.csHover);
+  SetState(FXControlState.Hover);
 
   if FMouseInHandle then
     StartToggle;
@@ -353,6 +388,10 @@ begin
   TemporaryCanvas.Free;
 end;
 
+procedure FXMinimisePanel.PaintAccentLine;
+begin
+end;
+
 procedure FXMinimisePanel.PaintHandle;
 var
   tmp: TBitMap;
@@ -399,7 +438,7 @@ begin
 
       IconRect := Rect(MINIMISE_ICON_MARGIN, FHandleSize div 4, TLeft - MINIMISE_ICON_MARGIN, FHandleSize - FHandleSize div 4);
 
-      if FImage.IconType <> fitSegoeIcon then
+      if FImage.IconType <> FXIconType.SegoeIcon then
         FImage.DrawIcon(tmp.Canvas, IconRect)
       else
         begin
@@ -455,6 +494,12 @@ begin
   end;
 
   canvas.CopyRect(DrawRect, tmp.Canvas, DrawRect);
+end;
+
+procedure FXMinimisePanel.Resize;
+begin
+  inherited;
+  Repaint;
 end;
 
 procedure FXMinimisePanel.SetContentFill(const Value: boolean);
@@ -537,6 +582,8 @@ begin
   FControlState := AState;
 
   FSkipRedrawFill := true;
+
+  // Draw
   PaintHandle;
 end;
 
@@ -604,9 +651,16 @@ end;
 
 { FXPanel }
 
+function FXPanel.Background: TColor;
+begin
+  Result := FDrawColors.Background;
+end;
+
 constructor FXPanel.Create(AOwner: TComponent);
 begin
   inherited;
+
+  FullRepaint := false;
 
   FCustomColors := FXColorSets.Create();
   FDrawColors := FXColorSet.Create(ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
@@ -623,14 +677,8 @@ begin
   inherited;
 end;
 
-function FXPanel.IsContainer: Boolean;
+procedure FXPanel.DrawAccentLine;
 begin
-  Result := true;
-end;
-
-procedure FXPanel.Paint;
-begin
-
   if FAccentLine then
     with Canvas do
       begin
@@ -640,8 +688,25 @@ begin
         RoundRect( PANEL_LINE_SPACING, PANEL_LINE_SPACING, PANEL_LINE_SPACING + FLineWidth, Height - PANEL_LINE_SPACING,
                     PANEL_LINE_ROUND, PANEL_LINE_ROUND);
       end;
+end;
+
+function FXPanel.IsContainer: Boolean;
+begin
+  Result := true;
+end;
+
+procedure FXPanel.Paint;
+begin
+  DrawAccentLine;
 
   inherited;
+end;
+
+procedure FXPanel.Resize;
+begin
+  inherited;
+  if AccentLine and not FullRepaint then
+    DrawAccentLine;
 end;
 
 procedure FXPanel.SetAccentLine(const Value: boolean);

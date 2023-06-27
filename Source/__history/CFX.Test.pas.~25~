@@ -1,0 +1,547 @@
+unit CFX.Test;
+
+interface
+
+uses
+  Winapi.Messages, Winapi.Windows, System.SysUtils, Winapi.CommCtrl, Vcl.Forms, Vcl.Controls, Vcl.Menus,
+  Vcl.Graphics, Vcl.StdCtrls, Winapi.RichEdit, Vcl.ToolWin, Vcl.ImgList, System.Classes, Vcl.ExtCtrls, Vcl.ListActns,
+  Winapi.ShlObj, Vcl.Themes, Vcl.GraphUtil, System.UITypes, Vcl.ComCtrls, Vcl.Consts, Math;
+
+  type
+
+  TBetterTrackBar = class(TWinControl)
+  private
+    FOrientation: TTrackBarOrientation;
+    FTickMarks: TTickMark;
+    FTickStyle: TTickStyle;
+    FLineSize: Integer;
+    FPageSize: Integer;
+    FThumbLength: Integer;
+    FSliderVisible: Boolean;
+    FMin: Integer;
+    FMax: Integer;
+    FFrequency: Integer;
+    FPosition: Integer;
+    FPositionToolTip: TPositionToolTip;
+    FSelStart: Integer;
+    FSelEnd: Integer;
+    FShowSelRange: Boolean;
+    FOnChange: TNotifyEvent;
+    FOnTracking: TNotifyEvent;
+    class constructor Create;
+    class destructor Destroy;
+    function GetThumbLength: Integer;
+    procedure SetOrientation(Value: TTrackBarOrientation);
+    procedure SetParams(APosition, AMin, AMax: Integer);
+    procedure SetPosition(Value: Integer);
+    procedure SetMin(Value: Integer);
+    procedure SetMax(Value: Integer);
+    procedure SetFrequency(Value: Integer);
+    procedure SetTickStyle(Value: TTickStyle);
+    procedure SetTickMarks(Value: TTickMark);
+    procedure SetLineSize(Value: Integer);
+    procedure SetPageSize(Value: Integer);
+    procedure SetPositionToolTip(const Value: TPositionToolTip);
+    procedure SetThumbLength(Value: Integer);
+    procedure SetSliderVisible(Value: Boolean);
+    procedure SetSelStart(Value: Integer);
+    procedure SetSelEnd(Value: Integer);
+    procedure SetShowSelRange(const Value: Boolean);
+    procedure UpdateSelection;
+    procedure CMGestureManagerChanged(var Message: TMessage); message CM_GESTUREMANAGERCHANGED;
+    procedure CNHScroll(var Message: TWMHScroll); message CN_HSCROLL;
+    procedure CNNotify(var Message: TWMNotifyTRB); message CN_NOTIFY;
+    procedure CNVScroll(var Message: TWMVScroll); message CN_VSCROLL;
+    procedure WMEraseBkGnd(var Message: TWMEraseBkGnd); message WM_ERASEBKGND;
+  protected
+    procedure CreateParams(var Params: TCreateParams); override;
+    procedure ChangeScale(M, D: Integer; isDpiChange: Boolean); override;
+    procedure CreateWnd; override;
+    procedure DestroyWnd; override;
+    procedure Changed; dynamic;
+    procedure Tracking; virtual;
+  public
+    constructor Create(AOwner: TComponent); override;
+    procedure SetTick(Value: Integer);
+  published
+    property Align;
+    property Anchors;
+    property BorderWidth;
+    property Ctl3D;
+    property DoubleBuffered;
+    property DragCursor;
+    property DragKind;
+    property DragMode;
+    property Enabled;
+    property Constraints;
+    property LineSize: Integer read FLineSize write SetLineSize default 1;
+    property Max: Integer read FMax write SetMax default 10;
+    property Min: Integer read FMin write SetMin default 0;
+    property Orientation: TTrackBarOrientation read FOrientation write SetOrientation default trHorizontal;
+    property ParentCtl3D;
+    property ParentDoubleBuffered;
+    property ParentShowHint;
+    property PageSize: Integer read FPageSize write SetPageSize default 2;
+    property PopupMenu;
+    property Frequency: Integer read FFrequency write SetFrequency default 1;
+    property Position: Integer read FPosition write SetPosition default 0;
+    property PositionToolTip: TPositionToolTip read FPositionToolTip write SetPositionToolTip default ptNone;
+    property SliderVisible: Boolean read FSliderVisible write SetSliderVisible default True;
+    property SelEnd: Integer read FSelEnd write SetSelEnd default 0;
+    property SelStart: Integer read FSelStart write SetSelStart default 0;
+    property ShowHint;
+    property ShowSelRange: Boolean read FShowSelRange write SetShowSelRange default True;
+    property TabOrder;
+    property TabStop default True;
+    property ThumbLength: Integer read GetThumbLength write SetThumbLength default 20;
+    property TickMarks: TTickMark read FTickMarks write SetTickMarks default tmBottomRight;
+    property TickStyle: TTickStyle read FTickStyle write SetTickStyle default tsAuto;
+    property Touch;
+    property Visible;
+    property StyleElements;
+    property StyleName;
+    property OnContextPopup;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDock;
+    property OnEndDrag;
+    property OnEnter;
+    property OnExit;
+    property OnGesture;
+    property OnKeyDown;
+    property OnKeyPress;
+    property OnKeyUp;
+    property OnStartDock;
+    property OnStartDrag;
+    property OnTracking: TNotifyEvent read FOnTracking write FOnTracking;
+  end;
+
+implementation
+
+{ TBetterTrackBar }
+
+const
+  MaxAutoTicks = 10000;
+
+class constructor TBetterTrackBar.Create;
+begin
+  TCustomStyleEngine.RegisterStyleHook(TBetterTrackBar, TTrackBarStyleHook);
+end;
+
+constructor TBetterTrackBar.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  Width := 150;
+  Height := 45;
+  TabStop := True;
+  FMax := 10;
+  FLineSize := 1;
+  FPageSize := 2;
+  FPositionToolTip := ptNone;
+  FFrequency := 1;
+  FThumbLength := 20;
+  FTickMarks := tmBottomRight;
+  FTickStyle := tsAuto;
+  FOrientation := trHorizontal;
+  ControlStyle := ControlStyle - [csDoubleClicks, csGestures] + [csNeedsDesignDisabledState];
+  FSliderVisible := True;
+  FShowSelRange := True;
+end;
+
+class destructor TBetterTrackBar.Destroy;
+begin
+  TCustomStyleEngine.UnRegisterStyleHook(TTrackBar, TTrackBarStyleHook);
+end;
+
+procedure TBetterTrackBar.CreateParams(var Params: TCreateParams);
+const
+  OrientationStyle: array[TTrackBarOrientation] of DWORD = (TBS_HORZ, TBS_VERT);
+  TickStyles: array[Boolean, TTickStyle] of DWORD =
+    ((TBS_NOTICKS, TBS_AUTOTICKS, 0), (TBS_NOTICKS, 0, 0));
+  TickMarks: array[TTickMark] of DWORD = (TBS_BOTTOM, TBS_TOP, TBS_BOTH);
+var
+  LTickStyles: DWORD;
+begin
+  InitCommonControl(ICC_BAR_CLASSES);
+  inherited CreateParams(Params);
+  CreateSubClass(Params, TRACKBAR_CLASS);
+  // Ignore tsAuto if more than MaxAutoTicks in the track bar range.
+  // tsAuto is is ignored because the TRACKBAR_CLASS will paint,
+  // as many tick marks as you ask for. Too many an it appears
+  // the track bar has hung but it just painting very slowly. Since large
+  // ranges can be accidentally entered in the object inpsector we just
+  // have the control ignore them instead of hanging.
+  if Frequency <> 0 then
+    LTickStyles := TickStyles[(FMax - FMin) div Frequency > MaxAutoTicks, FTickStyle]
+  else
+    LTickStyles := TickStyles[(FMax - FMin) > MaxAutoTicks, FTickStyle];
+  with Params do
+  begin
+    Style := Style or OrientationStyle[FOrientation] or
+      LTickStyles or TickMarks[FTickMarks] or TBS_FIXEDLENGTH;
+    WindowClass.style := WindowClass.style and not (CS_HREDRAW or CS_VREDRAW) or
+      CS_DBLCLKS;
+    if not FSliderVisible then
+      Style := Style or TBS_NOTHUMB;
+    if FShowSelRange then
+      Style := Style or TBS_ENABLESELRANGE;
+    if FPositionToolTip <> ptNone then
+      Style := Style or TBS_TOOLTIPS;
+  end;
+end;
+
+procedure TBetterTrackBar.ChangeScale(M, D: Integer; isDpiChange: Boolean);
+begin
+  ThumbLength := MulDiv(FThumbLength, M, D);
+  inherited ChangeScale(M, D, isDpichange);
+end;
+
+{$IFDEF CLR}[UIPermission(SecurityAction.LinkDemand, Window=UIPermissionWindow.AllWindows)]{$ENDIF}
+procedure TBetterTrackBar.CreateWnd;
+const
+  APositionToolTip: array[TPositionToolTip] of DWORD = (0, TBTS_TOP, TBTS_LEFT,
+    TBTS_BOTTOM, TBTS_RIGHT);
+begin
+
+end;
+
+procedure TBetterTrackBar.DestroyWnd;
+begin
+  inherited DestroyWnd;
+end;
+
+procedure TBetterTrackBar.Tracking;
+begin
+  if Assigned(FOnTracking) then
+    FOnTracking(Self)
+end;
+
+procedure TBetterTrackBar.CMGestureManagerChanged(var Message: TMessage);
+begin
+  if not (csDestroying in ComponentState) then
+  begin
+    if (Touch.GestureManager <> nil) then
+      ControlStyle := ControlStyle + [csGestures]
+    else
+      ControlStyle := ControlStyle - [csGestures];
+    if HandleAllocated then
+      RecreateWnd;
+  end;
+end;
+
+procedure TBetterTrackBar.CNHScroll(var Message: TWMHScroll);
+begin
+  inherited;
+  var FOldPosition := FPosition;
+  FPosition := SendMessage(Handle, TBM_GETPOS, 0, 0);
+  if FPosition <> FOldPosition then
+    Changed;
+  Tracking;
+  Message.Result := 0;
+end;
+
+procedure TBetterTrackBar.CNVScroll(var Message: TWMVScroll);
+begin
+  inherited;
+  var FOldPosition := FPosition;
+  FPosition := SendMessage(Handle, TBM_GETPOS, 0, 0);
+  if FPosition <> FOldPosition then
+    Changed;
+  Tracking;
+  Message.Result := 0;
+end;
+
+function TBetterTrackBar.GetThumbLength: Integer;
+begin
+  if HandleAllocated then
+    Result := SendMessage(Handle, TBM_GETTHUMBLENGTH, 0, 0)
+  else
+    Result := FThumbLength;
+end;
+
+procedure TBetterTrackBar.SetOrientation(Value: TTrackBarOrientation);
+begin
+  if Value <> FOrientation then
+  begin
+    FOrientation := Value;
+    if ComponentState * [csLoading, csUpdating] = [] then
+      SetBounds(Left, Top, Height, Width);
+    RecreateWnd;
+  end;
+end;
+
+procedure TBetterTrackBar.SetParams(APosition, AMin, AMax: Integer);
+begin
+  if AMax < AMin then
+    raise EInvalidOperation.CreateFmt(SPropertyOutOfRange, [Self.Classname]);
+  if APosition < AMin then APosition := AMin;
+  if APosition > AMax then APosition := AMax;
+  if (AMax - AMin > MaxAutoTicks) <> (FMax - FMin > MaxAutoTicks) then
+  begin
+    FMin := AMin;
+    FMax := AMax;
+    RecreateWnd;
+  end;
+  if (FMin <> AMin) then
+  begin
+    FMin := AMin;
+    if HandleAllocated then
+      SendMessage(Handle, TBM_SETRANGEMIN, 1, AMin);
+  end;
+  if (FMax <> AMax) then
+  begin
+    FMax := AMax;
+    if HandleAllocated then
+      SendMessage(Handle, TBM_SETRANGEMAX, 1, AMax);
+  end;
+  if FPosition <> APosition then
+  begin
+    FPosition := APosition;
+    if HandleAllocated then
+      SendMessage(Handle, TBM_SETPOS, 1, APosition);
+    Changed;
+  end;
+end;
+
+procedure TBetterTrackBar.SetPosition(Value: Integer);
+begin
+  SetParams(Value, FMin, FMax);
+end;
+
+procedure TBetterTrackBar.SetMin(Value: Integer);
+begin
+  SetParams(FPosition, Value, System.Math.Max(Value, FMax));
+end;
+
+procedure TBetterTrackBar.SetMax(Value: Integer);
+begin
+  SetParams(FPosition, System.Math.Min(FMin, Value), Value);
+end;
+
+procedure TBetterTrackBar.SetFrequency(Value: Integer);
+begin
+  if Value <> FFrequency then
+  begin
+    FFrequency := Value;
+    if HandleAllocated then
+      SendMessage(Handle, TBM_SETTICFREQ, FFrequency, 1);
+  end;
+end;
+
+procedure TBetterTrackBar.SetTick(Value: Integer);
+begin
+  if HandleAllocated then
+    SendMessage(Handle, TBM_SETTIC, 0, Value);
+end;
+
+procedure TBetterTrackBar.SetTickStyle(Value: TTickStyle);
+begin
+  if Value <> FTickStyle then
+  begin
+    FTickStyle := Value;
+    RecreateWnd;
+  end;
+end;
+
+procedure TBetterTrackBar.SetTickMarks(Value: TTickMark);
+begin
+  if Value <> FTickMarks then
+  begin
+    FTickMarks := Value;
+    RecreateWnd;
+  end;
+end;
+
+procedure TBetterTrackBar.SetLineSize(Value: Integer);
+begin
+  if Value <> FLineSize then
+  begin
+    FLineSize := Value;
+    if HandleAllocated then
+      SendMessage(Handle, TBM_SETLINESIZE, 0, FLineSize);
+  end;
+end;
+
+procedure TBetterTrackBar.SetPageSize(Value: Integer);
+begin
+  if Value <> FPageSize then
+  begin
+    FPageSize := Value;
+    if HandleAllocated then
+      SendMessage(Handle, TBM_SETPAGESIZE, 0, FPageSize);
+  end;
+end;
+
+procedure TBetterTrackBar.SetPositionToolTip(const Value: TPositionToolTip);
+begin
+  if Value <> FPositionToolTip then
+  begin
+    FPositionToolTip := Value;
+    if not (csDesigning in ComponentState) then
+      RecreateWnd;
+  end;
+end;
+
+procedure TBetterTrackBar.SetThumbLength(Value: Integer);
+begin
+  if Value <> FThumbLength then
+  begin
+    FThumbLength := Value;
+    if HandleAllocated then
+      SendMessage(Handle, TBM_SETTHUMBLENGTH, Value, 0);
+  end;
+end;
+
+procedure TBetterTrackBar.SetSliderVisible(Value: Boolean);
+begin
+  if FSliderVisible <> Value then
+  begin
+    FSliderVisible := Value;
+    RecreateWnd;
+  end;
+end;
+
+procedure TBetterTrackBar.SetShowSelRange(const Value: Boolean);
+begin
+  if Value <> FShowSelRange then
+  begin
+    FShowSelRange := Value;
+    RecreateWnd;
+  end;
+end;
+
+procedure TBetterTrackBar.UpdateSelection;
+begin
+  if HandleAllocated then
+  begin
+    if (FSelStart = 0) and (FSelEnd = 0) then
+      SendMessage(Handle, TBM_CLEARSEL, 1, 0)
+    else
+    begin
+      if FSelEnd < High(SmallInt) then
+        SendMessage(Handle, TBM_SETSEL, WPARAM(True), MakeLong(FSelStart, FSelEnd))
+      else
+      begin
+        SendMessage(Handle, TBM_SETSELSTART, WPARAM(False), FSelStart);
+        SendMessage(Handle, TBM_SETSELEND, WPARAM(True), FSelEnd);
+      end;
+    end;
+  end;
+end;
+
+procedure TBetterTrackBar.SetSelStart(Value: Integer);
+begin
+  if Value <> FSelStart then
+  begin
+    FSelStart := Value;
+    UpdateSelection;
+  end;
+end;
+
+procedure TBetterTrackBar.SetSelEnd(Value: Integer);
+begin
+  if Value <> FSelEnd then
+  begin
+    FSelEnd := Value;
+    UpdateSelection;
+  end;
+end;
+
+procedure TBetterTrackBar.Changed;
+begin
+  if Assigned(FOnChange) then FOnChange(Self);
+end;
+
+procedure TBetterTrackBar.CNNotify(var Message: TWMNotifyTRB);
+var
+  R: TRect;
+  Rgn: HRGN;
+  Details: TThemedElementDetails;
+  Offset: Integer;
+  LStyle: TCustomStyleServices;
+{$IFDEF CLR}
+  Info: TNMCustomDraw;
+{$ELSE}
+  Info: PNMCustomDraw;
+{$ENDIF}
+begin
+  LStyle := StyleServices(Self);
+  if LStyle.Enabled then
+  begin
+    with Message do
+      if NMHdr.code = NM_CUSTOMDRAW then
+      begin
+        Info := NMCustomDraw;
+        case Info.dwDrawStage of
+          CDDS_PREPAINT:
+            Result := CDRF_NOTIFYITEMDRAW;
+          CDDS_ITEMPREPAINT:
+            begin
+{$IFDEF CLR}
+              case Info.dwItemSpec.ToInt64 of
+{$ELSE}
+              case Info.dwItemSpec of
+{$ENDIF}
+                TBCD_TICS:
+                  begin
+                    R := ClientRect;
+                    if Focused and ((Perform(WM_QUERYUISTATE, 0, 0) and UISF_HIDEFOCUS) = 0) then
+                      InflateRect(R, -1, -1);
+                    LStyle.DrawParentBackground(Handle, Info.hDC, nil, False, R)
+                  end;
+                TBCD_CHANNEL:
+                  begin
+                    SendGetStructMessage(Handle, TBM_GETTHUMBRECT, 0, R);
+                    Offset := 0;
+                    if Focused then
+                      Inc(Offset);
+                    if Orientation = trHorizontal then
+                    begin
+                      R.Left := ClientRect.Left + Offset;
+                      R.Right := ClientRect.Right - Offset;
+                    end
+                    else
+                    begin
+                      R.Top := ClientRect.Top + Offset;
+                      R.Bottom := ClientRect.Bottom - Offset;
+                    end;
+                    with R do
+                      Rgn := CreateRectRgn(Left, Top, Right, Bottom);
+                    SelectClipRgn(Info.hDC, Rgn);
+                    Details := LStyle.GetElementDetails(ttbThumbTics);
+                    LStyle.DrawParentBackground(Handle, Info.hDC, Details, False);
+                    DeleteObject(Rgn);
+                    SelectClipRgn(Info.hDC, 0);
+                  end;
+              end;
+              Result := CDRF_DODEFAULT;
+            end;
+        else
+          Result := CDRF_DODEFAULT;
+        end;
+      end;
+  end
+  else
+    inherited;
+end;
+
+procedure TBetterTrackBar.WMEraseBkGnd(var Message: TWMEraseBkGnd);
+var
+  R: TRect;
+  LStyle: TCustomStyleServices;
+begin
+  LStyle := StyleServices(Self);
+  if LStyle.Enabled then
+  begin
+    R := ClientRect;
+    if Focused and ((Perform(WM_QUERYUISTATE, 0, 0) and UISF_HIDEFOCUS) = 0) then
+      InflateRect(R, -1, -1);
+    LStyle.DrawParentBackground(Handle, Message.DC, nil, False, R);
+    Message.Result := 1;
+  end
+  else
+    inherited;
+end;
+
+end.

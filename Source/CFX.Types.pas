@@ -1,42 +1,70 @@
 unit CFX.Types;
 
+{$SCOPEDENUMS ON}
+
 interface
   uses
     UITypes, Types, CFX.UIConsts, VCl.GraphUtil, Winapi.Windows,
     Classes, Vcl.Themes, Vcl.Controls, Vcl.Graphics,
-    SysUtils, GDIPAPI, GDIPOBJ;
+    SysUtils, Winapi.GDIPAPI, Winapi.GDIPOBJ;
 
   type
-    // Cardinals
-    TFileType = (dftText, dftBMP, dftPNG, dftJPEG, dftGIF, dftHEIC, dftTIFF,
-      dftMP3, dftMP4, dftFlac, dftMDI, dftOGG, dftSND, dftM3U8, dftEXE, dftMSI,
-      dftZip, dftGZip, dft7Zip, dftCabinet, dftTAR, dftRAR, dftLZIP, dftISO,
-      dftPDF, dftHLP, dftCHM);
+    // File Type
+    TFileType = (Text, BMP, PNG, JPEG, GIF, HEIC, TIFF,
+      MP3, MP4, Flac, MDI, OGG, SND, M3U8, EXE, MSI,
+      Zip, GZip, Zip7, Cabinet, TAR, RAR, LZIP, ISO,
+      PDF, HLP, CHM);
 
-    FXImageType = (fitImage, fitBitMap, fitImageList, fitSegoeIcon);
+    // Icon Type
+    FXIconType = (Image, BitMap, ImageList, SegoeIcon);
+
+    // FXPopupMenu
+    FXAnimateSelection = (Instant, Opacity, Linear, Square);
+
+    // FXCheckBox
+    FXCheckBoxState = (Checked, Unchecked, Grayed);
+
+    // FXBlurMaterial
+    FXGlassRefreshMode = (Manual, Timer);
+    FXBlurVersion = (WallpaperBlurred, Wallpaper, Screenshot, None);
+    TWallpaperSetting = (Fill, Fit, Stretch, Tile, Center, Span);
+
+    // FXStandardIcons
+    FXStandardIconType = (Checkmark, Error, Question, Information, Warning, Star, None);
+
+    // FXSlider
+    FXOrientation = (Horizontal, Vertical);
 
     // Graphics
-    TDrawMode = (dmFill, dmFit, dmStretch, dmCenter, dmCenterFill,
-                 dmCenter3Fill, dmCenterFit, dmNormal, dmTile);
+    FXDrawMode = (Fill, Fit, Stretch, Center, CenterFill,
+                 Center3Fill, CenterFit, Normal, Tile);
 
-    TCorners = (crTopLeft, crTopRight, crBottomLeft, crBottomRight);
+    FXTextFlag = (WordWrap, Top, VerticalCenter, Bottom, Left, Center, Right,
+                 NoClip, Auto);
+
+    FXDrawLayout = (Left, Top, Right, Bottom);
+    FXLayout = (Beginning, Center, Ending);
+
+    FXTextFlags= set of FXTextFlag;
+
+    FXCorners = (TopLeft, TopRight, BottomLeft, BottomRight);
 
     // Theme Color
-    FXColorType = (fctForeground, fctAccent, fctBackGround, fctContent);
-    FXDarkSetting = (fdsAuto, fdsForceDark, fdsForceLight);
+    FXColorType = (Foreground, Accent, BackGround, Content);
+    FXDarkSetting = (Auto, ForceDark, ForceLight);
 
     // File
-    FXUserShellLocation = (shlUser, shlAppData, shlAppDataLocal, shlDocuments,
-                      shlPictures, shlDesktop, shlMusic, shlVideos,
-                      shlNetwork, shlRecent, shlStartMenu, shlStartup,
-                      shlDownloads, shlPrograms);
+    FXUserShell = (User, AppData, AppDataLocal, Documents,
+                      Pictures, Desktop, Music, Videos,
+                      Network, Recent, StartMenu, Startup,
+                      Downloads, Programs);
 
     // Theme Change Detection
-    FXThemeType = (fttRedraw, fttColorization, fttAppTheme);
+    FXThemeType = (Redraw, Colorization, AppTheme);
     FXThemeChange = procedure(Sender: TObject; ThemeChange: FXThemeType; DarkTheme: boolean; Accent: TColor) of object;
 
     // Controls
-    FXControlState = (csNone, csHover, csPress);
+    FXControlState = (None, Hover, Press);
     FXControlOnPaint = procedure(Sender: TObject) of object;
 
     // Classes
@@ -59,6 +87,9 @@ interface
 
       procedure Create(P1, P2: TPoint);
 
+      procedure SetPercentage(Percentage: real);
+      procedure SwapPoints;
+
       procedure OffSet(const DX, DY: Integer);
 
       function Rect: TRect;
@@ -77,7 +108,7 @@ interface
         RoundBL,
         RoundBR: integer;
 
-        Corners: TCorners;
+        Corners: FXCorners;
 
         function Left: integer;
         function Right: integer;
@@ -102,9 +133,10 @@ interface
     end;
 
   { Type Functions }
-  function RoundRect(SRect: TRect; Rnd: integer): TRoundRect; overload;
-  function RoundRect(SRect: TRect; RndX, RndY: integer): TRoundRect; overload;
-  function RoundRect(X1, Y1, X2, Y2: integer; Rnd: integer): TRoundRect; overload;
+  function MakeRoundRect(SRect: TRect; Rnd: integer): TRoundRect; overload;
+  function MakeRoundRect(SRect: TRect; RndX, RndY: integer): TRoundRect; overload;
+  function MakeRoundRect(X1, Y1, X2, Y2: integer; Rnd: integer): TRoundRect; overload;
+  function Line(Point1, Point2: TPoint): TLine;
 
   { Color Conversion }
   function GetRGB(Color: TColor; Alpha: Byte = 255): FXRGBA; overload;
@@ -120,7 +152,7 @@ interface
 
 implementation
 
-function RoundRect(SRect: TRect; Rnd: integer): TRoundRect;
+function MakeRoundRect(SRect: TRect; Rnd: integer): TRoundRect;
 var
   rec: TRoundRect;
 begin
@@ -128,7 +160,7 @@ begin
   Result := rec;
 end;
 
-function RoundRect(SRect: TRect; RndX, RndY: integer): TRoundRect; overload;
+function MakeRoundRect(SRect: TRect; RndX, RndY: integer): TRoundRect; overload;
 var
   rec: TRoundRect;
 begin
@@ -136,12 +168,18 @@ begin
   Result := rec;
 end;
 
-function RoundRect(X1, Y1, X2, Y2: integer; Rnd: integer): TRoundRect;
+function MakeRoundRect(X1, Y1, X2, Y2: integer; Rnd: integer): TRoundRect;
 var
   rec: TRoundRect;
 begin
   rec.Create(Rect(X1, Y1, X2, Y2), Rnd);
   Result := rec;
+end;
+
+function Line(Point1, Point2: TPoint): TLine;
+begin
+  Result.Point1 := Point1;
+  Result.Point2 := Point2;
 end;
 
 function GetRGB(Color: TColor; Alpha: Byte): FXRGBA;
@@ -394,6 +432,26 @@ end;
 function TLine.Rect: TRect;
 begin
   Result := GetValidRect(Point1, Point2);
+end;
+
+procedure TLine.SetPercentage(Percentage: real);
+var
+  DistX, DistY: integer;
+begin
+  DistX := Point2.X - Point1.X;
+  DistY := Point2.Y - Point1.Y;
+
+  Point2.X := Point1.X + round(Percentage / 100 * DistX);
+  Point2.Y := Point1.Y + round(Percentage / 100 * DistY);
+end;
+
+procedure TLine.SwapPoints;
+var
+  ATemp: TPoint;
+begin
+  ATemp := Point1;
+  Point1 := Point2;
+  Point2 := ATemp;
 end;
 
 function TLine.Center: TPoint;

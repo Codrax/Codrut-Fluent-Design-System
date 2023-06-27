@@ -1,0 +1,11 @@
+unit CFX.Linker;
+
+interface
+  uses
+    Vcl.Graphics;
+
+    
+
+implementation
+
+end.

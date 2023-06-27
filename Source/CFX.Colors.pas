@@ -5,16 +5,28 @@ unit CFX.Colors;
 interface
 
 uses
-  Winapi.Windows, Vcl.Graphics, Types, UITypes, Classes, Vcl.Forms, Math,
-  CFX.Types, TypInfo;
+  Winapi.Windows,
+  Vcl.Graphics,
+  Types,
+  UITypes,
+  Classes,
+  SysUtils,
+  Vcl.Forms,
+  Math,
+  CFX.Types,
+  TypInfo,
+  CFX.TypeInfo,
+  CFX.Linker;
 
   type
     FXPersistentColor = class(TPersistent)
     private
       Owner : TPersistent;
 
+      procedure Updated;
+
     public
-      constructor Create(AOwner : TPersistent); overload; virtual;
+      constructor CreateOwner(AOwner : TPersistent); overload; virtual;
 
       procedure Assign(Source: TPersistent); override;
     end;
@@ -39,13 +51,15 @@ uses
         FDarkForeGroundPress: TColor;
 
         procedure SetStateColor(const Index: Integer; const Value: TColor);
+        procedure SetEnabled(const Value: boolean);
+
       public
         constructor Create;
 
         function GetColor(const DarkTheme, Foreground: boolean; State: FXControlState): TColor;
 
       published
-        property Enabled: boolean read FEnable write FEnable;
+        property Enabled: boolean read FEnable write SetEnabled;
 
         property Accent: TColor read FAccent write FAccent;
         property LightBackgroundNone: TColor index 0 read FLightBackGroundNone write SetStateColor;
@@ -74,6 +88,7 @@ uses
         FForeGroundNone,
         FForeGroundHover,
         FForeGroundPress: TColor;
+
       public
         constructor Create; overload;
         constructor Create(AFrom: FXColorStateSets; const DarkColor: boolean); overload;
@@ -140,7 +155,7 @@ uses
         constructor Create(Colors: FXSingleColorStateSets; const DarkTheme: boolean = false); overload;
 
         procedure SetStateColor(const Index: Integer; const Value: TColor);
-        function GetColor(const State: FXControlState): TColor;
+        function GetColor(const AState: FXControlState): TColor;
 
         procedure CopyFrom(FromSet: FXSingleColorStateSet);
 
@@ -163,17 +178,21 @@ uses
         FDarkBackGround,
         FDarkForeground: TColor;
 
+        procedure WriteColorValue(const Index: Integer; const Value: TColor);
+        procedure SetEnable(const Value: boolean);
+
       public
-        constructor Create(FocusControl: boolean = false);
+        constructor Create(FocusControl: boolean = false); overload;
+        constructor Create(AOwner: TPersistent; FocusControl: boolean = false); overload;
 
       published
-        property Enabled: boolean read FEnable write FEnable;
+        property Enabled: boolean read FEnable write SetEnable;
 
-        property Accent: TColor read FAccent write FAccent;
-        property LightBackGround: TColor read FLightBackGround write FLightBackGround;
-        property LightForeGround: TColor read FLightForeGround write FLightForeGround;
-        property DarkBackGround: TColor read FDarkBackGround write FDarkBackGround;
-        property DarkForeGround: TColor read FDarkForeground write FDarkForeground;
+        property Accent: TColor index 0 read FAccent write WriteColorValue;
+        property LightBackGround: TColor index 1 read FLightBackGround write WriteColorValue;
+        property LightForeGround: TColor index 2 read FLightForeGround write WriteColorValue;
+        property DarkBackGround: TColor index 3 read FDarkBackGround write WriteColorValue;
+        property DarkForeGround: TColor index 4 read FDarkForeground write WriteColorValue;
     end;
 
     // Interited from Basic Color Sets
@@ -181,14 +200,17 @@ uses
       private
         FLightBackGroundInterior,
         FDarkBackGroundInterior: TColor;
+        procedure SetDarkBackGroundInterior(const Value: TColor);
+        procedure SetLightBackGroundInterior(const Value: TColor);
 
       public
-        constructor Create;
+        constructor Create; overload;
+        constructor Create(AOwner: TPersistent); overload;
 
       published
-        property LightBackGroundInterior: TColor read FLightBackGroundInterior write FLightBackGroundInterior;
+        property LightBackGroundInterior: TColor read FLightBackGroundInterior write SetLightBackGroundInterior;
         //
-        property DarkBackGroundInterior: TColor read FDarkBackGroundInterior write FDarkBackGroundInterior;
+        property DarkBackGroundInterior: TColor read FDarkBackGroundInterior write SetDarkBackGroundInterior;
     end;
 
     { Single Color Set with one option }
@@ -200,10 +222,12 @@ uses
 
       public
         constructor Create; overload;
-        constructor Create(AAccent, ABackGround, AForeGround: TColor); overload;
+        constructor Create(AOwner: TPersistent); overload;
         constructor Create(Colors: FXColorSets; const DarkColor: boolean = false); overload;
+        constructor Create(AOwner: TPersistent; Colors: FXColorSets; const DarkColor: boolean = false); overload;
 
         procedure UpdateSource;
+        procedure LoadFrom(Colors: FXColorSets; const DarkColor: boolean = false);
 
       published
         property Accent: TColor read FAccent write FAccent;
@@ -220,20 +244,21 @@ uses
         constructor Create(Colors: FXCompleteColorSets; DarkColor: boolean = false); overload;
 
         procedure UpdateSource;
+        procedure LoadFrom(Colors: FXCompleteColorSets; const DarkColor: boolean = false); overload;
 
       published
         property BackGroundInterior: TColor read FBackGroundInterior write FBackGroundInterior;
     end;
 
-  // Color Functions
+  (* Extract Color is in CFX.ThemeManager! *)
+
+  // Color Manipulation
   function ChangeColorLight( clr: TColor; changeby: integer ): TColor;
   function GetColorLight( clr: TColor ): integer;
   function GetColorGrayScale( clr: TColor ): TColor;
   function GetTextColorFromBackground(BackGround: TColor): TColor;
   function ColorBlend(Color1, Color2: TColor; A: Byte): TColor;
   function GetMaxFontSize(Canvas: TCanvas; Text: string; MaxWidth, MaxHeight: Integer): integer;
-  procedure GradHorizontal(Canvas:TCanvas; Rect:TRect; FromColor, ToColor:TColor);
-  procedure GradVertical(Canvas:TCanvas; Rect:TRect; FromColor, ToColor:TColor);
   procedure PrepareCustomTitleBar(var TitleBar: TForm; const Background: TColor; Foreground: TColor);
 
   const
@@ -329,22 +354,17 @@ end;
 
 function ColorBlend(Color1, Color2: TColor; A: Byte): TColor;
 var
-  c1, c2: LongInt;
-  r, g, b, v1, v2: byte;
+  RGB1, RGB2: FXRGBA;
+  R, G, B: Byte;
 begin
-  A:= Round(2.55 * A);
-  c1 := ColorToRGB(Color1);
-  c2 := ColorToRGB(Color2);
-  v1:= Byte(c1);
-  v2:= Byte(c2);
-  r:= A * (v1 - v2) shr 8 + v2;
-  v1:= Byte(c1 shr 8);
-  v2:= Byte(c2 shr 8);
-  g:= A * (v1 - v2) shr 8 + v2;
-  v1:= Byte(c1 shr 16);
-  v2:= Byte(c2 shr 16);
-  b:= A * (v1 - v2) shr 8 + v2;
-  Result := (b shl 16) + (g shl 8) + r;
+  RGB1.FromColor(Color1);
+  RGB2.FromColor(Color2);
+
+  R := RGB1.R + (RGB2.R - RGB1.R) * A div 255;
+  G := RGB1.G + (RGB2.G - RGB1.G) * A div 255;
+  B := RGB1.B + (RGB2.B - RGB1.B) * A div 255;
+
+  Result := RGB(R, G, B);
 end;
 
 function GetMaxFontSize(Canvas: TCanvas; Text: string; MaxWidth, MaxHeight: Integer): integer;
@@ -367,94 +387,6 @@ begin
   until ((Ext.cx <= MaxWidth) and (Ext.cy <= MaxHeight)) or (Canvas.Font.Size = 1);
 
   Result := Canvas.Font.Size;
-end;
-
-procedure GradHorizontal(Canvas:TCanvas; Rect:TRect; FromColor, ToColor:TColor);
-var
-   X: integer;
-   dr, dg, db:Extended;
-   r1, r2, g1, g2, b1, b2:Byte;
-   R, G, B:Byte;
-   cnt, csize:integer;
-begin
-  //Unpack Colors
-  tocolor := ColorToRGB(tocolor);
-  fromcolor := ColorToRGB(fromcolor);
-
-   R1 := GetRValue(FromColor) ;
-   G1 := GetGValue(FromColor) ;
-   B1 := GetBValue(FromColor) ;
-
-   R2 := GetRValue(ToColor) ;
-   G2 := GetGValue(ToColor) ;
-   B2 := GetBValue(ToColor) ;
-
-   // Calculate Width
-   csize := Rect.Right-Rect.Left;
-   if csize <= 0 then Exit;
-
-   // Get Color mdi
-   dr := (R2-R1) / csize;
-   dg := (G2-G1) / csize;
-   db := (B2-B1) / csize;
-
-   // Start Draw
-   cnt := 0;
-   for X := Rect.Left to Rect.Right-1 do
-   begin
-     R := R1+Ceil(dr*cnt) ;
-     G := G1+Ceil(dg*cnt) ;
-     B := B1+Ceil(db*cnt) ;
-
-     Canvas.Pen.Color := RGB(R,G,B) ;
-     Canvas.MoveTo(X,Rect.Top) ;
-     Canvas.LineTo(X,Rect.Bottom) ;
-     inc(cnt) ;
-   end;
-end;
-
-procedure GradVertical(Canvas:TCanvas; Rect:TRect; FromColor, ToColor:TColor);
-var
-   Y: integer;
-   dr, dg, db:Extended;
-   r1, r2, g1, g2, b1, b2:Byte;
-   R, G, B:Byte;
-   cnt, csize:integer;
-begin
-  //Unpack Colors
-  tocolor := ColorToRGB(tocolor);
-  fromcolor := ColorToRGB(fromcolor);
-
-   R1 := GetRValue(FromColor) ;
-   G1 := GetGValue(FromColor) ;
-   B1 := GetBValue(FromColor) ;
-
-   R2 := GetRValue(ToColor) ;
-   G2 := GetGValue(ToColor) ;
-   B2 := GetBValue(ToColor) ;
-
-   // Calculate Width
-   csize := Rect.Bottom-Rect.Top;
-   if csize <= 0 then Exit;
-
-   // Get Color mdi
-   dr := (R2-R1) / csize;
-   dg := (G2-G1) / csize;
-   db := (B2-B1) / csize;
-
-   // Start Draw
-   cnt := 0;
-   for Y := Rect.Top to Rect.Bottom-1 do
-   begin
-     R := R1+Ceil(dr*cnt) ;
-     G := G1+Ceil(dg*cnt) ;
-     B := B1+Ceil(db*cnt) ;
-
-     Canvas.Pen.Color := RGB(R,G,B) ;
-     Canvas.MoveTo(Rect.Left,Y) ;
-     Canvas.LineTo(Rect.Right,Y) ;
-     inc(cnt) ;
-   end;
 end;
 
 procedure PrepareCustomTitleBar(var TitleBar: TForm; const Background: TColor; Foreground: TColor);
@@ -498,21 +430,48 @@ constructor FXColorSets.Create(FocusControl: boolean);
 begin
   inherited Create;
 
-  Accent := DEFAULT_ACCENT_COLOR;
+  FAccent := DEFAULT_ACCENT_COLOR;
 
-  DarkForeGround := DEFAULT_DARK_FOREGROUND_COLOR;
-  LightForeGround := DEFAULT_LIGHT_FOREGROUND_COLOR;
+  FDarkForeGround := DEFAULT_DARK_FOREGROUND_COLOR;
+  FLightForeGround := DEFAULT_LIGHT_FOREGROUND_COLOR;
 
   if FocusControl then
     begin
-      DarkBackGround := DEFAULT_DARK_BACKGROUNDCONTROL_COLOR;
-      LightBackGround := DEFAULT_LIGHT_BACKGROUNDCONTROL_COLOR;
+      FDarkBackGround := DEFAULT_DARK_BACKGROUNDCONTROL_COLOR;
+      FLightBackGround := DEFAULT_LIGHT_BACKGROUNDCONTROL_COLOR;
     end
       else
     begin
-      DarkBackGround := DEFAULT_DARK_BACKGROUND_COLOR;
-      LightBackGround := DEFAULT_LIGHT_BACKGROUND_COLOR;
+      FDarkBackGround := DEFAULT_DARK_BACKGROUND_COLOR;
+      FLightBackGround := DEFAULT_LIGHT_BACKGROUND_COLOR;
     end;
+end;
+
+constructor FXColorSets.Create(AOwner: TPersistent; FocusControl: boolean);
+begin
+  CreateOwner(AOwner);
+  Create(FocusControl);
+end;
+
+procedure FXColorSets.SetEnable(const Value: boolean);
+begin
+  FEnable := Value;
+
+  Updated;
+end;
+
+procedure FXColorSets.WriteColorValue(const Index: Integer;
+  const Value: TColor);
+begin
+  case Index of
+    0: FAccent := Value;
+    1: FLightBackGround := Value;
+    2: FLightForeGround := Value;
+    3: FDarkBackGround := Value;
+    4: FDarkForeGround := Value;
+  end;
+
+  Updated;
 end;
 
 constructor FXColorSet.Create;
@@ -522,21 +481,23 @@ begin
   Accent := DEFAULT_ACCENT_COLOR;
 end;
 
-constructor FXColorSet.Create(AAccent, ABackGround, AForeGround: TColor);
-begin
-  inherited Create;
-
-  Accent := AAccent;
-
-  BackGround := ABackGround;
-  ForeGround := AForeGround;
-end;
-
 constructor FXColorSet.Create(Colors: FXColorSets; const DarkColor: boolean);
 begin
   inherited Create;
 
   // Load Colors from a complete color set
+  LoadFrom(Colors, DarkColor);
+end;
+
+constructor FXColorSet.Create(AOwner: TPersistent; Colors: FXColorSets;
+  const DarkColor: boolean);
+begin
+  Create(Colors, DarkColor);
+  CreateOwner(AOwner);
+end;
+
+procedure FXColorSet.LoadFrom(Colors: FXColorSets; const DarkColor: boolean);
+begin
   Accent := Colors.Accent;
 
   if DarkColor then
@@ -549,6 +510,12 @@ begin
       BackGround := Colors.LightBackGround;
       ForeGround := Colors.LightForeGround;
     end;
+end;
+
+constructor FXColorSet.Create(AOwner: TPersistent);
+begin
+  Create;
+  CreateOwner(AOwner);
 end;
 
 procedure FXColorSet.UpdateSource;
@@ -573,10 +540,29 @@ begin
   DarkBackGroundInterior := DEFAULT_DARK_BACKGROUNDCONTROL_COLOR;
 end;
 
+constructor FXCompleteColorSets.Create(AOwner: TPersistent);
+begin
+  Create;
+  CreateOwner(AOwner);
+end;
+
+procedure FXCompleteColorSets.SetDarkBackGroundInterior(const Value: TColor);
+begin
+  FDarkBackGroundInterior := Value;
+  Updated;
+end;
+
+procedure FXCompleteColorSets.SetLightBackGroundInterior(const Value: TColor);
+begin
+  FLightBackGroundInterior := Value;
+  Updated;
+end;
+
 { FXPersistentColor }
 
 procedure FXPersistentColor.Assign(Source: TPersistent);
 var
+  APropName: string;
   PropList: PPropList;
   PropCount, i: Integer;
 begin
@@ -589,7 +575,11 @@ begin
       try
         GetPropList(Source.ClassInfo, tkProperties, PropList);
         for i := 0 to PropCount - 1 do
-          SetPropValue(Self, string(PropList^[i]^.Name), GetPropValue(Source, string(PropList^[i]^.Name)));
+          begin
+            APropName := string(PropList^[i]^.Name);
+            if PropertyExists(Self, APropName) then
+              SetPropValue(Self, APropName, GetPropValue(Source, string(PropList^[i]^.Name)));
+          end;
       finally
         FreeMem(PropList);
       end;
@@ -599,10 +589,16 @@ begin
     inherited Assign(Source);
 end;
 
-constructor FXPersistentColor.Create(AOwner: TPersistent);
+constructor FXPersistentColor.CreateOwner(AOwner: TPersistent);
 begin
   inherited Create;
   Owner := AOwner;
+end;
+
+procedure FXPersistentColor.Updated;
+begin
+  if (Owner <> nil) and Supports(Owner, FXControl) and not (csReading in TComponent(Owner).ComponentState) then
+    (TComponent(Owner) as FXControl).UpdateTheme(true);
 end;
 
 { FXColorStateSet }
@@ -711,18 +707,18 @@ constructor FXSingleColorStateSet.Create(Colors: FXSingleColorStateSets;
 begin
   inherited Create;
 
-  None := Colors.GetColor(DarkTheme, csNone);
-  Hover := Colors.GetColor(DarkTheme, csHover);
-  Press := Colors.GetColor(DarkTheme, csPress);
+  None := Colors.GetColor(DarkTheme, FXControlState.None);
+  Hover := Colors.GetColor(DarkTheme, FXControlState.Hover);
+  Press := Colors.GetColor(DarkTheme, FXControlState.Press);
 end;
 
-function FXSingleColorStateSet.GetColor(const State: FXControlState): TColor;
+function FXSingleColorStateSet.GetColor(const AState: FXControlState): TColor;
 begin
   Result := 0;
-  case State of
-    csNone: Result := None;
-    csHover: Result := Hover;
-    csPress: Result := Press;
+  case AState of
+    FXControlState.None: Result := None;
+    FXControlState.Hover: Result := Hover;
+    FXControlState.Press: Result := Press;
   end;
 end;
 
@@ -792,8 +788,14 @@ constructor FXCompleteColorSet.Create(Colors: FXCompleteColorSets;
   DarkColor: boolean);
 begin
   inherited Create;
+  LoadFrom(Colors, DarkColor);
+end;
+
+procedure FXCompleteColorSet.LoadFrom(Colors: FXCompleteColorSets;
+  const DarkColor: boolean);
+begin
   // Inherited function for basic color
-  Self.Create(Colors as FXColorSets, DarkColor);
+  LoadFrom(Colors as FXColorSets, DarkColor);
 
   // Get by theme for Interior
   if DarkColor then
@@ -813,19 +815,19 @@ constructor FXColorStateSets.Create;
 begin
   Accent := DEFAULT_ACCENT_COLOR;
 
-  DarkBackGroundNone := DEFAULT_DARK_GRAY_CONTROL_COLOR;
-  DarkBackGroundHover := DEFAULT_DARK_GRAY_CONTROL_HOVER_COLOR;
-  DarkBackGroundPress := DEFAULT_DARK_GRAY_CONTROL_PRESS_COLOR;
-  DarkForeGroundNone := DEFAULT_DARK_GRAY_CONTROL_FONT_COLOR;
-  DarkForeGroundHover := DEFAULT_DARK_GRAY_CONTROL_HOVER_FONT_COLOR;
-  DarkForeGroundPress := DEFAULT_DARK_GRAY_CONTROL_PRESS_FONT_COLOR;
+  FDarkBackGroundNone := DEFAULT_DARK_GRAY_CONTROL_COLOR;
+  FDarkBackGroundHover := DEFAULT_DARK_GRAY_CONTROL_HOVER_COLOR;
+  FDarkBackGroundPress := DEFAULT_DARK_GRAY_CONTROL_PRESS_COLOR;
+  FDarkForeGroundNone := DEFAULT_DARK_GRAY_CONTROL_FONT_COLOR;
+  FDarkForeGroundHover := DEFAULT_DARK_GRAY_CONTROL_HOVER_FONT_COLOR;
+  FDarkForeGroundPress := DEFAULT_DARK_GRAY_CONTROL_PRESS_FONT_COLOR;
 
-  LightBackGroundNone := DEFAULT_LIGHT_GRAY_CONTROL_COLOR;
-  LightBackGroundHover := DEFAULT_LIGHT_GRAY_CONTROL_HOVER_COLOR;
-  LightBackGroundPress := DEFAULT_LIGHT_GRAY_CONTROL_PRESS_COLOR;
-  LightForeGroundNone := DEFAULT_LIGHT_GRAY_CONTROL_FONT_COLOR;
-  LightForeGroundHover := DEFAULT_LIGHT_GRAY_CONTROL_HOVER_FONT_COLOR;
-  LightForeGroundPress := DEFAULT_LIGHT_GRAY_CONTROL_PRESS_FONT_COLOR;
+  FLightBackGroundNone := DEFAULT_LIGHT_GRAY_CONTROL_COLOR;
+  FLightBackGroundHover := DEFAULT_LIGHT_GRAY_CONTROL_HOVER_COLOR;
+  FLightBackGroundPress := DEFAULT_LIGHT_GRAY_CONTROL_PRESS_COLOR;
+  FLightForeGroundNone := DEFAULT_LIGHT_GRAY_CONTROL_FONT_COLOR;
+  FLightForeGroundHover := DEFAULT_LIGHT_GRAY_CONTROL_HOVER_FONT_COLOR;
+  FLightForeGroundPress := DEFAULT_LIGHT_GRAY_CONTROL_PRESS_FONT_COLOR;
 end;
 
 function FXColorStateSets.GetColor(const DarkTheme, Foreground: boolean;
@@ -873,6 +875,13 @@ begin
   end;
 end;
 
+procedure FXColorStateSets.SetEnabled(const Value: boolean);
+begin
+  FEnable := Value;
+
+  Updated;
+end;
+
 procedure FXColorStateSets.SetStateColor(const Index: Integer;
   const Value: TColor);
 begin
@@ -914,6 +923,8 @@ begin
       if Value <> FDarkForeGroundPress then
         FDarkForeGroundPress := Value;
   end;
+
+  Updated;
 end;
 
 end.

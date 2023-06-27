@@ -66,6 +66,7 @@ type
       var FStep: Byte;
     function GetEndValue: Integer;
     function GetRunning: boolean;
+    procedure SetEndValue(const Value: Integer);
       var AniFunction: TAniFunction;
 
       FOnSync: TAniSyncProc;
@@ -78,6 +79,7 @@ type
       FDuration: Cardinal;
       FStartValue: Integer;
       FDeltaValue: Integer;
+      FPercent: real;
 
       function UpdateFunction: Boolean;
       procedure UpdateControl;
@@ -108,8 +110,11 @@ type
       property DelayStartTime: Cardinal read FDelayStartTime write FDelayStartTime default 0;
       property Duration: Cardinal read FDuration write FDuration default 400;
       property StartValue: Integer read FStartValue write FStartValue default 0;
-      property EndValue: Integer read GetEndValue;
+      property EndValue: Integer read GetEndValue write SetEndValue;
       property DeltaValue: Integer read FDeltaValue write FDeltaValue default 0;
+
+      // Read Only
+      property Percent: real read FPercent;
   end;
 
   TFloatAni = class(TThread)
@@ -129,6 +134,8 @@ type
       FDuration: Cardinal;
       FStartValue: Single;
       FDeltaValue: Integer;
+
+      FPercent: real;
 
       function UpdateFunction: Boolean;
       procedure UpdateControl;
@@ -157,6 +164,9 @@ type
       property Duration: Cardinal read FDuration write FDuration default 400;
       property StartValue: Single read FStartValue write FStartValue;
       property DeltaValue: Integer read FDeltaValue write FDeltaValue default 0;
+
+      // Read Only
+      property Percent: real read FPercent;
   end;
 
 implementation
@@ -312,6 +322,7 @@ begin
   for i := 1 to Step do
     begin
       t := i * TimePerStep;
+      FPercent := t / d;
       CurrentValue := b + Round(c * AniFunction(t / d));
       Synchronize(UpdateControl);
       Sleep(TimePerStep);
@@ -330,6 +341,11 @@ end;
 function TIntAni.GetRunning: boolean;
 begin
   Result := Started and not Finished;
+end;
+
+procedure TIntAni.SetEndValue(const Value: Integer);
+begin
+  DeltaValue := Value - StartValue;
 end;
 
 { PROCS }
@@ -518,6 +534,7 @@ begin
   for i := 1 to Step do
     begin
       t := i * TimePerStep;
+      FPercent := t / d;
       CurrentValue := b + Round(c * AniFunction(t / d));
       Synchronize(UpdateControl);
       Sleep(TimePerStep);

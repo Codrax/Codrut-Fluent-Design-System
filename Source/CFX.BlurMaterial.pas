@@ -4,7 +4,7 @@ interface
 
 uses
   SysUtils,
-  Windows,
+  Winapi.Windows,
   Classes,
   Types,
   Vcl.Controls,
@@ -25,17 +25,12 @@ uses
   CFX.GDI,
   CFX.Colors,
   CFX.Types,
+  CFX.Linker,
   Vcl.Imaging.GIFImg,
   Vcl.Imaging.pngimage,
   Vcl.Imaging.jpeg;
 
 type
-  FXGlassRefreshMode = (gdmManual, gdmTimer);
-
-  CBlurVersion = (bvWallpaperBlurred, bvWallpaper, bvScreenshot);
-
-  TWallpaperSetting = (wsFill, wsFit, wsStretch, wsTile, wsCenter, wsSpan);
-
   FXBlurMaterial = class(TGraphicControl, FXControl)
   private
     FPicture: TPicture;
@@ -44,7 +39,7 @@ type
     Tick: TTimer;
     FDrawing: Boolean;
     FInvalidateAbove: boolean;
-    FVersion: CBlurVersion;
+    FVersion: FXBlurVersion;
     FOnPaint: FXControlOnPaint;
 
     FDarkTintOpacity,
@@ -59,9 +54,9 @@ type
     procedure SetRefreshMode(const Value: FXGlassRefreshMode);
     procedure PictureChanged(Sender: TObject);
     procedure SetPicture(const Value: TPicture);
-    procedure SetVersion(const Value: CBlurVersion);
+    procedure SetVersion(const Value: FXBlurVersion);
 
-    function ImageTypeExists(ImgType: CBlurVersion): boolean;
+    function ImageTypeExists(ImgType: FXBlurVersion): boolean;
     procedure SetTinting(const Value: boolean);
     procedure SetDarkTint(const Value: integer);
     procedure SetWhiteTint(const Value: integer);
@@ -91,7 +86,7 @@ type
     property DragMode;
     property Enabled;
     property Picture: TPicture read FPicture write SetPicture;
-    property Version: CBlurVersion read FVersion write SetVersion;
+    property Version: FXBlurVersion read FVersion write SetVersion;
     property RefreshMode: FXGlassRefreshMode read FRefreshMode write SetRefreshMode;
     property InvalidateAbove: boolean read FInvalidateAbove write FInvalidateAbove;
     property ParentShowHint;
@@ -141,6 +136,8 @@ type
     // Interface
     function IsContainer: Boolean;
     procedure UpdateTheme(const UpdateChildren: Boolean);
+
+    function Background: TColor;
   end;
 
   procedure GetWallpaper;
@@ -178,7 +175,7 @@ var
 begin
   // Create registry
   R := TRegistry.Create(KEY_READ);
-  Result := TWallpaperSetting.wsStretch;
+  Result := TWallpaperSetting.Stretch;
   R.RootKey := HKEY_CURRENT_USER;
   try
     if R.OpenKeyReadOnly('Control Panel\Desktop') then
@@ -189,14 +186,14 @@ begin
         // Clear String
         case Value of
           0: if TileWallpaper then
-              Result := TWallpaperSetting.wsTile
+              Result := TWallpaperSetting.Tile
                 else
-                  Result := TWallpaperSetting.wsCenter;
-          2: Result := TWallpaperSetting.wsStretch;
-          6: Result := TWallpaperSetting.wsFit;
-          10: Result := TWallpaperSetting.wsFill;
-          22: Result := TWallpaperSetting.wsSpan;
-          else Result := wsStretch;
+                  Result := TWallpaperSetting.Center;
+          2: Result := TWallpaperSetting.Stretch;
+          6: Result := TWallpaperSetting.Fit;
+          10: Result := TWallpaperSetting.Fill;
+          22: Result := TWallpaperSetting.Span;
+          else Result := TWallpaperSetting.Stretch;
         end;
       end;
   finally
@@ -208,14 +205,14 @@ end;
 function GetWallpaperName(ScreenIndex: integer; TranscodedDefault: boolean): string;
 begin
   if GetNTKernelVersion <= 6.1 then
-    Result := GetUserShellLocation(shlAppData) + '\Microsoft\Windows\Themes\TranscodedWallpaper.jpg'
+    Result := GetUserShellLocation(FXUserShell.AppData) + '\Microsoft\Windows\Themes\TranscodedWallpaper.jpg'
   else
     begin
-      Result := GetUserShellLocation(shlAppData) + '\Microsoft\Windows\Themes\Transcoded_' +
+      Result := GetUserShellLocation(FXUserShell.AppData) + '\Microsoft\Windows\Themes\Transcoded_' +
         IntToStrIncludePrefixZeros(ScreenIndex, 3);
 
       if TranscodedDefault or not TFile.Exists(Result) then
-        Result := GetUserShellLocation(shlAppData) + '\Microsoft\Windows\Themes\TranscodedWallpaper';
+        Result := GetUserShellLocation(FXUserShell.AppData) + '\Microsoft\Windows\Themes\TranscodedWallpaper';
     end;
 end;
 
@@ -237,7 +234,7 @@ var
   TranscodedDefault: boolean;
 
   WallpaperSetting: TWallpaperSetting;
-  DrawMode: TDrawMode;
+  DrawMode: FXDrawMode;
 
   BitMap: TBitMap;
 begin
@@ -270,16 +267,16 @@ begin
 
   // Rects Draw Mode
   case WallpaperSetting of
-    wsFill: DrawMode := dmCenter3Fill;
-    wsFit: DrawMode := dmCenterFit;
-    wsStretch: DrawMode := dmStretch;
-    wsTile: DrawMode := dmTile;
-    wsCenter: DrawMode := dmCenter;
-    wsSpan: DrawMode := dmCenterFill;
-    else DrawMode := dmStretch;
+    TWallpaperSetting.Fill: DrawMode := FXDrawMode.Center3Fill;
+    TWallpaperSetting.Fit: DrawMode := FXDrawMode.CenterFit;
+    TWallpaperSetting.Stretch: DrawMode := FXDrawMode.Stretch;
+    TWallpaperSetting.Tile: DrawMode := FXDrawMode.Tile;
+    TWallpaperSetting.Center: DrawMode := FXDrawMode.Center;
+    TWallpaperSetting.Span: DrawMode := FXDrawMode.CenterFill;
+    else DrawMode := FXDrawMode.Stretch;
   end;
 
-  if WallpaperSetting = wsSpan then
+  if WallpaperSetting = TWallpaperSetting.Span then
     // Fill Image with Wallpaper
     begin
       // Single-File Extension
@@ -293,7 +290,7 @@ begin
         Exit;
 
       Wallpaper.LoadFromFile(FileName);
-      DrawImageInRect(WallpaperBlurred.Canvas, WallpaperBlurred.Canvas.ClipRect, Wallpaper, dmCenterFill);
+      DrawImageInRect(WallpaperBlurred.Canvas, WallpaperBlurred.Canvas.ClipRect, Wallpaper, FXDrawMode.CenterFill);
     end
   else
     // Complete Desktop Puzzle
@@ -324,7 +321,7 @@ begin
         DRects := GetDrawModeRects(DestRect, Wallpaper, DrawMode);
 
         // Draw
-        if WallpaperSetting in [wsFit, wsStretch] then
+        if WallpaperSetting in [TWallpaperSetting.Fit, TWallpaperSetting.Stretch] then
           for J := 0 to High(DRects) do
             WallpaperBlurred.Canvas.StretchDraw(DRects[J], Wallpaper, 255)
           else
@@ -365,7 +362,7 @@ begin
   QuickScreenShot( ScreenshotBlurred );
 
   // Effects
-  FastBlur(ScreenshotBlurred, 6, 8, false);
+  FastBlur(ScreenshotBlurred, 3, 8, false);
 
   // Time
   LastSyncTime := Now;
@@ -407,13 +404,13 @@ procedure CreateBySignature(var Wallpaper: TGraphic; Sign: TFileType);
 begin
   case Sign of
     { Png }
-    dftPNG: Wallpaper := TPngImage.Create;
+    TFileType.PNG: Wallpaper := TPngImage.Create;
 
     { Jpeg }
-    dftJPEG: Wallpaper := TJpegImage.Create;
+    TFileType.JPEG: Wallpaper := TJpegImage.Create;
 
     { Gif }
-    dftGIF: Wallpaper := TGifImage.Create;
+    TFileType.GIF: Wallpaper := TGifImage.Create;
 
     { Heif? }
     //dftHEIF: ;
@@ -447,6 +444,11 @@ end;
 
 
 { FXBlurMaterial }
+
+function FXBlurMaterial.Background: TColor;
+begin
+  Result := FDrawColors.Background;
+end;
 
 constructor FXBlurMaterial.Create(AOwner: TComponent);
 begin
@@ -483,7 +485,7 @@ begin
   // Settings
   FInvalidateAbove := false;
 
-  FVersion := bvWallpaperBlurred;
+  FVersion := FXBlurVersion.WallpaperBlurred;
 
   CustomColorGet;
 
@@ -547,13 +549,13 @@ begin
   Result := Self.Canvas;
 end;
 
-function FXBlurMaterial.ImageTypeExists(ImgType: CBlurVersion): boolean;
+function FXBlurMaterial.ImageTypeExists(ImgType: FXBlurVersion): boolean;
 begin
   Result := false;
   case ImgType of
-    bvWallpaperBlurred: Result := (WallpaperBlurred  <> nil) and (not WallpaperBlurred.Empty);
-    bvWallpaper: Result := (WallpaperBMP  <> nil) and (not WallpaperBMP.Empty);
-    bvScreenshot: Result := (ScreenshotBlurred  <> nil) and (not ScreenshotBlurred.Empty);
+    FXBlurVersion.WallpaperBlurred: Result := (WallpaperBlurred  <> nil) and (not WallpaperBlurred.Empty);
+    FXBlurVersion.Wallpaper: Result := (WallpaperBMP  <> nil) and (not WallpaperBMP.Empty);
+    FXBlurVersion.Screenshot: Result := (ScreenshotBlurred  <> nil) and (not ScreenshotBlurred.Empty);
   end;
 end;
 
@@ -597,7 +599,7 @@ var
 begin
   // Disable Timer After Successfull Draw
   if (not ImageTypeExists(Version)) and (not (csDesigning in ComponentState)) then
-    Tick.Enabled := RefreshMode = gdmTimer;
+    Tick.Enabled := RefreshMode = FXGlassRefreshMode.Timer;
 
   // Draw
   if csDesigning in ComponentState then
@@ -640,9 +642,9 @@ begin
 
           // Copy Rect
           case Version of
-            bvWallpaperBlurred: Pict.Canvas.CopyRect(DrawRect, WallpaperBlurred.Canvas, ImageRect);
-            bvWallpaper: Pict.Canvas.CopyRect(DrawRect, WallpaperBMP.Canvas, ImageRect);
-            bvScreenshot: Pict.Canvas.CopyRect(DrawRect, ScreenshotBlurred.Canvas, ImageRect);
+            FXBlurVersion.WallpaperBlurred: Pict.Canvas.CopyRect(DrawRect, WallpaperBlurred.Canvas, ImageRect);
+            FXBlurVersion.Wallpaper: Pict.Canvas.CopyRect(DrawRect, WallpaperBMP.Canvas, ImageRect);
+            FXBlurVersion.Screenshot: Pict.Canvas.CopyRect(DrawRect, ScreenshotBlurred.Canvas, ImageRect);
           end;
 
           // Draw
@@ -712,8 +714,8 @@ end;
 procedure FXBlurMaterial.RebuildImage;
 begin
   case Version of
-    bvWallpaperBlurred, bvWallpaper: GetWallpaper;
-    bvScreenshot: GetBlurredScreen( ThemeManager.DarkTheme );
+    FXBlurVersion.WallpaperBlurred, FXBlurVersion.Wallpaper: GetWallpaper;
+    FXBlurVersion.Screenshot: GetBlurredScreen( ThemeManager.DarkTheme );
   end;
 end;
 
@@ -746,7 +748,7 @@ begin
   FRefreshMode := Value;
 
   if not (csDesigning in ComponentState) then
-    Tick.Enabled := Value = gdmTimer;
+    Tick.Enabled := Value = FXGlassRefreshMode.Timer;
 end;
 
 procedure FXBlurMaterial.SetTinting(const Value: boolean);
@@ -756,7 +758,7 @@ begin
   Paint;
 end;
 
-procedure FXBlurMaterial.SetVersion(const Value: CBlurVersion);
+procedure FXBlurMaterial.SetVersion(const Value: FXBlurVersion);
 begin
   FVersion := Value;
 
@@ -777,9 +779,9 @@ begin
 
   // Check for different wallpaper
   case Version of
-    bvWallpaperBlurred, bvWallpaper: if (GetWallpaperSize <> LastDetectedFileSize) then
+    FXBlurVersion.WallpaperBlurred, FXBlurVersion.Wallpaper: if (GetWallpaperSize <> LastDetectedFileSize) then
       RebuildImage;
-    bvScreenshot: if (ScreenshotBlurred = nil) or (SecondsBetween(LastSyncTime, Now) > 1) then
+    FXBlurVersion.Screenshot: if (ScreenshotBlurred = nil) or (SecondsBetween(LastSyncTime, Now) > 1) then
       RebuildImage;
   end;
 

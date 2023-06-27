@@ -1,0 +1,13 @@
+unit CFX.Linker;
+
+interface
+  uses
+    Vcl.Graphics;
+
+  type
+    // Define Control type to identify on update
+    
+
+implementation
+
+end.

@@ -3,10 +3,25 @@ unit CFX.Forms;
 interface
 
 uses
-  SysUtils, Classes, Windows, CFX.ToolTip, Vcl.Forms, Vcl.Controls, Vcl.Graphics,
-  Vcl.Dialogs, Messages, CFX.ThemeManager, CFX.Colors, CFX.UIConsts,
-  Vcl.TitleBarCtrls, CFX.Animations, CFX.Utilities, Vcl.ExtCtrls, CFX.Classes,
-  CFX.Types;
+  SysUtils,
+  Classes,
+  Windows,
+  CFX.ToolTip,
+  Vcl.Forms,
+  Vcl.Controls,
+  Vcl.Graphics,
+  Vcl.Dialogs,
+  Messages,
+  CFX.ThemeManager,
+  CFX.Colors,
+  CFX.UIConsts,
+  Vcl.TitleBarCtrls,
+  CFX.Animations,
+  CFX.Utilities,
+  Vcl.ExtCtrls,
+  CFX.Classes,
+  CFX.Types,
+  CFX.Linker;
 
 type
   FXFormProcedure = procedure(Sender: TObject) of object;
@@ -14,6 +29,7 @@ type
   FXForm = class(TForm, FXControl)
     private
         FCustomColors: FXColorSets;
+        FDrawColors: FXColorSet;
 
         FFullScreen: Boolean;
 
@@ -56,6 +72,21 @@ type
 
       procedure DoShow; override;
 
+      procedure InitializeNewForm; override;
+
+    published
+      property MicaEffect: boolean read FMicaEffect write SetMicaEffect;
+      property SmokeEffect: boolean read FSmokeEffect write SetSmokeEffect;
+      property CustomColors: FXColorSets read FCustomColors write FCustomColors;
+      property AllowThemeChangeAnimation: boolean read FAllowThemeChangeAnim write FAllowThemeChangeAnim;
+      property FullScreen: Boolean read FFullScreen write SetFullScreen default false;
+
+      // On Change...
+      property OnMove: FXFormProcedure read FOnMove write FOnMove;
+
+      // Theming Engine
+      property OnThemeChange: FXThemeChange read FThemeChange write FThemeChange;
+
     public
       constructor Create(aOwner: TComponent); override;
       constructor CreateNew(aOwner: TComponent; Dummy: Integer = 0); override;
@@ -72,18 +103,7 @@ type
       function IsContainer: Boolean;
       procedure UpdateTheme(const UpdateChildren: Boolean);
 
-    published
-      property MicaEffect: boolean read FMicaEffect write SetMicaEffect;
-      property SmokeEffect: boolean read FSmokeEffect write SetSmokeEffect;
-      property CustomColors: FXColorSets read FCustomColors write FCustomColors;
-      property AllowThemeChangeAnimation: boolean read FAllowThemeChangeAnim write FAllowThemeChangeAnim;
-      property FullScreen: Boolean read FFullScreen write SetFullScreen default false;
-
-      // On Change...
-      property OnMove: FXFormProcedure read FOnMove write FOnMove;
-
-      // Theming Engine
-      property OnThemeChange: FXThemeChange read FThemeChange write FThemeChange;
+      function Background: TColor;
   end;
 
 
@@ -91,10 +111,17 @@ implementation
 
 { FXForm }
 
+function FXForm.Background: TColor;
+begin
+  Result := FDrawColors.Background;
+end;
+
 constructor FXForm.Create(aOwner: TComponent);
 begin
+  // Create Form and Components
   inherited;
 
+  // Initialise
   InitForm;
 end;
 
@@ -102,6 +129,7 @@ constructor FXForm.CreateNew(aOwner: TComponent; Dummy: Integer);
 begin
   inherited;
 
+  // Initialise
   InitForm;
 end;
 
@@ -150,6 +178,7 @@ end;
 destructor FXForm.Destroy;
 begin
   FCustomColors.Free;
+  FDrawColors.Free;
 
   inherited;
 end;
@@ -183,7 +212,6 @@ var
   I: Integer;
 begin
   // Settings
-  FCustomColors := FXColorSets.Create();
   Font.Name := ThemeManager.FormFont;
   Font.Height := ThemeManager.FormFontHeight;
 
@@ -201,6 +229,7 @@ begin
       goto skip_titlebar;
     end;
 
+  (* Scan for existing *)
   for I := 0 to ControlCount - 1 do
     if Controls[I] is TTitleBarPanel then
       begin
@@ -208,18 +237,30 @@ begin
         Break;
       end;
 
+  (*Create New*)
   if TTlCtrl = nil then
     begin
       TTlCtrl := TTitlebarPanel.Create(Self);
       TTlCtrl.Parent := Self;
     end;
 
+  (* Assign *)
+  if not Assigned(CustomTitleBar.Control) then
+    CustomTitleBar.Control := TTlCtrl;
+
   // Title Bar End
   skip_titlebar:
 
-  // Initialize Theme Manager
-  ThemeManager;
+  // Update Theme
   UpdateTheme(true);
+end;
+
+procedure FXForm.InitializeNewForm;
+begin
+  inherited;
+  // Create Classes
+  FCustomColors := FXColorSets.Create();
+  FDrawColors := FXColorSet.Create(ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
 end;
 
 function FXForm.IsContainer: Boolean;
@@ -340,59 +381,60 @@ end;
 procedure FXForm.UpdateTheme(const UpdateChildren: Boolean);
 var
   i: Integer;
-  PrevColor, FrmColor, FntColor: TColor;
+  PrevColor: TColor;
   a: TIntAni;
   ThemeReason: FXThemeType;
 begin
   // Update Colors
   if CustomColors.Enabled then
     begin
-      FrmColor := ExtractColor( CustomColors, FXColorType.fctBackGround );
-      FntColor := ExtractColor( CustomColors, FXColorType.fctForeground );
+      FDrawColors.Background := ExtractColor( CustomColors, FXColorType.BackGround );
+      FDrawColors.Foreground := ExtractColor( CustomColors, FXColorType.Foreground );
     end
   else
     begin
-      FrmColor := ThemeManager.SystemColor.BackGround;
-      FntColor := ThemeManager.SystemColor.ForeGround;
+      FDrawColors.Background := ThemeManager.SystemColor.BackGround;
+      FDrawColors.Foreground := ThemeManager.SystemColor.ForeGround;
     end;
 
   // Transizion Animation
   PrevColor := Self.Color;
 
   // Theme Change Engine
-  if PrevColor <> FrmColor then
-    ThemeReason := fttAppTheme
+  if PrevColor <> FDrawColors.Background then
+    ThemeReason := FXThemeType.AppTheme
   else
-    ThemeReason := fttRedraw;
+    ThemeReason := FXThemeType.Redraw;
 
   // Start Transition
   if Self.Visible and FAllowThemeChangeAnim then
     begin
-
-      a := TIntAni.Create(true, TAniKind.akIn, TAniFunctionKind.afkLinear, 0, 100,
+      a := TIntAni.Create(true, TAniKind.akIn, TAniFunctionKind.afkLinear, 25, 100,
       procedure (Value: integer)
       begin
-        Self.Color := ColorBlend(FrmColor, PrevColor, Value);
+        Self.Color := ColorBlend(PrevColor, FDrawColors.Background, Value);
 
         if FEnableTitlebar then
-          PrepareCustomTitleBar( TForm( Self ), Self.Color, FntColor );
+          PrepareCustomTitleBar( TForm( Self ), Self.Color, FDrawColors.Foreground );
       end,
       procedure
       begin
-        Self.Color := FrmColor;
+        Self.Color := FDrawColors.Background;
         if FEnableTitlebar then
-          PrepareCustomTitleBar( TForm( Self ), FrmColor, FntColor );
+          PrepareCustomTitleBar( TForm( Self ), FDrawColors.Background, FDrawColors.Foreground );
       end);
 
-      a.Duration := 80;
+      a.Duration := 200;
+      a.Step := 6;
+
 
       a.Start;
     end
       else
         begin
-          Self.Color := FrmColor;
+          Self.Color := FDrawColors.Background;
           if FEnableTitlebar then
-            PrepareCustomTitleBar( TForm( Self ), FrmColor, FntColor );
+            PrepareCustomTitleBar( TForm( Self ), FDrawColors.Background, FDrawColors.Foreground );
         end;
 
   //  Update tooltip style
@@ -403,7 +445,7 @@ begin
 
   // Legacy Control Support
   if ThemeManager.LegacyFontColor then
-    Font.Color := FntColor;
+    Font.Color := FDrawColors.Foreground;
 
   // Notify Theme Change
   if Assigned(FThemeChange) then
@@ -430,7 +472,7 @@ end;
 
 procedure FXForm.WM_DWMColorizationColorChanged(var Msg: TMessage);
 begin
-  ThemeManager.UpdateSettings;
+  ThemeManager.MeasuredUpdateSettings;
 
   UpdateTheme(true);
 end;
