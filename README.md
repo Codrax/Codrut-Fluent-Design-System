@@ -27,6 +27,9 @@ The component package is not at a state where it can be considered finished with
 ## Image Gallery
 > The following images are ALPHA versions of the component suite, the components are expected to change in the future.
 ![Screenshot 2023-06-27 213121](https://github.com/Codrax/CodrutFluentDesignSystem/assets/68193064/786e1e3f-8c57-405a-8abd-173887aa9b06)
+![ezgif com-video-to-gif(1)](https://github.com/Codrax/CodrutFluentDesignSystem/assets/68193064/8a3b3378-2c76-4baf-a1c2-84fa1748dc93)
+![Screenshot 2023-06-29 185725](https://github.com/Codrax/CodrutFluentDesignSystem/assets/68193064/24959e8c-b207-4d24-9bc2-3a46a6e8708b)
+![ezgif com-optimize](https://github.com/Codrax/CodrutFluentDesignSystem/assets/68193064/43419ec6-e583-455d-b113-34f49d9137d9)
 ![Screenshot_7](https://user-images.githubusercontent.com/68193064/215814322-41a0e245-af55-4e97-aaf2-75e81d25dd17.png)
 ![Screenshot 2023-04-07 200816](https://user-images.githubusercontent.com/68193064/230649040-7c1ccc50-8d72-46b7-afca-d07b734f2112.png)
 ![Screenshot 2023-06-27 212832](https://github.com/Codrax/CodrutFluentDesignSystem/assets/68193064/e54efb73-4f1f-4236-a632-6cbc1fd07664)
