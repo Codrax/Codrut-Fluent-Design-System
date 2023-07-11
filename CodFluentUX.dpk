@@ -88,7 +88,9 @@ contains
   CFX.RadioButton in 'Source\CFX.RadioButton.pas',
   CFX.ScrollBox in 'Source\CFX.ScrollBox.pas',
   CFX.Scrollbar in 'Source\CFX.Scrollbar.pas',
-  CFX.Selector in 'Source\CFX.Selector.pas';
+  CFX.Selector in 'Source\CFX.Selector.pas',
+  CFX.Edit in 'Source\CFX.Edit.pas',
+  CFX.PopupConnector in 'Source\CFX.PopupConnector.pas';
 
 end.
 

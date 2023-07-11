@@ -6,17 +6,17 @@ object Form1: TForm1
   ClientWidth = 757
   Color = clBtnFace
   CustomTitleBar.ShowIcon = False
+  DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clBlack
   Font.Height = -16
   Font.Name = 'Segoe UI'
   Font.Style = []
   Position = poScreenCenter
-  OnCreate = FormCreate
   TextHeight = 21
   object FXStandardIcon1: FXStandardIcon
     Left = 24
-    Top = 36
+    Top = 52
     Width = 37
     Height = 37
     CustomColors.Enabled = False
@@ -31,7 +31,7 @@ object Form1: TForm1
   end
   object FXStandardIcon2: FXStandardIcon
     Left = 67
-    Top = 36
+    Top = 52
     Width = 37
     Height = 37
     CustomColors.Enabled = False
@@ -46,7 +46,7 @@ object Form1: TForm1
   end
   object FXStandardIcon3: FXStandardIcon
     Left = 110
-    Top = 36
+    Top = 52
     Width = 37
     Height = 37
     CustomColors.Enabled = False
@@ -61,7 +61,7 @@ object Form1: TForm1
   end
   object FXStandardIcon4: FXStandardIcon
     Left = 153
-    Top = 36
+    Top = 52
     Width = 37
     Height = 37
     CustomColors.Enabled = False
@@ -76,7 +76,7 @@ object Form1: TForm1
   end
   object FXStandardIcon5: FXStandardIcon
     Left = 196
-    Top = 36
+    Top = 52
     Width = 37
     Height = 37
     CustomColors.Enabled = False
@@ -91,7 +91,7 @@ object Form1: TForm1
   end
   object FXStandardIcon6: FXStandardIcon
     Left = 239
-    Top = 36
+    Top = 52
     Width = 37
     Height = 37
     CustomColors.Enabled = False
@@ -104,10 +104,31 @@ object Form1: TForm1
     SelectedIcon = Warning
     PenWidth = 10
   end
+  object FXLabel2: FXLabel
+    Left = 312
+    Top = 80
+    Width = 78
+    Height = 23
+    Caption = 'Type here:'
+    Color = 15987699
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = 1776410
+    Font.Height = 24
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ParentColor = False
+    ParentFont = False
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+  end
   object FXButton1: FXButton
     Left = 24
-    Top = 93
-    Width = 121
+    Top = 109
+    Width = 125
     Height = 40
     Hint = 'Hello World!'
     OnClick = FXButton1Click
@@ -116,7 +137,7 @@ object Form1: TForm1
     Cancel = False
     ShowHint = True
     TabStop = True
-    TabOrder = 0
+    TabOrder = 1
     ParentColor = False
     UseManualColor = False
     Image.SelectSegoe = #59188
@@ -158,10 +179,10 @@ object Form1: TForm1
     State = mbsLeave
     FlatButton = False
     FlatComplete = False
-    Colors.Enter = 9717069
-    Colors.Leave = 8730174
-    Colors.Down = 7085349
-    Colors.BLine = 6098454
+    Colors.Enter = 3370495
+    Colors.Leave = 2383600
+    Colors.Down = 738775
+    Colors.BLine = 14024
     UnderLine.Enable = True
     UnderLine.UnderLineRound = True
     UnderLine.UnderLineThicknes = 6
@@ -182,9 +203,9 @@ object Form1: TForm1
   end
   object FXMinimisePanel1: FXMinimisePanel
     Left = 492
-    Top = 36
+    Top = 52
     Width = 257
-    Height = 240
+    Height = 200
     BevelOuter = bvNone
     Caption = '`'
     Color = 15987699
@@ -208,7 +229,7 @@ object Form1: TForm1
     CustomColors.DarkBackGroundInterior = clRed
     AccentLine = True
     AccentLineWidth = 8
-    DefaultHeight = 240
+    DefaultHeight = 200
     HandleCustomColors.Enabled = False
     HandleCustomColors.Accent = 13924352
     HandleCustomColors.LightBackgroundNone = 9145227
@@ -253,8 +274,8 @@ object Form1: TForm1
     end
     object FXButon2: FXButton
       Left = 8
-      Top = 96
-      Width = 110
+      Top = 144
+      Width = 115
       Height = 40
       Allignment = taCenter
       Default = False
@@ -302,10 +323,10 @@ object Form1: TForm1
       State = mbsLeave
       FlatButton = False
       FlatComplete = False
-      Colors.Enter = 9717069
-      Colors.Leave = 8730174
-      Colors.Down = 7085349
-      Colors.BLine = 6098454
+      Colors.Enter = 3370495
+      Colors.Leave = 2383600
+      Colors.Down = 738775
+      Colors.BLine = 14024
       UnderLine.Enable = True
       UnderLine.UnderLineRound = True
       UnderLine.UnderLineThicknes = 6
@@ -325,9 +346,9 @@ object Form1: TForm1
       Animations.FASpeed = 10
     end
     object FXButton2: FXButton
-      Left = 124
-      Top = 96
-      Width = 110
+      Left = 132
+      Top = 144
+      Width = 115
       Height = 40
       Allignment = taCenter
       Default = False
@@ -375,11 +396,11 @@ object Form1: TForm1
       State = mbsLeave
       FlatButton = True
       FlatComplete = False
-      Colors.Enter = 9717069
-      Colors.Leave = 8730174
-      Colors.Down = 7085349
-      Colors.BLine = 6098454
-      UnderLine.Enable = True
+      Colors.Enter = 3370495
+      Colors.Leave = 2383600
+      Colors.Down = 738775
+      Colors.BLine = 14024
+      UnderLine.Enable = False
       UnderLine.UnderLineRound = True
       UnderLine.UnderLineThicknes = 6
       TextColors.Enter = clWhite
@@ -402,20 +423,20 @@ object Form1: TForm1
     Left = 0
     Top = 0
     Width = 757
-    Height = 22
+    Height = 30
     CustomButtons = <>
   end
   object FXButton3: FXButton
-    Left = 151
-    Top = 93
-    Width = 114
+    Left = 155
+    Top = 109
+    Width = 125
     Height = 40
     OnClick = FXButton3Click
     Allignment = taCenter
     Default = False
     Cancel = False
     TabStop = True
-    TabOrder = 1
+    TabOrder = 4
     ParentColor = False
     UseManualColor = False
     Image.Enabled = True
@@ -459,10 +480,10 @@ object Form1: TForm1
     State = mbsLeave
     FlatButton = False
     FlatComplete = False
-    Colors.Enter = 9717069
-    Colors.Leave = 8730174
-    Colors.Down = 7085349
-    Colors.BLine = 6098454
+    Colors.Enter = 3370495
+    Colors.Leave = 2383600
+    Colors.Down = 738775
+    Colors.BLine = 14024
     UnderLine.Enable = True
     UnderLine.UnderLineRound = True
     UnderLine.UnderLineThicknes = 6
@@ -483,8 +504,8 @@ object Form1: TForm1
   end
   object FXSlider1: FXSlider
     Left = 24
-    Top = 208
-    Width = 225
+    Top = 224
+    Width = 233
     Height = 49
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
@@ -494,16 +515,17 @@ object Form1: TForm1
     CustomColors.DarkForeGround = clWhite
     CustomColors.LightBackGroundInterior = 16514043
     CustomColors.DarkBackGroundInterior = 2829099
-    Position = 3
+    Position = 4
     Max = 5
     TotalTicks = 6
     ParentColor = False
+    ShowHint = True
     TabStop = True
     TabOrder = 5
   end
   object FXCheckBox1: FXCheckBox
     Left = 24
-    Top = 160
+    Top = 176
     Width = 180
     Height = 30
     CustomColors.Enabled = False
@@ -529,12 +551,12 @@ object Form1: TForm1
     WordWrap = False
     AnimationEnabled = True
     TabStop = True
-    TabOrder = 4
+    TabOrder = 6
     ParentColor = False
   end
   object FXScrollbar1: FXScrollbar
     Left = 24
-    Top = 276
+    Top = 292
     Width = 241
     Height = 13
     CustomColors.Enabled = False
@@ -547,14 +569,15 @@ object Form1: TForm1
     CustomColors.DarkBackGroundInterior = 2829099
     Orientation = Horizontal
     Position = 0
+    Animation = True
     CustomScrollbarSize = 0
     ParentColor = False
     TabStop = True
-    TabOrder = 6
+    TabOrder = 7
   end
   object FXCheckBox2: FXCheckBox
     Left = 24
-    Top = 328
+    Top = 344
     Width = 180
     Height = 30
     CustomColors.Enabled = False
@@ -580,40 +603,202 @@ object Form1: TForm1
     Font.Style = []
     AnimationEnabled = True
     TabStop = True
-    TabOrder = 7
+    TabOrder = 8
     ParentColor = False
   end
-  object FXPopupMenu1: FXPopupMenu
-    Image.SelectSegoe = #59188
-    Image.SelectImageIndex = 0
-    Items.Item = {
-      02000000545046300B4658506F7075704974656D0004546578740604436F7079
-      0D496D6167652E456E61626C65640911496D6167652E53656C6563745365676F
-      65120100000009E716496D6167652E53656C656374496D616765496E64657802
-      000A4974656D732E4974656D0A04000000000000000853686F72746375740606
-      4374726C2B4314437573746F6D436F6C6F72732E456E61626C65640813437573
-      746F6D436F6C6F72732E416363656E74040078D4001C437573746F6D436F6C6F
-      72732E4C696768744261636B47726F756E6404F3F3F3001C437573746F6D436F
-      6C6F72732E4C69676874466F726547726F756E64041A1B1B001B437573746F6D
-      436F6C6F72732E4461726B4261636B47726F756E6404202020001B437573746F
-      6D436F6C6F72732E4461726B466F726547726F756E640707636C576869746500
-      00545046300B4658506F7075704974656D0004546578740604436F70790D496D
-      6167652E456E61626C65640911496D6167652E53656C6563745365676F651201
-      00000009E716496D6167652E53656C656374496D616765496E64657802000A49
-      74656D732E4974656D0A04000000000000000853686F72746375740606437472
-      6C2B4314437573746F6D436F6C6F72732E456E61626C65640813437573746F6D
-      436F6C6F72732E416363656E74040078D4001C437573746F6D436F6C6F72732E
-      4C696768744261636B47726F756E6404F3F3F3001C437573746F6D436F6C6F72
-      732E4C69676874466F726547726F756E64041A1B1B001B437573746F6D436F6C
-      6F72732E4461726B4261636B47726F756E6404202020001B437573746F6D436F
-      6C6F72732E4461726B466F726547726F756E640707636C57686974650000}
+  object FXSelector1: FXSelector
+    Left = 26
+    Top = 400
+    Width = 250
+    Height = 30
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
     CustomColors.LightForeGround = 1776410
-    CustomColors.DarkBackGround = clRed
+    CustomColors.DarkBackGround = 2105376
     CustomColors.DarkForeGround = clWhite
-    Left = 352
-    Top = 56
+    CustomColors.LightBackGroundInterior = 16514043
+    CustomColors.DarkBackGroundInterior = 2829099
+    SelectedItem = 0
+    Items.Strings = (
+      'Item1'
+      'Item2'
+      'Item3')
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -16
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    TabStop = True
+    TabOrder = 0
+    ParentColor = False
+  end
+  object FXRadioButton1: FXRadioButton
+    Left = 492
+    Top = 275
+    Width = 180
+    Height = 30
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    IconFont.Charset = DEFAULT_CHARSET
+    IconFont.Color = clWindowText
+    IconFont.Height = -19
+    IconFont.Name = 'Segoe Fluent Icons'
+    IconFont.Style = []
+    Checked = True
+    AutomaticCursorPointer = True
+    Text = 'Option 1'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -16
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageSize = 30
+    TabStop = True
+    TabOrder = 9
+    ParentColor = False
+  end
+  object FXRadioButton2: FXRadioButton
+    Left = 492
+    Top = 311
+    Width = 180
+    Height = 30
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    IconFont.Charset = DEFAULT_CHARSET
+    IconFont.Color = clWindowText
+    IconFont.Height = -19
+    IconFont.Name = 'Segoe Fluent Icons'
+    IconFont.Style = []
+    AutomaticCursorPointer = True
+    Text = 'Option 2'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -16
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageSize = 30
+    TabStop = True
+    TabOrder = 10
+    ParentColor = False
+  end
+  object FXButton4: FXButton
+    Left = 543
+    Top = 390
+    Width = 110
+    Height = 40
+    OnClick = FXButton4Click
+    Allignment = taCenter
+    Default = False
+    Cancel = False
+    TabStop = True
+    TabOrder = 11
+    ParentColor = False
+    UseManualColor = False
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageLayout = cpLeft
+    ActionText = 'Working'
+    ActionImage.SelectSegoe = #59188
+    ActionImage.SelectImageIndex = 0
+    ActionToggle = False
+    ShowCaption = True
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    GradientOptions.Enabled = False
+    GradientOptions.Enter = clFuchsia
+    GradientOptions.Leave = clRed
+    GradientOptions.Down = clMaroon
+    ControlStyle = []
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = 14123546
+    Font.Height = -16
+    Font.Name = 'Segoe UI Semibold'
+    Font.Style = []
+    FontAutoSize.Enabled = False
+    FontAutoSize.Max = -1
+    FontAutoSize.Min = -1
+    SubTextFont.Charset = DEFAULT_CHARSET
+    SubTextFont.Color = 14123546
+    SubTextFont.Height = -13
+    SubTextFont.Name = 'Segoe UI'
+    SubTextFont.Style = []
+    Text = 'Click me'
+    SubText = 'Hello World!'
+    RoundTransparent = True
+    RoundAmount = 10
+    State = mbsLeave
+    FlatButton = False
+    FlatComplete = False
+    Colors.Enter = 3370495
+    Colors.Leave = 2383600
+    Colors.Down = 738775
+    Colors.BLine = 14024
+    UnderLine.Enable = True
+    UnderLine.UnderLineRound = True
+    UnderLine.UnderLineThicknes = 6
+    TextColors.Enter = clWhite
+    TextColors.Leave = clWhite
+    TextColors.Down = clWhite
+    TextColors.BLine = clBlack
+    Pen.Color = clWindow
+    Pen.Width = 0
+    Pen.AltHoverColor = clBlack
+    Pen.AltPressColor = clBlack
+    Animations.PressAnimation = False
+    Animations.PADelay = 2
+    Animations.PAShrinkAmount = 6
+    Animations.PAAnimateEngine = cbneAtDraw
+    Animations.FadeAnimation = True
+    Animations.FASpeed = 10
+  end
+  object FXEdit1: FXEdit
+    Left = 312
+    Top = 109
+    Width = 150
+    Height = 35
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    CustomColors.LightBackGroundInterior = 16514043
+    CustomColors.DarkBackGroundInterior = 2829099
+    CustomEditColors.Enabled = False
+    CustomEditColors.Accent = 13924352
+    CustomEditColors.LightNone = 9145227
+    CustomEditColors.LightHover = 10461087
+    CustomEditColors.LightPress = 7697781
+    CustomEditColors.DarkNone = 10657693
+    CustomEditColors.DarkHover = 12039603
+    CustomEditColors.DarkPress = 9275783
+    Text = 'Hello World!'
+    Position = 0
+    SelectionLength = 0
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = 1776410
+    Font.Height = -16
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    TabStop = True
+    TabOrder = 12
+    ParentColor = False
   end
 end

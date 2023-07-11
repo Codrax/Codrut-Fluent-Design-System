@@ -49,6 +49,11 @@ type
       procedure WM_LButtonUp(var Msg: TWMLButtonUp); message WM_LBUTTONUP;
       procedure WMSize(var Message: TWMSize); message WM_SIZE;
 
+      // Select
+      procedure SelectNext;
+      procedure SelectLast;
+      function MakeDrawPositionRect: TRect;
+
       // Paint
       function GetRoundness: integer;
       procedure AnimateToPosition;
@@ -61,8 +66,12 @@ type
       // State
       procedure InteractionStateChanged(AState: FXControlState); override;
 
+      // Focus
+      procedure UpdateFocusRect; override;
+
       // Key Presses
       procedure KeyPress(var Key: Char); override;
+      procedure HandleKeyDown(var CanHandle: boolean; Key: integer; ShiftState: TShiftState); override;
 
       // Inherited Mouse Detection
       procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
@@ -79,10 +88,12 @@ type
       property Font: TFont read FTextFont write FTextFont;
 
       property Align;
-      property TabStop;
-      property TabOrder;
+      property Constraints;
+      property Anchors;
       property Hint;
       property ShowHint;
+      property TabStop;
+      property TabOrder;
       property OnEnter;
       property OnExit;
       property OnClick;
@@ -129,8 +140,14 @@ begin
   inherited;
   // Move with - or +
   case Key of
-    #13: ;
+    '+', '=': SelectNext;
+    '-': SelectLast;
   end;
+end;
+
+function FXSelector.MakeDrawPositionRect: TRect;
+begin
+  Result := Rect(FDrawPosition, DrawRect.Top, FDrawPosition + ItemWidth, DrawRect.Bottom)
 end;
 
 procedure FXSelector.MouseMove(Shift: TShiftState; X, Y: Integer);
@@ -204,6 +221,11 @@ begin
                               ChangeColorLight(AccentColor, ACCENT_DIFFERENTIATE_CONST),
                               ChangeColorLight(AccentColor, -ACCENT_DIFFERENTIATE_CONST));
     end;
+end;
+
+procedure FXSelector.UpdateFocusRect;
+begin
+  FocusRect := MakeDrawPositionRect;
 end;
 
 procedure FXSelector.UpdateRects;
@@ -291,6 +313,23 @@ begin
     Result := Height;
 end;
 
+procedure FXSelector.HandleKeyDown(var CanHandle: boolean; Key: integer;
+  ShiftState: TShiftState);
+begin
+  inherited;
+  case Key of
+    VK_LEFT: begin
+      SelectLast;
+      CanHandle := false;
+    end;
+
+    VK_RIGHT: begin
+      SelectNext;
+      CanHandle := false;
+    end;
+  end;
+end;
+
 procedure FXSelector.AnimateToPosition;
 var
   NewPosition: integer;
@@ -367,7 +406,7 @@ begin
         AColor := FItemAccentColors.GetColor(InteractionState)
       else
         AColor := FItemAccentColors.None;
-      ARect := Rect(FDrawPosition, DrawRect.Top, FDrawPosition + ItemWidth, DrawRect.Bottom);
+      ARect := MakeDrawPositionRect;
       GDIRoundRect(MakeRoundRect(ARect, ARound), GetRGB(AColor).MakeGDIBrush, nil);
 
       // Draw Texts
@@ -390,6 +429,18 @@ procedure FXSelector.Resize;
 begin
   inherited;
   UpdateRects;
+end;
+
+procedure FXSelector.SelectLast;
+begin
+  if SelectedItem > 0 then
+    SelectedItem := SelectedItem - 1;
+end;
+
+procedure FXSelector.SelectNext;
+begin
+  if SelectedItem < FItems.Count then
+    SelectedItem := SelectedItem + 1;
 end;
 
 procedure FXSelector.SetItems(const Value: TStringList);

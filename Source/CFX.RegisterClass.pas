@@ -4,7 +4,8 @@ interface
   uses Classes, CFX.Classes, CFX.UIConsts,
        CFX.Button, CFX.Checkbox, CFX.Panels, CFX.StandardIcons, CFX.Slider,
        CFX.BlurMaterial, CFX.PopupMenu, CFX.ImageList, CFX.Labels,
-       CFX.RadioButton, CFX.Scrollbar, CFX.ScrollBox, CFX.Selector;
+       CFX.RadioButton, CFX.Scrollbar, CFX.ScrollBox, CFX.Selector,
+       CFX.Edit, CFX.PopupConnector;
 
 
 procedure Register;
@@ -25,10 +26,14 @@ begin
   RegisterComponents(REGISTER_CLASS_NAME, [FXScrollbar]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXScrollBox]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXSelector]);
+  RegisterComponents(REGISTER_CLASS_NAME, [FXEdit]);
 
   // Non-Visual Components
   RegisterComponents(REGISTER_CLASS_NAME, [FXPopupMenu]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXImageList]);
+
+  // Utils
+  RegisterComponents(REGISTER_CLASS_UTILS_NAME, [FXPopupConnector]);
 end;
 
 end.

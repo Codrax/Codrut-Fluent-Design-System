@@ -46,7 +46,6 @@ uses
 
       procedure Show;
       procedure ShowAtPoint(APoint: TPoint);
-
     end;
 
 implementation

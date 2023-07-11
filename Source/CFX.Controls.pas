@@ -4,7 +4,7 @@ interface
   uses
     Winapi.Windows, Vcl.Graphics, Classes, Types, Winapi.Messages, CFX.Types,
     CFX.UIConsts, SysUtils, CFX.Graphics, CFX.VarHelpers, CFX.ThemeManager,
-    Vcl.Controls, CFX.PopupMenu, CFX.Linker;
+    Vcl.Controls, CFX.PopupMenu, CFX.Linker, Vcl.Forms;
 
   type
     // Control
@@ -17,7 +17,7 @@ interface
       FAutoFocusLine: boolean;
       FHasEnteredTab: boolean;
       FInteraction: FXControlState;
-      FAutoFocus: boolean;
+      FCreated: boolean;
 
       // Events
       procedure WMNCHitTest(var Message: TWMNCHitTest); message WM_NCHITTEST;
@@ -39,13 +39,21 @@ interface
       procedure Paint; override;
       procedure PaintBuffer; virtual;
 
+      // Virtual Events
+      procedure ComponentCreated; virtual;
+      procedure UpdateFocusRect; virtual;
+      procedure OpenPopupMenu(X, Y: integer); virtual;
+      procedure HandleKeyDown(var CanHandle: boolean; Key: integer; ShiftState: TShiftState); virtual;
+
       // Focus Line and Events
       procedure DoEnter; override;
       procedure DoExit; override;
 
       property FocusRect: TRect read FFocusRect write FFocusRect;
       property AutoFocusLine: boolean read FAutoFocusLine write FAutoFocusLine;
-      property AutoFocus: boolean read FAutoFocus write FAutoFocus;
+
+      // Created
+      procedure CreateWnd; override;
 
       // Mouse Events
       procedure CMMouseEnter(var Message : TMessage); message CM_MOUSEENTER;
@@ -55,7 +63,7 @@ interface
       procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
 
       // Key Events
-      procedure DialogKey(var Msg: TWMKey); message CM_DIALOGKEY;
+      procedure CNKeyDown(var Message: TWMKeyDown); message CN_KEYDOWN;
 
       // Interaction
       procedure InteractionStateChanged(AState: FXControlState); virtual;
@@ -63,6 +71,7 @@ interface
       // Utilities
       function IsReading: boolean;
       function IsDesigning: boolean;
+      function Creating: boolean;
 
       // Interact State
       property InteractionState: FXControlState read FInteraction write SetState;
@@ -157,13 +166,30 @@ begin
     OnMouseLeave(Self);
 end;
 
+procedure FXWindowsControl.CNKeyDown(var Message: TWMKeyDown);
+var
+  CanContinue: boolean;
+begin
+  CanContinue := true;
+
+  HandleKeyDown(CanContinue, Message.CharCode, KeyDataToShiftState(Message.KeyData));
+
+  if CanContinue then
+    inherited;
+end;
+
+procedure FXWindowsControl.ComponentCreated;
+begin
+  // nothing
+end;
+
 constructor FXWindowsControl.Create(AOwner: TComponent);
 begin
   inherited;
   //InterceptMouse := true;
+  FCreated := false;
   FBufferedComponent := true;
   FAutoFocusLine := false;
-  FAutoFocus := true;
   ParentColor := false;
 
   ControlStyle := ControlStyle + [csOpaque, csCaptureMouse];
@@ -173,16 +199,24 @@ begin
   ResizeBuffer;
 end;
 
+procedure FXWindowsControl.CreateWnd;
+begin
+  FCreated := true;
+  inherited;
+
+  // Notify
+  ComponentCreated;
+end;
+
+function FXWindowsControl.Creating: boolean;
+begin
+  Result := not FCreated;
+end;
+
 destructor FXWindowsControl.Destroy;
 begin
   FreeAndNil(FBuffer);
   inherited;
-end;
-
-procedure FXWindowsControl.DialogKey(var Msg: TWMKey);
-begin
-  if not (Msg.CharCode in [VK_DOWN, VK_UP, VK_RIGHT, VK_LEFT]) then
-    inherited;
 end;
 
 procedure FXWindowsControl.DoEnter;
@@ -216,6 +250,12 @@ begin
     Result := (Parent as FXControl).Background
       else
         Result := Default;
+end;
+
+procedure FXWindowsControl.HandleKeyDown(var CanHandle: boolean; Key: integer;
+  ShiftState: TShiftState);
+begin
+  // nothing
 end;
 
 procedure FXWindowsControl.InteractionStateChanged(AState: FXControlState);
@@ -273,7 +313,13 @@ begin
   InteractionState := FXControlState.Hover;
 
   // Popup Menu
-  if (Button = mbRight) and Assigned(PopupMenu) then
+  if (Button = mbRight) then
+    OpenPopupMenu(X, Y);
+end;
+
+procedure FXWindowsControl.OpenPopupMenu(X, Y: integer);
+begin
+  if Assigned(PopupMenu) then
     FPopupMenu.PopupAtPoint( ClientToScreen(Point(X,Y)) );
 end;
 
@@ -292,10 +338,7 @@ begin
   // Focus Line
   if CanDrawFocusLine then
     begin
-      FocusRect := Self.ClientRect;
-
-      FFocusRect.Right := FocusRect.Right - FOCUS_LINE_SIZE;
-      FFocusRect.Bottom := FocusRect.Bottom - FOCUS_LINE_SIZE;
+      UpdateFocusRect;
 
       Canvas.GDIRoundRect(MakeRoundRect(FocusRect, FOCUS_LINE_ROUND, FOCUS_LINE_ROUND),
         nil,
@@ -344,6 +387,14 @@ begin
       // Clear
       FillRect(ClipRect);
     end;
+end;
+
+procedure FXWindowsControl.UpdateFocusRect;
+begin
+  FocusRect := Self.ClientRect;
+
+  FFocusRect.Right := FocusRect.Right - FOCUS_LINE_SIZE;
+  FFocusRect.Bottom := FocusRect.Bottom - FOCUS_LINE_SIZE;
 end;
 
 procedure FXWindowsControl.WMNCHitTest(var Message: TWMNCHitTest);

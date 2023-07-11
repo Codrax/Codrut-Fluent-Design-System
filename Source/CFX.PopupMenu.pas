@@ -34,7 +34,12 @@ uses
 
   type
     // Class
+    FXPopupComponent = class;
     FXPopupItem = class;
+
+    // Types
+    TOnItemClick = procedure(Sender: TObject; Item: FXPopupComponent; Index: integer) of object;
+    TOnBeforePopup = procedure(Sender: TObject; var CanPopup: boolean; Point: TPoint) of object;
 
     // Menu
     FXPopupItems = class(TMPersistent)
@@ -84,6 +89,7 @@ uses
 
       FOnClick: TNotifyEvent;
       FOnHover: TNotifyEvent;
+      FOnCheck: TNotifyEvent;
 
       FAutoCheck: Boolean;
 
@@ -93,8 +99,16 @@ uses
       procedure SetChecked(const Value: boolean);
       function GetMenuItem(Index: Integer): FXPopupContainer;
       function GetIndex: integer;
+      function GetSeparator: boolean;
+      procedure SetSeparator(const Value: boolean);
 
-    published
+    protected
+      // Notify Event
+      property OnClick: TNotifyEvent read FOnClick write FOnClick;
+      property OnHover: TNotifyEvent read FOnHover write FOnHover;
+      property OnCheck: TNotifyEvent read FOnCheck write FOnCheck;
+
+      // Data
       property Text: string read FText write FText;
       property Hint: string read FHint write FHint;
 
@@ -106,15 +120,15 @@ uses
       property IsDefault: boolean read FDefault write FDefault default False;
       property Visible: boolean read FVisible write FVisible default True;
 
-      property Image: FXIconSelect read FImage write FImage;
-
-      // Useless
+      // Items
       property Items: FXPopupItems read FItems write FItems;
 
+      // Data
+      property Image: FXIconSelect read FImage write FImage;
       property Shortcut: string read FShortcut write FShortcut;
 
-      property OnClick: TNotifyEvent read FOnClick write FOnClick;
-      property OnHover: TNotifyEvent read FOnHover write FOnHover;
+      // Separator
+      property IsSeparator: boolean read GetSeparator write SetSeparator;
 
       property MenuIndex: integer read GetIndex;
 
@@ -126,14 +140,14 @@ uses
       property MenuItems[Index: Integer]: FXPopupContainer read GetMenuItem;
 
       function GetMenuItemCount: integer;
-      function IsSeparator: boolean;
 
       // Stream Conversion
       procedure SaveToStream(AStream: TStream);
       procedure LoadFromStream(AStream: TStream);
     end;
 
-    FXPopupItem = class(FXPopupContainer, FXControl)
+    // General Component
+    FXPopupComponent = class(FXPopupContainer, FXControl)
     private
       // Animation
       FAnim: TIntAni;
@@ -166,7 +180,7 @@ uses
       procedure SetHover(Index: integer);
 
       function IsOpen: boolean;
-      function GetParentPopupMenu: FXPopupItem;
+      function GetParentPopupMenu: FXPopupComponent;
 
       procedure GlassUp(Sender: TObject; Button: TMouseButton;
                         Shift: TShiftState; X, Y: Integer);
@@ -180,7 +194,7 @@ uses
       procedure CloseAllWindows;
 
       procedure OpenItem(MenuIndex: integer);
-      procedure ExecuteItem(MenuIndex: integer);
+      procedure ExecuteItem(AMenuIndex: integer);
       function GetOpenChildIndex: integer;
       function HasChildOpen: boolean;
       procedure CloseChildWindow;
@@ -195,7 +209,7 @@ uses
 
       procedure PopupAtPointS(Point: TPoint);
 
-    published
+    protected
       property CustomColors: FXColorSets read FCustomColors write FCustomColors;
 
       property AnimationType: FXAnimateSelection read FAnimType write FAnimType default FXAnimateSelection.Linear;
@@ -215,18 +229,64 @@ uses
       function Background: TColor;
     end;
 
+    // Popup Item
+    FXPopupItem = class(FXPopupComponent)
+    published
+      // Notify Event
+      property OnClick;
+      property OnHover;
+      property OnCheck;
+
+      // Data
+      property Text;
+      property Hint;
+
+      property Image;
+      property Shortcut;
+
+      // Status
+      property Enabled;
+      property Checked;
+      property AutoCheck;
+      property RadioItem;
+
+      property IsDefault;
+      property Visible;
+
+      // Items
+      property Items;
+
+      // Separator
+      property IsSeparator;
+
+      property MenuIndex;
+    end;
+
     // Popup Menu
-    FXPopupMenu = class(FXPopupItem, FXControl)
+    FXPopupMenu = class(FXPopupComponent, FXControl)
     private
       FOnPopup: TNotifyEvent;
-      FCloseOnInteract,
-      FCloseOnExecute: boolean;
+      FOnBeforePopup: TOnBeforePopup;
+      FCloseOnCheck,
+      FCloseOnExecute,
+      FCloseOnNoExecuteClick: boolean;
+      FOnItemClick: TOnItemClick;
 
     published
-      property OnPopup: TNotifyEvent read FOnPopup write FOnPopup;
+      property CustomColors;
+      property FlatMenu;
+      property AnimationType;
+      property EnableBorder;
+      property EnableRadius;
+      property Items;
 
-      property CloseOnInteract: boolean read FCloseOnInteract write FCloseOnInteract default false;
+      property OnPopup: TNotifyEvent read FOnPopup write FOnPopup;
+      property OnBeforePopup: TOnBeforePopup read FOnBeforePopup write FOnBeforePopup;
+      property OnItemClick: TOnItemClick read FOnItemClick write FOnItemClick;
+
+      property CloseOnCheck: boolean read FCloseOnCheck write FCloseOnCheck default false;
       property CloseOnExecute: boolean read FCloseOnExecute write FCloseOnExecute default true;
+      property CloseOnNoExecuteClick: boolean read FCloseOnNoExecuteClick write FCloseOnNoExecuteClick default true;
 
     public
       constructor Create(AOwner: TComponent); override;
@@ -293,7 +353,7 @@ begin
   Result := GetMenuItemCount <> 0;
 end;
 
-function FXPopupContainer.IsSeparator: boolean;
+function FXPopupContainer.GetSeparator: boolean;
 begin
   Result := Text = '-';
 end;
@@ -355,6 +415,12 @@ begin
       end;
 end;
 
+procedure FXPopupContainer.SetSeparator(const Value: boolean);
+begin
+  if Value then
+    Text := '-';
+end;
+
 { FXPopupMenu }
 
 constructor FXPopupMenu.Create(AOwner: TComponent);
@@ -363,8 +429,9 @@ begin
   // Properties
   FAnimType := FXAnimateSelection.Linear;
 
-  CloseOnInteract := false;
+  FCloseOnCheck := false;
   CloseOnExecute := true;
+  CloseOnNoExecuteClick := true;
 
   // Update Children (children not required)
   UpdateTheme(false);
@@ -388,18 +455,30 @@ begin
 end;
 
 procedure FXPopupMenu.PopupAtPoint(Point: TPoint);
+var
+  CanPopup: boolean;
 begin
   inherited;
-  PopupAtPointS( Point );
+  CanPopup := true;
 
-  // Notify Event
-  if Assigned(OnPopup) then
-    OnPopup( Self );
+  // Before
+  if Assigned(OnBeforePopup) then
+    OnBeforePopup(Self, CanPopup, Point);
+
+  if CanPopup then
+    begin
+      // Popup
+      PopupAtPointS( Point );
+
+      // Notify Event
+      if Assigned(OnPopup) then
+        OnPopup( Self );
+    end;
 end;
 
-{ FXPopupItem }
+{ FXPopupComponent }
 
-procedure FXPopupItem.Animation;
+procedure FXPopupComponent.Animation;
 var
   LinearUpwards: boolean;
 begin
@@ -409,8 +488,6 @@ begin
   // Settings
   FAnim.AniKind := akIn;
   FAnim.AniFunctionKind := afkQuadratic;
-
-  FAnim.Duration := 50;
 
   with FForm do
     begin
@@ -431,19 +508,23 @@ begin
         FXAnimateSelection.Linear: begin
           AlphaBlendValue := 255;
           Width := NormalWidth;
+          FAnim.Duration := 10;
+          FAnim.Step := 10;
 
           LinearUpwards := FDropPoint.Y > Top;
 
-          FAnim.StartValue := NormalHeight - POPUP_ANIMATE_SIZE;
-          FAnim.DeltaValue := POPUP_ANIMATE_SIZE;
+          FAnim.StartValue := NormalHeight div 8;
+          FAnim.EndValue := NormalHeight;
         end;
         FXAnimateSelection.Square: begin
           AlphaBlendValue := 255;
+          FAnim.Duration := 10;
+          FAnim.Step := 10;
 
           LinearUpwards := FDropPoint.Y > Top;
 
-          FAnim.StartValue := NormalHeight - POPUP_ANIMATE_SIZE;
-          FAnim.DeltaValue := POPUP_ANIMATE_SIZE;
+          FAnim.StartValue := NormalHeight div 8;
+          FAnim.EndValue := NormalHeight;
         end;
       end;
 
@@ -477,32 +558,32 @@ begin
   FAnim.Start;
 end;
 
-function FXPopupItem.Background: TColor;
+function FXPopupComponent.Background: TColor;
 begin
   Result := FDrawColors.Background;
 end;
 
-procedure FXPopupItem.CloseAllWindows;
+procedure FXPopupComponent.CloseAllWindows;
 var
   I: Integer;
 begin
   CloseMenu(true);
 
-  for I := 0 to GetMenuItemCount - 1 do
-    FXPopupItem(MenuItems[I]).CloseAllWindows;
+  if Owner is FXPopupComponent then
+    FXPopupComponent(Owner).CloseAllWindows;
 end;
 
-procedure FXPopupItem.CloseChildWindow;
+procedure FXPopupComponent.CloseChildWindow;
 var
   Index: integer;
 begin
   Index := GetOpenChildIndex;
 
   if Index <> -1 then
-    FXPopupItem(MenuItems[Index]).CloseMenu;
+    FXPopupComponent(MenuItems[Index]).CloseMenu;
 end;
 
-procedure FXPopupItem.CloseMenu(FreeMem: boolean);
+procedure FXPopupComponent.CloseMenu(FreeMem: boolean);
 begin
   if IsOpen then
     FForm.Close;
@@ -514,7 +595,7 @@ begin
     end;
 end;
 
-constructor FXPopupItem.Create(AOwner: TComponent);
+constructor FXPopupComponent.Create(AOwner: TComponent);
 begin
   inherited;
   FCustomColors := FXColorSets.Create(False);
@@ -530,29 +611,61 @@ begin
     end;
 end;
 
-destructor FXPopupItem.Destroy;
+destructor FXPopupComponent.Destroy;
 begin
 
   inherited;
 end;
 
-procedure FXPopupItem.ExecuteItem(MenuIndex: integer);
+procedure FXPopupComponent.ExecuteItem(AMenuIndex: integer);
 var
-  Item: FXPopupItem;
+  Item: FXPopupComponent;
+  AMenu: FXPopupMenu;
 begin
-  Item := FXPopupItem(MenuItems[MenuIndex]);
+  Item := FXPopupComponent(MenuItems[AMenuIndex]);
+  AMenu := FXPopupMenu(GetParentPopupMenu);
 
   // Execute
-  if (not Item.HasSubItems) and Assigned( Item.OnClick ) then
+  if (not Item.HasSubItems) then
     begin
-      if FXPopupMenu(GetParentPopupMenu).CloseOnExecute then
-        CloseAllWindows;
+      // Check
+      if Item.AutoCheck then
+        if (not Item.RadioItem) xor (Item.RadioItem and not Item.Checked) then
+          begin
+            Item.Checked := not Item.Checked;
 
-      Item.OnClick(Item);
+            // Notify
+            if Assigned(Item.OnCheck) then
+              Item.OnCheck(Item);
+          end;
+
+      // Close Menu
+      if Assigned( Item.OnClick ) then
+        begin
+          if (AMenu.CloseOnExecute) then
+            CloseAllWindows;
+        end
+      else
+        if Item.AutoCheck then
+          begin
+            if AMenu.CloseOnCheck then
+              CloseAllWindows;
+          end
+        else
+          if (AMenu.CloseOnNoExecuteClick) then
+            CloseAllWindows;
+
+      // Select Item
+      if Assigned(AMenu.OnItemClick) then
+        AMenu.OnItemClick(AMenu, Item, AMenuIndex);
+
+      // Execute
+      if Assigned( Item.OnClick ) then
+        Item.OnClick(Item);
     end;
 end;
 
-procedure FXPopupItem.FormKeyPress(ender: TObject; var Key: Word;
+procedure FXPopupComponent.FormKeyPress(ender: TObject; var Key: Word;
   Shift: TShiftState);
 var
   Direction, NewPos: integer;
@@ -593,7 +706,7 @@ begin
   end;
 end;
 
-procedure FXPopupItem.FormLoseFocus(Sender: TObject);
+procedure FXPopupComponent.FormLoseFocus(Sender: TObject);
 begin
   if not HasChildOpen then
     if Self is FXPopupMenu then
@@ -604,13 +717,13 @@ begin
         CloseMenu;
 
         // Entire Menu Lost Focus
-        if Self.Owner is FXPopupItem then
-          if FXPopupItem(Self.Owner).IsOpen then
-            FXPopupItem(Self.Owner).FForm.SetFocus;
+        if Self.Owner is FXPopupComponent then
+          if FXPopupComponent(Self.Owner).IsOpen then
+            FXPopupComponent(Self.Owner).FForm.SetFocus;
       end;
 end;
 
-procedure FXPopupItem.FormOnShow(Sender: TObject);
+procedure FXPopupComponent.FormOnShow(Sender: TObject);
 begin
   // Position
   FForm.Left := FDropPoint.X;
@@ -622,7 +735,7 @@ begin
   Animation;
 end;
 
-procedure FXPopupItem.FormPosition;
+procedure FXPopupComponent.FormPosition;
 var
   AHeight, AWidth: integer;
 begin
@@ -652,49 +765,49 @@ begin
     end;
 end;
 
-function FXPopupItem.GetOpenChildIndex: integer;
+function FXPopupComponent.GetOpenChildIndex: integer;
 var
   I: Integer;
 begin
   Result := -1;
 
   for I := 0 to GetMenuItemCount - 1 do
-    if FXPopupItem(MenuItems[I]).IsOpen then
+    if FXPopupComponent(MenuItems[I]).IsOpen then
       Exit(I);
 end;
 
-function FXPopupItem.GetParentPopupMenu: FXPopupItem;
+function FXPopupComponent.GetParentPopupMenu: FXPopupComponent;
 begin
   Result := Self;
 
   while not (Result is FXPopupMenu) do
     begin
-      Result := FXPopupItem(Result.Owner);
+      Result := FXPopupComponent(Result.Owner);
     end;
 
   if not (Result is FXPopupMenu) then
     Result := nil;
 end;
 
-procedure FXPopupItem.GlassDown(Sender: TObject; Button: TMouseButton;
+procedure FXPopupComponent.GlassDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   FItemPressed := true;
   SetHover(FHoverOver);
 end;
 
-procedure FXPopupItem.GlassEnter(Sender: TObject);
+procedure FXPopupComponent.GlassEnter(Sender: TObject);
 begin
   FItemPressed := false;
   SetHover(FHoverOver);
 end;
 
-procedure FXPopupItem.GlassMove(Sender: TObject; Shift: TShiftState; X,
+procedure FXPopupComponent.GlassMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
 var
   I, FHoverPrevious: Integer;
   Hover: boolean;
-  Item: FXPopupItem;
+  Item: FXPopupComponent;
 begin
   // Previous
   FHoverPrevious := FHoverOver;
@@ -702,7 +815,7 @@ begin
   // Search
   Hover := false;
   for I := 0 to GetMenuItemCount - 1 do
-    if MenuItems[I] is FXPopupItem then
+    if MenuItems[I] is FXPopupComponent then
       begin
         if MenuItems[I].FBounds.Contains(Point(X,Y)) and MenuItems[I].Enabled then
           begin
@@ -721,7 +834,7 @@ begin
   // Notify
   if (FHoverOver <> -1) and (FHoverOver <> FHoverPrevious) then
     begin
-      Item := FXPopupItem(MenuItems[FHoverOver]);
+      Item := FXPopupComponent(MenuItems[FHoverOver]);
 
       // Close windows if exists
       CloseChildWindow;;
@@ -736,10 +849,10 @@ begin
     end;
 end;
 
-procedure FXPopupItem.GlassUp(Sender: TObject; Button: TMouseButton;
+procedure FXPopupComponent.GlassUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var
-  Item: FXPopupItem;
+  Item: FXPopupComponent;
 begin
   FItemPressed := false;
   SetHover(FHoverOver);
@@ -747,16 +860,7 @@ begin
   // Notify
   if IndexIsValid(FHoverOver) then
     begin
-      Item := FXPopupItem(MenuItems[FHoverOver]);
-
-      if Item.AutoCheck then
-        if (not Item.RadioItem) xor (Item.RadioItem and not Item.Checked) then
-          begin
-            Item.Checked := not Item.Checked;
-
-            if FXPopupMenu(GetParentPopupMenu).CloseOnInteract then
-              CloseAllWindows;
-          end;
+      Item := FXPopupComponent(MenuItems[FHoverOver]);
 
       // Execute
       ExecuteItem(FHoverOver);
@@ -764,31 +868,30 @@ begin
       // Re-Open
       if Item.HasSubItems and not Item.IsOpen then
         OpenItem( FHoverOver );
-
     end;
 end;
 
-function FXPopupItem.HasChildOpen: boolean;
+function FXPopupComponent.HasChildOpen: boolean;
 begin
   Result := GetOpenChildIndex <> -1;
 end;
 
-function FXPopupItem.IndexIsValid(Index: integer): boolean;
+function FXPopupComponent.IndexIsValid(Index: integer): boolean;
 begin
   Result := (Index > -1) and (Index < GetMenuItemCount);
 end;
 
-function FXPopupItem.IsContainer: Boolean;
+function FXPopupComponent.IsContainer: Boolean;
 begin
   Result := true;
 end;
 
-function FXPopupItem.IsOpen: boolean;
+function FXPopupComponent.IsOpen: boolean;
 begin
   Result := (FForm <> nil) and FForm.Visible;
 end;
 
-procedure FXPopupItem.OnPaintControl(Sender: TObject);
+procedure FXPopupComponent.OnPaintControl(Sender: TObject);
 var
   I, X, ActualX, Y, BiggestWidth: integer;
   R: TRect;
@@ -862,6 +965,9 @@ begin
       // Draw
       for I := 0 to GetMenuItemCount - 1 do
         begin
+          // Clear Bound
+          MenuItems[I].FBounds := TRect.Empty;
+
           // Hidden
           if not MenuItems[I].Visible then
             Continue;
@@ -876,12 +982,14 @@ begin
               // Highlight Item
               if I = FHoverOver then
                 begin
-                  RoundR.Rect := Rect(POPUP_LINE_SPACING, Y + POPUP_FRACTION_SPACE, FForm.Width - POPUP_LINE_SPACING, Y + POPUP_ITEM_HEIGHT - POPUP_FRACTION_SPACE);
+                  RoundR.Rect := Rect(POPUP_LINE_SPACING, Y + POPUP_FRACTION_SPACE,
+                    FForm.Width - POPUP_LINE_SPACING, Y + POPUP_ITEM_HEIGHT - POPUP_FRACTION_SPACE);
                   GDIRoundRect(RoundR, B, nil);
                 end;
 
               // Checkmark / Radio
-              if not MenuItems[I].HasSubItems and (MenuItems[I].AutoCheck or MenuItems[I].Checked or MenuItems[I].RadioItem) then
+              if not MenuItems[I].HasSubItems
+                and (MenuItems[I].AutoCheck or MenuItems[I].Checked or MenuItems[I].RadioItem) then
                 begin
                   R := Rect( X, Y, X + POPUP_ITEM_SPACINT, Y + POPUP_ITEM_HEIGHT );
 
@@ -1048,12 +1156,12 @@ begin
     end;
 end;
 
-procedure FXPopupItem.OpenItem(MenuIndex: integer);
+procedure FXPopupComponent.OpenItem(MenuIndex: integer);
 var
-  Item: FXPopupItem;
+  Item: FXPopupComponent;
 begin
   // Get Item
-  Item := FXPopupItem(MenuItems[MenuIndex]);
+  Item := FXPopupComponent(MenuItems[MenuIndex]);
 
   // Clone Settings
   Item.FEnableRadius := FEnableRadius;
@@ -1067,10 +1175,11 @@ begin
   Item.UpdateTheme(false);
 
   // Open
-  Item.PopupAtPointS(Point(FForm.Left + FForm.Width - POPUP_ITEMS_OVERLAY_DISTANCE, FGlassBlur.ClientToScreen(Point(0, Item.FBounds.Top)).Y ));
+  Item.PopupAtPointS(Point(FForm.Left + FForm.Width - POPUP_ITEMS_OVERLAY_DISTANCE,
+    FGlassBlur.ClientToScreen(Point(0, Item.FBounds.Top)).Y ));
 end;
 
-procedure FXPopupItem.PopupAtPointS(Point: TPoint);
+procedure FXPopupComponent.PopupAtPointS(Point: TPoint);
 begin
   FDropPoint := Point;
 
@@ -1082,10 +1191,10 @@ begin
       with FForm do
         begin
           // Parent
-          if Self is FXPopupMenu then
+          {if Self is FXPopupMenu then
             Parent := TControl(Self).Parent
           else
-            Parent := TControl(FXPopupItem(Self).GetParentPopupMenu).Parent;
+            Parent := TControl(FXPopupComponent(Self).GetParentPopupMenu).Parent; }
 
           // Prepare Form
           Position := poDesigned;
@@ -1151,22 +1260,22 @@ begin
   FForm.Show;
 end;
 
-procedure FXPopupItem.SetHover(Index: integer);
+procedure FXPopupComponent.SetHover(Index: integer);
 begin
   FHoverOver := Index;
 
   FGlassBlur.ReDraw;
 end;
 
-procedure FXPopupItem.UpdateTheme(const UpdateChildren: Boolean);
+procedure FXPopupComponent.UpdateTheme(const UpdateChildren: Boolean);
 var
   I: integer;
 begin
   // Inherit from parent
-  if Self.Owner is FXPopupItem  then
+  if Self.Owner is FXPopupComponent  then
     begin
-      FAnimType := FXPopupItem(Self.Owner).FAnimType;
-      FDrawColors := FXPopupItem(Self.Owner).FDrawColors;
+      FAnimType := FXPopupComponent(Self.Owner).FAnimType;
+      FDrawColors := FXPopupComponent(Self.Owner).FDrawColors;
     end
       else
         // Color
@@ -1188,7 +1297,7 @@ begin
 
 
   // Redraw
-  if FGlassBlur <> nil then
+  if (FGlassBlur <> nil) and not (csReading in ComponentState) then
     FGlassBlur.Repaint;
 
   // Update Children

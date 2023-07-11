@@ -117,6 +117,10 @@ type
       property ParentColor;
 
       property Align;
+      property Constraints;
+      property Anchors;
+      property Hint;
+      property ShowHint;
       property TabStop;
       property TabOrder;
       property OnEnter;
@@ -499,7 +503,7 @@ begin
       Brush.Style := bsSolid;
 
       // Slider Background
-      GDIRoundRect(MakeRoundRect(ClipRect, FRoundness), GetRGB(FBackgroundColor).MakeGDIBrush, nil);
+      GDIRoundRect(MakeRoundRect(ClipRect, FRoundness*2), GetRGB(FBackgroundColor).MakeGDIBrush, nil);
 
       // Full
       ARect := SliderRect;

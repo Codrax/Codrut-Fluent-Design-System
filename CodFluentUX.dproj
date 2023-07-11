@@ -159,6 +159,8 @@
         <DCCReference Include="Source\CFX.ScrollBox.pas"/>
         <DCCReference Include="Source\CFX.Scrollbar.pas"/>
         <DCCReference Include="Source\CFX.Selector.pas"/>
+        <DCCReference Include="Source\CFX.Edit.pas"/>
+        <DCCReference Include="Source\CFX.PopupConnector.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

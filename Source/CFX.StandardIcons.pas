@@ -61,13 +61,14 @@ type
 
       property Color;
 
-      property ShowHint;
       property Align;
+      property Constraints;
       property Anchors;
+      property Hint;
+      property ShowHint;
       property Cursor;
       property Visible;
       property Enabled;
-      property Constraints;
 
       property Proportional : boolean read FProport write SetProport;
       property SelectedIcon : FXStandardIconType read FIcon write SetIcon;

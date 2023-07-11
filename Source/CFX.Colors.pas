@@ -22,8 +22,13 @@ uses
     FXPersistentColor = class(TPersistent)
     private
       Owner : TPersistent;
+      FEnable: boolean;
 
       procedure Updated;
+      procedure SetEnabled(const Value: boolean);
+
+    protected
+      property Enabled: boolean read FEnable write SetEnabled;
 
     public
       constructor CreateOwner(AOwner : TPersistent); overload; virtual;
@@ -34,8 +39,6 @@ uses
     { Complete Color State Set }
     FXColorStateSets = class(FXPersistentColor)
       private
-        FEnable: boolean;
-
         FAccent,
         FLightBackGroundNone,
         FLightBackGroundHover,
@@ -51,7 +54,6 @@ uses
         FDarkForeGroundPress: TColor;
 
         procedure SetStateColor(const Index: Integer; const Value: TColor);
-        procedure SetEnabled(const Value: boolean);
 
       public
         constructor Create;
@@ -59,7 +61,7 @@ uses
         function GetColor(const DarkTheme, Foreground: boolean; State: FXControlState): TColor;
 
       published
-        property Enabled: boolean read FEnable write SetEnabled;
+        property Enabled;
 
         property Accent: TColor read FAccent write FAccent;
         property LightBackgroundNone: TColor index 0 read FLightBackGroundNone write SetStateColor;
@@ -79,8 +81,6 @@ uses
     // Color State Set
     FXColorStateSet = class(FXPersistentColor)
       private
-        FEnable: boolean;
-
         FAccent,
         FBackGroundNone,
         FBackGroundHover,
@@ -96,7 +96,7 @@ uses
         function GetColor(const Foreground: boolean; State: FXControlState): TColor;
 
       published
-        property Enabled: boolean read FEnable write FEnable;
+        property Enabled;
 
         property Accent: TColor read FAccent write FAccent;
         property BackgroundNone: TColor index 0 read FBackGroundNone write FBackGroundNone;
@@ -110,8 +110,6 @@ uses
     { Color State Sets }
     FXSingleColorStateSets = class(FXPersistentColor)
       private
-        FEnable: boolean;
-
         FAccent,
         FLightNone,
         FLightHover,
@@ -122,14 +120,15 @@ uses
 
         procedure SetStateColor(const Index: Integer; const Value: TColor);
       public
-        constructor Create;
+        constructor Create; overload;
+        constructor Create(AOwner: TPersistent); overload;
 
         procedure SetLightColor(None, Hover, Press: TColor);
         procedure SetDarkColor(None, Hover, Press: TColor);
         function GetColor(const DarkTheme: boolean; State: FXControlState): TColor;
 
       published
-        property Enabled: boolean read FEnable write FEnable;
+        property Enabled;
 
         property Accent: TColor read FAccent write FAccent;
         property LightNone: TColor index 0 read FLightNone write SetStateColor;
@@ -143,8 +142,6 @@ uses
     { Color State Set }
     FXSingleColorStateSet = class(FXPersistentColor)
       private
-        FEnable: boolean;
-
         FAccent,
         FNone,
         FHover,
@@ -154,13 +151,16 @@ uses
         constructor Create(ANone, AHover, APress: TColor); overload;
         constructor Create(Colors: FXSingleColorStateSets; const DarkTheme: boolean = false); overload;
 
+        procedure LoadColors(ANone, AHover, APress: TColor); overload;
+        procedure LoadColors(Colors: FXSingleColorStateSets; const DarkTheme: boolean = false); overload;
+
         procedure SetStateColor(const Index: Integer; const Value: TColor);
         function GetColor(const AState: FXControlState): TColor;
 
         procedure CopyFrom(FromSet: FXSingleColorStateSet);
 
       published
-        property Enabled: boolean read FEnable write FEnable;
+        property Enabled;
 
         property Accent: TColor read FAccent write FAccent;
         property None: TColor read FNone write FNone;
@@ -171,7 +171,6 @@ uses
     { Complete color sets with both Dark and Light theme }
     FXColorSets = class(FXPersistentColor)
       private
-        FEnable: boolean;
         FAccent,
         FLightBackGround,
         FLightForeground,
@@ -179,14 +178,13 @@ uses
         FDarkForeground: TColor;
 
         procedure WriteColorValue(const Index: Integer; const Value: TColor);
-        procedure SetEnable(const Value: boolean);
 
       public
         constructor Create(FocusControl: boolean = false); overload;
         constructor Create(AOwner: TPersistent; FocusControl: boolean = false); overload;
 
       published
-        property Enabled: boolean read FEnable write SetEnable;
+        property Enabled;
 
         property Accent: TColor index 0 read FAccent write WriteColorValue;
         property LightBackGround: TColor index 1 read FLightBackGround write WriteColorValue;
@@ -453,13 +451,6 @@ begin
   Create(FocusControl);
 end;
 
-procedure FXColorSets.SetEnable(const Value: boolean);
-begin
-  FEnable := Value;
-
-  Updated;
-end;
-
 procedure FXColorSets.WriteColorValue(const Index: Integer;
   const Value: TColor);
 begin
@@ -595,6 +586,15 @@ begin
   Owner := AOwner;
 end;
 
+procedure FXPersistentColor.SetEnabled(const Value: boolean);
+begin
+  if FEnable <> Value then
+    begin
+      FEnable := Value;
+      Updated;
+    end;
+end;
+
 procedure FXPersistentColor.Updated;
 begin
   if (Owner <> nil) and Supports(Owner, FXControl) and not (csReading in TComponent(Owner).ComponentState) then
@@ -616,6 +616,12 @@ begin
   FDarkNone := DEFAULT_DARK_GRAY_CONTROL_COLOR;
   FDarkHover := DEFAULT_DARK_GRAY_CONTROL_HOVER_COLOR;
   FDarkPress := DEFAULT_DARK_GRAY_CONTROL_PRESS_COLOR;
+end;
+
+constructor FXSingleColorStateSets.Create(AOwner: TPersistent);
+begin
+  Create;
+  CreateOwner(AOwner);
 end;
 
 function FXSingleColorStateSets.GetColor(const DarkTheme: boolean;
@@ -650,12 +656,12 @@ end;
 
 procedure FXSingleColorStateSets.SetDarkColor(None, Hover, Press: TColor);
 begin
-
+  Updated;
 end;
 
 procedure FXSingleColorStateSets.SetLightColor(None, Hover, Press: TColor);
 begin
-
+  Updated;
 end;
 
 procedure FXSingleColorStateSets.SetStateColor(const Index: Integer; const Value: TColor);
@@ -680,6 +686,7 @@ begin
       if Value <> FDarkPress then
         FDarkPress := Value;
   end;
+  Updated;
 end;
 
 { FXColorStateSet }
@@ -688,9 +695,7 @@ constructor FXSingleColorStateSet.Create(ANone, AHover, APress: TColor);
 begin
   inherited Create;
 
-  None := ANone;
-  Hover := AHover;
-  Press := APress;
+  LoadColors(ANone, AHover, APress);
 end;
 
 procedure FXSingleColorStateSet.CopyFrom(FromSet: FXSingleColorStateSet);
@@ -707,9 +712,7 @@ constructor FXSingleColorStateSet.Create(Colors: FXSingleColorStateSets;
 begin
   inherited Create;
 
-  None := Colors.GetColor(DarkTheme, FXControlState.None);
-  Hover := Colors.GetColor(DarkTheme, FXControlState.Hover);
-  Press := Colors.GetColor(DarkTheme, FXControlState.Press);
+  LoadColors(Colors, DarkTheme);
 end;
 
 function FXSingleColorStateSet.GetColor(const AState: FXControlState): TColor;
@@ -720,6 +723,21 @@ begin
     FXControlState.Hover: Result := Hover;
     FXControlState.Press: Result := Press;
   end;
+end;
+
+procedure FXSingleColorStateSet.LoadColors(Colors: FXSingleColorStateSets;
+  const DarkTheme: boolean);
+begin
+  None := Colors.GetColor(DarkTheme, FXControlState.None);
+  Hover := Colors.GetColor(DarkTheme, FXControlState.Hover);
+  Press := Colors.GetColor(DarkTheme, FXControlState.Press);
+end;
+
+procedure FXSingleColorStateSet.LoadColors(ANone, AHover, APress: TColor);
+begin
+    None := ANone;
+  Hover := AHover;
+  Press := APress;
 end;
 
 procedure FXSingleColorStateSet.SetStateColor(const Index: Integer;
@@ -873,13 +891,6 @@ begin
     else
       Result := 0;
   end;
-end;
-
-procedure FXColorStateSets.SetEnabled(const Value: boolean);
-begin
-  FEnable := Value;
-
-  Updated;
 end;
 
 procedure FXColorStateSets.SetStateColor(const Index: Integer;

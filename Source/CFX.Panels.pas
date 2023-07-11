@@ -739,7 +739,7 @@ begin
   if ThemeManager.LegacyFontColor then
     Font.Color := FDrawColors.ForeGround;
 
-  Self.Paint;
+  Invalidate;
 
   // Update Children
   if IsContainer and UpdateChildren then

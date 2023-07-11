@@ -22,6 +22,7 @@ uses
       FFormFont,
       FIconFont: string;
       FFormFontHeight: integer;
+      FLargeFontHeight: integer;
 
       FAccentColor: TColor;
       FAutoAccentColor: boolean;
@@ -48,6 +49,7 @@ uses
       (* Global Font Settings *)
       property FormFont: string read FFormFont write FFormFont;
       property FormFontHeight: integer read FFormFontHeight write FFormFontHeight;
+      property LargeFontHeight: integer read FLargeFontHeight write FLargeFontHeight;
       property IconFont: string read FIconFont write FIconFont;
       property LegacyFontColor: boolean read FLegacyFontColor write FLegacyFontColor;
       { Legacy Font Color defines if the Form should change It's font to accomodate inheritable font properties }
@@ -88,6 +90,9 @@ uses
 
       procedure UpdateColors;
       procedure UpdateSettings;
+
+      (* Notify *)
+      procedure NotifyUpdate;
 
       (* Time Limited *)
       procedure MeasuredUpdateSettings;
@@ -262,6 +267,7 @@ begin
 
   FFormFont := FORM_FONT_NAME;
   FFormFontHeight := FORM_FONT_HEIGHT;
+  FLargeFontHeight := LARGE_FONT_HEIGHT;
 end;
 
 procedure FXThemeManager.MeasuredUpdateSettings;
@@ -270,6 +276,16 @@ begin
     Exit;
 
   UpdateSettings;
+end;
+
+procedure FXThemeManager.NotifyUpdate;
+var
+  I: integer;
+begin
+  for I := 0 to Screen.FormCount - 1 do
+    if Screen.Forms[i] <> nil then
+      if Supports(Screen.Forms[i], FXControl) then
+        (Screen.Forms[i] as FXControl).UpdateTheme(true);
 end;
 
 procedure FXThemeManager.RegMonitorProc(Sender: TObject);
@@ -330,6 +346,8 @@ end;
 
 procedure FXThemeManager.UpdateColors;
 begin
+  if SystemColor <> nil then
+    SystemColor.Free;
   SystemColor := FXCompleteColorSet.Create(SystemColorSet, FDarkTheme);
 
   // Update Accent
@@ -350,14 +368,15 @@ procedure FXThemeManager.UpdateSettings;
 var
   I: Integer;
 begin
+  // Date
   LastUpdate := Now;
 
+  // Update
+  LoadFontSettings;
   UpdateColors;
 
-  for I := 0 to Screen.FormCount - 1 do
-    if Screen.Forms[i] <> nil then    
-      if Supports(Screen.Forms[i], FXControl) then
-        (Screen.Forms[i] as FXControl).UpdateTheme(true);
+  // Notify
+  NotifyUpdate;
 end;
 
 procedure FXThemeManager.UpdateThemeInformation;

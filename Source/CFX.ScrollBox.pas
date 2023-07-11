@@ -321,7 +321,7 @@ begin
   // Design Mode
   if IsDesigning then
     begin
-      FVertScroll.Left := FVertScroll.Width;
+      FVertScroll.Left := -FVertScroll.Width;
       FHorzScroll.Top := -FHorzScroll.Height;
 
       Exit;

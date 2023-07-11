@@ -84,7 +84,7 @@ type
       property IconFont: TFont read FIconFont write FIconFont;
       property AllowGrayed: Boolean read FAllowGrayed write SetAllowGrayed default false;
       property State: FXCheckBoxState read FState write SetState default FXCheckBoxState.Unchecked;
-      property TextSpacing: Integer read FTextSpacing write SetTextSpacing default 6;
+      property TextSpacing: Integer read FTextSpacing write SetTextSpacing default CHECKBOX_TEXT_SPACE;
       property Checked: Boolean read GetChecked write SetChecked default false;
       property OnChange: TNotifyEvent read FOnChange write FOnChange;
       property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default true;
@@ -96,10 +96,12 @@ type
       property AnimationEnabled: boolean read FAnimationEnabled write FAnimationEnabled;
 
       property Align;
-      property TabStop;
-      property TabOrder;
+      property Constraints;
+      property Anchors;
       property Hint;
       property ShowHint;
+      property TabStop;
+      property TabOrder;
       property OnEnter;
       property OnExit;
       property OnClick;
@@ -300,7 +302,7 @@ begin
 
   FTextFont := TFont.Create;
   FTextFont.Name := FORM_FONT_NAME;
-  FTextFont.Size := 12;
+  FTextFont.Size := ThemeManager.FormFontHeight;
 
   FAnimateTimer := TTimer.Create(nil);
   with FAnimateTimer do
@@ -312,7 +314,7 @@ begin
 
   FAllowGrayed := false;
   FState := FXCheckBoxState.Unchecked;
-  FTextSpacing := 6;
+  FTextSpacing := CHECKBOX_TEXT_SPACE;
   ParentColor := false;
   FAutomaticMouseCursor := false;
   TabStop := true;
@@ -416,8 +418,13 @@ begin
                 AText := CHECKBOX_FILL;
                 TextRect(IconRect, AText, IconFormat);
 
-                P1 := Point(IconRect.CenterPoint.X - round(IconRect.Width / 6), IconRect.CenterPoint.Y - trunc(IconRect.Height / 18));
-                P2 := Point(IconRect.CenterPoint.X - round(IconRect.Width / 12), IconRect.CenterPoint.Y + trunc(IconRect.Height / 10));
+                // Fix Size
+                IconRect.Offset(0, IconRect.Height div 2 - IconRect.Width div 2);
+                IconRect.Height := IconRect.Width;
+
+                // Anim
+                P1 := Point(IconRect.CenterPoint.X - trunc(IconRect.Width / 6), IconRect.CenterPoint.Y - trunc(IconRect.Height / 18));
+                P2 := Point(IconRect.CenterPoint.X - trunc(IconRect.Width / 12), IconRect.CenterPoint.Y + trunc(IconRect.Height / 10));
 
                 ALine := Line(P1, P2);
 
@@ -428,7 +435,7 @@ begin
 
                 if FAnimationStatus > 50 then
                   begin
-                    P1 := Point(IconRect.CenterPoint.X + round(IconRect.Width / 6), IconRect.CenterPoint.Y - trunc(IconRect.Height / 6));
+                    P1 := Point(IconRect.CenterPoint.X + trunc(IconRect.Width / 6), IconRect.CenterPoint.Y - trunc(IconRect.Height / 6));
                     ALine := Line(P2, P1);
                     ALine.SetPercentage((FAnimationStatus-50)/50 * 100);
 

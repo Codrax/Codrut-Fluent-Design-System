@@ -9,45 +9,49 @@ uses
   // CFX LIBRARY
   CFX.Forms, CFX.Colors, CFX.ThemeManager, Vcl.StdCtrls, Vcl.TitleBarCtrls,
   Vcl.ExtCtrls, Vcl.Imaging.jpeg, CFX.Button, CFX.Checkbox, CFX.Panels,
-  CFX.StandardIcons, CFX.Dialogs, CFX.BlurMaterial,
+  CFX.StandardIcons, CFX.Dialogs, CFX.BlurMaterial, CFX.Selector,
   CFX.Classes, CFX.PopupMenu, CFX.UIConsts, CFX.Types, CFX.ToolTip, CFX.Hint,
   CFX.Slider, CFX.ImageList, CFX.Controls, CFX.Test, CFX.Labels, CFX.RadioButton,
-  CFX.Scrollbar, CFX.ScrollBox, CFX.Selector,
+  CFX.Scrollbar, CFX.ScrollBox, CFX.Edit, Cod.Graphics,
 
   // VCL COMPONENTS
   Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage,
-  Vcl.ExtDlgs, System.ImageList,
-  Vcl.ComCtrls, Vcl.Mask;
+  Vcl.ExtDlgs, System.ImageList, UITypes,
+  Vcl.ComCtrls, Vcl.Mask, CFX.PopupConnector, Vcl.Buttons;
 
 type
   TForm1 = class(FXForm)
-    FXButton1: FXButton;
-    FXMinimisePanel1: FXMinimisePanel;
-    FXButon2: FXButton;
-    FXButton2: FXButton;
-    TitleBarPanel1: TTitleBarPanel;
-    FXButton3: FXButton;
-    FXPopupMenu1: FXPopupMenu;
-    FXSlider1: FXSlider;
-    FXCheckBox1: FXCheckBox;
     FXStandardIcon1: FXStandardIcon;
     FXStandardIcon2: FXStandardIcon;
     FXStandardIcon3: FXStandardIcon;
     FXStandardIcon4: FXStandardIcon;
     FXStandardIcon5: FXStandardIcon;
     FXStandardIcon6: FXStandardIcon;
+    FXButton1: FXButton;
+    FXMinimisePanel1: FXMinimisePanel;
     FXLabel1: FXLabel;
+    FXButon2: FXButton;
+    FXButton2: FXButton;
+    TitleBarPanel1: TTitleBarPanel;
+    FXButton3: FXButton;
+    FXSlider1: FXSlider;
+    FXCheckBox1: FXCheckBox;
     FXScrollbar1: FXScrollbar;
     FXCheckBox2: FXCheckBox;
+    FXSelector1: FXSelector;
+    FXRadioButton1: FXRadioButton;
+    FXRadioButton2: FXRadioButton;
+    FXButton4: FXButton;
+    FXEdit1: FXEdit;
+    FXLabel2: FXLabel;
     procedure Button2Click(Sender: TObject);
     procedure FXButton1Click(Sender: TObject);
     procedure FXButton3Click(Sender: TObject);
     procedure CButton1Click(Sender: TObject);
     procedure CImage1Click(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
+    procedure FXButton4Click(Sender: TObject);
   private
-    { Private decla
-    procedure FormCreate(Sender: TObject);rations }
+    { Private declarations }
   public
     { Public declarations }
   end;
@@ -85,12 +89,6 @@ begin
   Self.Repaint;
 end;
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
-  ThemeManager.LegacyFontColor := false;
-  Font.Color := clRed;
-end;
-
 procedure TForm1.FXButton1Click(Sender: TObject);
 var
   A: FXDialog;
@@ -114,7 +112,7 @@ var
   I, O: FXPopupItem;
   J: integer;
 begin
-  P := FXPopupMenu1;
+  P := nil;
 
   if P.GetMenuItemCount = 0 then
   begin
@@ -157,8 +155,8 @@ begin
 
         IsDefault := true;
 
-        Image.IconType := FXIconType.BitMap;
-        Image.SelectBitmap.LoadFromFile( 'F:\Assets\By Me\40x40\CheckMark gradient.bmp' );
+        Image.IconType := FXIconType.Image;
+        Image.SelectPicture.LoadFromFile( 'C:\Windows\System32\SecurityAndMaintenance_Alert.png' );
 
         Items.Add(I);
         Items.Add(O);
@@ -176,12 +174,10 @@ begin
     with I do
       begin
         Text := 'More';
-        ShortCut := 'LOL';
+        ShortCut := 'Del';
 
         Image.Enabled := true;
         Image.SelectSegoe := '';
-
-        OnClick := FXButton1Click;
       end;
 
     // Create Sub Items
@@ -299,6 +295,7 @@ begin
 
         AutoCheck := true;
         RadioItem := true;
+        OnCheck := FXButton1Click;
       end;
 
     with FXPopupItem.Create(P) do
@@ -343,6 +340,34 @@ begin
   end;
 
   P.PopupAtCursor;
+end;
+
+procedure TForm1.FXButton4Click(Sender: TObject);
+begin
+  with ThemeManager.SystemColor do
+    begin
+      Foreground := clLime;
+      Background := clRed;
+      BackgroundInterior := TColors.Cornflowerblue;
+      Accent := 16679746;
+    end;
+
+  with ThemeManager.SystemColorSet do
+    begin
+      DarkForeground := clLime;
+      DarkBackground := clRed;
+      DarkBackGroundInterior := TColors.Slateblue;
+      Accent := 16679746;
+    end;
+
+  with ThemeManager.SystemAccentInteractStates do
+    begin
+      None := TColors.Purple;
+      Hover := TColors.Cornflowerblue;
+      Press := TColors.Olivedrab;
+    end;
+
+  ThemeManager.NotifyUpdate;
 end;
 
 end.

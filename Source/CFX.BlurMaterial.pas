@@ -656,10 +656,15 @@ begin
 
           // Tint Item
           if EnableTinting then
-            if ThemeManager.DarkTheme then
-              GDITint( ClipRect, FDrawColors.BackGround, FDarkTintOpacity )
-            else
-              GDITint( ClipRect, FDrawColors.BackGround, FWhiteTintOpacity );
+            begin
+              DrawRect := ClipRect;
+              DrawRect.Inflate(1, 1);
+
+              if ThemeManager.DarkTheme then
+                GDITint( DrawRect, FDrawColors.BackGround, FDarkTintOpacity )
+              else
+                GDITint( DrawRect, FDrawColors.BackGround, FWhiteTintOpacity );
+            end;
         end;
   finally
     FDrawing := Save;

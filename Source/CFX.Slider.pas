@@ -65,6 +65,7 @@ type
       procedure SetMax(const Value: int64);
       procedure SetMin(const Value: int64);
       procedure SetPosition(const Value: int64);
+      procedure SetPositionEx(const Value: int64; Redraw: boolean);
       procedure SetSliderHeight(const Value: integer);
       procedure SetIconSize(const Value: integer);
 
@@ -98,6 +99,7 @@ type
       procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
 
       procedure KeyPress(var Key: Char); override;
+      procedure HandleKeyDown(var CanHandle: boolean; Key: integer; ShiftState: TShiftState); override;
 
     published
       property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
@@ -105,7 +107,7 @@ type
       property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default true;
       property Orientation: FXOrientation read FOrientation write SetOrientation default FXOrientation.Horizontal;
       property SliderHeight: integer read FSliderHeight write SetSliderHeight default 6;
-      property IconSize: integer read FIconSize write SetIconSize default 22;
+      property IconSize: integer read FIconSize write SetIconSize default CHECKBOX_ICON_SIZE;
       property Position: int64 read FPosition write SetPosition;
       property SmallChange: integer read FSmallChange write SetSmallChange default 1;
       property Min: int64 read FMin write SetMin default 0;
@@ -119,6 +121,10 @@ type
       property ParentColor;
 
       property Align;
+      property Constraints;
+      property Anchors;
+      property Hint;
+      property ShowHint;
       property TabStop;
       property TabOrder;
       property OnEnter;
@@ -163,7 +169,7 @@ end;
 procedure FXSlider.KeyPress(var Key: Char);
 begin
   inherited;
-  if (key = '-') or (key = '+') then
+  if (key = '-') or (key = '+') or (key = '=') then
     begin
       if Key = '-' then
         Position := Position - FSmallChange
@@ -246,7 +252,11 @@ begin
         end;
 
       // Position
-      Position := NewPosition + FMin;
+      SetPositionEx(NewPosition + Min, false);
+
+      // Update
+      UpdateRects;
+      PaintBuffer;
     end;
 end;
 
@@ -256,6 +266,9 @@ begin
   inherited;
   // Snap to position
   UpdateSliderPosition;
+  UpdateRects;
+  ShowPositionHint;
+  PaintBuffer;
 end;
 
 procedure FXSlider.UpdateTheme(const UpdateChildren: Boolean);
@@ -389,7 +402,7 @@ begin
   FAutomaticMouseCursor := true;
   FOrientation := FXOrientation.Horizontal;
   FSliderHeight := 6;
-  FIconSize := 22;
+  FIconSize := CHECKBOX_ICON_SIZE;
   FCenterFill := 50;
   FSmallChange := 1;
   FTotalTicks := 0;
@@ -477,6 +490,27 @@ begin
     Result := Height;
 end;
 
+procedure FXSlider.HandleKeyDown(var CanHandle: boolean; Key: integer;ShiftState: TShiftState
+  );
+var
+  C: char;
+begin
+  inherited;
+  case Key of
+    VK_LEFT: begin
+      C := '-';
+      KeyPress(C);
+      CanHandle := false;
+    end;
+
+    VK_RIGHT: begin
+      C := '+';
+      KeyPress(C);
+      CanHandle := false;
+    end;
+  end;
+end;
+
 procedure FXSlider.PaintBuffer;
 var
   ValueSize,
@@ -487,7 +521,6 @@ var
   InnerRect: TRect;
   I: integer;
 begin
-  UpdateRects;
   // Paint background
   if not ParentColor then
     Color := FDrawColors.BackGround;
@@ -623,6 +656,7 @@ begin
         end;
 
       UpdateRects;
+      UpdateSliderPosition;
       PaintBuffer;
     end;
 end;
@@ -643,6 +677,7 @@ begin
         end;
 
       UpdateRects;
+      UpdateSliderPosition;
       PaintBuffer;
     end;
 end;
@@ -669,6 +704,11 @@ end;
 
 procedure FXSlider.SetPosition(const Value: int64);
 begin
+  SetPositionEx(Value, true);
+end;
+
+procedure FXSlider.SetPositionEx(const Value: int64; Redraw: boolean);
+begin
   if FPosition <> Value then
     begin
       FPosition := Value;
@@ -685,10 +725,13 @@ begin
             OnChange(Self);
         end;
 
-      UpdateSliderPosition;
+      if Redraw then
+        begin
+          UpdateSliderPosition;
 
-      UpdateRects;
-      PaintBuffer;
+          UpdateRects;
+          PaintBuffer;
+        end;
     end;
 end;
 
@@ -756,6 +799,7 @@ procedure FXSlider.WMSize(var Message: TWMSize);
 begin
   inherited;
   UpdateRects;
+  UpdateSliderPosition;
 end;
 
 procedure FXSlider.WM_LButtonUp(var Msg: TWMLButtonUp);

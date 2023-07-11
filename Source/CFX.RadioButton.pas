@@ -77,7 +77,7 @@ type
     published
       property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
       property IconFont: TFont read FIconFont write FIconFont;
-      property TextSpacing: Integer read FTextSpacing write SetTextSpacing default 6;
+      property TextSpacing: Integer read FTextSpacing write SetTextSpacing default RADIO_TEXT_SPACE;
       property Checked: Boolean read GetChecked write SetChecked default false;
       property OnCheck: TNotifyEvent read FOnCheck write FOnCheck;
       property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor;
@@ -90,10 +90,12 @@ type
       property Layout: FXDrawLayout read FLayout write SetLayout default FXDrawLayout.Left;
 
       property Align;
-      property TabStop;
-      property TabOrder;
+      property Constraints;
+      property Anchors;
       property Hint;
       property ShowHint;
+      property TabStop;
+      property TabOrder;
       property OnEnter;
       property OnExit;
       property OnClick;
@@ -385,10 +387,10 @@ begin
 
   FTextFont := TFont.Create;
   FTextFont.Name := FORM_FONT_NAME;
-  FTextFont.Size := 12;
+  FTextFont.Size := ThemeManager.FormFontHeight;
 
   FChecked := false;
-  FTextSpacing := 6;
+  FTextSpacing := RADIO_TEXT_SPACE;
   ParentColor := false;
   FAutomaticMouseCursor := true;
   TabStop := true;

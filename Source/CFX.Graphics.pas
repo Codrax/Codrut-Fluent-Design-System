@@ -27,6 +27,10 @@ uses
                           DestCanvas: TCanvas; DestRect: TRect;
                           shrinkborder: integer = 0);
 
+  // Color Inversion
+  procedure StretchInvertedMask(Source: TBitMap; Destination: TCanvas; DestRect: TRect); overload;
+  procedure StretchInvertedMask(Source: TCanvas; Destination: TCanvas; DestRect: TRect); overload;
+
   // Draw Rectangles
   function GetDrawModeRects(Rect: TRect; Image: TGraphic; DrawMode: FXDrawMode; ImageMargin:
                             integer = 0): TArray<TRect>;
@@ -639,6 +643,16 @@ begin
                           FromCanvas, TRect.Create(HS.Point1, HS.Point2));
 end;
 
+procedure StretchInvertedMask(Source: TCanvas; Destination: TCanvas; DestRect: TRect);
+begin
+  BitBlt(Destination.Handle, DestRect.Left, DestRect.Top, DestRect.Width, DestRect.Height,
+    Source.Handle, 0, 0, SRCINVERT);
+end;
+
+procedure StretchInvertedMask(Source: TBitMap; Destination: TCanvas; DestRect: TRect);
+begin
+  StretchInvertedMask(Source.Canvas, Destination, DestRect);
+end;
 
 procedure DrawBorder(const Canvas: TCanvas; R: TRect; Color: TColor; Thickness: Byte; Roundness: integer);
 var
