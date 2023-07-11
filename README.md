@@ -13,6 +13,7 @@ The component package is not at a state where it can be considered finished with
 - Scrollbox, a modern scrollbox that uses the modern scrollbars
 - Selector, a component which allows to select between multiple options with a animation when switching
 - Checkbox, a animated checkbox that supports 3 states
+- Edit Box, a flue edit box with vertical alignment support
 - Standard icon, a drawable TGraphicControl icon component that has multiple icons
 - Slider, a slider with tick support, hint previews and more features
 - Blur Material, a acrilic blur box that can be drawn from the wallaper or a screenshot of the screen. Great for Windows Fluent Design System like apps
