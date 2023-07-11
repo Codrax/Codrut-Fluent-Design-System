@@ -41,9 +41,10 @@ type
     FXSelector1: FXSelector;
     FXRadioButton1: FXRadioButton;
     FXRadioButton2: FXRadioButton;
-    FXButton4: FXButton;
     FXEdit1: FXEdit;
     FXLabel2: FXLabel;
+    FXEdit2: FXEdit;
+    FXLabel3: FXLabel;
     procedure Button2Click(Sender: TObject);
     procedure FXButton1Click(Sender: TObject);
     procedure FXButton3Click(Sender: TObject);

@@ -49,6 +49,9 @@ interface
 
     FXCorners = (TopLeft, TopRight, BottomLeft, BottomRight);
 
+    // Text
+    FXCharCase = (Both, Uppercase, Lowercase);
+
     // Theme Color
     FXColorType = (Foreground, Accent, BackGround, Content);
     FXDarkSetting = (Auto, ForceDark, ForceLight);

@@ -496,19 +496,34 @@ var
   C: char;
 begin
   inherited;
-  case Key of
-    VK_LEFT: begin
-      C := '-';
-      KeyPress(C);
-      CanHandle := false;
-    end;
+  if Orientation = FXOrientation.Horizontal then
+    case Key of
+      VK_LEFT: begin
+        C := '-';
+        KeyPress(C);
+        CanHandle := false;
+      end;
 
-    VK_RIGHT: begin
-      C := '+';
-      KeyPress(C);
-      CanHandle := false;
+      VK_RIGHT: begin
+        C := '+';
+        KeyPress(C);
+        CanHandle := false;
+      end;
+    end
+  else
+    case Key of
+      VK_UP: begin
+        C := '-';
+        KeyPress(C);
+        CanHandle := false;
+      end;
+
+      VK_DOWN: begin
+        C := '+';
+        KeyPress(C);
+        CanHandle := false;
+      end;
     end;
-  end;
 end;
 
 procedure FXSlider.PaintBuffer;
@@ -522,14 +537,12 @@ var
   I: integer;
 begin
   // Paint background
-  if not ParentColor then
-    Color := FDrawColors.BackGround;
   with Buffer do
     begin
       Pen.Style := psClear;
       Brush.Style := bsSolid;
       Brush.Handle := CreateSolidBrushWithAlpha(FDrawColors.Background, 255);
-      RoundRect(DrawRect, GENERAL_ROUND, GENERAL_ROUND);
+      FilLRect(ClipRect);
     end;
 
   // Draw slider

@@ -49,6 +49,12 @@ type
       FHistory: TStringList;
       FDefaultMenu: FXPopupMenu;
       FTextMargin: integer;
+      FPassChar: char;
+      FCanUndo: boolean;
+      FEnableSelection: boolean;
+      FCharCase: FXCharCase;
+      FNumbersOnly: boolean;
+      FClearSelOnExit: boolean;
 
       //  Internal
       procedure UpdateColors;
@@ -79,11 +85,16 @@ type
       procedure ChangeText(AText: string);
       procedure DeleteChar(Index: integer);
 
+      procedure ApplyCharCase;
       procedure ScrollForCursor; overload;
       procedure ScrollForCursor(ADrawPosition: integer); overload;
       function SearchPosition(AX: integer): integer;
       function FindNext(From: integer; GoesLeft: boolean = false): integer;
       procedure SelectPoints(P1, P2: integer);
+      function DrawText: string;
+
+      // Getter
+      function GetValue: int64;
 
       // Setters
       procedure SetText(const Value: string);
@@ -94,6 +105,12 @@ type
       procedure SetLayout(const Value: FXLayout);
       procedure SetSelLength(const Value: integer);
       procedure SetTextMargin(const Value: integer);
+      procedure SetPasswordChar(const Value: char);
+      procedure SetCanUndo(const Value: boolean);
+      procedure SetEnableSelection(const Value: boolean);
+      procedure SetCharCase(const Value: FXCharCase);
+      procedure SetNumbersOnly(const Value: boolean);
+      procedure SetValue(const Value: int64);
 
     protected
       procedure PaintBuffer; override;
@@ -109,6 +126,7 @@ type
 
       // Mouse
       procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+      procedure DblClick; override;
 
       // Inherited
       procedure ComponentCreated; override;
@@ -141,12 +159,20 @@ type
 
       // Text
       property Text: string read FText write SetText;
+      property PasswordChar: char read FPassChar write SetPasswordChar;
+
+      property Value: int64 read GetValue write SetValue;
 
       property Position: integer read FPosition write SetPosition;
       property SelectionLength: integer read FSelLength write SetSelLength;
       property Layout: FXLayout read FLayout write SetLayout default FXLayout.Center;
 
       // Settings
+      property ClearSelectionOnExit: boolean read FClearSelOnExit write FClearSelOnExit default true;
+      property CanUndo: boolean read FCanUndo write SetCanUndo default true;
+      property CharCase: FXCharCase read FCharCase write SetCharCase default FXCharCase.Both;
+      property NumbersOnly: boolean read FNumbersOnly write SetNumbersOnly default false;
+      property EnableSelection: boolean read FEnableSelection write SetEnableSelection default true;
       property AutoSize: boolean read FAutoSize write SetAutoSizing default true;
       property LineSize: integer read FLineSize write SetLineSize default EDIT_LINE_SIZE;
       property Roundness: integer read FRoundness write SetRoundness default EDIT_BORDER_ROUND;
@@ -209,7 +235,12 @@ begin
   if CharInSet(Key, [#8, #13]) then
     Exit;
 
+  // Special keys
   if (ssCtrl in LastShiftState) or (ssAlt in LastShiftState) then
+    Exit;
+
+  // Numbers Only
+  if NumbersOnly and not CharInSet(Key, ['0'..'0']) then
     Exit;
 
   // Override Selection
@@ -239,7 +270,7 @@ begin
   inherited;
   if InteractionState = FXControlState.Press then
     begin
-      if FDownStart <> -1 then
+      if (FDownStart <> -1) and EnableSelection then
         begin
           PosX := X - TxtRect.Left + FCutPosition;
 
@@ -280,10 +311,24 @@ begin
   Invalidate;
 end;
 
+function FXEdit.GetValue: int64;
+begin
+  Result := 0;
+  if FText <> '' then
+    try
+      Result := FText.ToInt64;
+    except
+
+    end;
+end;
+
 procedure FXEdit.Undo;
 var
   Index: integer;
 begin
+  if not FCanUndo then
+    Exit;
+
   if FHistory.Count > 0 then
     begin
       Index := FHistory.Count-1;
@@ -363,7 +408,7 @@ end;
 
 procedure FXEdit.UpdateDrawPosition;
 begin
-  FDrawPosition := TextW( Copy(Text, 1, FPosition) ) - FCutPosition;
+  FDrawPosition := TextW( Copy(DrawText, 1, FPosition) ) - FCutPosition;
 end;
 
 procedure FXEdit.UpdateLine;
@@ -405,11 +450,15 @@ begin
   FRoundness := EDIT_BORDER_ROUND;
   FTextMargin := EDIT_EXTRA_SPACE;
   FLayout := FXLayout.Center;
+  FCanUndo := true;
+  FEnableSelection := true;
+  FClearSelOnExit := true;
 
   FAutoSize := true;
   FLineSize := EDIT_LINE_SIZE;
 
   FHandleUpDown := true;
+  FPassChar := #0;
 
   Cursor := crIBeam;
 
@@ -452,6 +501,9 @@ end;
 
 procedure FXEdit.CutToClipBoard;
 begin
+  if PasswordChar <> #0 then
+    Exit;
+
   CopyToClipBoard;
 
   DeleteSelection;
@@ -465,7 +517,21 @@ end;
 
 procedure FXEdit.CopyToClipBoard;
 begin
+  if PasswordChar <> #0 then
+    Exit;
+
   Clipboard.AsText := Selection;
+end;
+
+procedure FXEdit.DblClick;
+var
+  P1, P2: integer;
+begin
+  inherited;
+  P1 := FindNext(Position, true);
+  P2 := FindNext(Position, false);
+
+  SelectPoints(P1, P2);
 end;
 
 procedure FXEdit.DeleteChar(Index: integer);
@@ -506,7 +572,25 @@ procedure FXEdit.DoExit;
 begin
   inherited;
 
+  if NumbersOnly and (FText = '') then
+    Text := '0';
+
+  if FClearSelOnExit and HasSelection then
+    SelectionLength := 0;
+
   UpdateLine;
+end;
+
+function FXEdit.DrawText: string;
+var
+  I: Integer;
+begin
+  Result := '';
+  if PasswordChar = #0 then
+    Result := Text
+  else
+    for I := 1 to Length(Text) do
+      Result := Result + PasswordChar;
 end;
 
 function FXEdit.FindNext(From: integer; GoesLeft: boolean): integer;
@@ -517,9 +601,22 @@ end;
 var
   ATotal: integer;
 begin
+  // Password Char
+  if PasswordChar <> #0 then
+    begin
+      if GoesLeft then
+        Result := 0
+      else
+        Result := TextLength;
+
+      Exit;
+    end;
+
+  // Data
   Result := From;
   ATotal := TextLength;
 
+  // Search characters
   if GoesLeft then
     while Result > 0 do
       begin
@@ -586,7 +683,7 @@ begin
             Position := NewPos;
         end
       else
-        if ssShift in ShiftState then
+        if (ssShift in ShiftState) and EnableSelection then
           begin
             if FSelGoesLeft then
               begin
@@ -623,7 +720,7 @@ begin
             Position := NewPos;
         end
       else
-        if ssShift in ShiftState then
+        if (ssShift in ShiftState) and EnableSelection then
           begin
             if FSelGoesLeft then
               begin
@@ -705,6 +802,14 @@ begin
   Result := FSelLength > 0;
 end;
 
+procedure FXEdit.ApplyCharCase;
+begin
+  case CharCase of
+    FXCharCase.Uppercase: FText := UpperCase(FText);
+    FXCharCase.Lowercase: FText := Lowercase(FText);
+  end;
+end;
+
 function FXEdit.Background: TColor;
 begin
   Result := FDrawColors.Background;
@@ -718,10 +823,17 @@ end;
 
 procedure FXEdit.ChangeText(AText: string);
 begin
-  FHistory.Add(FText);
+  // Undp
+  if FCanUndo then
+    FHistory.Add(FText);
 
+  // Text
   FText := AText;
 
+  // Char
+  ApplyCharCase;
+
+  // Update
   UpdateRects;
   PaintBuffer;
 end;
@@ -739,6 +851,7 @@ var
   Temp: real;
   ASelect: string;
   FillColor: TColor;
+  AText: string;
 
   X, Y: integer;
 begin
@@ -775,11 +888,12 @@ begin
       // Selection
 
       // Text
+      AText := DrawText;
       Font.Assign(Self.Font);
       Font.Color := Self.Font.Color;
 
       // Data
-      TxtHeight := TextHeight(Text);
+      TxtHeight := TextHeight(AText);
 
       Y := 0;
       case Layout of
@@ -798,12 +912,11 @@ begin
       ARect.Left := TxtRect.Left + FDrawPosition;
       ARect.Right := ARect.Left + TextWidth(ASelect);
 
-      Brush.Color := FDrawColors.Accent;
-      FillRect(ARect);
+      GDIRectangle(ARect, GetRGB(FDrawColors.Accent).MakeGDIBrush, nil);
 
       // Text
       Brush.Style := bsClear;
-      TextRect(TxtRect, X, Y, FText);
+      TextRect(TxtRect, X, Y, AText);
 
       // Indicator
       if Focused then
@@ -831,6 +944,15 @@ var
 begin
   ClipText := Clipboard.AsText;
 
+  // Numbers Only
+  if NumbersOnly then
+    try
+      ClipText.ToInt64;
+    except
+      Exit;
+    end;
+
+  // Selection
   if HasSelection then
     NewText := Copy(FText, 1, FPosition) + ClipText + Copy(FText, 1+FPosition+FSelLength, Length(FText))
   else
@@ -847,13 +969,15 @@ procedure FXEdit.PopupBeforePopup(Sender: TObject; var CanPopup: boolean;
   Point: TPoint);
 var
   HasSelection: boolean;
+  IsPassword: boolean;
 begin
   HasSelection := SelectionLength <> 0;
+  IsPassword := (PasswordChar <> #0);
 
-  FDefaultMenu.Items[0].Visible := HasSelection;
-  FDefaultMenu.Items[1].Visible := HasSelection;
+  FDefaultMenu.Items[0].Visible := HasSelection and not IsPassword;
+  FDefaultMenu.Items[1].Visible := HasSelection and not IsPassword;
   FDefaultMenu.Items[2].Visible := Clipboard.AsText <> '';
-  FDefaultMenu.Items[3].Visible := FHistory.Count > 0;
+  FDefaultMenu.Items[3].Visible := (FHistory.Count > 0) and FCanUndo;
 end;
 
 procedure FXEdit.PopupItemClick(Sender: TObject; Item: FXPopupComponent;
@@ -991,7 +1115,7 @@ end;
 
 function FXEdit.Selection: string;
 begin
-  Result := Copy(FText, FPosition+1, FSelLength);
+  Result := Copy(DrawText, FPosition+1, FSelLength);
 end;
 
 function FXEdit.SelectionEnd: integer;
@@ -1012,6 +1136,10 @@ end;
 
 procedure FXEdit.SelectPoints(P1, P2: integer);
 begin
+  if not EnableSelection then
+    Exit;
+
+  // Type
   FSelGoesLeft := P1 < P2;
 
   if FSelGoesLeft then
@@ -1025,6 +1153,7 @@ begin
       FSelLength := P1-P2;
     end;
 
+  // Update
   UpdateRects;
   Invalidate;
 end;
@@ -1040,6 +1169,40 @@ begin
 
       UpdateRects;
       PaintBuffer;
+    end;
+end;
+
+procedure FXEdit.SetCanUndo(const Value: boolean);
+begin
+  if FCanUndo <> Value then
+    begin
+      FCanUndo := Value;
+
+      if not Value then
+        FHistory.Clear;
+    end;
+end;
+
+procedure FXEdit.SetCharCase(const Value: FXCharCase);
+begin
+  if FCharCase <> Value then
+    begin
+      FCharCase := Value;
+
+      ApplyCharCase;
+
+      Invalidate;
+    end;
+end;
+
+procedure FXEdit.SetEnableSelection(const Value: boolean);
+begin
+  if FEnableSelection <> Value then
+    begin
+      FEnableSelection := Value;
+
+      if SelectionLength <> 0 then
+        SelectionLength := 0;
     end;
 end;
 
@@ -1062,6 +1225,33 @@ begin
 
       UpdateRects;
       PaintBuffer;
+    end;
+end;
+
+procedure FXEdit.SetNumbersOnly(const Value: boolean);
+begin
+  if FNumbersOnly <> Value then
+    begin
+      FNumbersOnly := Value;
+
+      try
+        FText.ToInt64;
+      except
+        FText := '0';
+      end;
+
+      Invalidate;
+    end;
+end;
+
+procedure FXEdit.SetPasswordChar(const Value: char);
+begin
+  if FPassChar <> Value then
+    begin
+      FPassChar := Value;
+
+      UpdateRects;
+      Invalidate;
     end;
 end;
 
@@ -1095,6 +1285,7 @@ procedure FXEdit.SetSelLength(const Value: integer);
 var
   ATotal: integer;
 begin
+  // Set Selection
   if FSelLength <> Value then
     begin
       FSelLength := Value;
@@ -1118,6 +1309,9 @@ begin
   FText := Value;
   FHistory.Clear;
 
+  ApplyCharCase;
+
+  // Update
   UpdateRects;
   PaintBuffer;
 end;
@@ -1131,6 +1325,12 @@ begin
       UpdateAutoSize;
       Invalidate;
     end;
+end;
+
+procedure FXEdit.SetValue(const Value: int64);
+begin
+  if not IsReading then
+    Text := Value.ToString;
 end;
 
 function FXEdit.TextH(AText: string): integer;
