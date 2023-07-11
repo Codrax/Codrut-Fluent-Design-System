@@ -55,6 +55,7 @@ type
       FCharCase: FXCharCase;
       FNumbersOnly: boolean;
       FClearSelOnExit: boolean;
+      FOnChange: TNotifyEvent;
 
       //  Internal
       procedure UpdateColors;
@@ -182,6 +183,10 @@ type
       property HandleUpDown: boolean read FHandleUpDown write FHandleUpDown default true;
       property Font;
 
+      // Events
+      property OnChange: TNotifyEvent read FOnChange write FOnChange;
+
+      // Inherited properties
       property Cursor default crIBeam;
       property Align;
       property Constraints;
@@ -832,6 +837,10 @@ begin
 
   // Char
   ApplyCharCase;
+
+  // Notify
+  if Assigned(OnChange) then
+    OnChange(Self);
 
   // Update
   UpdateRects;
