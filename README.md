@@ -7,7 +7,8 @@ The component package is not at a state where it can be considered finished with
 ## Components
 - Minimise Panel, a Panel that is able to minimise itself with a optional animation, works best with DoubleBuffered and for more panels, use Align.alTop
 - Panel, a TPanel component with inproved features and the ability to sync to the System Color Theme
-- Button, a very customizable and advanced button from CodrutsVisualLibrary with inproved features, can be styled multiple ways, icon support, gradient, accent color sync, align, subtext, automatic font sizing and more
+- Button, a powerfull button in the Fluent Design style, customizable with custom colors, shapes, button types, long presses, 2-states, checkable, dropdown, and more. It can also be aligned Vertically and Horizontalle, and the Icon as well
+- ButtonDesign, a very customizable and advanced button from CodrutsVisualLibrary with inproved features, can be styled multiple ways, icon support, gradient, accent color sync, align, subtext, automatic font sizing and more
 - Radio Button, a radio button component with multiple aligmnets
 - Scrollbar, a simple scrollbar that minimised itself to a line when not in use
 - Scrollbox, a modern scrollbox that uses the modern scrollbars
@@ -15,6 +16,7 @@ The component package is not at a state where it can be considered finished with
 - Checkbox, a animated checkbox that supports 3 states
 - Edit Box, a flue edit box with vertical alignment support
 - Standard icon, a drawable TGraphicControl icon component that has multiple icons
+- IconView, a simple icon view control that relies on the FXIcon class for drawing & storing. Very lightweight
 - Slider, a slider with tick support, hint previews and more features
 - Blur Material, a acrilic blur box that can be drawn from the wallaper or a screenshot of the screen. Great for Windows Fluent Design System like apps
 - Popup Menu, it supports (FXIconSelect) icons and can have multiple sub-menus, It used a acrylic effect for the background with a accent colored border. It also has Checkable items, Radio Items, separators and as mentioned before, It can go infinite layers deep
