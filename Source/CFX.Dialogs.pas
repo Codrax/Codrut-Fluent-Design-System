@@ -5,16 +5,17 @@ unit CFX.Dialogs;
 interface
 
   uses
-    Windows, Vcl.Dialogs, CFX.Button, UITypes, Types, Classes, Variants,
+    Windows, Vcl.Dialogs, CFX.Button, Types, Classes, Variants,
     Vcl.Forms, Vcl.Themes, Vcl.Styles, Vcl.Graphics, CFX.Types,
     Vcl.Controls, CFX.Colors, SysUtils, Vcl.ExtCtrls, Vcl.ComCtrls,
-    Vcl.TitleBarCtrls, Math, CFX.Math, Vcl.StdCtrls, CFX.Forms;
+    Vcl.TitleBarCtrls, Math, CFX.Math, Vcl.StdCtrls, CFX.Forms,
+    UITypes;
 
   type
     FXMessageType = (Information, Error, Question, Sucess, Warning, Star);
     FXInputBoxResult = (Cancel, Ok);
 
-    FXButtonHelper = class helper for FXButton
+    FXButtonDesignHelper = class helper for FXButton
       procedure ApplyButtonSettings(LoadFromButton: FXButton);
     end;
 
@@ -64,8 +65,6 @@ interface
         constructor Create; virtual;
 
         // Settings
-        procedure SetButtonColor( AColor: TColor );
-
         procedure HighlightDefaultButton;
 
         property Parent: TForm read FParent write FParent;
@@ -418,29 +417,6 @@ begin
 
       ApplyButtonSettings( FButtonDesign );
 
-      UseManualColor := true;
-
-      with Colors do
-        begin
-          Leave := FFormColor;
-          Enter := ChangeColorLight(FFormColor, 10);
-          Down := ChangeColorLight(FFormColor, -10)
-        end;
-
-      with TextColors do
-        begin
-          Leave := Form.Font.Color;
-          Enter := Form.Font.Color;
-          Down := Form.Font.Color;
-        end;
-
-      Underline.Enable := false;
-
-      ParentColor := false;
-
-      Pen.Color := Footer.Color;
-
-
       // Next
       Right := Right - Width - FButtonOffset;
     end;
@@ -641,13 +617,7 @@ begin
       if Form.Controls[A] is FXButton then
         if (Form.Controls[A] as FXButton).Default then
           with (Form.Controls[A] as FXButton) do
-          begin
-            UseManualColor := false;
-
-            TextColors.Leave := Form.Color;
-            TextColors.Enter := Form.Color;
-            TextColors.Down := Form.Color;
-          end;
+            ButtonKind := FXButtonKind.Accent;
 end;
 
 function FXDialogBox.ModalExecution: integer;
@@ -705,55 +675,23 @@ begin
     end;
 end;
 
-procedure FXDialogBox.SetButtonColor(AColor: TColor);
-begin
-  with FButtonDesign do
-    begin
-      UseManualColor := true;
+{ FXButtonDesignHelper }
 
-      Colors.Leave := AColor;
-      Colors.Enter := ChangeColorLight( AColor, 60 );
-      Colors.Down := ChangeColorLight( AColor, -100 );
-      Colors.BLine := Colors.Down;
-    end;
-end;
-
-{ FXButtonHelper }
-
-procedure FXButtonHelper.ApplyButtonSettings(LoadFromButton: FXButton);
+procedure FXButtonDesignHelper.ApplyButtonSettings(LoadFromButton: FXButton);
 begin
   with Self do begin
     // Accent
-    UseManualColor := LoadFromButton.UseManualColor;
+    CustomColors.Assign(LoadFromButton.CustomColors);
+    CustomButtonColors.Assign(LoadFromButton.CustomButtonColors);
 
-    // Colors
-    Colors.Leave := LoadFromButton.Colors.Leave;
-    Colors.Enter := LoadFromButton.Colors.Enter;
-    Colors.Down := LoadFromButton.Colors.Down;
-    Colors.BLine := LoadFromButton.Colors.BLine;
-
-    // Settings
-    FlatButton := LoadFromButton.FlatButton;
-    FlatComplete := LoadFromButton.FlatComplete;
-
-    Cursor := LoadFromButton.Cursor;
     Font.Assign(LoadFromButton.Font);
-    FontAutoSize := LoadFromButton.FontAutoSize;
-    GradientOptions := LoadFromButton.GradientOptions;
+    WordWrap := LoadFromButton.WordWrap;
 
-    RoundAmount := LoadFromButton.RoundAmount;
-    RoundTransparent := LoadFromButton.RoundTransparent;
-
-    // Text Color
-    TextColors.Leave := LoadFromButton.TextColors.Leave;
-    TextColors.Enter := LoadFromButton.TextColors.Enter;
-    TextColors.Down := LoadFromButton.TextColors.Down;
-    TextColors.BLine := LoadFromButton.TextColors.BLine;
-
-    // Underline
-    UnderLine.UnderLineRound := LoadFromButton.UnderLine.UnderLineRound;
-    UnderLine.UnderLineThicknes := LoadFromButton.UnderLine.UnderLineThicknes;
-    UnderLine.Enable := LoadFromButton.UnderLine.Enable;
+    ImageLayout := LoadFromButton.ImageLayout;
+    LayoutHorizontal := LoadFromButton.LayoutHorizontal;
+    LayoutVertical := LoadFromButton.LayoutVertical;
+    ButtonKind := LoadFromButton.ButtonKind;
+    Roundness := LoadFromButton.Roundness;
   end;
 end;
 

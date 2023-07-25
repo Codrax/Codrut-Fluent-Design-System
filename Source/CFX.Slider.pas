@@ -159,6 +159,10 @@ begin
   UpdateRects;
   AnimateToFill;
   PaintBuffer;
+
+  if AState <> FXControlState.Press then
+    if FEnablePositionHint then
+      FHint.AutoHide := true;
 end;
 
 function FXSlider.IsContainer: Boolean;
@@ -178,7 +182,6 @@ begin
 
       ShowPositionHint;
       FHint.AutoHide := true;
-      FHint.Duration := 1000;
     end;
 end;
 
@@ -536,16 +539,11 @@ var
   InnerRect: TRect;
   I: integer;
 begin
-  // Paint background
-  with Buffer do
-    begin
-      Pen.Style := psClear;
-      Brush.Style := bsSolid;
-      Brush.Handle := CreateSolidBrushWithAlpha(FDrawColors.Background, 255);
-      FilLRect(ClipRect);
-    end;
+  // Background
+  Color := FDrawColors.BackGround;
+  PaintBackground;
 
-  // Draw slider
+  // Draw
   Canvas.Brush.Style := bsClear;
   Canvas.Font.Assign(Font);
 
@@ -802,6 +800,7 @@ begin
 
       FHint.Font.Size := 11;
       FHint.CenterToPosition := true;
+      FHint.Duration := CHECKBOX_HINT_DURATION;
       FHint.AutoHide := false;
 
       FHint.Show;

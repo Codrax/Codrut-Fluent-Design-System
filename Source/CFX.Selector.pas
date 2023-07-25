@@ -105,9 +105,6 @@ type
       property OnMouseEnter;
       property OnMouseLeave;
 
-      //  Modify default props
-      property ParentColor default true;
-
     public
       constructor Create(aOwner: TComponent); override;
       destructor Destroy; override;
@@ -262,8 +259,6 @@ begin
   FTextFont.Name := FORM_FONT_NAME;
   FTextFont.Size := 12;
 
-  ParentColor := false;
-  TabStop := true;
   AutoFocusLine := true;
   BufferedComponent := true;
   FAnimation := true;
@@ -373,14 +368,13 @@ var
   AColor: TColor;
   ARect: TRect;
 begin
+  // Background
+  Color := FDrawColors.BackGround;
+  PaintBackground;
+
+  // Draw
   with Buffer do
     begin
-      // Paint background
-      Pen.Style := psClear;
-      Brush.Style := bsSolid;
-      Color := FDrawColors.Background;
-      Rectangle(ClipRect);
-
       // Main Rectangle
       ARound := GetRoundness;
       GDIRoundRect(MakeRoundRect(DrawRect, ARound), GetRGB(FDrawColors.BackGroundInterior).MakeGDIBrush, nil);

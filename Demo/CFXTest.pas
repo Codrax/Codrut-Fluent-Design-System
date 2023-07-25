@@ -8,16 +8,16 @@ uses
 
   // CFX LIBRARY
   CFX.Forms, CFX.Colors, CFX.ThemeManager, Vcl.StdCtrls, Vcl.TitleBarCtrls,
-  Vcl.ExtCtrls, Vcl.Imaging.jpeg, CFX.Button, CFX.Checkbox, CFX.Panels,
+  Vcl.ExtCtrls, Vcl.Imaging.jpeg, CFX.ButtonDesign, CFX.Checkbox, CFX.Panels,
   CFX.StandardIcons, CFX.Dialogs, CFX.BlurMaterial, CFX.Selector,
   CFX.Classes, CFX.PopupMenu, CFX.UIConsts, CFX.Types, CFX.ToolTip, CFX.Hint,
   CFX.Slider, CFX.ImageList, CFX.Controls, CFX.Test, CFX.Labels, CFX.RadioButton,
-  CFX.Scrollbar, CFX.ScrollBox, CFX.Edit, Cod.Graphics,
+  CFX.Scrollbar, CFX.ScrollBox, CFX.Edit, Cod.Graphics, CFX.Button,
 
   // VCL COMPONENTS
   Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage,
   Vcl.ExtDlgs, System.ImageList, UITypes,
-  Vcl.ComCtrls, Vcl.Mask, CFX.PopupConnector, Vcl.Buttons;
+  Vcl.ComCtrls, Vcl.Mask, CFX.PopupConnector, Vcl.Buttons, CFX.IconView;
 
 type
   TForm1 = class(FXForm)
@@ -27,32 +27,55 @@ type
     FXStandardIcon4: FXStandardIcon;
     FXStandardIcon5: FXStandardIcon;
     FXStandardIcon6: FXStandardIcon;
-    FXButton1: FXButton;
-    FXMinimisePanel1: FXMinimisePanel;
-    FXLabel1: FXLabel;
-    FXButon2: FXButton;
-    FXButton2: FXButton;
+    FXLabel2: FXLabel;
+    FXLabel3: FXLabel;
     TitleBarPanel1: TTitleBarPanel;
-    FXButton3: FXButton;
     FXSlider1: FXSlider;
     FXCheckBox1: FXCheckBox;
     FXScrollbar1: FXScrollbar;
-    FXCheckBox2: FXCheckBox;
     FXSelector1: FXSelector;
     FXRadioButton1: FXRadioButton;
     FXRadioButton2: FXRadioButton;
     FXEdit1: FXEdit;
-    FXLabel2: FXLabel;
     FXEdit2: FXEdit;
-    FXLabel3: FXLabel;
-    procedure Button2Click(Sender: TObject);
-    procedure FXButton1Click(Sender: TObject);
-    procedure FXButton3Click(Sender: TObject);
-    procedure CButton1Click(Sender: TObject);
-    procedure CImage1Click(Sender: TObject);
+    FXButton1: FXButton;
+    FXButton4: FXButton;
+    FXButton5: FXButton;
+    FXMinimisePanel1: FXMinimisePanel;
+    FXLabel1: FXLabel;
+    FXLabel4: FXLabel;
+    FXButton2: FXButton;
+    FXButton6: FXButton;
+    FXButtonDesign3: FXButtonDesign;
+    FXButtonDesign1: FXButtonDesign;
+    FXButton3: FXButton;
+    FXButton7: FXButton;
+    FXButton8: FXButton;
+    FXButton9: FXButton;
+    FXButtonDesign2: FXButtonDesign;
+    FXButtonDesign4: FXButtonDesign;
+    FXButton11: FXButton;
+    FXButton12: FXButton;
+    FXPopupMenu1: FXPopupMenu;
+    FXEdit3: FXEdit;
+    FXButton10: FXButton;
+    FXBlurMaterial1: FXBlurMaterial;
+    FXLabel5: FXLabel;
+    FXBlurMaterial2: FXBlurMaterial;
+    FXIconView1: FXIconView;
+    FXIconView2: FXIconView;
     procedure FXButton4Click(Sender: TObject);
+    procedure FXButtonDesign3Click(Sender: TObject);
+    procedure FXButton5Click(Sender: TObject);
+    procedure FXButton12Click(Sender: TObject);
+    procedure FXButton10Click(Sender: TObject);
+    procedure FXButton13Click(Sender: TObject);
+    procedure FormResize(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormOnMove(Sender: TObject);
   private
     { Private declarations }
+    procedure UpdateBlurs;
   public
     { Public declarations }
   end;
@@ -66,31 +89,38 @@ implementation
 
 {$R *.dfm}
 
-procedure TForm1.Button2Click(Sender: TObject);
+procedure TForm1.FormCreate(Sender: TObject);
 begin
-  Self.SmokeEffect := NOT Self.SmokeEffect;
-
-  if Application.ComponentState = [] then
-    ShowMessage('');
+  OnMove := FormOnMove;
 end;
 
-procedure TForm1.CButton1Click(Sender: TObject);
-var
-  A, B: FXIconSelect;
+procedure TForm1.FormOnMove(Sender: TObject);
 begin
-  A := FXIconSelect.Create;
-  B := FXIconSelect.Create;
-
-
-  B.Assign(A);
+  UpdateBlurs;
 end;
 
-procedure TForm1.CImage1Click(Sender: TObject);
+procedure TForm1.FormResize(Sender: TObject);
 begin
-  Self.Repaint;
+  UpdateBlurs;
 end;
 
-procedure TForm1.FXButton1Click(Sender: TObject);
+procedure TForm1.FXButton10Click(Sender: TObject);
+begin
+  FXBUtton10.UpdateTheme(false);
+end;
+
+procedure TForm1.FXButton12Click(Sender: TObject);
+begin
+  FXButton(Sender).Tag := FXButton(Sender).Tag + 1;
+  FXButton(Sender).StateText := FXButton(Sender).Tag.ToString;
+end;
+
+procedure TForm1.FXButton13Click(Sender: TObject);
+begin
+  FXButton(Sender).UpdateTheme(false)
+end;
+
+procedure TForm1.FXButton4Click(Sender: TObject);
 var
   A: FXDialog;
 begin
@@ -107,7 +137,17 @@ begin
   A.Free;
 end;
 
-procedure TForm1.FXButton3Click(Sender: TObject);
+procedure TForm1.FXButton5Click(Sender: TObject);
+begin
+  if ThemeManager.DarkTheme then
+    ThemeManager.DarkThemeMode := FXDarkSetting.ForceLight
+  else
+    ThemeManager.DarkThemeMode := FXDarkSetting.ForceDark;
+
+  ThemeManager.UpdateSettings;
+end;
+
+procedure TForm1.FXButtonDesign3Click(Sender: TObject);
 var
   P: FXPopupMenu;
   I, O: FXPopupItem;
@@ -260,7 +300,7 @@ begin
         Image.Enabled := true;
         Image.SelectSegoe := '';
 
-        OnClick := FXButton1Click;
+        OnClick := FXButton4Click;
       end;
 
     with FXPopupItem.Create(P) do
@@ -296,7 +336,7 @@ begin
 
         AutoCheck := true;
         RadioItem := true;
-        OnCheck := FXButton1Click;
+        OnCheck := FXButton4Click;
       end;
 
     with FXPopupItem.Create(P) do
@@ -343,32 +383,10 @@ begin
   P.PopupAtCursor;
 end;
 
-procedure TForm1.FXButton4Click(Sender: TObject);
+procedure TForm1.UpdateBlurs;
 begin
-  with ThemeManager.SystemColor do
-    begin
-      Foreground := clLime;
-      Background := clRed;
-      BackgroundInterior := TColors.Cornflowerblue;
-      Accent := 16679746;
-    end;
-
-  with ThemeManager.SystemColorSet do
-    begin
-      DarkForeground := clLime;
-      DarkBackground := clRed;
-      DarkBackGroundInterior := TColors.Slateblue;
-      Accent := 16679746;
-    end;
-
-  with ThemeManager.SystemAccentInteractStates do
-    begin
-      None := TColors.Purple;
-      Hover := TColors.Cornflowerblue;
-      Press := TColors.Olivedrab;
-    end;
-
-  ThemeManager.NotifyUpdate;
+  FXBlurMaterial1.SyncroniseImage;
+  FXBlurMaterial2.SyncroniseImage;
 end;
 
 end.

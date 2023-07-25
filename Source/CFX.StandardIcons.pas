@@ -58,6 +58,7 @@ type
       property OnMouseUp;
       property OnMouseMove;
       property OnClick;
+      property OnDblClick;
 
       property Color;
 

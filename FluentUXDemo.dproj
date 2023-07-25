@@ -101,8 +101,6 @@
         <DCCReference Include="Demo\CFXTest.pas">
             <Form>Form1</Form>
         </DCCReference>
-        <DCCReference Include="Source\CFX.TypeInfo.pas"/>
-        <DCCReference Include="Source\CFX.Linker.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

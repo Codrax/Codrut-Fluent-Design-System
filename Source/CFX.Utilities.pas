@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, Win.Registry, System.UITypes,
-  Types, Vcl.Forms, Vcl.Graphics, CFX.Colors, CFX.Registry,
+  Types, Vcl.Forms, Vcl.Graphics, CFX.Colors, CFX.Registry, ShellAPI,
   CFX.Types, IOUTils, RegularExpressions;
 
   function GetAppsUseDarkTheme: Boolean;
@@ -12,6 +12,9 @@ uses
   function GetNTKernelVersion: single;
 
   function GetUserNameString: string;
+
+  // Shell
+  procedure ShellRun(Command: string);
 
   // String
   function IsStringAlphaNumeric(const S: string): Boolean;
@@ -27,6 +30,8 @@ uses
 
   // Screen
   procedure QuickScreenShot(var BitMap: TBitMap; Monitor: integer = -2);
+  procedure AppScreenShot(var BitMap: TBitMap; ApplicationCapton: string);
+
 
 implementation
 
@@ -82,6 +87,11 @@ begin
    SetLength(Result, nSize-1)
  else
    RaiseLastOSError;
+end;
+
+procedure ShellRun(Command: string);
+begin
+  ShellExecute(0, 'open', PChar(Command), '', nil, 0);
 end;
 
 function IsStringAlphaNumeric(const S: string): Boolean;
@@ -383,7 +393,27 @@ begin
   end;
 end;
 
+procedure AppScreenShot(var BitMap: TBitMap; ApplicationCapton: string);
+var
+  Handle: HWND;
+  R: TRect;
+  DC: HDC;
+  Old: HGDIOBJ;
 
+begin
+  Handle := FindWindow(nil, PWideChar(ApplicationCapton));
+  GetWindowRect(Handle, R);
+
+  Bitmap := TBitmap.Create;
+  Bitmap.Width := R.Right - R.Left;
+  Bitmap.Height := R.Bottom - R.Top;
+
+  DC := GetDC(Handle);
+  Old := SelectObject(DC, Bitmap.Canvas.Handle);
+  BitBlt(Bitmap.Canvas.Handle, 0, 0, Bitmap.Width, Bitmap.Height, DC, 0, 0, SRCCOPY);
+  SelectObject(DC, Old);
+  ReleaseDC(Handle, DC);
+end;
 
 end.
 

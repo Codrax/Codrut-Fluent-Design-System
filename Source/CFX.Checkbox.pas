@@ -113,9 +113,6 @@ type
       property OnMouseEnter;
       property OnMouseLeave;
 
-      //  Modify default props
-      property ParentColor default true;
-
     public
       constructor Create(aOwner: TComponent); override;
       destructor Destroy; override;
@@ -297,7 +294,7 @@ begin
   inherited;
   FIconFont := TFont.Create;
   FIconFont.Name := ThemeManager.IconFont;
-  FIconFont.Size := 14;
+  FIconFont.Size := 16;
   FAnimationEnabled := true;
 
   FTextFont := TFont.Create;
@@ -315,9 +312,7 @@ begin
   FAllowGrayed := false;
   FState := FXCheckBoxState.Unchecked;
   FTextSpacing := CHECKBOX_TEXT_SPACE;
-  ParentColor := false;
   FAutomaticMouseCursor := false;
-  TabStop := true;
   AutoFocusLine := true;
   BufferedComponent := true;
   FWordWrap := true;
@@ -384,16 +379,13 @@ var
   P1, P2: TPoint;
   ALine: TLine;
 begin
-  if not ParentColor then
-    Color := FDrawColors.Background;
+  // Background
+  Color := FDrawColors.BackGround;
+  PaintBackground;
+
+  // Draw
   with Buffer do
     begin
-      //  Paint background
-      Pen.Style := psClear;
-      Brush.Style := bsSolid;
-      Brush.Handle := CreateSolidBrushWithAlpha(Color, 255);
-      RoundRect(Rect(0, 0, Width, Height), CHECKBOX_BOX_ROUND, CHECKBOX_BOX_ROUND);
-
       //  Draw text
       Brush.Style := bsClear;
       Font.Assign(Self.Font);
@@ -415,6 +407,9 @@ begin
             // Animate
             if FAnimationEnabled then
               begin
+                AText := CHECKBOX_OUTLINE;
+                TextRect(IconRect, AText, IconFormat);
+                Font.Size := Font.Size + 1;
                 AText := CHECKBOX_FILL;
                 TextRect(IconRect, AText, IconFormat);
 
@@ -435,7 +430,7 @@ begin
 
                 if FAnimationStatus > 50 then
                   begin
-                    P1 := Point(IconRect.CenterPoint.X + trunc(IconRect.Width / 6), IconRect.CenterPoint.Y - trunc(IconRect.Height / 6));
+                    P1 := Point(IconRect.CenterPoint.X + trunc(IconRect.Width / 6), IconRect.CenterPoint.Y - trunc(IconRect.Height / 7));
                     ALine := Line(P2, P1);
                     ALine.SetPercentage((FAnimationStatus-50)/50 * 100);
 

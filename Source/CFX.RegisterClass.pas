@@ -2,10 +2,11 @@ unit CFX.RegisterClass;
 
 interface
   uses Classes, CFX.Classes, CFX.UIConsts,
-       CFX.Button, CFX.Checkbox, CFX.Panels, CFX.StandardIcons, CFX.Slider,
-       CFX.BlurMaterial, CFX.PopupMenu, CFX.ImageList, CFX.Labels,
-       CFX.RadioButton, CFX.Scrollbar, CFX.ScrollBox, CFX.Selector,
-       CFX.Edit, CFX.PopupConnector;
+       CFX.Button, CFX.ButtonDesign, CFX.Checkbox, CFX.Panels,
+       CFX.StandardIcons, CFX.Slider, CFX.BlurMaterial, CFX.PopupMenu,
+       CFX.ImageList, CFX.Labels, CFX.RadioButton, CFX.Scrollbar,
+       CFX.ScrollBox, CFX.Selector, CFX.Edit, CFX.PopupConnector,
+       CFX.IconView;
 
 
 procedure Register;
@@ -17,6 +18,7 @@ begin
   // Visual Components
   RegisterComponents(REGISTER_CLASS_NAME,[FXMinimisePanel, FXPanel]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXButton]);
+  RegisterComponents(REGISTER_CLASS_NAME, [FXButtonDesign]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXCheckBox]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXStandardIcon]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXSlider]);
@@ -27,6 +29,7 @@ begin
   RegisterComponents(REGISTER_CLASS_NAME, [FXScrollBox]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXSelector]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXEdit]);
+  RegisterComponents(REGISTER_CLASS_NAME, [FXIconView]);
 
   // Non-Visual Components
   RegisterComponents(REGISTER_CLASS_NAME, [FXPopupMenu]);

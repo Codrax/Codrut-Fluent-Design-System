@@ -18,6 +18,12 @@ interface
     // Icon Type
     FXIconType = (Image, BitMap, ImageList, SegoeIcon);
 
+    // Detail
+    FXDetailType = (None, Underline, Outline);
+
+    // FXButton
+    FXButtonKind = (Normal, Accent, Toggle, Dropdown, Link);
+
     // FXPopupMenu
     FXAnimateSelection = (Instant, Opacity, Linear, Square);
 
@@ -41,11 +47,10 @@ interface
 
     FXTextFlag = (WordWrap, Top, VerticalCenter, Bottom, Left, Center, Right,
                  NoClip, Auto);
+    FXTextFlags= set of FXTextFlag;
 
     FXDrawLayout = (Left, Top, Right, Bottom);
     FXLayout = (Beginning, Center, Ending);
-
-    FXTextFlags= set of FXTextFlag;
 
     FXCorners = (TopLeft, TopRight, BottomLeft, BottomRight);
 

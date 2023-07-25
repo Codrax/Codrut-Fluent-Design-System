@@ -4,11 +4,17 @@ interface
   uses
     Winapi.Windows, Vcl.Graphics, Classes, Types, Winapi.Messages, CFX.Types,
     CFX.UIConsts, SysUtils, CFX.Graphics, CFX.VarHelpers, CFX.ThemeManager,
-    Vcl.Controls, CFX.PopupMenu, CFX.Linker, Vcl.Forms;
+    Vcl.Controls, CFX.PopupMenu, CFX.Linker, Vcl.Forms, CFX.Forms;
 
   type
+    // Canvas-Based Control
+    FXCustomControl = class(TCustomControl)
+    published
+      property Canvas;
+    end;
+
     // Control
-    FXWindowsControl = class(TCustomControl)
+    FXWindowsControl = class(FXCustomControl)
     private
       FPopupMenu: FXPopupMenu;
       FBuffer: TBitMap;
@@ -17,7 +23,9 @@ interface
       FAutoFocusLine: boolean;
       FHasEnteredTab: boolean;
       FInteraction: FXControlState;
+      FPreviousInteraction: FXControlState;
       FCreated: boolean;
+      FTransparent: boolean;
 
       // Events
       procedure WMNCHitTest(var Message: TWMNCHitTest); message WM_NCHITTEST;
@@ -26,7 +34,10 @@ interface
       procedure ResizeBuffer;
       function GetBuffer: TCanvas;
       function CanDrawFocusLine: boolean;
+
+      // Set
       procedure SetState(const Value: FXControlState);
+      procedure SetTransparent(const Value: boolean);
 
     protected
       // Paint
@@ -38,6 +49,9 @@ interface
 
       procedure Paint; override;
       procedure PaintBuffer; virtual;
+
+      // Background
+      procedure PaintBackground;
 
       // Virtual Events
       procedure ComponentCreated; virtual;
@@ -67,14 +81,21 @@ interface
 
       // Interaction
       procedure InteractionStateChanged(AState: FXControlState); virtual;
+      procedure SetNewInteractionState(AState: FXControlState; ForceUpdate: boolean = false; UpdatePrevious: boolean = true);
 
       // Utilities
       function IsReading: boolean;
       function IsDesigning: boolean;
+      function IsDestroying: boolean;
       function Creating: boolean;
+
+      // Color
+      property Color;
+      property Transparent: boolean read FTransparent write SetTransparent;
 
       // Interact State
       property InteractionState: FXControlState read FInteraction write SetState;
+      property PreviousInteractionState: FXControlState read FPreviousInteraction write FPreviousInteraction;
 
       // Draw Buffer
       property Buffer: TCanvas read GetBuffer;
@@ -85,6 +106,8 @@ interface
       property PopupMenu: FXPopupMenu read FPopupMenu write FPopupMenu;
 
       property Enabled;
+      property Visible;
+      property Tag;
 
     public
       // Constructors
@@ -103,6 +126,7 @@ interface
     private
       FPopupMenu: FXPopupMenu;
       FInteraction: FXControlState;
+      FPreviousInteraction: FXControlState;
       FTransparent: boolean;
 
       procedure SetState(const Value: FXControlState);
@@ -115,6 +139,12 @@ interface
 
       procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
       procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+
+      // Detect creation
+      procedure Loaded; override;
+
+      // Created
+      procedure ComponentCreated; virtual;
 
       // Interaction
       procedure InteractionStateChanged(AState: FXControlState); virtual;
@@ -190,6 +220,9 @@ begin
   FCreated := false;
   FBufferedComponent := true;
   FAutoFocusLine := false;
+  FTransparent := false;
+
+  TabStop := true;
   ParentColor := false;
 
   ControlStyle := ControlStyle + [csOpaque, csCaptureMouse];
@@ -266,7 +299,7 @@ end;
 procedure FXWindowsControl.Invalidate;
 begin
   inherited;
-  if BufferedComponent then
+  if BufferedComponent and (Parent <> nil) then
     with Buffer do
       begin
         ResizeBuffer;
@@ -276,6 +309,11 @@ begin
 end;
 
 function FXWindowsControl.IsDesigning: boolean;
+begin
+  Result := csDesigning in ComponentState;
+end;
+
+function FXWindowsControl.IsDestroying: boolean;
 begin
   Result := csDesigning in ComponentState;
 end;
@@ -346,6 +384,40 @@ begin
     end;
 end;
 
+procedure FXWindowsControl.PaintBackground;
+var
+  FControl: FXCustomControl;
+  FForm: FXForm;
+begin
+  // Draw Background
+  with Buffer do
+    begin
+      if Transparent and false { WORK IN PROGRESS} then
+        begin
+          // FX Control
+          if (Parent is FXCustomControl) then
+            begin
+              FControl := FXCustomControl(Parent);
+
+              Canvas.CopyRect(ClientRect, FControl.Canvas, BoundsRect);
+            end
+          else
+            // Form
+            if (Parent is FXForm) then
+              begin
+                FForm := FXForm(Parent);
+
+                Canvas.CopyRect(ClientRect, FForm.Canvas, BoundsRect);
+              end;
+        end
+      else
+        begin
+          Brush.Color := Color;
+          FillRect(ClipRect);
+        end;
+    end;
+end;
+
 procedure FXWindowsControl.PaintBuffer;
 begin
   // Paint
@@ -355,7 +427,6 @@ end;
 procedure FXWindowsControl.Resize;
 begin
   inherited;
-  PaintBuffer;
 end;
 
 procedure FXWindowsControl.ResizeBuffer;
@@ -367,13 +438,32 @@ begin
     end;
 end;
 
+procedure FXWindowsControl.SetNewInteractionState(AState: FXControlState;
+  ForceUpdate, UpdatePrevious: boolean);
+begin
+  if (AState <> FInteraction) or ForceUpdate then
+    begin
+      if UpdatePrevious then
+        FPreviousInteraction := FInteraction;
+      FInteraction := AState;
+
+      InteractionStateChanged(AState);
+    end;
+end;
+
 procedure FXWindowsControl.SetState(const Value: FXControlState);
 begin
-  if Value <> FInteraction then
-    begin
-      FInteraction := Value;
+  SetNewInteractionState(Value);
+end;
 
-      InteractionStateChanged(Value);
+procedure FXWindowsControl.SetTransparent(const Value: boolean);
+begin
+  if FTransparent <> Value then
+    begin
+      FTransparent := Value;
+
+      if not IsDesigning then
+        Invalidate;
     end;
 end;
 
@@ -405,9 +495,7 @@ end;
 
 procedure FXWindowsControl.WMSize(var Message: TWMSize);
 begin
-  ResizeBuffer;
-  SolidifyBuffer;
-  PaintBuffer;
+  Invalidate;
 end;
 
 { FXGraphicControl }
@@ -426,6 +514,11 @@ begin
 
   if Assigned(OnMouseLeave) then
     OnMouseLeave(Self);
+end;
+
+procedure FXGraphicControl.ComponentCreated;
+begin
+  // nothing
 end;
 
 constructor FXGraphicControl.Create(AOwner: TComponent);
@@ -457,6 +550,12 @@ begin
   Result := csReading in ComponentState;
 end;
 
+procedure FXGraphicControl.Loaded;
+begin
+  inherited;
+  ComponentCreated;
+end;
+
 procedure FXGraphicControl.MouseDown(Button: TMouseButton; Shift: TShiftState;
   X, Y: integer);
 begin
@@ -481,6 +580,7 @@ procedure FXGraphicControl.SetState(const Value: FXControlState);
 begin
   if Value <> FInteraction then
     begin
+      FPreviousInteraction := FInteraction;
       FInteraction := Value;
 
       InteractionStateChanged(Value);

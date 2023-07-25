@@ -56,7 +56,8 @@ uses
         procedure SetStateColor(const Index: Integer; const Value: TColor);
 
       public
-        constructor Create;
+        constructor Create; overload;
+        constructor Create(AOwner : TPersistent); overload;
 
         function GetColor(const DarkTheme, Foreground: boolean; State: FXControlState): TColor;
 
@@ -92,6 +93,8 @@ uses
       public
         constructor Create; overload;
         constructor Create(AFrom: FXColorStateSets; const DarkColor: boolean); overload;
+
+        procedure LoadFrom(AFrom: FXColorStateSets; const DarkColor: boolean);
 
         function GetColor(const Foreground: boolean; State: FXControlState): TColor;
 
@@ -353,7 +356,7 @@ end;
 function ColorBlend(Color1, Color2: TColor; A: Byte): TColor;
 var
   RGB1, RGB2: FXRGBA;
-  R, G, B: Byte;
+  R, G, B: integer;
 begin
   RGB1.FromColor(Color1);
   RGB2.FromColor(Color2);
@@ -361,6 +364,10 @@ begin
   R := RGB1.R + (RGB2.R - RGB1.R) * A div 255;
   G := RGB1.G + (RGB2.G - RGB1.G) * A div 255;
   B := RGB1.B + (RGB2.B - RGB1.B) * A div 255;
+
+  R := EnsureRange(R, 0, 255);
+  G := EnsureRange(G, 0, 255);
+  B := EnsureRange(B, 0, 255);
 
   Result := RGB(R, G, B);
 end;
@@ -620,7 +627,6 @@ end;
 
 constructor FXSingleColorStateSets.Create(AOwner: TPersistent);
 begin
-  Create;
   CreateOwner(AOwner);
 end;
 
@@ -750,19 +756,8 @@ end;
 
 constructor FXColorStateSet.Create(AFrom: FXColorStateSets; const DarkColor: boolean);
 begin
-  Accent := AFrom.Accent;
-  if DarkColor then
-    begin
-      FBackGroundNone := AFrom.DarkBackGroundNone;
-      FBackGroundHover := AFrom.DarkBackGroundHover;
-      FBackGroundPress := AFrom.DarkBackGroundPress;
-    end
-  else
-    begin
-      FBackGroundNone := AFrom.LightBackGroundNone;
-      FBackGroundHover := AFrom.LightBackGroundHover;
-      FBackGroundPress := AFrom.LightBackGroundPress;
-    end;
+  LoadFrom(AFrom, DarkColor);
+  inherited Create;
 end;
 
 constructor FXColorStateSet.Create;
@@ -798,6 +793,24 @@ begin
     else
       Result := 0;
   end;
+end;
+
+procedure FXColorStateSet.LoadFrom(AFrom: FXColorStateSets;
+  const DarkColor: boolean);
+begin
+  Accent := AFrom.Accent;
+  if DarkColor then
+    begin
+      FBackGroundNone := AFrom.DarkBackGroundNone;
+      FBackGroundHover := AFrom.DarkBackGroundHover;
+      FBackGroundPress := AFrom.DarkBackGroundPress;
+    end
+  else
+    begin
+      FBackGroundNone := AFrom.LightBackGroundNone;
+      FBackGroundHover := AFrom.LightBackGroundHover;
+      FBackGroundPress := AFrom.LightBackGroundPress;
+    end;
 end;
 
 { FXCompleteColorSet }
@@ -846,6 +859,11 @@ begin
   FLightForeGroundNone := DEFAULT_LIGHT_GRAY_CONTROL_FONT_COLOR;
   FLightForeGroundHover := DEFAULT_LIGHT_GRAY_CONTROL_HOVER_FONT_COLOR;
   FLightForeGroundPress := DEFAULT_LIGHT_GRAY_CONTROL_PRESS_FONT_COLOR;
+end;
+
+constructor FXColorStateSets.Create(AOwner: TPersistent);
+begin
+  CreateOwner(AOwner);
 end;
 
 function FXColorStateSets.GetColor(const DarkTheme, Foreground: boolean;

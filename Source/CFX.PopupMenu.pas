@@ -190,8 +190,6 @@ uses
       procedure GlassMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 
       procedure FormPosition;
-      procedure CloseMenu(FreeMem: boolean = false);
-      procedure CloseAllWindows;
 
       procedure OpenItem(MenuIndex: integer);
       procedure ExecuteItem(AMenuIndex: integer);
@@ -221,6 +219,10 @@ uses
     public
       constructor Create(AOwner: TComponent); override;
       destructor Destroy; override;
+
+      // Close
+      procedure CloseMenu(FreeMem: boolean = false);
+      procedure CloseAllWindows;
 
       // Interface
       function IsContainer: Boolean;
@@ -321,8 +323,14 @@ begin
 end;
 
 destructor FXPopupContainer.Destroy;
+var
+  I: Integer;
 begin
   FreeAndNil(FImage);
+  // Free items
+  for I := 0 to Items.Count-1 do
+    Items.Delete(I);
+
   inherited;
 end;
 
@@ -564,8 +572,6 @@ begin
 end;
 
 procedure FXPopupComponent.CloseAllWindows;
-var
-  I: Integer;
 begin
   CloseMenu(true);
 
@@ -619,10 +625,10 @@ end;
 
 procedure FXPopupComponent.ExecuteItem(AMenuIndex: integer);
 var
-  Item: FXPopupComponent;
+  Item: FXPopupItem;
   AMenu: FXPopupMenu;
 begin
-  Item := FXPopupComponent(MenuItems[AMenuIndex]);
+  Item := FXPopupItem(MenuItems[AMenuIndex]);
   AMenu := FXPopupMenu(GetParentPopupMenu);
 
   // Execute
@@ -772,7 +778,7 @@ begin
   Result := -1;
 
   for I := 0 to GetMenuItemCount - 1 do
-    if FXPopupComponent(MenuItems[I]).IsOpen then
+    if FXPopupItem(MenuItems[I]).IsOpen then
       Exit(I);
 end;
 
@@ -786,7 +792,9 @@ begin
     end;
 
   if not (Result is FXPopupMenu) then
-    Result := nil;
+    Result := nil
+  else
+    Result := FXPopupMenu(Result);
 end;
 
 procedure FXPopupComponent.GlassDown(Sender: TObject; Button: TMouseButton;
@@ -807,7 +815,7 @@ procedure FXPopupComponent.GlassMove(Sender: TObject; Shift: TShiftState; X,
 var
   I, FHoverPrevious: Integer;
   Hover: boolean;
-  Item: FXPopupComponent;
+  Item: FXPopupMenu;
 begin
   // Previous
   FHoverPrevious := FHoverOver;
@@ -815,7 +823,7 @@ begin
   // Search
   Hover := false;
   for I := 0 to GetMenuItemCount - 1 do
-    if MenuItems[I] is FXPopupComponent then
+    if MenuItems[I] is FXPopupItem then
       begin
         if MenuItems[I].FBounds.Contains(Point(X,Y)) and MenuItems[I].Enabled then
           begin
@@ -834,7 +842,7 @@ begin
   // Notify
   if (FHoverOver <> -1) and (FHoverOver <> FHoverPrevious) then
     begin
-      Item := FXPopupComponent(MenuItems[FHoverOver]);
+      Item := FXPopupMenu(MenuItems[FHoverOver]);
 
       // Close windows if exists
       CloseChildWindow;;
@@ -852,7 +860,7 @@ end;
 procedure FXPopupComponent.GlassUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 var
-  Item: FXPopupComponent;
+  Item: FXPopupMenu;
 begin
   FItemPressed := false;
   SetHover(FHoverOver);
@@ -860,7 +868,7 @@ begin
   // Notify
   if IndexIsValid(FHoverOver) then
     begin
-      Item := FXPopupComponent(MenuItems[FHoverOver]);
+      Item := FXPopupMenu(MenuItems[FHoverOver]);
 
       // Execute
       ExecuteItem(FHoverOver);
@@ -1158,10 +1166,10 @@ end;
 
 procedure FXPopupComponent.OpenItem(MenuIndex: integer);
 var
-  Item: FXPopupComponent;
+  Item: FXPopupMenu;
 begin
   // Get Item
-  Item := FXPopupComponent(MenuItems[MenuIndex]);
+  Item := FXPopupMenu(MenuItems[MenuIndex]);
 
   // Clone Settings
   Item.FEnableRadius := FEnableRadius;
@@ -1304,9 +1312,9 @@ begin
   if IsOpen then
     if IsContainer and UpdateChildren then
       begin
-        for i := 0 to ComponentCount - 1 do
-          if Supports(MenuItems[i], FXControl) then
-            (MenuItems[i] as FXControl).UpdateTheme(UpdateChildren);
+        for I := 0 to Items.Count-1 do
+          if Supports(Items[I], FXControl) then
+            (Items[I] as FXControl).UpdateTheme(UpdateChildren);
       end;
 end;
 

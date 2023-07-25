@@ -73,8 +73,9 @@ type
     procedure FindGraphicClass(Sender: TObject; const Context: TFindGraphicClassContext;
       var GraphicClass: TGraphicClass); dynamic;
 
-
     procedure OnVisibleChange(var Message : TMessage); message CM_VISIBLECHANGED;
+
+    property Picture: TPicture read FPicture write SetPicture;
 
   published
     property Align;
@@ -85,10 +86,6 @@ type
     property DragKind;
     property DragMode;
     property Enabled;
-    property Picture: TPicture read FPicture write SetPicture;
-    property Version: FXBlurVersion read FVersion write SetVersion;
-    property RefreshMode: FXGlassRefreshMode read FRefreshMode write SetRefreshMode;
-    property InvalidateAbove: boolean read FInvalidateAbove write FInvalidateAbove;
     property ParentShowHint;
     property PopupMenu;
     property ShowHint;
@@ -96,9 +93,12 @@ type
     property Visible;
     property OnClick;
 
-    property EnableTinting: boolean read FEnableTinting write SetTinting;
-    property DarkTintOpacity: integer read FDarkTintOpacity write SetDarkTint;
-    property WhiteTintOpacity: integer read FWhiteTintOpacity write SetWhiteTint;
+    property Version: FXBlurVersion read FVersion write SetVersion default FXBlurVersion.WallpaperBlurred;
+    property RefreshMode: FXGlassRefreshMode read FRefreshMode write SetRefreshMode default FXGlassRefreshMode.Manual;
+    property InvalidateAbove: boolean read FInvalidateAbove write FInvalidateAbove default false;
+    property EnableTinting: boolean read FEnableTinting write SetTinting default true;
+    property DarkTintOpacity: integer read FDarkTintOpacity write SetDarkTint default 75;
+    property WhiteTintOpacity: integer read FWhiteTintOpacity write SetWhiteTint default 200;
 
     property CustomColors: FXColorSets read FCustomColors write SetCustomColor;
     property OnPaint: FXControlOnPaint read FOnPaint write FOnPaint;
@@ -148,6 +148,9 @@ type
   function GetCurrentExtension: string;
   procedure CreateBySignature(var Wallpaper: TGraphic; Sign: TFileType);
   procedure CreateByExtension(var Wallpaper: TGraphic; Extension: string);
+
+const
+  DESKTOP_PROGRAM = 'Program Manager';
 
 var
   WorkingAP: boolean;
@@ -218,126 +221,23 @@ end;
 
 procedure GetWallpaper;
 var
-  Filename: string;
-
-  DestRect: TRect;
-
-  DRects: TArray<TRect>;
-
-  DeskRect,
-  MonitorRect: TRect;
-
-  I, J, OffsetX, OffsetY: integer;
-
-  Extension: string;
-
-  TranscodedDefault: boolean;
-
-  WallpaperSetting: TWallpaperSetting;
-  DrawMode: FXDrawMode;
-
-  BitMap: TBitMap;
+  DeskRect: TRect;
 begin
-  if WorkingAP then
-    Exit;
-
-  // Windows Xp and below compatability
-  if GetNTKernelVersion <= 5.2 then
-    Exit;
-
+  (* This method is objectively better than loading all files manually and colaging them!
+    Screenshot the program Manager! *)
   // Working
   WorkingAP := true;
 
   // Get Rects
   DeskRect := Screen.DesktopRect;
 
-  OffsetX := abs(Screen.DesktopRect.Left);
-  OffsetY := abs(Screen.DesktopRect.Top);
-
   // Create Images
   WallpaperBlurred := TBitMap.Create(DeskRect.Width, DeskRect.Height);
 
-  WallpaperBlurred.Canvas.Brush.Color := clBlack;
-  WallpaperBlurred.Canvas.FillRect(WallpaperBlurred.Canvas.ClipRect);
+  // Screenshot
+  AppScreenShot(WallpaperBlurred, DESKTOP_PROGRAM);
 
-  // Prepare
-  WallpaperSetting := GetWallpaperSetting;
-
-  TranscodedDefault := Screen.MonitorCount = 1;
-
-  // Rects Draw Mode
-  case WallpaperSetting of
-    TWallpaperSetting.Fill: DrawMode := FXDrawMode.Center3Fill;
-    TWallpaperSetting.Fit: DrawMode := FXDrawMode.CenterFit;
-    TWallpaperSetting.Stretch: DrawMode := FXDrawMode.Stretch;
-    TWallpaperSetting.Tile: DrawMode := FXDrawMode.Tile;
-    TWallpaperSetting.Center: DrawMode := FXDrawMode.Center;
-    TWallpaperSetting.Span: DrawMode := FXDrawMode.CenterFill;
-    else DrawMode := FXDrawMode.Stretch;
-  end;
-
-  if WallpaperSetting = TWallpaperSetting.Span then
-    // Fill Image with Wallpaper
-    begin
-      // Single-File Extension
-      Extension := GetCurrentExtension;
-
-      // Get Transcoded
-      CreateByExtension( TGraphic(Wallpaper), Extension );
-      FileName := GetWallpaperName(0);
-
-      if not fileexists(FileName) then
-        Exit;
-
-      Wallpaper.LoadFromFile(FileName);
-      DrawImageInRect(WallpaperBlurred.Canvas, WallpaperBlurred.Canvas.ClipRect, Wallpaper, FXDrawMode.CenterFill);
-    end
-  else
-    // Complete Desktop Puzzle
-    for I := 0 to Screen.MonitorCount - 1 do
-      begin
-        // Get Transcoded
-		FileName := GetWallpaperName(Screen.Monitors[I].MonitorNum, TranscodedDefault); 
-
-        if not fileexists(FileName) then
-          Break;
-
-		// Create Extension
-        CreateBySignature( TGraphic(Wallpaper), ReadFileSignature(FileName) );
-
-        // Load
-        try
-          Wallpaper.LoadFromFile(FileName);
-        except
-          Break;
-        end;
-
-        // Draw Monitor
-        MonitorRect := Screen.Monitors[I].BoundsRect;
-
-        DestRect := MonitorRect;
-        DestRect.Offset(OffsetX, OffsetY);
-
-        DRects := GetDrawModeRects(DestRect, Wallpaper, DrawMode);
-
-        // Draw
-        if WallpaperSetting in [TWallpaperSetting.Fit, TWallpaperSetting.Stretch] then
-          for J := 0 to High(DRects) do
-            WallpaperBlurred.Canvas.StretchDraw(DRects[J], Wallpaper, 255)
-          else
-            begin
-              Bitmap := TBitMap.Create(DestRect.Width, DestRect.Height);
-              for J := 0 to High(DRects) do
-                begin
-                  DRects[J].Offset(-DestRect.Left, -DestRect.Top);
-
-                  Bitmap.Canvas.StretchDraw(DRects[J], Wallpaper, 255)
-                end;
-
-              WallpaperBlurred.Canvas.StretchDraw(DestRect, Bitmap, 255)
-            end;
-      end;
-
+  // Normal
   WallpaperBMP := TBitMap.Create(DeskRect.Width, DeskRect.Height);
   WallpaperBMP.Assign( WallpaperBlurred );
 

@@ -44,6 +44,8 @@ type
       property AccentLine: boolean read FAccentLine write SetAccentLine default False;
       property AccentLineWidth: integer read FLineWidth write SetAccentLineWidth;
 
+      property Canvas;
+
     public
       constructor Create(AOwner : TComponent); override;
       destructor Destroy; override;

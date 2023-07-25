@@ -133,7 +133,7 @@
         <DCCReference Include="Source\CFX.ThemeManager.pas"/>
         <DCCReference Include="Source\CFX.ToolTip.pas"/>
         <DCCReference Include="Source\CFX.Forms.pas"/>
-        <DCCReference Include="Source\CFX.Button.pas"/>
+        <DCCReference Include="Source\CFX.ButtonDesign.pas"/>
         <DCCReference Include="Source\CFX.Checkbox.pas"/>
         <DCCReference Include="Source\CFX.Panels.pas"/>
         <DCCReference Include="Source\CFX.StandardIcons.pas"/>
@@ -161,6 +161,8 @@
         <DCCReference Include="Source\CFX.Selector.pas"/>
         <DCCReference Include="Source\CFX.Edit.pas"/>
         <DCCReference Include="Source\CFX.PopupConnector.pas"/>
+        <DCCReference Include="Source\CFX.Button.pas"/>
+        <DCCReference Include="Source\CFX.IconView.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

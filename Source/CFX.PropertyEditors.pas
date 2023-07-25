@@ -33,7 +33,7 @@ uses
   CFX.Types,
   CFX.Forms,
   CFX.FontIcons,
-  CFX.Button,
+  CFX.ButtonDesign,
   CFX.PopupMenu,
   CFX.ImageList,
 
@@ -54,7 +54,7 @@ uses
       FTitle2: TLabel;
 
       FButtonSave,
-      FButtonClose: FXBUtton;
+      FButtonClose: FXButtonDesign;
 
       FAllowCancel: boolean;
       FStyled: boolean;
@@ -198,7 +198,7 @@ end;
 
 procedure TFXIconSelectProperty.ButtonImageAction(Sender: TObject);
 begin
-  case FXButton(Sender).Tag of
+  case FXButtonDesign(Sender).Tag of
     (* TPicture *)
     1: begin
       with TOpenPictureDialog.Create(nil) do
@@ -272,18 +272,18 @@ procedure TFXIconSelectProperty.ButtonSelect(Sender: TObject);
 var
   I: integer;
 begin
-  Item.Enabled := FXButton(Sender).Tag <> 1;
+  Item.Enabled := FXButtonDesign(Sender).Tag <> 1;
 
   if Item.Enabled then
-    Item.IconType := FXIconType(FXButton(Sender).Tag-2);
+    Item.IconType := FXIconType(FXButtonDesign(Sender).Tag-2);
 
-  for I := 0 to FXButton(Sender).Parent.ControlCount - 1 do
-    if FXButton(Sender).Parent.Controls[I] is FXButton then
-      FXButton(FXButton(Sender).Parent.Controls[I]).FlatButton := false;
+  for I := 0 to FXButtonDesign(Sender).Parent.ControlCount - 1 do
+    if FXButtonDesign(Sender).Parent.Controls[I] is FXButtonDesign then
+      FXButtonDesign(FXButtonDesign(Sender).Parent.Controls[I]).FlatButton := false;
 
-  FXButton(Sender).FlatButton := true;
+  FXButtonDesign(Sender).FlatButton := true;
 
-  ShowPanel( FXButton(Sender).Tag - 1 );
+  ShowPanel( FXButtonDesign(Sender).Tag - 1 );
 end;
 
 procedure TFXIconSelectProperty.Edit;
@@ -325,7 +325,7 @@ begin
             ParentColor := true;
           end;
 
-        with FXButton.Create(ListPanel) do
+        with FXButtonDesign.Create(ListPanel) do
           begin
             Parent := ListPanel;
 
@@ -334,7 +334,7 @@ begin
             Tag := 5;
           end;
 
-        with FXButton.Create(ListPanel) do
+        with FXButtonDesign.Create(ListPanel) do
           begin
             Parent := ListPanel;
 
@@ -343,7 +343,7 @@ begin
             Tag := 4;
           end;
 
-        with FXButton.Create(ListPanel) do
+        with FXButtonDesign.Create(ListPanel) do
           begin
             Parent := ListPanel;
 
@@ -352,7 +352,7 @@ begin
             Tag := 3;
           end;
 
-        with FXButton.Create(ListPanel) do
+        with FXButtonDesign.Create(ListPanel) do
           begin
             Parent := ListPanel;
 
@@ -361,7 +361,7 @@ begin
             Tag := 2;
           end;
 
-        with FXButton.Create(ListPanel) do
+        with FXButtonDesign.Create(ListPanel) do
           begin
             Parent := ListPanel;
 
@@ -430,7 +430,7 @@ begin
                   LB1.Visible := (Item.SelectPicture.Graphic = nil) or Item.SelectPicture.Graphic.Empty;
                 end;
 
-              with FXButton.Create(Panel) do
+              with FXButtonDesign.Create(Panel) do
                 begin
                   Parent := Panel;
 
@@ -451,7 +451,7 @@ begin
                   OnClick := ButtonImageAction;
                 end;
 
-              with FXButton.Create(Panel) do
+              with FXButtonDesign.Create(Panel) do
                 begin
                   Parent := Panel;
 
@@ -472,7 +472,7 @@ begin
                   OnClick := ButtonImageAction;
                 end;
 
-              with FXButton.Create(Panel) do
+              with FXButtonDesign.Create(Panel) do
                 begin
                   Parent := Panel;
 
@@ -553,7 +553,7 @@ begin
                   LB2.Visible := Item.SelectBitmap.Empty;
                 end;
 
-              with FXButton.Create(Panel) do
+              with FXButtonDesign.Create(Panel) do
                 begin
                   Parent := Panel;
 
@@ -574,7 +574,7 @@ begin
                   OnClick := ButtonImageAction;
                 end;
 
-              with FXButton.Create(Panel) do
+              with FXButtonDesign.Create(Panel) do
                 begin
                   Parent := Panel;
 
@@ -595,7 +595,7 @@ begin
                   OnClick := ButtonImageAction;
                 end;
 
-              with FXButton.Create(Panel) do
+              with FXButtonDesign.Create(Panel) do
                 begin
                   Parent := Panel;
 
@@ -697,8 +697,8 @@ begin
 
         // Prepare Buttons
         for I := 0 to ListPanel.ControlCount - 1 do
-          if ListPanel.Controls[I] is FXButton then
-            with FXButton(ListPanel.Controls[I]) do
+          if ListPanel.Controls[I] is FXButtonDesign then
+            with FXButtonDesign(ListPanel.Controls[I]) do
               begin
                 Align := alLeft;
                 AlignWithMargins := true;
@@ -867,7 +867,7 @@ begin
     end;
 
   // Buttons
-  FButtonSave := FXButton.Create(Self);
+  FButtonSave := FXButtonDesign.Create(Self);
   with FButtonSave do
     begin
       Parent  := Self;
@@ -889,7 +889,7 @@ begin
       Anchors := [akBottom, akRight];
     end;
 
-  FButtonClose := FXButton.Create(Self);
+  FButtonClose := FXButtonDesign.Create(Self);
   with FButtonClose do
     begin
       Parent  := Self;

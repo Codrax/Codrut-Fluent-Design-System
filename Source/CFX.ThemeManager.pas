@@ -365,8 +365,6 @@ begin
 end;
 
 procedure FXThemeManager.UpdateSettings;
-var
-  I: Integer;
 begin
   // Date
   LastUpdate := Now;

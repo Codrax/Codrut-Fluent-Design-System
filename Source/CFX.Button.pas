@@ -1,705 +1,255 @@
-﻿unit CFX.Button;
+unit CFX.Button;
 
 interface
-
 uses
-  System.SysUtils,
-  System.Classes,
+  Classes,
+  Messages,
+  Windows,
   Vcl.Controls,
-  Messaging,
-  Winapi.Windows,
-  Vcl.Forms,
-  Vcl.ExtCtrls,
   Vcl.Graphics,
-  Vcl.Styles,
-  Vcl.Themes,
-  CFX.Utilities,
+  Vcl.ExtCtrls,
+  Vcl.Forms,
+  Types,
+  Threading,
+  Math,
+  CFX.GDI,
+  CFX.Colors,
   CFX.VarHelpers,
   CFX.ThemeManager,
-  CFX.Colors,
-  CFX.UIConsts,
   CFX.Graphics,
+  CFX.UIConsts,
+  SysUtils,
+  CFX.Utilities,
   CFX.Classes,
-  CFX.Controls,
+  CFX.PopupMenu,
+  CFX.Types,
   CFX.Linker,
-  System.UITypes;
+  CFX.Animations,
+  CFX.Controls;
 
 type
-  FXButton = class;
-
-  CPosition = (cpLeft, cpRight, cpTop, cpBottom);
-  FXButtonState = (mbsLeave, mbsEnter, mbsDown);
-  FXButtonAnimateEngine = (cbneComponent, cbneAtDraw);
-  //FXButtonIconAlign = (cbiaLeft, cbiaRight, cbiaTop, cbiaBottom);
-  FXButtonStateChange = procedure(Sender: FXButton; State: FXButtonState) of object;
-  FXButtonIcon = (cicNone, cicSegoeFluent, cicYes, cicNo, cicTrueYes,
-                  cicNoAllow, cicQuestion, cicWarning, cicStart, cicNext,
-                  cicBack, cicUp, cicDown, cicArrow, cicEnter, cicRetry,
-                  cicDownload, cicUpload, cicSearch, cicSearchL);
-
-
-  FXButtonUnderLine = class(TMPersistent)
-    private
-      FUnderThick: integer;
-      FUnderLn, FUnderLnRound: boolean;
-      procedure SetUline(const Value: boolean);
-      procedure SetULRound(const Value: boolean);
-      procedure SetUlThick(const Value: integer);
-    published
-      property Enable : boolean read FUnderLn write SetUline;
-      property UnderLineRound : boolean read FUnderLnRound write SetULRound;
-      property UnderLineThicknes : integer read FUnderThick write SetUlThick;
-  end;
-
-  FXButtonColors = class(TMPersistent)
-    private
-      FEnter, FLeave, FDown: TColor;
-      FLine: TColor;
-      function Paint : Boolean;
-    published
-      property Enter : TColor read FEnter write FEnter stored Paint;
-      property Leave : TColor read FLeave write FLeave stored Paint;
-      property Down : TColor read FDown write FDown stored Paint;
-      property BLine : TColor read FLine write FLine stored Paint;
-  end;
-
-  FXButtonGradientSet = class(TMPersistent)
-    private
-      FEnter, FLeave, FDown: TColor;
-      FEnabled: boolean;
-      function Paint : Boolean;
-    published
-      property Enabled : boolean read FEnabled write FEnabled stored Paint;
-      property Enter : TColor read FEnter write FEnter stored Paint;
-      property Leave : TColor read FLeave write FLeave stored Paint;
-      property Down : TColor read FDown write FDown stored Paint;
-  end;
-
-  FXButtonFontAutoSize = class(TMPersistent)
-    private
-      FEnabled: boolean;
-      FMax, FMin: integer;
-      function Paint : Boolean;
-    published
-      property Enabled : boolean read FEnabled write FEnabled stored Paint;
-      property Max : integer read FMax write FMax stored Paint;
-      property Min : integer read FMin write FMin stored Paint;
-  end;
-
-  FXButtonAnimations = class(TMPersistent)
-    private
-      FPAn, FFadeAnimation: boolean;
-      FAnimdelay, FAnimshq, TimeProg, FFadeSpeed: integer;
-      FAnimateEngine: FXButtonAnimateEngine;
-    published
-      property PressAnimation : boolean read FPAn write FPAn;
-      property PADelay : integer read FAnimdelay write FAnimdelay;
-      property PAShrinkAmount : integer read FAnimshq write FAnimshq;
-      property PAAnimateEngine : FXButtonAnimateEngine read FAnimateEngine write FAnimateEngine;
-
-      property FadeAnimation: boolean read FFadeAnimation write FFadeAnimation;
-      property FASpeed: integer read FFadeSpeed write FFadeSpeed;
-  end;
-
-  FXButtonPen = class(TMPersistent)
-    private
-      FColor : TColor;
-      FWidth : integer;
-      FEnablePenAlt: boolean;
-      FCPenDown: TColor;
-      FCPenHover: TColor;
-      FUseThemeManager: boolean;
-      function Paint : Boolean;
-    published
-      property Color : TColor read FColor write FColor stored Paint;
-      property Width : integer read FWidth write FWidth stored Paint;
-      property UseThemeManager: boolean read FUseThemeManager write FUseThemeManager stored Paint default true;
-      property EnableAlternativeColors : boolean read FEnablePenAlt write FEnablePenAlt stored Paint default false;
-      property AltHoverColor : TColor read FCPenHover write FCPenHover stored Paint;
-      property AltPressColor : TColor read FCPenDown write FCPenDown stored Paint;
-  end;
+  FXBeforeModalResult = procedure(Sender: TObject; var SendModal: boolean) of object;
 
   FXButton = class(FXWindowsControl, FXControl)
-  private
-    FAuthor, FSite, FVersion: string;
-    FonStateChange: FXButtonStateChange;
+    private
+      var DrawRect, CaptionRect, IndicatorRect, ImageRect, TheTextRect: TRect;
+      FTextFont: TFont;
+      FCustomColors: FXCompleteColorSets;
+      FCustomButtonColors: FXColorStateSets;
+      FDrawColors: FXCompleteColorSet;
+      FButtonColors: FXColorStateSet;
+      FText: string;
+      FChecked: boolean;
+      FWordWrap: boolean;
+      FImage: FXIconSelect;
+      FImageScale: real;
+      FImageLayout: FXDrawLayout;
+      FVertLayout: FXLayout;
+      FHorizLayout: FXLayout;
+      FAutomaticMouseCursor: boolean;
+      FCancel: boolean;
+      FDefault: boolean;
+      FButtonKind: FXButtonKind;
+      FTextDrawFlags: FXTextFlags;
+      FRoundNess: integer;
+      FBorderWidth: real;
+      FHyperLinkURL: string;
+      FDropDown: FXPopupMenu;
+      FMargin: integer;
+      FStateText: string;
+      FStateImage: FXIconSelect;
+      FStateEnabled: boolean;
+      FStateDuration: integer;
+      FAutoStopState: TTimer;
+      FAutoStateToggle: boolean;
+      FOnCheck: TNotifyEvent;
+      FOnOpenLink: TNotifyEvent;
+      FOnDropDown: TNotifyEvent;
+      FAnimationRunning: boolean;
+      FAnimPos: integer;
+      FAutoRepeat: TTimer;
+      FRepeatWhenPressed: boolean;
+      FModalResult: TModalResult;
+      FBeforeModal: FXBeforeModalResult;
+      FAnimation: boolean;
+      FLineWidth: integer;
+      FDetail: FXDetailType;
 
-    FColors: FXButtonColors;
-    FPen: FXButtonPen;
-    FTextColors: FXButtonColors;
-    FAnimations: FXButtonAnimations;
-    FTransparent,
-    FFlatBT,
-    FFlatComplete,
-    FEnableCaption,
-    FCancel,
-    FDefault: Boolean;
-    w, h, fs: integer;
-    FUseManualColor: boolean;
-    FGradientSet: FXButtonGradientSet;
-    FFontAutoSize: FXButtonFontAutoSize;
-    FUnderLine: FXButtonUnderLine;
-    FModalResult: TModalResult;
-    FRoundAmount: integer;
-    FText: string;
-    FActionText: string;
-    FSubText: string;
-    FEnableSubText: boolean;
-    FState, FPreviousState: FXButtonState;
-    FFont: TFont;
-    FSubTextFont: TFont;
-    FAlign: TAlignment;
-    FControlStyle: TControlStyle;
-    ShX, ShY: integer;
-    FImageLayout: CPosition;
-    FTxtWSpace: integer;
-    FCustomColors: FXColorSets;
-    FImage: FXIconSelect;
-    FActionImage: FXIconSelect;
-    FActionToggle: boolean;
-    //FTrueTransparency: boolean;
+      //  Internal
+      procedure UpdateColors;
+      procedure UpdateRects;
 
-    FadeAnim: TTimer;
+      // Set properties
+      procedure SetText(const Value: string);
+      procedure SetWordWrap(const Value: boolean);
+      procedure SetChecked(const Value: Boolean);
+      procedure SetImage(const Value: FXIconSelect);
+      procedure SetCancel(const Value: boolean);
+      procedure SetDefault(const Value: boolean);
+      procedure SetImageScale(const Value: real);
+      procedure SetHorizLayout(const Value: FXLayout);
+      procedure SetImageLayout(const Value: FXDrawLayout);
+      procedure SetStateEnabled(const Value: boolean);
+      procedure SetStateImage(const Value: FXIconSelect);
+      procedure SetStateText(const Value: string);
+      procedure SetStateDuration(const Value: integer);
+      procedure SetVertLayout(const Value: FXLayout);
+      procedure SetDetail(const Value: FXDetailType);
+      procedure SetButtonKind(const Value: FXButtonKind);
+      procedure SetRoundness(const Value: integer);
+      procedure SetMargin(const Value: integer);
+      procedure SetLineWidth(const Value: integer);
 
-    function FadeBrushColor(from, towhich: FXButtonState; progress: integer; isflat: boolean = false; gradientcolor: boolean = false): TColor;
-    function FadeFontColor(from, towhich: FXButtonState; progress: integer): TColor;
+      // Draw
+      function GetTextH: integer;
+      function GetTextW: integer;
 
-    procedure StTimer;
-    procedure FTimerAct(Sender: TObject);
-    procedure SetText(cOnst Value: string);
-    procedure SetState(const Value: FXButtonState);
-    procedure SetFont(const Value: TFont);
-    procedure SetTransparent(const Value: boolean);
-    procedure SetRoundVal(const Value: integer);
-    procedure SetFlatnes(const Value: boolean);
-    function ClrGray(clr: TColor): TColor;
-    procedure SetAlign(const Value: TAlignment);
-    procedure SetDefault(const Value: boolean);
-    procedure SetCancel(const Value: boolean);
-    procedure SetFlatComplete(const Value: boolean);
-    procedure SetShowCaption(const Value: boolean);
-    procedure SetFontAutoSize(const Value: FXButtonFontAutoSize);
-    procedure SetGradient(const Value: FXButtonGradientSet);
-    procedure SetImageLayour(const Value: CPosition);
-    procedure SetManualColor(const Value: boolean);
-    procedure SetEnableSubText(const Value: boolean);
-    procedure SetSubFont(const Value: TFont);
-    procedure SetSubText(const Value: string);
-    procedure SetTextWall(const Value: integer);
-    procedure SetImage(const Value: FXIconSelect);
-    procedure SetActionToggle(const Value: boolean);
-    procedure SetActionText(const Value: string);
+      // State
+      function GetText: string;
+      function GetImage: FXIconSelect;
 
-    { Private declarations }
-  protected
-    procedure PaintBuffer; override;
+      // Timers
+      procedure TimerRepeat(Sender: TObject);
+      procedure StateStop(Sender: TObject);
 
-    procedure Animation(undo: boolean);
-    procedure CMMouseEnter(var Message : TMessage); message CM_MOUSEENTER;
-    procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
-    procedure CMDialogKey(var Message: TCMDialogKey); message CM_DIALOGKEY;
-    procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
-    procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
-    procedure KeyPress(var Key: Char); override;
-    procedure Click; override;
-    procedure DoEnter; override;
-    procedure DoExit; override;
-    procedure SetEnabled(Value: Boolean); override;
-    procedure ApplyAccentColor;
+      // Get properties
+      function GetChecked: Boolean;
 
-  published
-    property OnMouseEnter;
-    property OnMouseLeave;
-    property OnMouseDown;
-    property OnMouseUp;
-    property OnMouseMove;
-    property OnEnter;
-    property OnExit;
-    property ModalResult: TModalResult read FModalResult write FModalResult default 0;
-    property OnKeyPress;
-    property OnKeyDown;
-    property OnKeyUp;
-    property OnClick;
-    property OnStateChange : FXButtonStateChange read FOnStateChange write FOnStateChange;
+      // Handle Messages
+      procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
+      procedure WM_LButtonUp(var Msg: TWMLButtonUp); message WM_LBUTTONUP;
+      procedure WMSize(var Message: TWMSize); message WM_SIZE;
 
-    property PopupMenu;
+    protected
+      procedure PaintBuffer; override;
+      procedure Resize; override;
+      procedure ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF}); override;
 
-    property Allignment: TAlignment read FAlign write SetAlign;
+      // State
+      procedure InteractionStateChanged(AState: FXControlState); override;
 
-    property Default: boolean read FDefault write SetDefault;
-    property Cancel: boolean read FCancel write SetCancel;
+      // Key Presses
+      procedure KeyPress(var Key: Char); override;
 
-    property Action;
-    property ShowHint;
-    property TabStop;
-    property TabOrder;
-    property Align;
-    property Anchors;
-    property Constraints;
-    property Cursor;
-    property Visible;
-    property Enabled;
-    property DoubleBuffered;
+      // Mouse
+      procedure Click; override;
+      procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+      procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+      procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
 
-    property Color;
-    property ParentColor;
+    published
+      property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
+      property CustomButtonColors: FXColorStateSets read FCustomButtonColors write FCustomButtonColors stored true;
+      property Checked: Boolean read GetChecked write SetChecked default false;
 
-    property UseManualColor: boolean read FUseManualColor write SetManualColor;
+      property Text: string read FText write SetText;
+      property Font: TFont read FTextFont write FTextFont;
+      property WordWrap: boolean read FWordWrap write SetWordWrap default true;
+      property Image: FXIconSelect read FImage write SetImage;
+      property ImageScale: real read FImageScale write SetImageScale;
+      property ImageLayout: FXDrawLayout read FImageLayout write SetImageLayout default FXDrawLayout.Left;
+      property LayoutHorizontal: FXLayout read FHorizLayout write SetHorizLayout default FXLayout.Center;
+      property LayoutVertical: FXLayout read FVertLayout write SetVertLayout default FXLayout.Center;
+      property ButtonKind: FXButtonKind read FButtonKind write SetButtonKind default FXButtonKind.Normal;
+      property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default true;
+      property Roundness: integer read FRoundness write SetRoundness default BUTTON_ROUNDNESS;
+      property HyperLinkURL: string read FHyperLinkURL write FHyperLinkURL;
+      property DropDown: FXPopupMenu read FDropDown write FDropDown;
+      property Margin: integer read FMargin write SetMargin default 0;
+      property RepeatWhenPressed: boolean read FRepeatWhenPressed write FRepeatWhenPressed default false;
+      property Animation: boolean read FAnimation write FAnimation default true;
+      property Detail: FXDetailType read FDetail write SetDetail default FXDetailType.None;
+      property LineWidth: integer read FLineWidth write SetLineWidth default BUTTON_LINE_WIDTH;
 
-    property Image: FXIconSelect read FImage write SetImage;
-    property ImageLayout: CPosition Read FImageLayout write SetImageLayour;
+      property StateText: string read FStateText write SetStateText;
+      property StateImage: FXIconSelect read FStateImage write SetStateImage;
+      property StateEnabled: boolean read FStateEnabled write SetStateEnabled default false;
+      property StateDuration: integer read FStateDuration write SetStateDuration default BUTTON_STATE_DURATION;
+      property AutoStateToggle: boolean read FAutoStateToggle write FAutoStateToggle default false;
 
-    property ActionText: string read FActionText write SetActionText;
-    property ActionImage: FXIconSelect read FActionImage write FActionImage;
-    property ActionToggle: boolean read FActionToggle write SetActionToggle;
+      property OnCheck: TNotifyEvent read FOnCheck write FOnCheck;
+      property OnOpenLink: TNotifyEvent read FOnOpenLink write FOnOpenLink;
+      property OnDropDown: TNotifyEvent read FOnDropDown write FOnDropDown;
+      property OnBeforeModalResult: FXBeforeModalResult read FBeforeModal write FBeforeModal;
 
-    property ShowCaption: boolean read FEnableCaption write SetShowCaption;
+      // Button
+      property Default: boolean read FDefault write SetDefault default false;
+      property Cancel: boolean read FCancel write SetCancel default false;
+      property ModalResult: TModalResult read FModalResult write FModalResult default mrNone;
 
-    property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
+      // Properties
+      property Align;
+      property Constraints;
+      property Anchors;
+      property Hint;
+      property ShowHint;
+      property TabStop;
+      property TabOrder;
+      property OnEnter;
+      property OnExit;
+      property OnClick;
+      property OnKeyDown;
+      property OnKeyUp;
+      property OnKeyPress;
+      property OnMouseUp;
+      property OnMouseDown;
+      property OnMouseEnter;
+      property OnMouseLeave;
 
-    property GradientOptions : FXButtonGradientSet read FGradientSet write SetGradient;
-    property ControlStyle : TControlStyle read FControlStyle write FControlStyle;
+      // Checked Tag
+      function GetCheckedTag: integer;
 
-    property Font : TFont read FFont write SetFont stored True;
-    property FontAutoSize : FXButtonFontAutoSize read FFontAutoSize write SetFontAutoSize;
-    property SubTextFont : TFont read FSubTextFont write SetSubFont stored True;
-    property Text : string read FText write SetText;
-    property SubText : string read FSubText write SetSubText;
-    property SubTextEnabled : boolean read FEnableSubText write SetEnableSubText default false;
-    property TextWallSpacing : integer read FTxtWSpace write SetTextWall default 10;
+    public
+      constructor Create(aOwner: TComponent); override;
+      destructor Destroy; override;
 
-    property RoundTransparent : boolean read FTransparent write SetTransparent;
-    property RoundAmount : integer read FRoundAmount write SetRoundVal;
-    property State : FXButtonState read FState write SetState;
-    property FlatButton : boolean read FFlatBT write SetFlatnes;
-    property FlatComplete : boolean read FFlatComplete write SetFlatComplete;
-    property Colors : FXButtonColors read FColors write FColors;
-    property UnderLine: FXButtonUnderLine read FUnderLine write FUnderLine;
-    property TextColors : FXButtonColors read FTextColors write FTextColors;
-    property Pen : FXButtonPen read FPen write FPen;
-    property Animations: FXButtonAnimations read FAnimations write FAnimations;
+      // Interface
+      function IsContainer: Boolean;
+      procedure UpdateTheme(const UpdateChildren: Boolean);
 
-    property &&&Author: string Read FAuthor;
-    property &&&Site: string Read FSite;
-    property &&&Version: string Read FVersion;
-  public
-    constructor Create(AOwner : TComponent); override;
-    destructor Destroy; override;
-
-    procedure SetFocus(); override;
-    procedure Invalidate; override;
-
-    // Interface
-    function IsContainer: Boolean;
-    procedure UpdateTheme(const UpdateChildren: Boolean);
-
-    function Background: TColor;
+      function Background: TColor;
   end;
-
-const
-  defaultunderln = 6;
-  AnimSizeDvz = 50;
 
 implementation
 
-{ FXButtonColors }
-functiOn FXButtonColors.Paint: Boolean;
-begin
-  if Self.Owner is FXButton then begin
-    FXButton(Self.Owner).PaintBuffer;
-    Result := True;
-  end else Result := False;
-end;
-
-{ FXButtonPen }
-functiOn FXButtonPen.Paint: Boolean;
-begin
-  if Self.Owner is FXButton then begin
-    FXButton(Self.Owner).PaintBuffer;
-    Result := True;
-  end else Result := False;
-end;
-
-{ FXButton }
-
-procedure FXButton.Animation(undo: boolean);
+procedure FXButton.InteractionStateChanged(AState: FXControlState);
 var
-  i, x, y: integer;
+  FAnim: TIntAni;
 begin
-  if not FAnimations.FPAn then Exit;
+  inherited;
+  Invalidate;
 
-  if FAnimations.PAAnimateEngine = cbneAtDraw then begin
+  // Animation
+  if FAnimation and not Creating and not FAnimationRunning then
+    begin
+      FAnim := TIntAni.Create;
 
-    for i := 1 to FAnimations.FAnimshq do begin
-      Sleep(FAnimations.FAnimdelay);
+      FAnim.Duration := 10;
+      FAnim.Step := 10;
+      FAnim.StartValue := 0;
+      FAnim.DeltaValue := 255;
 
-      x := round(width / AnimSizeDvz);
-      Y := round(height / AnimSizeDvz);
+      FAnim.OnSync := procedure(Value: integer)
+      begin
+        FAnimPos := trunc(FAnim.Percent * 255);
 
-      if x < 1 then x := 1;
-      if y < 1 then y := 1;
-
-
-      if undo then begin
-        dec(shX, x);
-        dec(shY, y);
-      end else begin
-        inc(shX, x);
-        inc(shY, y);
+        if (Parent = nil) or IsDestroying then
+          begin
+            FAnim.Terminate;
+          end
+        else
+          PaintBuffer;
       end;
 
-      FTimerAct(nil);
+      FAnim.OnDone := procedure
+      begin
+         FAnimationRunning := false;
+      end;
 
-      PaintBuffer;
+      FAnim.FreeOnTerminate := true;
+      FAnimationRunning := true;
+      FAnim.Start;
     end;
-  end else
-  begin
-      if undo then begin
-      w := w * -1;
-      h := h * -1;
-      fs := fs * -1;
-    end else begin
-      w := trunc(Width / 40);
-      h := trunc(Height / 40);
-      fs := trunc(FFont.Size / 40);
-      if fs = 0 then fs := 1;
-      if w = 0 then w := 1;
-      if h = 0 then h := 1;
-    end;
-    //Experiment
-    for i := 1 to FAnimations.FAnimshq do begin
-      Sleep(FAnimations.FAnimdelay);
-      FFont.Size := FFont.Size -fs;
-      Width := Width + (w * -1);
-      Height := Height + (h * -1);
-      Left := Left + round(w / 2);
-      Top := Top + round(h / 2);
-
-      PaintBuffer;
-    end;
-  end;
-end;
-
-function FXButton.ClrGray(clr: TColor): TColor;
-var
-  RBGval: longint;
-  R, G, B: integer;
-begin
-  RBGval := ColorToRGB(clr);
-  R := GetRValue(RBGval);
-  G := GetGValue(RBGval);
-  B := GetBValue(RBGval);
-
-  R:= (R+G+B) div 3;
-  G:= R; B:=R;
-
-  Result := RGB(r,g,b);
-end;
-
-procedure FXButton.ApplyAccentColor;
-var
-  AccColor: TColor;
-begin
-  if FUseManualColor then
-    Exit;
-
-  if FCustomColors.Enabled then
-    AccColor := FCustomColors.Accent
-  else
-    AccColor := ThemeManager.AccentColor;
-
-  FColors.FLeave := ChangeColorLight(AccColor, -15);
-  FColors.FEnter := ChangeColorLight(FColors.FLeave, 15);
-  FColors.FDown := ChangeColorLight(FColors.FLeave, -25);
-  FColors.FLine := ChangeColorLight(FColors.FLeave, -40);
-end;
-
-function FXButton.Background: TColor;
-begin
-  Result := Color;
-end;
-
-procedure FXButton.Click;
-var
-  Form: TCustomForm;
-begin
-  inherited;
-
-  Form := GetParentForm(Self);
-  if Form <> nil then
-    Form.ModalResult := ModalResult;
-end;
-
-procedure FXButton.CMDialogKey(var Message: TCMDialogKey);
-begin
-  with Message do
-    if  (((CharCode = VK_RETURN) and FDefault) or
-      ((CharCode = VK_ESCAPE) and FCancel)) and
-      (KeyDataToShiftState(Message.KeyData) = []) and CanFocus then
-    begin
-      Click;
-      Result := 1;
-    end else
-      inherited;
-end;
-
-procedure FXButton.CMMouseEnter(var Message: TMessage);
-begin
-  inherited;
-  SetState(mbsEnter);
-  if Assigned(FOnStateChange) then FOnStateChange(Self, FState);
-end;
-
-procedure FXButton.CMMouseLeave(var Message: TMessage);
-begin
-  inherited;
-  SetState(mbsLeave);
-  if Assigned(FOnStateChange) then FOnStateChange(Self, FState);
-end;
-
-constructor FXButton.Create(AOwner: TComponent);
-begin
-  inherited;
-  FAuthor                       := 'Petculescu Codrut';
-  FSite                         := 'https://www.codrutsoftware.cf';
-  FVersion                      := '1.3';
-
-  FCustomColors := FXColorSets.Create(Self, false);
-
-  BufferedComponent := true;
-  AutoFocusLine := true;
-  FAlign := taCenter;
-
-  TabStop := true;
-
-  FEnableCaption := true;
-
-  FGradientSet := FXButtonGradientSet.Create(Self);
-  with FGradientSet do begin
-    FEnabled := false;
-    FDown := clMaroon;
-    FEnter := clFuchsia;
-    FLeave := clRed;
-  end;
-
-  FFontAutoSize := FXButtonFontAutoSize.Create(Self);
-  with FFontAutoSize do begin
-    FEnabled := false;
-    FMax := -1;
-    FMin := -1;
-  end;
-
-  FColors := FXButtonColors.Create(Self);
-  with FColors do begin
-    Enter := $00D7821A;
-    Leave := $00C57517;
-    Down := $008E5611;
-    BLine := $008E5611;;
-  end;
-
-  FadeAnim := TTimer.Create(Self);
-  with FadeAnim do begin
-    Interval := 1;
-    Enabled := false;
-    FadeAnim.OnTimer := FTimerAct;
-  end;
-
-  FAnimations := FXButtonAnimations.Create;
-  with FAnimations do begin
-    FAnimations.FPAn := false;
-    PAAnimateEngine := cbneAtDraw;
-    FAnimdelay := 2;
-    FFadeSpeed := 10;
-    FAnimshq := 6;
-  end;
-
-  FTextColors := FXButtonColors.Create(Self);
-  with FTextColors do begin
-    Enter := clWhite;
-    Leave := clWhite;
-    Down := clWhite;
-  end;
-
-  FUnderLine := FXButtonUnderLine.Create(Self);
-  with FUnderLine do begin
-    FUnderLnRound := true;
-    FUnderThick := defaultunderln;
-    FUnderLn := true;
-  end;
-
-  FPen := FXButtonPen.Create(self);
-  With FPen do begin
-    Width := 2;
-    Color := clWindow;
-    FEnablePenAlt := false;
-    UseThemeManager := true;
-  end;
-
-  FFont := TFont.Create;
-  with FFont do begin
-    Name := 'Segoe UI Semibold';
-    Size := 12;
-    Color := $00D7821A;
-  end;
-
-  FSubText := 'Hello World!';
-  FEnableSubText := false;
-
-  FSubTextFont := TFont.Create;
-  with FSubTextFont do begin
-    Name := 'Segoe UI';
-    Size := 10;
-    Color := $00D7821A;
-  end;
-
-  FTxtWSpace := 10;
-
-  FImage := FXIconSelect.Create(Self);
-  FActionImage := FXIconSelect.Create(Self);
-
-  ApplyAccentColor;
-
-  Width := 110;
-  Height := 40;
-
-  FText := 'Click me';
-  FState := mbsLeave;
-
-  FActionText := 'Working';
-
-  FImageLayout := cpLeft;
-
-  FAnimations.FFadeAnimation := true;
-
-  Pen.Width := 0;
-  FTransparent := true;
-  FRoundAmount := 10;
-end;
-
-destructor FXButton.Destroy;
-begin
-  FreeAndNil( FCustomColors );
-  FreeAndNil( FPen );
-  FreeAndNil( FColors );
-  FreeAndNil( FImage );
-  FreeAndNil( FActionImage );
-  FreeAndNil( FAnimations );
-  FadeAnim.Enabled := false;
-  FreeAndNil( FadeAnim );
-  FreeAndNil( FUnderLine );
-  FreeAndNil( FTextColors );
-  FreeAndNil( FFont );
-  inherited;
-end;
-
-procedure FXButton.DoEnter;
-begin
-  inherited;
-  SetState(mbsEnter);
-end;
-
-procedure FXButton.DoExit;
-begin
-  inherited;
-  SetState(mbsLeave);
-
-  if FDefault then
-    //Self.SetFocus;
-end;
-
-function FXButton.FadeBrushColor(from, towhich: FXButtonState;
-  progress: integer; isflat: boolean; gradientcolor: boolean): TColor;
-var
-  c1, c2: TColor;
-  flatmt: integer;
-begin
-  c1 := clWhite;
-  c2 := clWhite;
-
-  if FFlatComplete then
-    flatmt := 0
-  else
-    flatmt := 1;
-
-  if NOT gradientcolor then
-  begin
-    case from of
-      mbsDown: if isflat then c1 := ChangeColorLight(FPen.Color,-15 * flatmt) else
-        c1 := FColors.Down;
-      mbsLeave: if isflat then c1 := ChangeColorLight(FPen.Color,-3 * flatmt) else
-         c1 := FColors.Leave;
-      mbsEnter: if isflat then c1 := ChangeColorLight(FPen.Color,-5 * flatmt) else
-         c1 := FColors.Enter;
-    end;
-    case towhich of
-      mbsDown: if isflat then c2 := ChangeColorLight(FPen.Color,-15 * flatmt) else
-         c2 := FColors.Down;
-      mbsLeave: if isflat then c2 := ChangeColorLight(FPen.Color,-3 * flatmt) else
-         c2 := FColors.Leave;
-      mbsEnter: if isflat then c2 := ChangeColorLight(FPen.Color,-5 * flatmt) else
-         c2 := FColors.Enter;
-    end;
-  end
-  else begin
-    case from of
-      mbsDown: c1 := FGradientSet.Down;
-      mbsLeave: c1 := FGradientSet.Leave;
-      mbsEnter: c1 := FGradientSet.Enter;
-    end;
-    case towhich of
-      mbsDown: c2 := FGradientSet.Down;
-      mbsLeave: c2 := FGradientSet.Leave;
-      mbsEnter: c2 := FGradientSet.Enter;
-    end;
-  end;
-
-  if FAnimations.FFadeAnimation then
-    Result := ColorBlend(c1, c2, progress * (255 div FAnimations.FASpeed))
-  else
-    Result := c2;
-end;
-
-function FXButton.FadeFontColor(from, towhich: FXButtonState;
-  progress: integer): TColor;
-var
-  c1, c2: TColor;
-begin
-  c1 := clWhite;
-  c2 := clWhite;
-
-  case from of
-    mbsDown: c1 := FTextColors.Down;
-    mbsLeave: c1 := FTextColors.Leave;
-    mbsEnter: c1 := FTextColors.Enter;
-  end;
-  case towhich of
-    mbsDown: c2 := FTextColors.Down;
-    mbsLeave: c2 := FTextColors.Leave;
-    mbsEnter: c2 := FTextColors.Enter;
-  end;
-
-  if FAnimations.FFadeAnimation then
-    Result := ColorBlend(c1, c2, progress * (255 div FAnimations.FASpeed))
-  else
-    Result := c2;
-end;
-
-procedure FXButton.FTimerAct(Sender: TObject);
-begin
-  if NOT (FAnimations.TimeProg >= FAnimations.FASpeed) then
-  begin
-    inc(FAnimations.TimeProg);
-     PaintBuffer;
-  end else
-  FadeAnim.Enabled := false;
-end;
-
-procedure FXButton.Invalidate;
-begin
-  inherited;
-  PaintBuffer;
-
-  ApplyAccentColor;
 end;
 
 function FXButton.IsContainer: Boolean;
@@ -710,403 +260,409 @@ end;
 procedure FXButton.KeyPress(var Key: Char);
 begin
   inherited;
-  if (key = #13) or (key = #32) then begin
-    SetState(mbsDown);
-    if Assigned(FOnStateChange) then FOnStateChange(Self, FState);
-    //if Assigned(OnClick) then OnClick(Self);
-    SetState(mbsEnter);
-    Click;
-  end;
+  if (Key = #13) or (Key = #32) then
+    begin
+      PreviousInteractionState := FXControlState.Press;
+      Click;
+      SetNewInteractionState(FXControlState.None, true, false);
+    end;
 end;
 
 procedure FXButton.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
   Y: integer);
 begin
   inherited;
-  SetState(mbsDown);
-  if Assigned(FOnStateChange) then FOnStateChange(Self, FState);
-  Animation(false);
+  if RepeatWhenPressed then
+    begin
+      FAutoRepeat.Interval := REPEAT_START_DELAY;
+      FAutoRepeat.Enabled := true;
+    end;
+end;
+
+procedure FXButton.MouseMove(Shift: TShiftState; X, Y: Integer);
+begin
+  inherited;
 end;
 
 procedure FXButton.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
   Y: integer);
 begin
   inherited;
-  if Self.Parent = nil then
-    Exit;
-
-  SetState(mbsEnter);
-  if Assigned(FOnStateChange) then FOnStateChange(Self, FState);
-  PaintBuffer;
-  Animation(true);
+  if RepeatWhenPressed then
+    FAutoRepeat.Enabled := false;
 end;
 
-procedure FXButton.PaintBuffer;
+procedure FXButton.UpdateTheme(const UpdateChildren: Boolean);
+begin
+  UpdateColors;
+  UpdateRects;
+  Invalidate;
+end;
+
+procedure FXButton.UpdateColors;
 var
-  I, TLeft, TTop, ILeft, ITop, SLeft, STop, SHeight, SWidth, IWidth, IHeight,
-    TWidth, THeight, SC: Integer;
-  cl2: TColor;
-  TText: string;
-  drawcanv, lastcanv: TBitMap;
-  CRect, DRect, IconRect: TRect;
-  TmpFont: TFont;
-  ImagePointer: FXIconSelect;
+  LoadPreset: FXButtonKind;
+  AOffset, ASmallOffset: integer;
 begin
-  if (Parent = nil) then
+  FDrawColors.Assign( ThemeManager.SystemColor );
+
+  // Access theme manager
+  if FCustomColors.Enabled then
+    begin
+      // Custom Colors
+      FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme);
+      FDrawColors.BackGround := GetParentBackgroundColor(FDrawColors.BackGround);
+    end
+  else
+    begin
+      // Global Colors
+      FDrawColors.Assign( ThemeManager.SystemColor );
+
+      FDrawColors.BackGround := GetParentBackgroundColor(FDrawColors.BackGround);
+    end;
+
+  // Button Colors
+  if FCustomButtonColors.Enabled then
+    begin
+      // Custom Colors
+      FButtonColors.LoadFrom(FCustomButtonColors, ThemeManager.DarkTheme);
+    end
+  else
+    begin
+      // Button Kind Color Pallete Logic
+      LoadPreset := ButtonKind;
+
+      case LoadPreset of
+        FXButtonKind.Toggle: begin
+          if Checked then
+            LoadPreset := FXButtonKind.Accent
+          else
+            LoadPreset := FXButtonKind.Normal;
+        end;
+      end;
+
+      // Load from FDrawColors
+      AOffset := BUTTON_COLOR_OFFSET;
+      ASmallOffset := BUTTON_COLOR_SMALL_OFFSET;
+
+      if not ThemeManager.DarkTheme then
+        begin
+          AOffset := AOffset * -1;
+          ASmallOffset := ASmallOffset * -1;
+        end;
+
+      with FButtonColors do
+        case LoadPreset of
+          FXButtonKind.Normal, FXButtonKind.Dropdown, FXButtonKind.Toggle:
+            begin
+              if AutomaticCursorPointer then
+                Cursor := crDefault;
+
+              FBorderWidth := 1;
+              BackgroundNone := ChangeColorLight(FDrawColors.BackGroundInterior, -ASmallOffset);
+              BackgroundHover := ChangeColorLight(BackgroundNone, AOffset);
+              BackgroundPress := ChangeColorLight(FDrawColors.BackGroundInterior, -AOffset);
+
+              ForeGroundNone := FDrawColors.ForeGround;
+              ForeGroundHover := FDrawColors.ForeGround;
+              ForeGroundPress := ColorBlend(FDrawColors.ForeGround, BackgroundNone, BUTTON_BLEND_FADE);
+            end;
+
+          FXButtonKind.Accent:
+            begin
+              if AutomaticCursorPointer then
+                Cursor := crDefault;
+
+              FBorderWidth := 1;
+              BackgroundNone := FDrawColors.Accent;
+              BackgroundHover := ChangeColorLight(FDrawColors.Accent, -AOffset);
+              BackgroundPress := ChangeColorLight(FDrawColors.Accent, -(ASmallOffset+AOffset));
+
+              ForeGroundNone := FDrawColors.BackGround;
+              ForeGroundHover := FDrawColors.BackGround;
+              ForeGroundPress := ColorBlend(FDrawColors.BackGround, FDrawColors.Accent, BUTTON_BLEND_FADE);
+            end;
+
+          FXButtonKind.Link: begin
+            with FButtonColors do
+              if AutomaticCursorPointer then
+                Cursor := crHandPoint;
+
+              FBorderWidth := 0;
+              BackgroundNone := FDrawColors.BackGround;
+              BackgroundHover := ChangeColorLight(FDrawColors.BackGround, AOffset);
+              BackgroundPress := ChangeColorLight(BackgroundNone, -ASmallOffset);
+
+              ForeGroundNone := FDrawColors.Accent;
+              ForeGroundHover := FDrawColors.Accent;
+              ForeGroundPress := ChangeColorLight(FDrawColors.Accent, -AOffset);
+            end;
+        end;
+    end;
+
+  // Disabled
+  if not Enabled then
+    begin
+      FDrawColors.Accent := GetColorGrayscale(FDrawColors.Accent);
+      FButtonColors.BackgroundNone := GetColorGrayscale(FButtonColors.BackgroundNone);
+      FButtonColors.ForegroundNone := GetColorGrayscale(FButtonColors.ForegroundNone);
+      FButtonColors.ForegroundNone := ColorBlend(FButtonColors.BackgroundNone, FButtonColors.ForegroundNone, BUTTON_BLEND_FADE)
+    end
+end;
+
+procedure FXButton.UpdateRects;
+var
+  AMargin, ATextHeight, ATextWidth, ATextLinesCount, ASize: integer;
+  ALeft, ATop: integer;
+begin
+  if Parent = nil then
     Exit;
 
-  ApplyAccentColor;
+  DrawRect := Rect(0, 0, Width, Height);
 
-  // Select Color
-  if not Self.ParentColor then
-    FPen.Color := GetParentBackgroundColor(Color)
-      else
-        if not FPen.FUseThemeManager then
-          FPen.Color := ThemeManager.SystemColor.BackGround;
+  // Get Data
+  ATextHeight := GetTextH;
+  ATextWidth := GetTextW;
+  AMargin := -(BUTTON_MARGIN + FMargin + FLineWidth);
 
-  drawcanv := TBitMap.Create;
-  drawcanv.Height := height;
-  drawcanv.Width := width;
-
-  with drawcanv.Canvas do begin
-    //Drawing ( + Transparency )
-    Brush.Color := FPen.Color;
-    if FPen.FEnablePenAlt then begin
-      if FState = mbsDown then Brush.Color := FPen.FCPenDown
-        else
-      if FState = mbsEnter then Brush.Color := FPen.FCPenHover;
-    end;
-    //bgcolor := Brush.Color;
-    FillRect( ClipRect );
-
-    Font.Assign( FFont );
-    case FState of
-      mbsLeave: begin
-        Brush.Color := FColors.Leave;
-        Font.Color := FTextColors.Leave;
-      end;
-      mbsEnter: begin
-        Brush.Color := FColors.Enter;
-        Font.Color := FTextColors.Enter;
-      end;
-      mbsDown: begin
-        Brush.Color := FColors.Down;
-        Font.Color := FTextColors.Down;
-      end;
-    end;
-
-    { Animate }
-    Brush.Color := FadeBrushColor( FPreviousState, FState, FAnimations.TimeProg);
-    Font.Color := FadeFontColor( FPreviousState, FState, FAnimations.TimeProg);
-    if FFlatBt then
+  // Button Kind
+  case ButtonKind of
+    FXButtonKind.Normal, FXButtonKind.Accent, FXButtonKind.Toggle, FXButtonKind.Link:
       begin
-        Font.Color := Brush.Color;
-        Brush.Color := FadeBrushColor( FPreviousState, FState, FAnimations.TimeProg, true);
+        CaptionRect := DrawRect;
+        CaptionRect.Inflate(AMargin, AMargin);
       end;
 
-    //Brush.Color := clRed;
-    // Normal Draw
-    DRect := Rect( FPen.Width, FPen.Width, Width - FPen.Width, Height - FPen.Width );
-    if NOT Self.Enabled then
+    FXButtonKind.Dropdown:
       begin
-        if FFlatBt then
-          Font.Color := FTextColors.FLine
-        else
-          Brush.Color := ClrGray(Brush.Color);
-      end;
+        CaptionRect := DrawRect;
+        CaptionRect.Inflate(AMargin, AMargin);
+        IndicatorRect := CaptionRect;
 
-    // Gradient Mode
-    if FGradientSet.FEnabled then
+        CaptionRect.Right := CaptionRect.Right - Max(ATextHeight, BUTTON_ICON_SPACE) - BUTTON_MARGIN;
+
+        IndicatorRect.Left := CaptionRect.Right + BUTTON_MARGIN;
+      end;
+  end;
+
+  // Make Rectangles
+  if Image.Enabled then
     begin
-      cl2 := FadeBrushColor( FPreviousState, FState, FAnimations.TimeProg, false, true);
-
-      // Draw Gradient
-      GradHorizontal(drawcanv.Canvas, DRect, Brush.Color, cl2);
-    end
+      // Flags
+      if WordWrap then
+        FTextDrawFlags := [FXTextFlag.WordWrap]
       else
-    FillRect( DRect );
+        FTextDrawFlags := [];
 
-    // Text and Icon
-    // Font Auto Size
-    if FFontAutoSize.FEnabled then
-    begin
-      Font.Size := trunc((Self.Width - Pen.Width) / (TextWidth(FText)) * 7);
+      // Data
+      TheTextRect := CaptionRect;
+      ASize := round(ATextHeight * ImageScale);
 
-      if FFontAutoSize.FMax <> -1 then
-      if Font.Size > FFontAutoSize.FMax then
-        Font.Size   := FFontAutoSize.FMax;
-
-      if FFontAutoSize.FMin <> -1 then
-      if Font.Size < FFontAutoSize.FMin then
-        Font.Size   := FFontAutoSize.FMin;
-    end;
-
-    // Action Mode
-    if ActionToggle then
-      begin
-        ImagePointer := FActionImage;
-        TText := FActionText;
-      end
-    else
-      begin
-        ImagePointer := FImage;
-        TText := FText;
-      end;
-    SC := 5;
-
-    // Caption
-    if NOT FEnableCaption then
-      begin
-        TText := '';
-        SC := 0;
-      end;
-
-    // Height and positioning
-    TLeft := 0;
-    TTop := 0;
-    ILeft := 0;
-    ITop := 0;
-
-    TWidth := TextWidth(TText);
-    THeight := TextHeight(TText);
-
-    IHeight := THeight;
-
-    // Sub Text Sizing
-    SLeft := 0;
-    STop := 0;
-    SWidth := 0;
-    SHeight := 0;
-    if FEnableSubText then
-      begin
-        FSubTextFont.Color := Font.Color;
-
-        TmpFont := TFont.Create;
-        TmpFont.Assign(Font);
-
-        SHeight := TextHeight(FSubText);
-        SWidth := TextWidth(FSubText);
-
-        Font.Assign(TmpFont);
-        TmpFont.Free;
-      end;
-
-    // Clear brush and begin
-    Brush.Style := bsClear;
-    if NOT Self.Enabled then Font.Color := ClrGray(Font.Color);
-      { Bitmap Mode }
-      try
-        if IHeight = 0 then
-          IHeight := round(height / 1.2);
-
-        IWidth := IHeight;
-
-        { Image Layouts }
-        if not ImagePointer.Enabled then
+      // Layout
+      ALeft := 0;
+      ATop := 0;
+      case ImageLayout of
+        FXDrawLayout.Left, FXDrawLayout.Right:
           begin
-            IWidth := 0;
-            IHeight := 0;
-            SC := 0;
-          end;
+            // Flags
+            FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Left];
 
-        { Layout coordinate set }
-        case FImageLayout of
-          cpLeft: begin
-            TTop := Height div 2 - THeight div 2 - SHeight div 2;
-            STop := TTop + SHeight;
-            ITop := TTop;
+            // Start Pos
+            if ATextWidth > CaptionRect.Width-ASize then
+              begin
+                ALeft := CaptionRect.Left;
+                ATextWidth := CaptionRect.Width-ASize;
+              end
+            else
+              case FHorizLayout of
+                FXLayout.Beginning: ALeft := CaptionRect.Left;
+                FXLayout.Center: ALeft := CaptionRect.Left + round((CaptionRect.Width - ATextWidth - ASize) /2);
+                FXLayout.Ending: ALeft := CaptionRect.Left + CaptionRect.Width - ATextWidth - ASize;
+              end;
 
-            case FAlign of
-              taCenter: begin
-                TLeft := Width div 2 - TWidth div 2 + IWidth div 2;
-                ILeft := TLeft - IWidth - SC;
+            // Split
+            ImageRect := CaptionRect;
+            TheTextRect := CaptionRect;
+            if ImageLayout = FXDrawLayout.Left then
+              begin
+                ImageRect.Left := ALeft;
+                TheTextRect.Left := ALeft+ASize+BUTTON_MARGIN;
+              end
+            else
+              begin
+                TheTextRect.Left := ALeft;
+                ImageRect.Left := ALeft+ATextWidth+BUTTON_MARGIN;
               end;
-              taLeftJustify: begin
-                TLeft := Pen.Width + FTxtWSpace + SC * 2 + IWidth;
-                ILeft := Pen.Width + FTxtWSpace + SC;
-              end;
-              taRightJustify: begin
-                TLeft := Width - Pen.Width - FTxtWSpace - SC - TWidth;
-                ILeft := TLeft - IWidth - SC;
-              end;
+
+            // Size
+            ImageRect.Width := ASize;
+            TheTextRect.Width := ATextWidth;
+
+            // Vertical Align
+            case FVertLayout of
+              FXLayout.Beginning:
+                begin
+                  FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Top];
+                  ImageRect.Height := ASize;
+                end;
+
+              FXLayout.Center:
+                begin
+                  FTextDrawFlags := FTextDrawFlags + [FXTextFlag.VerticalCenter];
+                  ImageRect.Height := ASize;
+                  ImageRect.Offset(0, (CaptionRect.Height-ASize) div 2);
+                end;
+
+              FXLayout.Ending:
+                begin
+                  FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Bottom];
+                  ImageRect.Height := ASize;
+                  ImageRect.Offset(0, CaptionRect.Height-ASize);
+                end;
             end;
           end;
-          cpRight: begin
-            TTop := Height div 2 - THeight div 2 - SHeight div 2;
-            STop := TTop + SHeight;
-            ITop := TTop;
 
-            case FAlign of
-              taCenter: begin
-                TLeft := Width div 2 - TWidth div 2 - IWidth div 2;
-                ILeft := TLeft + TWidth + SC;
+        FXDrawLayout.Top, FXDrawLayout.Bottom:
+          begin
+            if ATextWidth = 0 then
+              ATextLinesCount := 0
+            else
+              ATextLinesCount := (CaptionRect.Height-ASize) div ATextWidth; (* Use width to calc length *)
+            ATextHeight := ATextLinesCount * ATextHeight;
+
+            // Start Pos
+            if ATextHeight > CaptionRect.Height-ASize then
+              begin
+                ATop := CaptionRect.Top;
+                ATextHeight := CaptionRect.Height-ASize;
+              end
+            else
+              case FVertLayout of
+                FXLayout.Beginning: ATop := CaptionRect.Top;
+                FXLayout.Center: ATop := CaptionRect.Top + (CaptionRect.Height - ATextHeight - ASize) div 2;
+                FXLayout.Ending: ATop := CaptionRect.Top + CaptionRect.Height - ATextHeight - ASize;
               end;
-              taLeftJustify: begin
-                TLeft := Pen.Width + FTxtWSpace + SC;
-                ILeft := TLeft + TWidth + SC;
+
+            // Split
+            ImageRect := CaptionRect;
+            TheTextRect := CaptionRect;
+            if ImageLayout = FXDrawLayout.Top then
+              begin
+                FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Top];
+                ImageRect.Top := ATop;
+                TheTextRect.Top := ATop+ASize+BUTTON_MARGIN;
+              end
+            else
+              begin
+                FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Bottom];
+                TheTextRect.Top := ATop;
+                ImageRect.Top := ATop+ATextHeight+BUTTON_MARGIN;
               end;
-              taRightJustify: begin
-                TLeft := Width - Pen.Width - FTxtWSpace - SC * 2 - TWidth - IWidth;
-                ILeft := Width - Pen.Width - FTxtWSpace - SC - IWidth;
-              end;
+
+            // Size
+            ImageRect.Height := ASize;
+            TheTextRect.Height := ATextHeight;
+
+            // Horizontal Align
+            case FHorizLayout of
+              FXLayout.Beginning:
+                begin
+                  FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Left];
+                  ImageRect.Width := ASize;
+                end;
+
+              FXLayout.Center:
+                begin
+                  FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Center];
+                  ImageRect.Width := ASize;
+                  ImageRect.Offset((CaptionRect.Width-ASize) div 2, 0);
+                end;
+
+              FXLayout.Ending:
+                begin
+                  FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Right];
+                  ImageRect.Width := ASize;
+                  ImageRect.Offset(CaptionRect.Width-ASize, 0);
+                end;
             end;
           end;
-          cpTop: begin
-            TTop := Height div 2 - THeight div 2 + IHeight div 2 - SHeight div 2;
-            STop := TTop + SHeight;
-            ITop := TTop - SC - IHeight;
+      end
+    end
+  else
+    begin
+      TheTextRect := CaptionRect;
 
-            case FAlign of
-              taCenter: begin
-                TLeft := Width div 2 - TWidth div 2;
-                ILeft := Width div 2 - IWidth div 2;
-              end;
-              taLeftJustify: begin
-                TLeft := Pen.Width + FTxtWSpace + SC;
-                ILeft := Pen.Width + FTxtWSpace + SC;
-              end;
-              taRightJustify: begin
-                TLeft := Width - Pen.Width - FTxtWSpace - SC - TWidth;
-                ILeft := Width - Pen.Width - FTxtWSpace - SC - IWidth;
-              end;
-            end;
-          end;
-          cpBottom: begin
-            TTop := Height div 2 - THeight div 2 - IHeight div 2 - SHeight div 2;
-            STop := TTop + SHeight;
-            ITop := TTop + SC + IHeight + SHeight;
+      FTextDrawFlags := [FXTextFlag.WordWrap, FXTextFlag.VerticalCenter];
 
-            case FAlign of
-              taCenter: begin
-                TLeft := Width div 2 - TWidth div 2;
-                ILeft := Width div 2 - IWidth div 2;
-              end;
-              taLeftJustify: begin
-                TLeft := Pen.Width + FTxtWSpace + SC;
-                ILeft := Pen.Width + FTxtWSpace + SC;
-              end;
-              taRightJustify: begin
-                TLeft := Width - Pen.Width - FTxtWSpace - SC - TWidth;
-                ILeft := Width - Pen.Width - FTxtWSpace - SC - IWidth;
-              end;
-            end;
-          end;
-        end;
-
-        { SubText Left }
-        case FAlign of
-          taLeftJustify: SLeft := TLeft;
-          taRightJustify: SLeft := TLeft + TWidth - SWidth;
-          taCenter: SLeft := Width div 2 - SWidth div 2;
-        end;
-
-        { Check empty text for bitmap only }
-        if TText = '' then
-        begin
-          ILeft := Width div 2- IWidth div 2;
-          //ITop := trunc(Height * 0.1);
-          ITop := Height div 2 - IHeight div 2;
-        end;
-
-        { Draw Bitmap }
-        if ImagePointer.Enabled then begin
-          IconRect := Rect(
-          {x1} ILeft,
-          {y1} ITop,
-          {x2} ILeft + IWidth,
-          {y2} ITop + IHeight);
-
-          ImagePointer.DrawIcon(drawcanv.Canvas, IconRect);
-        end;
-      except
-        TText := '🚫' + TText;
-      end;
-
-    // Draw Text
-    TextOut(  TLeft, TTop, TText);
-
-    // Sub Text
-    if FEnableSubText then
-      begin
-        Font.Assign(FSubTextFont);
-        TextOut(  SLeft, STop, FSubText);
-      end;
-
-
-    // Underline
-    if FUnderLine.FUnderLn then begin
-      Brush.Style := bsSolid;
-      Brush.Color := FColors.BLine;
-      if FUnderLine.FUnderLnRound then begin
-        Pen.Color := FColors.BLine;
-        Pen.Width := FUnderLine.FUnderThick;
-        Brush.Style := bsClear;
-        Pen.Style := psSolid;
-        if NOT Self.Enabled then Pen.Color := ClrGray(Pen.Color);
-        RoundRect( Rect( -Pen.Width div 2, -Pen.Width, Width + Pen.Width div 2, Height - FPen.Width), FRoundAmount, FRoundAmount * 3);
-      end else begin
-        FillRect( Rect( FPen.Width, Height - trunc( Height / 50 * FUnderLine.FUnderThick ), Width - FPen.Width, Height - FPen.Width) );
+      // Text Align
+      case FHorizLayout of
+        FXLayout.Beginning: FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Left];
+        FXLayout.Center: FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Center];
+        FXLayout.Ending: FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Right];
       end;
     end;
-
-    // Round Amount
-    if FTransparent then begin
-      Brush.Style := bsClear;
-      if FPen.FEnablePenAlt then
-        case State of
-          mbsLeave: Pen.Color := FPen.FColor;
-          mbsEnter: Pen.Color := FPen.FCPenHover;
-          mbsDown: Pen.Color := FPen.FCPenDown;
-        end
-      else
-        Pen.Color := FPen.FColor;
-
-      Pen.Width := 1;
-      for I := 0 to FRoundAmount do
-        RoundRect(0, 0, Width, Height, I, I);
-      end;
-  end;
-
-  CRect := Rect(ShX div 2, ShY div 2, Width - round(ShX / 2), Height - round(ShY / 2));
-
-  // Final Preparations to avoid flicker
-  lastcanv := TBitMap.Create;
-  lastcanv.Width := Width;
-  lastcanv.Height := Height;
-
-  with lastcanv do begin
-    Buffer.Brush.Color := TStyleManager.ActiveStyle.GetSystemColor(Self.Color);
-    Buffer.FillRect( Buffer.ClipRect );
-
-    Buffer.DrawHighQuality(CRect, drawcanv);
-  end;
-
-  // Complete draw cycle
-  Buffer.CopyRect( drawcanv.Canvas.ClipRect,drawcanv.Canvas,drawcanv.Canvas.ClipRect );
-
-  lastcanv.Free;
-  drawcanv.Free;
-  inherited;
 end;
 
-procedure FXButton.SetActionText(const Value: string);
+procedure FXButton.SetText(const Value: string);
 begin
-  FActionText := Value;
+  if FText <> Value then
+    begin
+      FText := Value;
 
-  PaintBuffer;
+      UpdateRects;
+      Invalidate;
+    end;
 end;
 
-procedure FXButton.SetActionToggle(const Value: boolean);
+procedure FXButton.SetVertLayout(const Value: FXLayout);
 begin
-  FActionToggle := Value;
+  if FVertLayout <> Value then
+    begin
+      FVertLayout := Value;
 
-  PaintBuffer;
+      UpdateRects;
+      Invalidate;
+    end;
 end;
 
-procedure FXButton.SetAlign(const Value: TAlignment);
+procedure FXButton.SetWordWrap(const Value: boolean);
 begin
-  FAlign := Value;
-  PaintBuffer;
+  if FWordWrap <> Value then
+    begin
+      FWordWrap := Value;
+
+      UpdateRects;
+      Invalidate;
+    end;
+end;
+
+procedure FXButton.StateStop(Sender: TObject);
+begin
+  StateEnabled := false;
+  FAutoStopState.Enabled := false;
+end;
+
+procedure FXButton.TimerRepeat(Sender: TObject);
+begin
+  Click;
+  FAutoRepeat.Interval := HOLD_REPEAT_INTERVAL;
+
+  if not RepeatWhenPressed or (InteractionState <> FXControlState.Press) then
+    FAutoRepeat.Enabled := false;
+
+  Invalidate;
+end;
+
+procedure FXButton.SetButtonKind(const Value: FXButtonKind);
+begin
+  if FButtonKind <> Value then
+    begin
+      FButtonKind := Value;
+
+      UpdateColors;
+      UpdateRects;
+      Invalidate;
+    end;
 end;
 
 procedure FXButton.SetCancel(const Value: boolean);
@@ -1114,197 +670,468 @@ begin
   FCancel := Value;
 end;
 
+procedure FXButton.SetChecked(const Value: Boolean);
+begin
+  if Value <> FChecked then
+    begin
+      FChecked := Value;
+
+      UpdateColors;
+      Invalidate;
+    end;
+end;
+
 procedure FXButton.SetDefault(const Value: boolean);
 begin
   FDefault := Value;
 end;
 
-procedure FXButton.SetEnabled(Value: Boolean);
+procedure FXButton.SetDetail(const Value: FXDetailType);
 begin
-  inherited;
-  PaintBuffer;
+  if FDetail <> Value then
+    begin
+      FDetail := Value;
+
+      Invalidate;
+    end;
 end;
 
-procedure FXButton.SetEnableSubText(const Value: boolean);
+procedure FXButton.SetHorizLayout(const Value: FXLayout);
 begin
-  FEnableSubText := Value;
+  if FHorizLayout <> Value then
+    begin
+      FHorizLayout := Value;
 
-  PaintBuffer;
-end;
-
-procedure FXButton.SetFlatComplete(const Value: boolean);
-begin
-  FFlatComplete := Value;
-
-  if Value then
-    FUnderline.Enable := false;
-
-  PaintBuffer;
-end;
-
-procedure FXButton.SetFlatnes(const Value: boolean);
-begin
-  FFlatBT := Value;
-  PaintBuffer;
-end;
-
-procedure FXButton.SetFocus;
-begin
-  inherited;
-  {//OutDated execution
-  FState := mbsEnter;
-  if Assigned(FOnStateChange) then FOnStateChange(Self, FState);
-  Paint;   }
-end;
-
-procedure FXButton.SetFont(const Value: TFont);
-begin
-  FFont.Assign( Value );
-  PaintBuffer;
-end;
-
-procedure FXButton.SetFontAutoSize(const Value: FXButtonFontAutoSize);
-begin
-  FFontAutoSize := Value;
-end;
-
-procedure FXButton.SetGradient(const Value: FXButtonGradientSet);
-begin
-  FGradientSet := Value;
-  PaintBuffer;
+      UpdateRects;
+      Invalidate;
+    end;
 end;
 
 procedure FXButton.SetImage(const Value: FXIconSelect);
 begin
-  FImage := Value;
+  if FImage <> Value then
+    begin
+      FImage := Value;
 
-  PaintBuffer;
+      UpdateRects;
+      Invalidate;
+    end;
 end;
 
-procedure FXButton.SetImageLayour(const Value: CPosition);
+procedure FXButton.SetImageLayout(const Value: FXDrawLayout);
 begin
-  FImageLayout := Value;
+  if FImageLayout <> Value then
+    begin
+      FImageLayout := Value;
+
+      UpdateRects;
+      Invalidate;
+    end;
 end;
 
-procedure FXButton.SetManualColor(const Value: boolean);
+procedure FXButton.SetImageScale(const Value: real);
 begin
-  FUseManualColor := Value;
+  if FImageScale <> Value then
+    begin
+      FImageScale := Value;
 
-  if not Value then
-    ApplyAccentColor;
-
-  PaintBuffer;
+      UpdateRects;
+      Invalidate;
+    end;
 end;
 
-procedure FXButton.SetRoundVal(const Value: integer);
+procedure FXButton.SetLineWidth(const Value: integer);
 begin
-  FRoundAmount := Value;
+  if FLineWidth <> Value then
+    begin
+      FLineWidth := Value;
 
-  PaintBuffer;
+      UpdateRects;
+      Invalidate;
+    end;
 end;
 
-procedure FXButton.SetShowCaption(const Value: boolean);
+procedure FXButton.SetMargin(const Value: integer);
 begin
-  FEnableCaption := Value;
-  PaintBuffer;
+  if FMargin <> Value then
+    begin
+      FMargin := Value;
+
+      UpdateRects;
+      Invalidate;
+    end;
 end;
 
-procedure FXButton.SetState(const Value: FXButtonState);
+procedure FXButton.SetRoundness(const Value: integer);
 begin
-  StTimer;
-  FPreviousState := FState;
-  FState := Value;
-  PaintBuffer;
+  if FRoundness <> Value then
+    begin
+      FRoundness := Value;
+
+      Invalidate;
+    end;
 end;
 
-procedure FXButton.SetSubFont(const Value: TFont);
+procedure FXButton.SetStateDuration(const Value: integer);
 begin
-  FSubTextFont := Value;
+  if FStateDuration <> Value then
+    begin
+      FStateDuration := Value;
 
-  PaintBuffer;
+      FAutoStopState.Interval := Value;
+    end;
 end;
 
-procedure FXButton.SetSubText(const Value: string);
+procedure FXButton.SetStateEnabled(const Value: boolean);
 begin
-  FSubText := Value;
+  if FStateEnabled <> Value then
+    begin
+      FStateEnabled := Value;
 
-  PaintBuffer;
+      FAutoStopState.Enabled := false;
+      if Value and (StateDuration <> 0) then
+        FAutoStopState.Enabled := true;
+
+      UpdateRects;
+      Invalidate;
+    end;
 end;
 
-procedure FXButton.SetText(const Value: string);
+procedure FXButton.SetStateImage(const Value: FXIconSelect);
 begin
-  FText := Value;
-  PaintBuffer;
+  if FStateImage <> Value then
+    begin
+      FStateImage := Value;
+
+      if StateEnabled then
+        begin
+          UpdateRects;
+          Invalidate;
+        end;
+    end;
 end;
 
-procedure FXButton.SetTextWall(const Value: integer);
+procedure FXButton.SetStateText(const Value: string);
 begin
-  FTxtWSpace := Value;
+  FStateText := Value;
+  if FStateText <> Value then
+    begin
+      FStateText := Value;
 
-  PaintBuffer;
+      if FStateEnabled then
+        begin
+          UpdateRects;
+          Invalidate;
+        end;
+    end;
 end;
 
-procedure FXButton.SetTransparent(const Value: boolean);
+function FXButton.GetChecked;
 begin
-  FTransparent := Value;
-  PaintBuffer;
+  Result := FChecked;
 end;
 
-procedure FXButton.StTimer;
+function FXButton.GetCheckedTag: integer;
+var
+  I: Integer;
 begin
-  if Parent <> nil then
-  if (Parent.Visible) and (Visible)
-    and (Application.Active) and (FAnimations.FFadeAnimation)
-    then begin
-    FAnimations.TimeProg := 0;
-    FadeAnim.Enabled := true;
+  // Uncheck Parent control
+  Result := Tag;
+  if Assigned(Parent) then
+    begin
+      for I := 0 to Parent.ControlCount-1 do
+        if Parent.Controls[I] is FXButton then
+            if (Parent.Controls[I] as FXButton).Checked then
+              Exit( (Parent.Controls[I] as FXButton).Tag );
+    end;
+end;
+
+function FXButton.GetImage: FXIconSelect;
+begin
+  if StateEnabled then
+    Result := StateImage
+  else
+    Result := Image;
+end;
+
+function FXButton.GetText: string;
+begin
+  if StateEnabled then
+    Result := StateText
+  else
+    Result := Text;
+end;
+
+function FXButton.GetTextH: integer;
+begin
+  with Canvas do
+    begin
+      Font.Assign(FTextFont);
+
+      Result := TextHeight(TEXT_SIZE_COMPARER);
+    end;
+end;
+
+function FXButton.GetTextW: integer;
+begin
+  with Canvas do
+    begin
+      Font.Assign(FTextFont);
+
+      Result := TextWidth(GetText);
+    end;
+end;
+
+constructor FXButton.Create(aOwner: TComponent);
+begin
+  inherited;
+  FTextFont := TFont.Create;
+  FTextFont.Name := FORM_FONT_NAME;
+  FTextFont.Size := ThemeManager.FormFontHeight;
+
+  FChecked := false;
+  AutoFocusLine := true;
+  BufferedComponent := true;
+
+  FAnimation := true;
+  FAnimationRunning := false;
+
+  FAutomaticMouseCursor := true;
+  FButtonKind := FXButtonKind.Normal;
+  FImageLayout := FXDrawLayout.Left;
+  FHorizLayout := FXLayout.Center;
+  FVertLayout := FXLayout.Center;
+  FImageScale := BUTTON_IMAGE_SCALE;
+  FWordWrap := true;
+  FCancel := false;
+  FDefault := false;
+  FRoundness := BUTTON_ROUNDNESS;
+  FMargin := 0;
+  FRepeatWhenPressed := false;
+  FDetail := FXDetailType.None;
+  FLineWidth := BUTTON_LINE_WIDTH;
+
+  FStateDuration := BUTTON_STATE_DURATION;
+  FAutoStopState := TTimer.Create(nil);
+  FAutoStateToggle := false;
+  with FAutoStopState do
+    begin
+      Enabled := false;
+      OnTimer := StateStop;
+    end;
+
+  // Repeat
+  FAutoRepeat := TTimer.Create(nil);
+  with FAutoRepeat do
+    begin
+      Enabled := false;
+      OnTimer := TimerRepeat;
+    end;
+
+  // Icon
+  FImage := FXIconSelect.Create(Self);
+  FStateImage := FXIconSelect.Create(Self);
+
+  // Custom Color
+  FCustomColors := FXCompleteColorSets.Create(Self);
+  FCustomButtonColors := FXColorStateSets.Create(Self);
+
+  FDrawColors := FXCompleteColorSet.Create;
+  FButtonColors := FXColorStateSet.Create;
+
+  FText := 'Button';
+  FStateText := 'Success';
+
+  // Sizing
+  Height := 35;
+  Width := 140;
+
+  // Update
+  UpdateRects;
+  UpdateColors;
+end;
+
+destructor FXButton.Destroy;
+begin
+  FTextFont.Free;
+  FreeAndNil( FCustomColors );
+  FreeAndNil( FCustomButtonColors );
+  FreeAndNil( FDrawColors );
+  FreeAndNil( FButtonColors );
+  FreeAndNil( FImage );
+  FreeAndNil( FStateImage );
+  FreeAndNil( FAutoStopState );
+  FreeAndNil( FAutoRepeat );
+
+  inherited;
+end;
+
+function FXButton.Background: TColor;
+begin
+  Result := FDrawColors.Background;
+end;
+
+procedure FXButton.ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF});
+begin
+  inherited;
+  UpdateRects;
+end;
+
+procedure FXButton.Click;
+var
+  Form: TCustomForm;
+  AllowModal: boolean;
+begin
+  // Toggle Button
+  case ButtonKind of
+    FXButtonKind.Toggle:
+      begin
+        Checked := not Checked;
+
+        UpdateColors;
+        Invalidate;
+
+        if Assigned(OnCheck) then
+          OnCheck(Self);
+      end;
+
+    FXButtonKind.Dropdown: begin
+      if Assigned(FDropDown) then
+        FDropDown.PopupAtPoint( ClientToScreen(Point(0, Height+BUTTON_MARGIN)) );
+
+      if Assigned(OnDropDown) then
+          OnDropDown(Self);
+    end;
+
+    FXButtonKind.Link: begin
+      if HyperLinkURL <> '' then
+        ShellRun( HyperLinkURL );
+
+      if Assigned(OnOpenLink) then
+          OnOpenLink(Self);
+    end;
   end;
+
+  // State
+  if AutoStateToggle then
+    if StateDuration <> 0 then
+      StateEnabled := true
+    else
+      StateEnabled := not StateEnabled;
+
+  // Modal Result
+  Form := GetParentForm(Self);
+  if Form <> nil then
+    begin
+      AllowModal := true;
+      if Assigned(FBeforeModal) then
+        FBeforeModal(Self, AllowModal);
+
+      if AllowModal then
+        Form.ModalResult := ModalResult;
+    end;
+
+  inherited;
 end;
 
-procedure FXButton.UpdateTheme(const UpdateChildren: Boolean);
+procedure FXButton.CMEnabledChanged(var Message: TMessage);
 begin
-  ApplyAccentColor;
-  PaintBuffer;
+  inherited;
+  UpdateColors;
+  Invalidate;
 end;
 
-{ FXButtonUnderLine }
-
-procedure FXButtonUnderLine.SetUline(const Value: boolean);
+procedure FXButton.PaintBuffer;
+var
+  AText: string;
+  FBackground, FForeground: TColor;
+  ARect: TRect;
+  FPen: TGDIPen;
 begin
-  FUnderLn := Value;
-  FXButton(Self.Owner).PaintBuffer;
+  // Background
+  Color := FDrawColors.BackGround;
+  PaintBackground;
+
+  // Draw
+  with Buffer do
+    begin
+      // Colors
+      if FAnimationRunning then
+        begin
+          FBackground := ColorBlend( FButtonColors.GetColor(False, PreviousInteractionState),
+            FButtonColors.GetColor(False, InteractionState), FAnimPos);
+          FForeground := ColorBlend( FButtonColors.GetColor(True, PreviousInteractionState),
+            FButtonColors.GetColor(True, InteractionState), FAnimPos);
+        end
+      else
+        begin
+          FBackground := FButtonColors.GetColor(False, InteractionState);
+          FForeground := FButtonColors.GetColor(True, InteractionState);
+        end;
+
+      // Background
+      ARect := DrawRect;
+      ARect.Width := ARect.Width-1;
+      ARect.Height := ARect.Height-1;
+
+      FPen := nil;
+      case Detail of
+        FXDetailType.None, FXDetailType.Underline: FPen := GetRGB(FDrawColors.BackGroundInterior).MakeGDIPen(FBorderWidth);
+        FXDetailType.Outline: FPen := GetRGB(FDrawColors.BackGroundInterior).MakeGDIPen(LineWidth);
+      end;
+
+      ARect.Inflate(-trunc(FPen.GetWidth), -trunc(FPen.GetWidth));
+      if ARect.Width > 0 then
+        GDIRoundRect( MakeRoundRect(ARect, Roundness),
+          GetRGB(FBackground).MakeGDIBrush, FPen);
+
+      // Text
+      AText := GetText;
+      Brush.Style := bsClear;
+      Font.Assign(Self.Font);
+      Font.Color := FForeground;
+      DrawTextRect(Buffer, TheTextRect, AText, FTextDrawFlags);
+
+      // Icon
+      case ButtonKind of
+        FXButtonKind.Dropdown:
+          begin
+            Font.Assign(Self.Font);
+            Font.Color := FForeground;
+            Font.Name := ThemeManager.IconFont;
+            Font.Height := ThemeManager.FormFontHeight;
+            AText := #$E70D;
+
+            TextRect(IndicatorRect, AText, [tfSingleLine, tfVerticalCenter, tfCenter]);
+          end;
+      end;
+
+      // Paint Image
+      if GetImage.Enabled then
+        begin
+          GetImage.DrawIcon(Buffer, ImageRect);
+        end;
+    end;
+
+  inherited;
 end;
 
-procedure FXButtonUnderLine.SetULRound(const Value: boolean);
+procedure FXButton.Resize;
 begin
-  FUnderLnRound := Value;
-  FXButton(Self.Owner).PaintBuffer;
+  inherited;
+  UpdateRects;
 end;
 
-procedure FXButtonUnderLine.SetUlThick(const Value: integer);
+procedure FXButton.WMSize(var Message: TWMSize);
 begin
-  FUnderThick := Value;
-  FXButton(Self.Owner).PaintBuffer;
+  UpdateRects;
+  Invalidate;
 end;
 
-{ FXButtonFontAutoSize }
-
-function FXButtonFontAutoSize.Paint: Boolean;
+procedure FXButton.WM_LButtonUp(var Msg: TWMLButtonUp);
 begin
-  if Self.Owner is FXButton then begin
-    FXButton(Self.Owner).PaintBuffer;
-    Result := True;
-  end else Result := False;
-end;
 
-{ FXButtonGradientSet }
-
-function FXButtonGradientSet.Paint: Boolean;
-begin
-  if Self.Owner is FXButton then begin
-    FXButton(Self.Owner).PaintBuffer;
-    Result := True;
-  end else Result := False;
+  inherited;
 end;
 
 end.

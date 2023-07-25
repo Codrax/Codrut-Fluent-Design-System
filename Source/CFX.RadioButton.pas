@@ -107,9 +107,6 @@ type
       property OnMouseEnter;
       property OnMouseLeave;
 
-      //  Modify default props
-      property ParentColor default true;
-
       // Checked Tag
       function GetCheckedTag: integer;
 
@@ -391,9 +388,7 @@ begin
 
   FChecked := false;
   FTextSpacing := RADIO_TEXT_SPACE;
-  ParentColor := false;
   FAutomaticMouseCursor := true;
-  TabStop := true;
   AutoFocusLine := true;
   BufferedComponent := true;
   FWordWrap := true;
@@ -448,16 +443,13 @@ var
   IconFormat: TTextFormat;
   DrawFlags: FXTextFlags;
 begin
-  if not ParentColor then
-    Color := FDrawColors.Background;
+  // Background
+  Color := FDrawColors.BackGround;
+  PaintBackground;
+
+  // Draw
   with Buffer do
     begin
-      //  Paint background
-      Pen.Style := psClear;
-      Brush.Style := bsSolid;
-      Brush.Handle := CreateSolidBrushWithAlpha(Color, 255);
-      RoundRect(Rect(0, 0, Width, Height), CHECKBOX_BOX_ROUND, CHECKBOX_BOX_ROUND);
-
       //  Draw text
       Brush.Style := bsClear;
       Font.Assign(Self.Font);

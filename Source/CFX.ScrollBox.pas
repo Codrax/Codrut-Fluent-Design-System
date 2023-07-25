@@ -110,15 +110,26 @@ implementation
 
 procedure FXScrollBox.AdjustClientRect(var Rect: TRect);
 begin
+  // Update scrollbars
+  CalculateRange;
+  UpdateScrollbars;
+
+  // Result Rect
   if csDesigning in ComponentState then
     inherited
   else
-    Rect := Bounds(-FHorzScroll.Position, -FVertScroll.Position,
-      Max(FHorzScroll.Max, ClientWidth), Max(ClientHeight,
-      FVertScroll.Max));
+    begin
+      Rect := Bounds(-FHorzScroll.Position, -FVertScroll.Position,
+        Max(FHorzScroll.Max, ClientWidth), Max(ClientHeight,
+        FVertScroll.Max));
 
-  CalculateRange;
-  UpdateScrollbars;
+      // Remove scrollbars from client
+      if FVertScroll.Visible then
+        Rect.Width := Rect.Width - FVertScroll.Width;
+
+      if FHorzScroll.Visible then
+        Rect.Height := Rect.Height - FHorzScroll.Height;
+    end;
 end;
 
 function FXScrollBox.Background: TColor;
@@ -337,7 +348,8 @@ begin
 
       // Enabled
       if Visible then
-        Visible := FEnableVertical;
+        if Visible <> FEnableVertical then
+          Visible := FEnableVertical;
     end;
 
   with FHorzScroll do
@@ -345,14 +357,15 @@ begin
       Top := Self.Height - Height;
       Left := 0;
 
-      Width := Self.Width;
-
       if FVertScroll.Visible then
-        Width := Width - FVertScroll.Width;
+        Width := Parent.Width - FVertScroll.Width
+      else
+        Width := Parent.Width;
 
       // Enabled
       if Visible then
-        Visible := FEnableHorizontal;
+        if Visible <> FEnableHorizontal then
+          Visible := FEnableHorizontal;
     end;
 end;
 
@@ -402,7 +415,7 @@ procedure FXScrollBoxScrollBar.CalcAutoRange;
 var
   FControl: FXScrollBox;
   I: Integer;
-  NewRange, AlignMargin, ControlSize: Integer;
+  NewRange, AlignMargin, ControlSize, ZoneSize: Integer;
 
 procedure ProcessHorz(Control: TControl);
   begin
@@ -427,7 +440,7 @@ procedure ProcessVert(Control: TControl);
   end;
 
 begin
-  if Parent is TScrollbox then
+  if Parent is FXScrollbox then
     begin
       // Control
       FControl := FXScrollBox(Parent);
@@ -442,17 +455,29 @@ begin
       NewRange := 0;
       AlignMargin := 0;
       for I := 0 to FControl.ControlCount - 1 do
-        if not (FControl.Controls[I] is FXScrollBoxScrollBar)  then
+        if not (FControl.Controls[I] is FXScrollBoxScrollBar) then
           if Orientation = FXOrientation.Horizontal then
-            ProcessHorz(FControl.Controls[I]) else
+            ProcessHorz(FControl.Controls[I])
+          else
             ProcessVert(FControl.Controls[I]);
 
+      // Calc Range
+      ZoneSize := NewRange;
       NewRange := NewRange + AlignMargin - ControlSize;
 
-      if NewRange > Position then
+      // Extra Range, cancel if controls fit
+      if (Position = 0) and (ControlSize >= ZoneSize) then
+        NewRange := 0;
+
+      // Set Max
+      if NewRange >= Position then
         Self.Max := Math.Max(NewRange, 0);
 
-      Visible := (Self.Max <> 0);
+      // Visible
+      if Orientation = FXOrientation.Vertical then
+        Visible := (Self.Max > 0) and FControl.ScrollbarEnableVertical
+      else
+        Visible := (Self.Max > 0) and FControl.ScrollbarEnableHorizontal;
     end
 end;
 

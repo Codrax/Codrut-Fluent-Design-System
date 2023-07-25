@@ -112,10 +112,6 @@ type
       property EnableButtons: boolean read FEnableButtons write SetEnableButtons default true;
       property AutoMinimise: boolean read FAutoMinimise write FAutoMinimise default true;
       property PreferLeftSide: boolean read FPreferLeftSide write FPreferLeftSide default false;
-
-      //  Modify default props
-      property ParentColor;
-
       property Align;
       property Constraints;
       property Anchors;
@@ -389,7 +385,6 @@ begin
   FAutoMinimise := true;
   FAnimation := true;
 
-  TabStop := true;
   AutoFocusLine := true;
 
   // Repeater
@@ -482,16 +477,9 @@ var
   Spacing1, Spacing2, Shrinked: integer;
   ARect: TRect;
 begin
-  // Paint background
-  if not ParentColor then
-    Color := FDrawColors.BackGround;
-  with Buffer do
-    begin
-      Pen.Style := psClear;
-      Brush.Style := bsSolid;
-      Brush.Handle := CreateSolidBrushWithAlpha(FDrawColors.Background, 255);
-      RoundRect(DrawRect, GENERAL_ROUND, GENERAL_ROUND);
-    end;
+  // Background
+  Color := FDrawColors.BackGround;
+  PaintBackground;
 
   // Draw slider
   Canvas.Brush.Style := bsClear;

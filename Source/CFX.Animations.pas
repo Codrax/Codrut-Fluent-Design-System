@@ -64,9 +64,9 @@ type
 
     private
       var FStep: Byte;
-    function GetEndValue: Integer;
-    function GetRunning: boolean;
-    procedure SetEndValue(const Value: Integer);
+      function GetEndValue: Integer;
+      function GetRunning: boolean;
+      procedure SetEndValue(const Value: Integer);
       var AniFunction: TAniFunction;
 
       FOnSync: TAniSyncProc;

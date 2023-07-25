@@ -10,10 +10,11 @@ uses
     private
       FPopupMenu: FXPopupMenu;
 
-      procedure Popup(X, Y: Integer); override;
-
     published
       property PopupMenu: FXPopupMenu read FPopupMenu write FPopupMenu;
+
+    public
+      procedure Popup(X, Y: Integer); override;
 
     end;
 
