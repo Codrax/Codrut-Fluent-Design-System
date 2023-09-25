@@ -32,6 +32,8 @@ type
         FDrawColors: FXColorSet;
 
         FFullScreen: Boolean;
+        FRestoredPosition: TRect;
+        FRestoredBorder: TBorderStyle;
 
         FMicaEffect: boolean;
         FSmokeEffect: boolean;
@@ -47,6 +49,7 @@ type
         TTlCtrl: TTitleBarpanel;
 
         Smoke: TForm;
+        SmokeAnimation: TIntAni;
 
       // Functions
       procedure SetFullScreen(const Value: Boolean);
@@ -57,6 +60,7 @@ type
       procedure WM_DWMColorizationColorChanged(var Msg: TMessage); message WM_DWMCOLORIZATIONCOLORCHANGED;
       procedure WM_Activate(var Msg: TWMActivate); message WM_ACTIVATE;
       procedure WM_MOVE(var Msg: Tmessage); message WM_MOVE;
+      procedure WM_GETMINMAXINFO(var Msg: TMessage); message WM_GETMINMAXINFO;
 
       // Procedures
       procedure SetMicaEffect(const Value: boolean);
@@ -90,9 +94,12 @@ type
     public
       constructor Create(aOwner: TComponent); override;
       constructor CreateNew(aOwner: TComponent; Dummy: Integer = 0); override;
+      destructor Destroy; override;
 
       procedure InitForm;
-      destructor Destroy; override;
+
+      // Procedures
+      procedure SetBoundsRect(Bounds: TRect);
 
       // Utils
       function IsResizable: Boolean;
@@ -141,35 +148,15 @@ begin
 end;
 
 procedure FXForm.CreateSmokeSettings;
-var
-  p: TTitleBarPanel;
-  i: TImage;
 begin
   Smoke := TForm.Create(nil);
   Smoke.Position := poDesigned;
-  Smoke.BorderStyle := bsSingle;
+  Smoke.WindowState := wsMaximized;
+  Smoke.Parent := Self;
+  Smoke.BorderStyle := bsNone;
   Smoke.Caption := '';
   Smoke.BorderIcons := [];
-  with Smoke.CustomTitleBar do
-    begin
-      Enabled := true;
-      SystemButtons := false;
-      SystemColors := false;
-
-      p := TTitleBarPanel.Create(Smoke);
-      p.Parent := Smoke;
-
-      i := TImage.Create(p);
-      i.Parent := p;
-      i.Align := alClient;
-
-      Control := p;
-
-      BackgroundColor := clBlack;
-      InactiveBackgroundColor := clBlack;
-    end;
   Smoke.OnCloseQuery := FormCloseIgnore;
-  LockWindowUpdate(Smoke.ClientHandle);
   Smoke.AlphaBlend := True;
   Smoke.AlphaBlendValue := FORM_SMOKE_BLEND_VALUE;
   Smoke.Color := clBlack;
@@ -259,7 +246,7 @@ procedure FXForm.InitializeNewForm;
 begin
   inherited;
   // Create Classes
-  FCustomColors := FXColorSets.Create();
+  FCustomColors := FXColorSets.Create(Self);
   FDrawColors := FXColorSet.Create(ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
 end;
 
@@ -301,9 +288,33 @@ begin
 
 end;
 
+procedure FXForm.SetBoundsRect(Bounds: TRect);
+begin
+  SetBounds(Bounds.Left, Bounds.Top, Bounds.Width, Bounds.Height);
+end;
+
 procedure FXForm.SetFullScreen(const Value: Boolean);
 begin
+  if Value <> FFullScreen then
+    begin
+      FFullScreen := Value;
 
+      if Value then
+        begin
+          FRestoredPosition := BoundsRect;
+          FRestoredBorder := BorderStyle;
+
+          CustomTitleBar.Enabled := false;
+          BorderStyle := bsNone;
+          SetBoundsRect(Monitor.BoundsRect);
+        end
+      else
+        begin
+          CustomTitleBar.Enabled := true;
+          BorderStyle := FRestoredBorder;
+          SetBoundsRect(FRestoredPosition);
+        end;
+    end;
 end;
 
 procedure FXForm.SetMicaEffect(const Value: boolean);
@@ -323,36 +334,17 @@ begin
 end;
 
 procedure FXForm.SetSmokeEffect(const Value: boolean);
-var
-  hani: TIntAni;
-  bwd: integer;
 begin
   FSmokeEffect := Value;
 
-  if Value then
+  // Wait
+  if (SmokeAnimation <> nil) and SmokeAnimation.Running then
     begin
-      bwd := round( (Width - ClientWidth) / 2 );
-
-      if BorderStyle in [bsSingle, bsSizeable, bsSizeToolWin] then
-        begin
-          if BorderStyle = bsSingle then
-            bwd := bwd - 4;
-
-          // Border Style
-          Smoke.BorderStyle := bsDialog;
-        end
-          else
-        begin
-          bwd := 0;
-        end;
-
-      Smoke.Width := Width - bwd;
-      Smoke.Height := Height - round(bwd / 2);
-
-      Smoke.Top := Self.Top;
-      Smoke.Left := Self.Left + round(bwd / 2);
+      SmokeAnimation.Terminate;
+      SmokeAnimation.WaitFor;
     end;
 
+  // Toggle
   if Value then
     begin
       Smoke.Visible := true;
@@ -361,7 +353,10 @@ begin
     end
       else
     begin
-      hani := TIntAni.Create(true, TAniKind.akIn, TAniFunctionKind.afkLinear,
+      if SmokeAnimation <> nil then
+        SmokeAnimation.Free;
+
+      SmokeAnimation := TIntAni.Create(true, TAniKind.akIn, TAniFunctionKind.afkLinear,
       Smoke.AlphaBlendValue, -Smoke.AlphaBlendValue,
       procedure(Value: integer)
         begin
@@ -372,9 +367,10 @@ begin
           Smoke.Visible := false;
         end);
 
-        hani.Duration := 100;
+      SmokeAnimation.Duration := 100;
 
-        hani.Start;
+      SmokeAnimation.FreeOnTerminate := false;
+      SmokeAnimation.Start;
     end;
 end;
 
@@ -443,9 +439,8 @@ begin
   else
     HintWindowClass := FXLightTooltip;
 
-  // Legacy Control Support
-  if ThemeManager.LegacyFontColor then
-    Font.Color := FDrawColors.Foreground;
+  // Font Color
+  Font.Color := FDrawColors.Foreground;
 
   // Notify Theme Change
   if Assigned(FThemeChange) then
@@ -475,6 +470,26 @@ begin
   ThemeManager.MeasuredUpdateSettings;
 
   UpdateTheme(true);
+end;
+
+procedure FXForm.WM_GETMINMAXINFO(var Msg: TMessage);
+begin
+  if SmokeEffect then
+    begin
+      // When SmokeEffect is true, set the minimum and maximum tracking size to the current size
+      with PMinMaxInfo(Msg.LParam)^.ptMinTrackSize do
+      begin
+        X := Width;
+        Y := Height;
+      end;
+      with PMinMaxInfo(Msg.LParam)^.ptMaxTrackSize do
+      begin
+        X := Width;
+        Y := Height;
+      end;
+    end
+  else
+    inherited;
 end;
 
 procedure FXForm.WM_MOVE(var Msg: Tmessage);

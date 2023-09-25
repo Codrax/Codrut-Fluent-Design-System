@@ -18,14 +18,24 @@ interface
     // Icon Type
     FXIconType = (Image, BitMap, ImageList, SegoeIcon);
 
+    // FXForm
+    FXFormFill = (TitleBar, Complete);
+    FXFormCloseAction = (Default, Free, Hide, Minimise);
+
     // Detail
     FXDetailType = (None, Underline, Outline);
 
+    // FXPanel
+    FXBackgroundColor = (Background, Content);
+
     // FXButton
-    FXButtonKind = (Normal, Accent, Toggle, Dropdown, Link);
+    FXButtonKind = (Normal, Accent, Toggle, Dropdown, Link, Flat);
 
     // FXPopupMenu
     FXAnimateSelection = (Instant, Opacity, Linear, Square);
+
+    // FXProgress
+    FXProgressKind = (Normal, Intermediate, Paused, Error);
 
     // FXCheckBox
     FXCheckBoxState = (Checked, Unchecked, Grayed);
@@ -36,7 +46,7 @@ interface
     TWallpaperSetting = (Fill, Fit, Stretch, Tile, Center, Span);
 
     // FXStandardIcons
-    FXStandardIconType = (Checkmark, Error, Question, Information, Warning, Star, None);
+    FXStandardIconType = (None, Checkmark, Error, Question, Information, Warning, Star);
 
     // FXSlider
     FXOrientation = (Horizontal, Vertical);
@@ -75,7 +85,20 @@ interface
     FXControlState = (None, Hover, Press);
     FXControlOnPaint = procedure(Sender: TObject) of object;
 
-    // Classes
+    // Thingies
+    FXPercent = 0..1000;
+
+    FXPercentHelper = record helper for FXPercent
+      public
+        function Percentage: real;
+
+        function OfNumber(Value: int64): real; overload;
+        function OfNumber(Value: real): real; overload;
+
+        function OfNumberInt(Value: int64): int64; overload;
+        function OfNumberInt(Value: real): int64; overload;
+    end;
+
     FXRGBA = record
     public
       R, G, B, A: byte;
@@ -150,6 +173,9 @@ interface
   function GetRGB(Color: TColor; Alpha: Byte = 255): FXRGBA; overload;
   function GetRGB(R, G, B: Byte; Alpha: Byte = 255): FXRGBA; overload;
 
+  { Point }
+  function RotatePointAroundPoint(APoint: TPoint; ACenter: TPoint; ARotateDegree: real; ACustomRadius: real = -1): TPoint;
+
   { Rectangles }
   function GetValidRect(Point1, Point2: TPoint): TRect; overload;
   function GetValidRect(Points: TArray<TPoint>): TRect; overload;
@@ -198,6 +224,36 @@ end;
 function GetRGB(R, G, B: Byte; Alpha: Byte): FXRGBA;
 begin
   Result.Create(R, G, B, Alpha);
+end;
+
+function RotatePointAroundPoint(APoint: TPoint; ACenter: TPoint; ARotateDegree: real; ACustomRadius: real): TPoint;
+var
+  r, dg, cosa, sina, ncos, nsin, dsin, dcos: real;
+begin
+  dg := (ARotateDegree * pi / 180);
+
+  dsin := sin(dg);
+  dcos := cos(dg);
+
+  if ACustomRadius = -1 then
+    r := ACenter.Distance(APoint)
+  else
+    r := ACustomRadius;
+
+  if r <> 0 then
+    begin
+      cosa := (APoint.X - ACenter.X) / r;
+      sina := (APoint.Y - ACenter.Y) / r;
+
+
+      nsin := sina * dcos + dsin * cosa;
+      ncos := cosa * dcos - sina * dsin;
+
+
+      // Apply New Properties
+      Result.X := round( ACenter.X + r * ncos );
+      Result.Y := round( ACenter.Y + r * nsin );
+    end;
 end;
 
 function GetValidRect(Point1, Point2: TPoint): TRect;
@@ -465,6 +521,33 @@ end;
 function TLine.Center: TPoint;
 begin
   Result := Point( (Point1.X + Point2.X) div 2, (Point1.Y + Point2.Y) div 2);
+end;
+
+{ FXPercentHelper }
+
+function FXPercentHelper.OfNumber(Value: int64): real;
+begin
+  Result := Value * Percentage;
+end;
+
+function FXPercentHelper.OfNumber(Value: real): real;
+begin
+  Result := Value * Percentage;
+end;
+
+function FXPercentHelper.OfNumberInt(Value: int64): int64;
+begin
+  Result := trunc(OfNumber(Value));
+end;
+
+function FXPercentHelper.OfNumberInt(Value: real): int64;
+begin
+  Result := trunc(OfNumber(Value));
+end;
+
+function FXPercentHelper.Percentage: real;
+begin
+  Result := Self / 100;
 end;
 
 end.

@@ -9,7 +9,7 @@ interface
     Vcl.Forms, Vcl.Themes, Vcl.Styles, Vcl.Graphics, CFX.Types,
     Vcl.Controls, CFX.Colors, SysUtils, Vcl.ExtCtrls, Vcl.ComCtrls,
     Vcl.TitleBarCtrls, Math, CFX.Math, Vcl.StdCtrls, CFX.Forms,
-    UITypes;
+    UITypes, CFX.Edit;
 
   type
     FXMessageType = (Information, Error, Question, Sucess, Warning, Star);
@@ -67,12 +67,12 @@ interface
         // Settings
         procedure HighlightDefaultButton;
 
-        property Parent: TForm read FParent write FParent;
+        property ParentForm: TForm read FParent write FParent;
         property ScreenCenter: boolean read FScreenCenter write FScreenCenter;
 
         // Execute
         procedure ExecuteInherited; virtual;
-        function ModalExecution: integer;
+        function ModalExecution(FreeForm: boolean): integer;
 
         property Title: string read FTitle write FTitle;
         property Text: string read FText write FText;
@@ -108,6 +108,8 @@ interface
     FXInputBox = class(FXDialogBox)
       private
         FValue: string;
+        FTextHint: string;
+        FSelectAll: boolean;
         FCanCancel: boolean;
         FNumbersOnly: boolean;
         FPasswordChar: char;
@@ -121,6 +123,8 @@ interface
         function Execute: string; overload;
 
         property Value: string read FValue write FValue;
+        property TextHint: string read FTextHint write FTextHint;
+        property SelectAll: boolean read FSelectAll write FSelectAll;
         property CanCancel: boolean read FCanCancel write FCanCancel;
         property PasswordChar: char read FPasswordChar write FPasswordChar;
         property NumbersOnly: boolean read FNumbersOnly write FNumbersOnly;
@@ -198,11 +202,11 @@ begin
                                 Break;
                               end;
                           end;
-                          
+
     HighlightDefaultButton;
 
     // Result
-    Result := ModalExecution;
+    Result := ModalExecution(true);
   end;
 end;
 
@@ -231,7 +235,7 @@ begin
 
     HighlightDefaultButton;
     
-    ModalExecution;
+    ModalExecution(true);
   end;
 end;
 
@@ -257,26 +261,25 @@ end;
 
 function FXInputBox.Execute: string;
 var
-  Text: TEdit;
+  AText: FXEdit;
 begin
   ExecuteInherited;
 
   with Form do begin
     // Create Text Box
-    Text := TEdit.Create(Form);
-    with Text do
+    AText := FXEdit.Create(nil);
+    with AText do
     begin
       Parent   := Form;
 
-      Text := Value;
+      Text := FValue;
+      TextHint := FTextHint;
 
       Font.Assign( FTextFont );
       Font.Size := Font.Size + 2;
 
       PasswordChar := FPasswordChar;
       NumbersOnly := FNumbersOnly;
-
-      Color := ChangeColorLight(Form.Color,-10);
 
       Left := Prompt.Left;
 
@@ -285,9 +288,13 @@ begin
       Anchors := [akLeft, akTop];
 
       BorderStyle := bsNone;
+
+      // Select All
+      if FSelectAll then
+        SelectAll;
     end;
 
-    ResizeForm( -1, Form.ClientHeight + Text.Height + FButtonOffset * 2 );
+    ResizeForm( -1, Form.ClientHeight + AText.Height + FButtonOffset * 2 );
 
     // Create Buttons
     if FCanCancel then
@@ -303,21 +310,24 @@ begin
     HighlightDefaultButton;
       
     // Set Edit Width
-    Text.Width := Form.ClientWidth - Prompt.Left * 2; // This is set after in case the Buttons span a langer distance that the Form
+    AText.Width := Form.ClientWidth - Prompt.Left * 2; // This is set after in case the Buttons span a langer distance that the Form
 
     // Focus
     //Text.SetFocus;
 
-    if ModalExecution = mrOk then
+    if ModalExecution(false) = mrOk then
       begin
         DialogResult := FXInputBoxResult.Ok;
-        Result := Text.Text
+        Result := AText.Text;
       end
     else
       begin
         DialogResult := FXInputBoxResult.Cancel;
         Result := Value;
       end;
+
+    // Free form
+    Form.Free;
   end;
 end;
 
@@ -402,6 +412,7 @@ begin
   with FXButton.Create(Form) do
     begin
       Parent := Form;
+      Animation := false;
 
       Anchors := [akRight,akBottom];
 
@@ -620,7 +631,7 @@ begin
             ButtonKind := FXButtonKind.Accent;
 end;
 
-function FXDialogBox.ModalExecution: integer;
+function FXDialogBox.ModalExecution(FreeForm: boolean): integer;
 begin
   // Lock Form Size
   Form.Constraints.MinWidth := Form.Width;
@@ -633,10 +644,10 @@ begin
     begin
       Form.Position := poDesigned;
 
-      if Assigned(Parent) then
+      if Assigned(ParentForm) then
         begin
-          Form.Left := Parent.Left + Parent.Width div 2 - Form.Width div 2;
-          Form.Top := Parent.Top + Parent.Height div 2 - Form.Height div 2;
+          Form.Left := ParentForm.Left + ParentForm.Width div 2 - Form.Width div 2;
+          Form.Top := ParentForm.Top + ParentForm.Height div 2 - Form.Height div 2;
         end
       else
         if Application.MainForm <> nil then
@@ -653,10 +664,20 @@ begin
 
   // Execute Modal & Return value
   try
+    // Smoke On
+    if Assigned(ParentForm) and (ParentForm is FXForm) then
+      FXForm(ParentForm).SmokeEffect := true;
+
+    // Modal
     Result := Form.ShowModal;
   finally
+    // Smoke Off
+    if Assigned(ParentForm) and (ParentForm is FXForm) then
+      FXForm(ParentForm).SmokeEffect := false;
+
     // Free Memory
-    Form.Free;
+    if FreeForm then
+      Form.Free;
   end;
 end;
 

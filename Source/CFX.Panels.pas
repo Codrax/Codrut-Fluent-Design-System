@@ -23,15 +23,17 @@ type
 
   FXPanel = class(TPanel, FXControl)
     private
-      FCustomColors: FXColorSets;
+      FCustomColors: FXCompleteColorSets;
 
-      FDrawColors: FXColorSet;
+      FDrawColors: FXCompleteColorSet;
+      FBackground: FXBackgroundColor;
 
       FAccentLine: boolean;
       FLineWidth: integer;
 
       procedure SetAccentLine(const Value: boolean);
       procedure SetAccentLineWidth(const Value: integer);
+      procedure SetBackground(const Value: FXBackgroundColor);
 
     protected
       procedure Paint; override;
@@ -39,10 +41,17 @@ type
       // Inherited
       procedure Resize; override;
 
+      // Update
+      procedure UpdateColors;
+
     published
-      property CustomColors: FXColorSets read FCustomColors write FCustomColors;
+      property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors;
+      property BackgroundColor: FXBackgroundColor read FBackground write SetBackground default FXBackgroundColor.Background;
       property AccentLine: boolean read FAccentLine write SetAccentLine default False;
       property AccentLineWidth: integer read FLineWidth write SetAccentLineWidth;
+
+      property ShowCaption default false;
+      property ParentColor default true;
 
       property Canvas;
 
@@ -60,7 +69,7 @@ type
       function Background: TColor;
   end;
 
-  FXMinimisePanel = class(FXPanel, FXControl)
+  FXMinimisePanel = class(TPanel, FXControl)
     private
       var
       FCustomColors: FXCompleteColorSets;
@@ -106,15 +115,22 @@ type
       procedure SetContentFill(const Value: boolean);
       procedure SetImage(const Value: FXIconSelect);
 
+      // Theme
+      procedure UpdateColors;
+
     protected
       procedure Paint; override;
 
       // Paint
       procedure PaintHandle;
-      procedure PaintAccentLine;
+
+      // Inherit align rect calculation
+      procedure AdjustClientRect(var Rect: TRect); override;
 
       // Override
       procedure Resize; override;
+
+      procedure ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF}); override;
 
       procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
       procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
@@ -156,8 +172,6 @@ type
       constructor Create(AOwner : TComponent); override;
       destructor Destroy; override;
 
-      procedure DrawAccentLine; override;
-
       // State
       procedure ToggleMinimised;
       procedure ChangeMinimised(Minimised: boolean);
@@ -173,6 +187,12 @@ implementation
 
 
 { CProgress }
+
+procedure FXMinimisePanel.AdjustClientRect(var Rect: TRect);
+begin
+  inherited;
+  Rect.Top := Self.HandleSize;
+end;
 
 procedure FXMinimisePanel.AnimateTranzition;
 begin
@@ -236,6 +256,14 @@ begin
   SetMinimiseState(Minimised);
 end;
 
+procedure FXMinimisePanel.ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF});
+begin
+  inherited;
+  FDefaultHeight := MulDiv(FDefaultHeight, M, D);
+  FHandleSize := MulDiv(FHandleSize, M, D);
+  Height := Height;
+end;
+
 constructor FXMinimisePanel.Create(AOwner: TComponent);
 begin
   inherited;
@@ -252,9 +280,9 @@ begin
   FullRepaint := false;
 
   // Theme Manager building
-  FCustomColors := FXCompleteColorSets.Create;
+  FCustomColors := FXCompleteColorSets.Create(Self);
   FDrawColors := FXCompleteColorSet.Create(ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
-  FCustomHandleColor := FXColorStateSets.Create;
+  FCustomHandleColor := FXColorStateSets.Create(Self);
   FHandleColor := FXColorStateSet.Create(FCustomHandleColor, ThemeManager.DarkTheme);
 
   FAnim := TIntAni.Create;
@@ -276,6 +304,9 @@ begin
   FText := 'Minimised Panel';
 
   FDefaultHeight := Height;
+
+  // Update
+  UpdateColors;
 end;
 
 destructor FXMinimisePanel.Destroy;
@@ -285,12 +316,6 @@ begin
   FreeAndNil(FCustomHandleColor);
   FreeAndNil(FCustomColors);
   inherited;
-end;
-
-
-procedure FXMinimisePanel.DrawAccentLine;
-begin
-  // No nothing
 end;
 
 function FXMinimisePanel.IsContainer: Boolean;
@@ -388,10 +413,6 @@ begin
                   TemporaryCanvas.Canvas, TemporaryCanvas.Canvas.ClipRect);
 
   TemporaryCanvas.Free;
-end;
-
-procedure FXMinimisePanel.PaintAccentLine;
-begin
 end;
 
 procedure FXMinimisePanel.PaintHandle;
@@ -612,9 +633,7 @@ begin
   Result := (not (FMinimised and not FAnim.Running)) and FContentFill
 end;
 
-procedure FXMinimisePanel.UpdateTheme(const UpdateChildren: Boolean);
-var
-  I: integer;
+procedure FXMinimisePanel.UpdateColors;
 begin
   // Access Theme Manager
   if FCustomColors.Enabled then
@@ -636,18 +655,27 @@ begin
       FHandleColor.BackGroundPress := ChangeColorLight( FDrawColors.BackGroundInterior, -MINIMISE_COLOR_CHANGE);
     end;
 
-  // Legacy Control Support
-  if ThemeManager.LegacyFontColor then
-    Font.Color := FDrawColors.ForeGround;
+  // Font Color
+  Font.Color := FDrawColors.ForeGround;
+end;
 
-  Self.Paint;
+procedure FXMinimisePanel.UpdateTheme(const UpdateChildren: Boolean);
+var
+  I: integer;
+begin
+  UpdateColors;
+
+  // Draw
+  Invalidate;
 
   // Update Children
   if IsContainer and UpdateChildren then
     begin
+      LockDrawing;
       for i := 0 to ControlCount - 1 do
         if Supports(Controls[i], FXControl) then
           (Controls[i] as FXControl).UpdateTheme(UpdateChildren);
+      UnlockDrawing;
     end;
 end;
 
@@ -655,7 +683,12 @@ end;
 
 function FXPanel.Background: TColor;
 begin
-  Result := FDrawColors.Background;
+  case FBackground of
+    FXBackgroundColor.Background: Result := FDrawColors.Background;
+    FXBackgroundColor.Content: Result := FDrawColors.BackGroundInterior;
+    else
+      Result := 0;
+  end;
 end;
 
 constructor FXPanel.Create(AOwner: TComponent);
@@ -663,14 +696,22 @@ begin
   inherited;
 
   FullRepaint := false;
+  ParentBackground := false;
+  ParentColor := true;
+  ShowCaption := false;
 
-  FCustomColors := FXColorSets.Create();
-  FDrawColors := FXColorSet.Create(ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
+  Font.Name := ThemeManager.FormFont;
+
+  FCustomColors := FXCompleteColorSets.Create(Self);
+  FDrawColors := FXCompleteColorSet.Create(ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
 
   FLineWidth := PANEL_LINE_WIDTH;
+  FBackground := FXBackgroundColor.Background;
 
   BevelKind := bkNone;
   BevelOuter := bvNone;
+
+  UpdateColors;
 end;
 
 destructor FXPanel.Destroy;
@@ -727,20 +768,47 @@ begin
     RePaint;
 end;
 
+procedure FXPanel.SetBackground(const Value: FXBackgroundColor);
+begin
+  if FBackground <> Value then
+    begin
+      FBackground := Value;
+
+      Invalidate;
+
+      if not (csReading in ComponentState) then
+        begin
+          ParentColor := false;
+          UpdateColors
+        end;
+    end;
+end;
+
+procedure FXPanel.UpdateColors;
+begin
+  // Access Theme Manager
+  if FCustomColors.Enabled then
+    FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme)
+  else
+    FDrawColors.Assign(ThemeManager.SystemColor);
+
+  // Font Color
+  Font.Color := FDrawColors.ForeGround;
+
+  // Set Color
+  case FBackground of
+    FXBackgroundColor.Background: Color := FDrawColors.BackGround;
+    FXBackgroundColor.Content: Color := FDrawColors.BackGroundInterior;
+  end;
+end;
+
 procedure FXPanel.UpdateTheme(const UpdateChildren: Boolean);
 var
   I: integer;
 begin
-  // Access Theme Manager
-  if FCustomColors.Enabled then
-    FDrawColors := FXColorSet.Create( FCustomColors, ThemeManager.DarkTheme )
-  else
-    FDrawColors := FXColorSet.Create( ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
+  UpdateColors;
 
-  // Legacy Control Support
-  if ThemeManager.LegacyFontColor then
-    Font.Color := FDrawColors.ForeGround;
-
+  // Draw
   Invalidate;
 
   // Update Children

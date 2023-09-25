@@ -33,7 +33,6 @@ type
   FXButton = class(FXWindowsControl, FXControl)
     private
       var DrawRect, CaptionRect, IndicatorRect, ImageRect, TheTextRect: TRect;
-      FTextFont: TFont;
       FCustomColors: FXCompleteColorSets;
       FCustomButtonColors: FXColorStateSets;
       FDrawColors: FXCompleteColorSet;
@@ -72,8 +71,9 @@ type
       FModalResult: TModalResult;
       FBeforeModal: FXBeforeModalResult;
       FAnimation: boolean;
-      FLineWidth: integer;
+      FLineWidth: real;
       FDetail: FXDetailType;
+      FShowText: boolean;
 
       //  Internal
       procedure UpdateColors;
@@ -98,7 +98,8 @@ type
       procedure SetButtonKind(const Value: FXButtonKind);
       procedure SetRoundness(const Value: integer);
       procedure SetMargin(const Value: integer);
-      procedure SetLineWidth(const Value: integer);
+      procedure SetLineWidth(const Value: real);
+      procedure SetShowText(const Value: boolean);
 
       // Draw
       function GetTextH: integer;
@@ -116,14 +117,13 @@ type
       function GetChecked: Boolean;
 
       // Handle Messages
-      procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
-      procedure WM_LButtonUp(var Msg: TWMLButtonUp); message WM_LBUTTONUP;
       procedure WMSize(var Message: TWMSize); message WM_SIZE;
 
     protected
       procedure PaintBuffer; override;
       procedure Resize; override;
-      procedure ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF}); override;
+      // Scale
+      procedure ScaleChanged(Scaler: single); override;
 
       // State
       procedure InteractionStateChanged(AState: FXControlState); override;
@@ -142,8 +142,9 @@ type
       property CustomButtonColors: FXColorStateSets read FCustomButtonColors write FCustomButtonColors stored true;
       property Checked: Boolean read GetChecked write SetChecked default false;
 
+      property ShowText: boolean read FShowText write SetShowText default true;
       property Text: string read FText write SetText;
-      property Font: TFont read FTextFont write FTextFont;
+      property Font;
       property WordWrap: boolean read FWordWrap write SetWordWrap default true;
       property Image: FXIconSelect read FImage write SetImage;
       property ImageScale: real read FImageScale write SetImageScale;
@@ -159,7 +160,7 @@ type
       property RepeatWhenPressed: boolean read FRepeatWhenPressed write FRepeatWhenPressed default false;
       property Animation: boolean read FAnimation write FAnimation default true;
       property Detail: FXDetailType read FDetail write SetDetail default FXDetailType.None;
-      property LineWidth: integer read FLineWidth write SetLineWidth default BUTTON_LINE_WIDTH;
+      property LineWidth: real read FLineWidth write SetLineWidth;
 
       property StateText: string read FStateText write SetStateText;
       property StateImage: FXIconSelect read FStateImage write SetStateImage;
@@ -179,6 +180,7 @@ type
 
       // Properties
       property Align;
+      property PaddingFill;
       property Constraints;
       property Anchors;
       property Hint;
@@ -220,7 +222,7 @@ begin
   Invalidate;
 
   // Animation
-  if FAnimation and not Creating and not FAnimationRunning then
+  if FAnimation and not Creating and not Destroyed and not FAnimationRunning then
     begin
       FAnim := TIntAni.Create;
 
@@ -233,17 +235,18 @@ begin
       begin
         FAnimPos := trunc(FAnim.Percent * 255);
 
-        if (Parent = nil) or IsDestroying then
+        if Destroyed then
           begin
             FAnim.Terminate;
           end
         else
-          PaintBuffer;
+          Invalidate;
       end;
 
       FAnim.OnDone := procedure
       begin
-         FAnimationRunning := false;
+        if not Destroyed then
+          FAnimationRunning := false;
       end;
 
       FAnim.FreeOnTerminate := true;
@@ -355,7 +358,7 @@ begin
         case LoadPreset of
           FXButtonKind.Normal, FXButtonKind.Dropdown, FXButtonKind.Toggle:
             begin
-              if AutomaticCursorPointer then
+              if AutomaticCursorPointer and not IsReading then
                 Cursor := crDefault;
 
               FBorderWidth := 1;
@@ -368,9 +371,24 @@ begin
               ForeGroundPress := ColorBlend(FDrawColors.ForeGround, BackgroundNone, BUTTON_BLEND_FADE);
             end;
 
+          FXButtonKind.Flat:
+            begin
+              if AutomaticCursorPointer and not IsReading then
+                Cursor := crDefault;
+
+              FBorderWidth := 0;
+              BackgroundNone := FDrawColors.BackGround;
+              BackgroundHover := ChangeColorLight(BackgroundNone, AOffset);
+              BackgroundPress := ChangeColorLight(FDrawColors.BackGroundInterior, -AOffset);
+
+              ForeGroundNone := FDrawColors.ForeGround;
+              ForeGroundHover := FDrawColors.ForeGround;
+              ForeGroundPress := ColorBlend(FDrawColors.ForeGround, BackgroundNone, BUTTON_BLEND_FADE);
+            end;
+
           FXButtonKind.Accent:
             begin
-              if AutomaticCursorPointer then
+              if AutomaticCursorPointer and not IsReading then
                 Cursor := crDefault;
 
               FBorderWidth := 1;
@@ -385,7 +403,7 @@ begin
 
           FXButtonKind.Link: begin
             with FButtonColors do
-              if AutomaticCursorPointer then
+              if AutomaticCursorPointer and not IsReading then
                 Cursor := crHandPoint;
 
               FBorderWidth := 0;
@@ -418,16 +436,16 @@ begin
   if Parent = nil then
     Exit;
 
-  DrawRect := Rect(0, 0, Width, Height);
+  DrawRect := GetClientRect;
 
   // Get Data
   ATextHeight := GetTextH;
   ATextWidth := GetTextW;
-  AMargin := -(BUTTON_MARGIN + FMargin + FLineWidth);
+  AMargin := -(BUTTON_MARGIN + FMargin + round(FLineWidth));
 
   // Button Kind
   case ButtonKind of
-    FXButtonKind.Normal, FXButtonKind.Accent, FXButtonKind.Toggle, FXButtonKind.Link:
+    FXButtonKind.Normal, FXButtonKind.Accent, FXButtonKind.Toggle, FXButtonKind.Link, FXButtonKind.Flat:
       begin
         CaptionRect := DrawRect;
         CaptionRect.Inflate(AMargin, AMargin);
@@ -527,7 +545,7 @@ begin
             if ATextWidth = 0 then
               ATextLinesCount := 0
             else
-              ATextLinesCount := (CaptionRect.Height-ASize) div ATextWidth; (* Use width to calc length *)
+              ATextLinesCount := ceil(ATextWidth / CaptionRect.Width); (* Use width to calc length *)
             ATextHeight := ATextLinesCount * ATextHeight;
 
             // Start Pos
@@ -653,6 +671,17 @@ begin
   Invalidate;
 end;
 
+procedure FXButton.ScaleChanged(Scaler: single);
+begin
+  inherited;
+  FImageScale := FImageScale * Scaler;
+  FLineWidth := FLineWidth * Scaler;
+  FMargin := round(FMargin * Scaler);
+  FBorderWidth := FBorderWidth * Scaler;
+
+  UpdateRects;
+end;
+
 procedure FXButton.SetButtonKind(const Value: FXButtonKind);
 begin
   if FButtonKind <> Value then
@@ -740,7 +769,7 @@ begin
     end;
 end;
 
-procedure FXButton.SetLineWidth(const Value: integer);
+procedure FXButton.SetLineWidth(const Value: real);
 begin
   if FLineWidth <> Value then
     begin
@@ -768,6 +797,17 @@ begin
     begin
       FRoundness := Value;
 
+      Invalidate;
+    end;
+end;
+
+procedure FXButton.SetShowText(const Value: boolean);
+begin
+  if FShowText <> Value then
+    begin
+      FShowText := Value;
+
+      UpdateRects;
       Invalidate;
     end;
 end;
@@ -866,9 +906,9 @@ function FXButton.GetTextH: integer;
 begin
   with Canvas do
     begin
-      Font.Assign(FTextFont);
+      Font.Assign(Self.Font);
 
-      Result := TextHeight(TEXT_SIZE_COMPARER);
+      Result := TextHeight(TEXT_SIZE_COMPARER)
     end;
 end;
 
@@ -876,19 +916,19 @@ function FXButton.GetTextW: integer;
 begin
   with Canvas do
     begin
-      Font.Assign(FTextFont);
+      Font.Assign(Self.Font);
 
-      Result := TextWidth(GetText);
+      if FShowText then
+        Result := TextWidth(GetText)
+      else
+        Result := 0;
     end;
 end;
 
 constructor FXButton.Create(aOwner: TComponent);
 begin
   inherited;
-  FTextFont := TFont.Create;
-  FTextFont.Name := FORM_FONT_NAME;
-  FTextFont.Size := ThemeManager.FormFontHeight;
-
+  FShowText := true;
   FChecked := false;
   AutoFocusLine := true;
   BufferedComponent := true;
@@ -953,7 +993,6 @@ end;
 
 destructor FXButton.Destroy;
 begin
-  FTextFont.Free;
   FreeAndNil( FCustomColors );
   FreeAndNil( FCustomButtonColors );
   FreeAndNil( FDrawColors );
@@ -969,12 +1008,6 @@ end;
 function FXButton.Background: TColor;
 begin
   Result := FDrawColors.Background;
-end;
-
-procedure FXButton.ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF});
-begin
-  inherited;
-  UpdateRects;
 end;
 
 procedure FXButton.Click;
@@ -1034,19 +1067,13 @@ begin
   inherited;
 end;
 
-procedure FXButton.CMEnabledChanged(var Message: TMessage);
-begin
-  inherited;
-  UpdateColors;
-  Invalidate;
-end;
-
 procedure FXButton.PaintBuffer;
 var
   AText: string;
   FBackground, FForeground: TColor;
   ARect: TRect;
   FPen: TGDIPen;
+  AWidth: integer;
 begin
   // Background
   Color := FDrawColors.BackGround;
@@ -1074,28 +1101,40 @@ begin
       ARect.Width := ARect.Width-1;
       ARect.Height := ARect.Height-1;
 
+      AWidth := 0;
       FPen := nil;
       case Detail of
-        FXDetailType.None, FXDetailType.Underline: FPen := GetRGB(FDrawColors.BackGroundInterior).MakeGDIPen(FBorderWidth);
-        FXDetailType.Outline: FPen := GetRGB(FDrawColors.BackGroundInterior).MakeGDIPen(LineWidth);
+        FXDetailType.None, FXDetailType.Underline: begin
+          if FBorderWidth <> 0 then
+            FPen := GetRGB(FDrawColors.BackGroundInterior).MakeGDIPen(FBorderWidth);
+          AWidth := trunc(FBorderWidth);
+        end;
+        FXDetailType.Outline: begin
+          FPen := GetRGB(FDrawColors.BackGroundInterior).MakeGDIPen(LineWidth);
+          AWidth := round(LineWidth);
+        end;
       end;
 
-      ARect.Inflate(-trunc(FPen.GetWidth), -trunc(FPen.GetWidth));
+      ARect.Inflate(-trunc(AWidth), -trunc(AWidth));
       if ARect.Width > 0 then
         GDIRoundRect( MakeRoundRect(ARect, Roundness),
           GetRGB(FBackground).MakeGDIBrush, FPen);
 
       // Text
-      AText := GetText;
-      Brush.Style := bsClear;
-      Font.Assign(Self.Font);
-      Font.Color := FForeground;
-      DrawTextRect(Buffer, TheTextRect, AText, FTextDrawFlags);
+      if FShowText then
+        begin
+          AText := GetText;
+          Brush.Style := bsClear;
+          Font.Assign(Self.Font);
+          Font.Color := FForeground;
+          DrawTextRect(Buffer, TheTextRect, AText, FTextDrawFlags);
+        end;
 
       // Icon
       case ButtonKind of
         FXButtonKind.Dropdown:
           begin
+            Brush.Style := bsClear;
             Font.Assign(Self.Font);
             Font.Color := FForeground;
             Font.Name := ThemeManager.IconFont;
@@ -1109,6 +1148,9 @@ begin
       // Paint Image
       if GetImage.Enabled then
         begin
+          Brush.Style := bsClear;
+          Font.Assign(Self.Font);
+          Font.Color := FForeground;
           GetImage.DrawIcon(Buffer, ImageRect);
         end;
     end;
@@ -1126,12 +1168,6 @@ procedure FXButton.WMSize(var Message: TWMSize);
 begin
   UpdateRects;
   Invalidate;
-end;
-
-procedure FXButton.WM_LButtonUp(var Msg: TWMLButtonUp);
-begin
-
-  inherited;
 end;
 
 end.

@@ -3,10 +3,22 @@ unit CFX.Graphics;
 interface
 
 uses
-  UITypes, Types, CFX.UIConsts, VCl.GraphUtil, Winapi.Windows,
-  Classes, Vcl.Themes, Vcl.Controls, Vcl.Graphics,
-  CFX.VarHelpers, CFX.Types, CFX.BlurFunctions, Math,
-  CFX.StringUtils;
+  UITypes,
+  Types,
+  CFX.UIConsts,
+  Vcl.GraphUtil,
+  Winapi.Windows,
+  Classes,
+  SysUtils,
+  Vcl.Themes,
+  Vcl.Controls,
+  Vcl.Graphics,
+  CFX.VarHelpers,
+  CFX.Types,
+  CFX.BlurFunctions,
+  Math,
+  CFX.StringUtils,
+  CFX.ArrayHelpers;
 
   type
     TPent = array[0..4] of TPoint;
@@ -15,9 +27,16 @@ uses
   procedure GetCenterPos(Width, Height: Integer; Rect: TRect; out X, Y: Integer);
   function CreateSolidBrushWithAlpha(Color: TColor; Alpha: Byte = $FF): HBRUSH;
 
-  // Text Draw Functions
+  // Text Drawing Utils
   procedure DrawTextRect(Canvas: TCanvas; ARect: TRect; Text: string;
     Flags: FXTextFlags; AMargin: integer = 0);
+  function GetTextRect(Canvas: TCanvas; ARect: TRect; Text: string;
+    Flags: FXTextFlags; AMargin: integer = 0): TRect;
+  function GetWordWrapLines(Canvas: TCanvas; Text: string;
+    ARect: TRect): TArray<string>;
+  function WordWrapGetLineHeight(Canvas: TCanvas; Text: string): integer;
+
+  // Font Size
   function GetMaxFontHeight(Canvas: TCanvas; Text: string; MaxWidth, MaxHeight: Integer): integer;
 
   // Drawing Functions
@@ -26,6 +45,8 @@ uses
   procedure CopyRoundRect(FromCanvas: TCanvas; FromRect: TRoundRect;
                           DestCanvas: TCanvas; DestRect: TRect;
                           shrinkborder: integer = 0);
+
+  procedure CopyRectWithOpacity(Dest: TCanvas; DestRect: TRect; Source: TCanvas; SourceRect: TRect; Opacity: Byte);
 
   // Color Inversion
   procedure StretchInvertedMask(Source: TBitMap; Destination: TCanvas; DestRect: TRect); overload;
@@ -346,34 +367,11 @@ begin
   CFX.BlurFunctions.FastBlur( Bitmap, Radius, BlurScale, HighQuality );
 end;
 
-function GetMaxFontHeight(Canvas: TCanvas; Text: string; MaxWidth, MaxHeight: Integer): integer;
-var
-  Ext: TSize;
-begin
-  Result := 0;
-  if Text = '' then
-    Exit;
-
-  Canvas.Font.Height := -10;
-  repeat
-    Canvas.Font.Height := Canvas.Font.Height - 1;
-    Ext := Canvas.TextExtent(Text);
-  until ((Ext.cx >= MaxWidth) or (Ext.cy >= MaxHeight));
-  repeat
-    Canvas.Font.Height := Canvas.Font.Height + 1;
-    Ext := Canvas.TextExtent(Text);
-  until ((Ext.cx <= MaxWidth) and (Ext.cy <= MaxHeight)) or (Canvas.Font.Height = 1);
-
-  Result := Canvas.Font.Height;
-end;
-
 procedure DrawTextRect(Canvas: TCanvas; ARect: TRect; Text: string; Flags: FXTextFlags; AMargin: integer);
 var
   TextFormat: TTextFormat;
-  Words, Lines: TArray<string>;
-  Moved, Line, Top, LineHeight, HasBreak, I: integer;
-  NewStarted: boolean;
-  Temp: string;
+  Lines: TArray<string>;
+  Top, LineHeight, I: integer;
   R: TRect;
 begin
   // Margin
@@ -392,9 +390,6 @@ begin
 
   if FXTextFlag.WordWrap in Flags then
     begin
-      // Get Words
-      Words := GetAllSeparatorItems(Text, [' ']);
-
       // Line Settings
       TextFormat := [];
       if FXTextFlag.Left in Flags then
@@ -406,48 +401,7 @@ begin
       if FXTextFlag.NoClip in Flags then
         TextFormat := TextFormat + [tfNoClip];
 
-      // Move words to Lines
-      SetLength( Lines, 1);
-      NewStarted := true;
-
-      Moved := 0;
-      Line := 0;
-      repeat
-        // Add Word
-        Temp := Lines[Line];
-        if not NewStarted then
-          Temp := Temp + ' ';
-        Temp := Temp + Words[Moved];
-
-        // Break #13
-        HasBreak := Pos(#13, Temp);
-        if (HasBreak <> 0) and NewStarted then
-          begin
-            Temp := StrRemove(Temp, HasBreak, HasBreak);
-            HasBreak := Pos(#13, Temp);
-
-            if HasBreak <> 0 then
-              Words[Moved] := StrRemove(Words[Moved], Pos(#13, Words[Moved]), Pos(#13, Words[Moved]));
-          end;
-
-        if ( NewStarted or (Canvas.TextWidth(Temp) <= ARect.Width) ) and (HasBreak = 0) then
-          begin
-            Lines[Line] := Temp;
-
-            NewStarted := false;
-
-            // Increase
-            Inc( Moved );
-          end
-        else
-        // Start New Line
-          begin
-            Inc( Line );
-            SetLength( Lines, Line + 1);
-
-            NewStarted := true;
-          end;
-      until Moved >= Length( Words );
+      Lines := GetWordWrapLines(Canvas, Text, ARect);
 
       // Vertical Align
       Top := 0;
@@ -471,9 +425,7 @@ begin
       // Draw
       for I := 0 to High(Lines) do
         begin
-          LineHeight := Canvas.TextHeight(Lines[I]);
-          if Lines[I] = '' then
-            LineHeight := Canvas.TextHeight('I');
+          LineHeight := WordWrapGetLineHeight(Canvas, Lines[I]);
 
           R := Rect( ARect.Left, Top, ARect.Right, Top + LineHeight );
 
@@ -500,6 +452,184 @@ begin
     end;
 end;
 
+function GetTextRect(Canvas: TCanvas; ARect: TRect; Text: string;
+    Flags: FXTextFlags; AMargin: integer = 0): TRect;
+var
+  TextFormat: TTextFormat;
+  Lines: TArray<string>;
+  Top, LineHeight, I: integer;
+begin
+  // Margin
+  if AMargin <> 0 then
+    ARect.Inflate(-AMargin, -AMargin);
+
+  // Ignore
+  if Text = '' then
+    Exit;
+
+  if FXTextFlag.Auto in Flags then
+    begin
+      if Canvas.TextWidth(Text) > ARect.Width then
+        Flags := Flags + [FXTextFlag.WordWrap];
+    end;
+
+  if FXTextFlag.WordWrap in Flags then
+    begin
+      // Line Settings
+      TextFormat := [];
+      if FXTextFlag.Left in Flags then
+        TextFormat := TextFormat + [tfLeft];
+      if FXTextFlag.Center in Flags then
+        TextFormat := TextFormat + [tfCenter];
+      if FXTextFlag.Right in Flags then
+        TextFormat := TextFormat + [tfRight];
+      if FXTextFlag.NoClip in Flags then
+        TextFormat := TextFormat + [tfNoClip];
+
+      // Lines
+      Lines := GetWordWrapLines(Canvas, Text, ARect);
+
+      // Vertical Align
+      Top := 0;
+      if FXTextFlag.VerticalCenter in Flags then
+        begin
+          for I := 0 to High(Lines) do
+            Top := Top + Canvas.TextHeight(Lines[I]);
+
+          Top := round( ARect.Height / 2 - Top / 2 );
+        end;
+      if FXTextFlag.Bottom in Flags then
+        begin
+          for I := 0 to High(Lines) do
+            Top := Top + Canvas.TextHeight(Lines[I]);
+
+          Top := ARect.Height - Top;
+        end;
+
+      Top := Top + ARect.Top;
+
+      // Result
+      Result := ARect;
+      Result.Top := Top;
+
+      // Draw
+      for I := 0 to High(Lines) do
+        begin
+          LineHeight := WordWrapGetLineHeight(Canvas, Lines[I]);
+
+          Top := Top + LineHeight;
+        end;
+
+      // Result
+      Result.Bottom := Top;
+    end
+  else
+    begin
+      Result := ARect;
+    end;
+end;
+
+function GetWordWrapLines(Canvas: TCanvas; Text: string; ARect: TRect): TArray<string>;
+var
+  Temp: string;
+  Words: TArray<string>;
+  Line, WordWidth, LineWidth: integer;
+  I, Index: Integer;
+procedure AddLine;
+begin
+  Inc(Line);
+  SetLength(Result, Line + 1);
+
+  LineWidth := 0;
+end;
+begin
+  // Get Words
+  Words := GetAllSeparatorItems(Text, [' ']);
+  for I := 0 to High(Words)-1 do
+    Words[I] := Words[I] + ' ';
+
+  // Split values with #13
+  I := 0;
+  while I < Length(Words) do
+    begin
+      Index := Words[I].IndexOf(#13);
+
+      if Index <> -1 then
+        begin
+          if Index = 0 then
+            Index := 1;
+
+          Temp := Words[I].Remove(0, Index);
+          Words.Insert(I+1, Temp);
+
+          Words[I] := Words[I].Remove(Index, Words[I].Length-Index);
+        end;
+
+      Inc(I);
+    end;
+
+  // Data
+  Line := 0;
+  LineWidth := 0;
+
+  // Result
+  SetLength(Result, 1);
+
+  // Step
+  for I := 0 to High(Words) do
+    begin
+      // Word
+      Temp := Words[I];
+
+      if Temp = #13 then
+        begin
+          AddLine;
+          Continue;
+        end;
+
+      // Width
+      WordWidth := Canvas.TextWidth(Temp);
+
+      // New Line
+      if LineWidth + WordWidth > ARect.Width then
+        AddLine;
+
+      // Add to line
+      Result[Line] := ConCat(Result[Line], Temp);
+
+      // Add
+      LineWidth := LineWidth + WordWidth;
+    end;
+end;
+
+function WordWrapGetLineHeight(Canvas: TCanvas; Text: string): integer;
+begin
+  Result := Canvas.TextHeight(Text);
+  if Result = 0 then
+    Result := Canvas.TextHeight('|');
+end;
+
+
+function GetMaxFontHeight(Canvas: TCanvas; Text: string; MaxWidth, MaxHeight: Integer): integer;
+var
+  Ext: TSize;
+begin
+  Result := 0;
+  if Text = '' then
+    Exit;
+
+  Canvas.Font.Height := -10;
+  repeat
+    Canvas.Font.Height := Canvas.Font.Height - 1;
+    Ext := Canvas.TextExtent(Text);
+  until ((Ext.cx >= MaxWidth) or (Ext.cy >= MaxHeight));
+  repeat
+    Canvas.Font.Height := Canvas.Font.Height + 1;
+    Ext := Canvas.TextExtent(Text);
+  until ((Ext.cx <= MaxWidth) and (Ext.cy <= MaxHeight)) or (Canvas.Font.Height = 1);
+
+  Result := Canvas.Font.Height;
+end;
 
 function CreatePreMultipliedRGBQuad(Color: TColor; Alpha: Byte = $FF): TRGBQuad;
 begin
@@ -641,6 +771,24 @@ begin
       // Copy Center Rext
       DestCanvas.CopyRect(TRect.Create(HD.Point1, HD.Point2),
                           FromCanvas, TRect.Create(HS.Point1, HS.Point2));
+end;
+
+procedure CopyRectWithOpacity(Dest: TCanvas; DestRect: TRect; Source: TCanvas; SourceRect: TRect; Opacity: Byte);
+var
+  BlendFunction: TBlendFunction;
+begin
+  // Set up the blending parameters
+  BlendFunction.BlendOp := AC_SRC_OVER;
+  BlendFunction.BlendFlags := 0;
+  BlendFunction.SourceConstantAlpha := Opacity;
+  BlendFunction.AlphaFormat := AC_SRC_OVER;
+
+  // Perform the alpha blending
+  AlphaBlend(
+    Dest.Handle, DestRect.Left, DestRect.Top, DestRect.Width, DestRect.Height,
+    Source.Handle, SourceRect.Left, SourceRect.Top, SourceRect.Width, SourceRect.Height,
+    BlendFunction
+  );
 end;
 
 procedure StretchInvertedMask(Source: TCanvas; Destination: TCanvas; DestRect: TRect);

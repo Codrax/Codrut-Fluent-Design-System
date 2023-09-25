@@ -84,9 +84,6 @@ type
       procedure PopupBeforePopup(Sender: TObject; var CanPopup: boolean; Point: TPoint);
       procedure PopupItemClick(Sender: TObject; Item: FXPopupComponent; Index: integer);
 
-      // Font
-      procedure FontUpdate(Sedner: TObject);
-
       // Text
       procedure ChangeText(AText: string);
       procedure DeleteChar(Index: integer);
@@ -131,6 +128,9 @@ type
 
       // State
       procedure InteractionStateChanged(AState: FXControlState); override;
+
+      // Font
+      procedure FontUpdate; override;
 
       // Key Presses
       procedure HandleKeyDown(var CanHandle: boolean; Key: integer; ShiftState: TShiftState); override;
@@ -184,6 +184,7 @@ type
       procedure ClearSelection;
       procedure DeleteSelection;
       procedure SelectAll;
+      procedure Clear;
 
       procedure Undo;
 
@@ -205,6 +206,7 @@ type
       // Inherited properties
       property Cursor default crIBeam;
       property Align;
+      property PaddingFill;
       property Constraints;
       property Anchors;
       property Hint;
@@ -283,7 +285,7 @@ procedure FXCustomEdit.KeyPress(var Key: Char);
 begin
   inherited;
   // Invalid
-  if CharInSet(Key, [#8, #13]) then
+  if CharInSet(Key, [#8, #13, #27]) then
     Exit;
 
   // Special keys
@@ -291,7 +293,7 @@ begin
     Exit;
 
   // Numbers Only
-  if NumbersOnly and not CharInSet(Key, ['0'..'0']) then
+  if NumbersOnly and not CharInSet(Key, ['0'..'9']) then
     Exit;
 
   // Override Selection
@@ -475,7 +477,7 @@ end;
 
 procedure FXCustomEdit.UpdateRects;
 begin
-  DrawRect := Rect(0, 0, Width, Height);
+  DrawRect := ClientRect;
 
   // Rects
   LineRect := DrawRect;
@@ -556,7 +558,6 @@ begin
 
   // Font
   Font.Height := ThemeManager.FormFontHeight;
-  Font.OnChange := FontUpdate;
 
   // Update
   UpdateRects;
@@ -687,7 +688,7 @@ begin
 
   // Search characters
   if GoesLeft then
-    while Result > 0 do
+    while Result >= 1 do
       begin
         Dec(Result);
 
@@ -708,9 +709,10 @@ begin
       end;
 end;
 
-procedure FXCustomEdit.FontUpdate(Sedner: TObject);
+procedure FXCustomEdit.FontUpdate;
 begin
   Invalidate;
+
   UpdateAutoSize;
 end;
 
@@ -912,6 +914,11 @@ begin
   // Update
   UpdateRects;
   PaintBuffer;
+end;
+
+procedure FXCustomEdit.Clear;
+begin
+  Text := '';
 end;
 
 procedure FXCustomEdit.ClearSelection;

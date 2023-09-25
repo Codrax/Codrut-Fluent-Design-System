@@ -101,6 +101,8 @@
         <DCCReference Include="Demo\CFXTest.pas">
             <Form>Form1</Form>
         </DCCReference>
+        <DCCReference Include="Source\CFX.ArrayHelpers.pas"/>
+        <DCCReference Include="Source\CFX.Template.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

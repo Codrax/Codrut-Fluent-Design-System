@@ -78,6 +78,7 @@ type
       procedure AnimateToFill;
 
       // Data
+      function GetSliderBegin: integer;
       function GetSliderSize: integer;
       procedure UpdateSliderPosition;
 
@@ -89,6 +90,9 @@ type
     protected
       procedure PaintBuffer; override;
       procedure WMSize(var Message: TWMSize); message WM_SIZE;
+
+      // Scale
+      procedure ScaleChanged(Scaler: single); override;
 
       // State
       procedure InteractionStateChanged(AState: FXControlState); override;
@@ -121,6 +125,7 @@ type
       property ParentColor;
 
       property Align;
+      property PaddingFill;
       property Constraints;
       property Anchors;
       property Hint;
@@ -158,7 +163,7 @@ begin
   inherited;
   UpdateRects;
   AnimateToFill;
-  PaintBuffer;
+  Invalidate;
 
   if AState <> FXControlState.Press then
     if FEnablePositionHint then
@@ -233,9 +238,9 @@ begin
       else
         begin
           if Orientation = FXOrientation.Horizontal then
-            NewPosition := round((X - FIconSize div 2) / (Width - FIconSize) * (FMax - FMin))
+            NewPosition := round((X-GetSliderBegin - FIconSize div 2) / (GetSliderSize - FIconSize) * (FMax - FMin))
           else
-            NewPosition := round((Y - FIconSize div 2) / (Height - FIconSize) * (FMax - FMin));
+            NewPosition := round((Y-GetSliderBegin - FIconSize div 2) / (GetSliderSize - FIconSize) * (FMax - FMin));
         end;
       ShowPositionHint;
 
@@ -245,9 +250,10 @@ begin
       else
         begin
           if Orientation = FXOrientation.Horizontal then
-            FPositionDraw := X - FIconSize div 2
+            FPositionDraw := X - FIconSize div 2 - DrawRect.Left
           else
-            FPositionDraw := Y - FIconSize div 2;
+            FPositionDraw := Y - FIconSize div 2- DrawRect.Top;
+
           if FPositionDraw < 0 then
             FPositionDraw := 0;
           if FPositionDraw > GetSliderSize-FIconSize then
@@ -259,7 +265,7 @@ begin
 
       // Update
       UpdateRects;
-      PaintBuffer;
+      Invalidate;
     end;
 end;
 
@@ -271,14 +277,14 @@ begin
   UpdateSliderPosition;
   UpdateRects;
   ShowPositionHint;
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXSlider.UpdateTheme(const UpdateChildren: Boolean);
 begin
   UpdateColors;
   UpdateRects;
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXSlider.UpdateColors;
@@ -329,11 +335,15 @@ procedure FXSlider.UpdateRects;
 var
   DisplayPosition: integer;
 begin
-  IconRect := Rect(0, 0, Height, Height);
+  // Rect
+  DrawRect := GetClientRect;
+
+  // Build rects
+  IconRect := DrawRect;
   IconRect.Height := FIconSize;
   IconRect.Width := FIconSize;
 
-  SliderRect := Rect(0, 0, Width, Height);
+  SliderRect := DrawRect;
   if FOrientation = FXOrientation.Horizontal then
     begin
       // Slider
@@ -342,20 +352,12 @@ begin
 
       // Icon
       DisplayPosition := FPositionDraw;
-      IconRect.Offset(DisplayPosition, (Height - FIconSize) div 2);
+      IconRect.Offset(DisplayPosition, (DrawRect.Height - FIconSize) div 2);
 
       // Split
       SliderFull := SliderRect;
 
-      SliderFull.Right := DisplayPosition + IconSize div 2;
-
-      // Draw Rect
-      DrawRect := SliderRect;
-      if FIconSize > FSliderHeight then
-        begin
-          DrawRect.Top := IconRect.Top;
-          DrawRect.Bottom := IconRect.Bottom;
-        end;
+      SliderFull.Width := DisplayPosition + IconSize div 2;
     end
   else
     begin
@@ -365,24 +367,13 @@ begin
 
       // Icon
       DisplayPosition := FPositionDraw;
-      IconRect.Offset((Width - FIconSize) div 2, DisplayPosition);
+      IconRect.Offset((DrawRect.Width - FIconSize) div 2, DisplayPosition);
 
       // Split
       SliderFull := SliderRect;
 
-      SliderFull.Bottom := DisplayPosition + IconSize div 2;
-
-      // Draw Rect
-      DrawRect := SliderRect;
-      if FIconSize > FSliderHeight then
-        begin
-          DrawRect.Left := IconRect.Left;
-          DrawRect.Right := IconRect.Right;
-        end;
+      SliderFull.Height := DisplayPosition + IconSize div 2;
     end;
-
-  // Rect
-  DrawRect.Inflate(2, 2);
 
   // Round
   FRoundness := FSliderHeight div 2;
@@ -390,7 +381,7 @@ end;
 
 procedure FXSlider.UpdateSliderPosition;
 begin
-  FPositionDraw := trunc( GetPercentage * (Self.GetSliderSize - FIconSize) );
+  FPositionDraw := trunc( GetPercentage * (GetSliderSize - FIconSize) );
 end;
 
 procedure FXSlider.CMHintShow(var Message: TCMHintShow);
@@ -466,7 +457,7 @@ begin
         else
           FFillTick.Enabled := false;
 
-  PaintBuffer;
+  Invalidate;
 end;
 
 function FXSlider.GetPercentage: real;
@@ -485,12 +476,20 @@ begin
     Result := Value1 / Value2;
 end;
 
+function FXSlider.GetSliderBegin: integer;
+begin
+  if Orientation = FXOrientation.Horizontal then
+    Result := DrawRect.Left
+  else
+    Result := DrawRect.Top;
+end;
+
 function FXSlider.GetSliderSize: integer;
 begin
   if Orientation = FXOrientation.Horizontal then
-    Result := Width
+    Result := DrawRect.Width
   else
-    Result := Height;
+    Result := DrawRect.Height;
 end;
 
 procedure FXSlider.HandleKeyDown(var CanHandle: boolean; Key: integer;ShiftState: TShiftState
@@ -568,11 +567,11 @@ begin
         Pen.Style := psClear;
         Brush.Style := bsSolid;
         Brush.Color := FDrawColors.BackGroundInterior;
-        TickMargin := IconRect.Width div 2;
+        TickMargin := IconRect.Width div 2 + GetSliderBegin; // Padding offset
 
         if Orientation = FXOrientation.Horizontal then
           begin
-            ValueSize := SliderRect.Left + SliderRect.Width - IconRect.Width;
+            ValueSize := SliderRect.Width - IconRect.Width;
             TickHeight := (IconRect.Height - SliderRect.Height) div 2 - SLIDER_TICK_SPACING;
 
             for I := 0 to FTotalTicks - 1 do
@@ -597,7 +596,7 @@ begin
           end
         else
           begin
-            ValueSize := SliderRect.Top + SliderRect.Height - IconRect.Height;
+            ValueSize := SliderRect.Height - IconRect.Height;
             TickHeight := (IconRect.Width - SliderRect.Width) div 2 - SLIDER_TICK_SPACING;
 
             for I := 0 to FTotalTicks - 1 do
@@ -640,6 +639,15 @@ begin
   inherited;
 end;
 
+procedure FXSlider.ScaleChanged(Scaler: single);
+begin
+  inherited;
+  FSliderHeight := round(FSliderHeight * Scaler);
+  FIconSize := round(FIconSize * Scaler);
+
+  UpdateRects;
+end;
+
 procedure FXSlider.SetIconSize(const Value: integer);
 begin
   if FIconSize <> Value then
@@ -647,7 +655,7 @@ begin
       FIconSize := Value;
 
       UpdateRects;
-      PaintBuffer;
+      Invalidate;
     end;
 end;
 
@@ -668,7 +676,7 @@ begin
 
       UpdateRects;
       UpdateSliderPosition;
-      PaintBuffer;
+      Invalidate;
     end;
 end;
 
@@ -689,7 +697,7 @@ begin
 
       UpdateRects;
       UpdateSliderPosition;
-      PaintBuffer;
+      Invalidate;
     end;
 end;
 
@@ -708,7 +716,7 @@ begin
           Height := AWidth;
 
           UpdateRects;
-          PaintBuffer;
+          Invalidate;
         end;
     end;
 end;
@@ -741,7 +749,7 @@ begin
           UpdateSliderPosition;
 
           UpdateRects;
-          PaintBuffer;
+          Invalidate;
         end;
     end;
 end;
@@ -753,7 +761,7 @@ begin
       FSliderHeight := Value;
 
       UpdateRects;
-      PaintBuffer;
+      Invalidate;
     end;
 end;
 
@@ -771,7 +779,7 @@ begin
       begin
         FTotalTicks := Value;
 
-        PaintBuffer;
+        Invalidate;
       end;
 end;
 

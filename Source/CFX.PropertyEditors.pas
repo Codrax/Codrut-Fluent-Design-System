@@ -7,6 +7,7 @@ uses
   Windows,
   Classes,
   Types,
+  Math,
   Vcl.Controls,
   Vcl.Graphics,
   Vcl.ExtCtrls,
@@ -92,6 +93,15 @@ uses
 
     public
       procedure Edit; override;
+      function GetAttributes: TPropertyAttributes; override;
+      function GetValue: string; override;
+      procedure SetValue(const Value: string); override;
+    end;
+
+    // Percent Property
+    TFXPercentProperty = class(TPropertyEditor)
+    private
+    public
       function GetAttributes: TPropertyAttributes; override;
       function GetValue: string; override;
       procedure SetValue(const Value: string); override;
@@ -328,33 +338,17 @@ begin
         with FXButtonDesign.Create(ListPanel) do
           begin
             Parent := ListPanel;
+            Left := 0;
 
-            Image.SelectSegoe := #$F714;
-            Text := 'Font Icon';
-            Tag := 5;
+            Image.SelectSegoe := #$E711;
+            Text := 'None';
+            Tag := 1;
           end;
 
         with FXButtonDesign.Create(ListPanel) do
           begin
             Parent := ListPanel;
-
-            Image.SelectSegoe := #$E8B9;
-            Text := 'Image List';
-            Tag := 4;
-          end;
-
-        with FXButtonDesign.Create(ListPanel) do
-          begin
-            Parent := ListPanel;
-
-            Image.SelectSegoe := #$E8BA;
-            Text := 'Bitmap';
-            Tag := 3;
-          end;
-
-        with FXButtonDesign.Create(ListPanel) do
-          begin
-            Parent := ListPanel;
+            Left := 0;
 
             Image.SelectSegoe := #$EB9F;
             Text := 'Picture';
@@ -364,10 +358,31 @@ begin
         with FXButtonDesign.Create(ListPanel) do
           begin
             Parent := ListPanel;
+            Left := 0;
 
-            Image.SelectSegoe := #$E711;
-            Text := 'None';
-            Tag := 1;
+            Image.SelectSegoe := #$E8BA;
+            Text := 'Bitmap';
+            Tag := 3;
+          end;
+
+        with FXButtonDesign.Create(ListPanel) do
+          begin
+            Parent := ListPanel;
+            Left := 0;
+
+            Image.SelectSegoe := #$E8B9;
+            Text := 'Image List';
+            Tag := 4;
+          end;
+
+        with FXButtonDesign.Create(ListPanel) do
+          begin
+            Parent := ListPanel;
+            Left := 0;
+
+            Image.SelectSegoe := #$F714;
+            Text := 'Font Icon';
+            Tag := 5;
           end;
 
           // Create Panels
@@ -1006,12 +1021,37 @@ begin
   inherited;
 end;
 
+{ TFXPercentProperty }
+
+function TFXPercentProperty.GetAttributes: TPropertyAttributes;
+begin
+  Result := inherited GetAttributes + [paValueEditable];
+end;
+
+function TFXPercentProperty.GetValue: string;
+begin
+  Result := GetOrdValue.ToString + '%';
+end;
+
+procedure TFXPercentProperty.SetValue(const Value: string);
+var
+  V: integer;
+begin
+  inherited;
+  V := Value.Replace('%', '').ToInteger;
+  V := EnsureRange(V, 0, 1000);
+
+  SetOrdValue(V);
+end;
+
 initialization
   { Initialize }
   RegisterPropertyEditor(TypeInfo(FXIconSelect), nil, '', TFXIconSelectProperty);
 
   RegisterPropertyEditor(TypeInfo(FXPopupItems), nil, '', TFXPopupItemsProperty);
   RegisterPropertyEditor(TypeInfo(FXPictureImages), nil, '', TFXPictureImagesProperty);
+
+  RegisterPropertyEditor(TypeInfo(FXPercent), nil, '', TFXPercentProperty);
   (*
   Parameter 1: Edited Class for Property Edit
   Parameter 2: Compoent to work with. Enter nil for it to work with all

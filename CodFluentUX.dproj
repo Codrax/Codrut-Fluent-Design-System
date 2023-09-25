@@ -153,7 +153,7 @@
         <DCCReference Include="Source\CFX.Test.pas"/>
         <DCCReference Include="Source\CFX.TypeInfo.pas"/>
         <DCCReference Include="Source\CFX.Linker.pas"/>
-        <DCCReference Include="Source\CFX.Labels.pas"/>
+        <DCCReference Include="Source\CFX.TextBox.pas"/>
         <DCCReference Include="Source\CFX.StringUtils.pas"/>
         <DCCReference Include="Source\CFX.RadioButton.pas"/>
         <DCCReference Include="Source\CFX.ScrollBox.pas"/>
@@ -163,6 +163,12 @@
         <DCCReference Include="Source\CFX.PopupConnector.pas"/>
         <DCCReference Include="Source\CFX.Button.pas"/>
         <DCCReference Include="Source\CFX.IconView.pas"/>
+        <DCCReference Include="Source\CFX.ScrollText.pas"/>
+        <DCCReference Include="Source\CFX.ArrayHelpers.pas"/>
+        <DCCReference Include="Source\CFX.FormClasses.pas"/>
+        <DCCReference Include="Source\CFX.Imported.pas"/>
+        <DCCReference Include="Source\CFX.Progress.pas"/>
+        <DCCReference Include="Source\CFX.Threading.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

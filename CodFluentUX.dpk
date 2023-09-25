@@ -83,7 +83,7 @@ contains
   CFX.Test in 'Source\CFX.Test.pas',
   CFX.TypeInfo in 'Source\CFX.TypeInfo.pas',
   CFX.Linker in 'Source\CFX.Linker.pas',
-  CFX.Labels in 'Source\CFX.Labels.pas',
+  CFX.TextBox in 'Source\CFX.TextBox.pas',
   CFX.StringUtils in 'Source\CFX.StringUtils.pas',
   CFX.RadioButton in 'Source\CFX.RadioButton.pas',
   CFX.ScrollBox in 'Source\CFX.ScrollBox.pas',
@@ -92,9 +92,16 @@ contains
   CFX.Edit in 'Source\CFX.Edit.pas',
   CFX.PopupConnector in 'Source\CFX.PopupConnector.pas',
   CFX.Button in 'Source\CFX.Button.pas',
-  CFX.IconView in 'Source\CFX.IconView.pas';
+  CFX.IconView in 'Source\CFX.IconView.pas',
+  CFX.ScrollText in 'Source\CFX.ScrollText.pas',
+  CFX.ArrayHelpers in 'Source\CFX.ArrayHelpers.pas',
+  CFX.FormClasses in 'Source\CFX.FormClasses.pas',
+  CFX.Imported in 'Source\CFX.Imported.pas',
+  CFX.Progress in 'Source\CFX.Progress.pas',
+  CFX.Threading in 'Source\CFX.Threading.pas';
 
 end.
+
 
 
 

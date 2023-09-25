@@ -29,7 +29,6 @@ type
       FOnSelect: TNotifyEvent;
       FCustomColors: FXCompleteColorSets;
       FItemAccentColors: FXSingleColorStateSet;
-      FTextFont: TFont;
       FDrawColors: FXCompleteColorSet;
       FItems: TStringList;
       FHoverOver, FSelectedItem: integer;
@@ -63,6 +62,9 @@ type
       procedure Resize; override;
       procedure ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF}); override;
 
+      // Scale
+      procedure ScaleChanged(Scaler: single); override;
+
       // State
       procedure InteractionStateChanged(AState: FXControlState); override;
 
@@ -85,9 +87,10 @@ type
 
       property Animation: boolean read FAnimation write FAnimation default true;
 
-      property Font: TFont read FTextFont write FTextFont;
+      property Font;
 
       property Align;
+      property PaddingFill;
       property Constraints;
       property Anchors;
       property Hint;
@@ -124,7 +127,7 @@ begin
   case AState of
     FXControlState.None: FHoverOver := -1;
   end;
-  PaintBuffer;
+  Invalidate;
 end;
 
 function FXSelector.IsContainer: Boolean;
@@ -165,9 +168,8 @@ begin
 
   // Changed
   if AItem <> FHoverOver then
-    begin
-      PaintBuffer;
-    end;
+    Invalidate;
+
 end;
 
 procedure FXSelector.UpdateTheme(const UpdateChildren: Boolean);
@@ -229,7 +231,8 @@ procedure FXSelector.UpdateRects;
 var
   I: Integer;
 begin
-  DrawRect := Rect(0, 0, Width, Height);
+  // Rect
+  DrawRect := GetClientRect;
 
   // Width
   ItemWidth := trunc(DrawRect.Width / FItems.Count);
@@ -240,8 +243,8 @@ begin
     begin
       with ItemRects[I] do
         begin
-          Left := ItemWidth * I;
-          Right := ItemWidth * (I+1);
+          Left := DrawRect.Left + ItemWidth * I;
+          Right := DrawRect.Left + ItemWidth * (I+1);
 
           Top := DrawRect.Top;
           Bottom := DrawRect.Bottom;
@@ -255,10 +258,6 @@ end;
 constructor FXSelector.Create(aOwner: TComponent);
 begin
   inherited;
-  FTextFont := TFont.Create;
-  FTextFont.Name := FORM_FONT_NAME;
-  FTextFont.Size := 12;
-
   AutoFocusLine := true;
   BufferedComponent := true;
   FAnimation := true;
@@ -292,7 +291,6 @@ end;
 
 destructor FXSelector.Destroy;
 begin
-  FTextFont.Free;
   FreeAndNil( FCustomColors );
   FreeAndNil( FDrawColors );
   FreeAndNil( FItemAccentColors );
@@ -343,7 +341,7 @@ begin
   FAnim.OnSync := procedure(Value: integer)
   begin
     FDrawPosition := Value;
-    PaintBuffer;
+    Invalidate;
   end;
 
   FAnim.Start;
@@ -408,7 +406,7 @@ begin
         begin
           // Text
           Brush.Style := bsClear;
-          Font.Assign(Self.FTextFont);
+          Font.Assign(Self.Font);
           Font.Color := FDrawColors.ForeGround;
 
           DrawTextRect(Buffer, ItemRects[I], FItems[I], [FXTextFlag.Center, FXTextFlag.VerticalCenter]);
@@ -423,6 +421,12 @@ procedure FXSelector.Resize;
 begin
   inherited;
   UpdateRects;
+end;
+
+procedure FXSelector.ScaleChanged(Scaler: single);
+begin
+  inherited;
+  ItemWidth := round(ItemWidth * Scaler);
 end;
 
 procedure FXSelector.SelectLast;
@@ -442,7 +446,7 @@ begin
   FItems.Assign(Value);
 
   UpdateRects;
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXSelector.SetSelectedItem(const Value: integer);
@@ -462,7 +466,7 @@ begin
           FOnSelect(Self);
 
       // Draw
-      PaintBuffer;
+      Invalidate;
     end;
 end;
 
@@ -478,7 +482,7 @@ begin
     begin
       SelectedItem := FHoverOver;
 
-      PaintBuffer;
+      Invalidate;
     end;
   inherited;
 end;

@@ -290,6 +290,24 @@ uses
 
     GRAYSCALE_DIV_CONST = 3;
 
+  type
+    ColorRepository = record
+      const
+      AccentDefault = DEFAULT_ACCENT_COLOR;
+
+      DarkBackground = DEFAULT_DARK_BACKGROUND_COLOR;
+      DarkBackgroundControl = DEFAULT_DARK_BACKGROUNDCONTROL_COLOR;
+      DarkFontColor = GENERIC_DARK_FONT_COLOR;
+      DarkPausedColor = $0000E1FC;
+      DarkErrorColor = $00A499FF;
+
+      LightBackground = DEFAULT_LIGHT_BACKGROUND_COLOR;
+      LightBackgroundControl = DEFAULT_LIGHT_BACKGROUNDCONTROL_COLOR;
+      LightFontColor = GENERIC_LIGHT_FONT_COLOR;
+      LightPausedColor = $00005D9D;
+      LightErrorColor = $001C2BC4;
+    end;
+
 implementation
 
 

@@ -4,20 +4,21 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Forms, Threading, Types,
+  Vcl.Forms, Threading, Types, Math,
 
   // CFX LIBRARY
   CFX.Forms, CFX.Colors, CFX.ThemeManager, Vcl.StdCtrls, Vcl.TitleBarCtrls,
   Vcl.ExtCtrls, Vcl.Imaging.jpeg, CFX.ButtonDesign, CFX.Checkbox, CFX.Panels,
   CFX.StandardIcons, CFX.Dialogs, CFX.BlurMaterial, CFX.Selector,
   CFX.Classes, CFX.PopupMenu, CFX.UIConsts, CFX.Types, CFX.ToolTip, CFX.Hint,
-  CFX.Slider, CFX.ImageList, CFX.Controls, CFX.Test, CFX.Labels, CFX.RadioButton,
+  CFX.Slider, CFX.ImageList, CFX.Controls, CFX.Test, CFX.TextBox, CFX.RadioButton,
   CFX.Scrollbar, CFX.ScrollBox, CFX.Edit, Cod.Graphics, CFX.Button,
+  CFX.PopupConnector, Vcl.Buttons, CFX.IconView, CFX.ScrollText, CFX.FormClasses,
 
   // VCL COMPONENTS
   Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage,
   Vcl.ExtDlgs, System.ImageList, UITypes,
-  Vcl.ComCtrls, Vcl.Mask, CFX.PopupConnector, Vcl.Buttons, CFX.IconView;
+  Vcl.ComCtrls, Vcl.Mask, Cod.Visual.ColorBox, CFX.Progress;
 
 type
   TForm1 = class(FXForm)
@@ -27,23 +28,14 @@ type
     FXStandardIcon4: FXStandardIcon;
     FXStandardIcon5: FXStandardIcon;
     FXStandardIcon6: FXStandardIcon;
-    FXLabel2: FXLabel;
-    FXLabel3: FXLabel;
+    FXIconView1: FXIconView;
+    FXIconView2: FXIconView;
     TitleBarPanel1: TTitleBarPanel;
-    FXSlider1: FXSlider;
-    FXCheckBox1: FXCheckBox;
-    FXScrollbar1: FXScrollbar;
-    FXSelector1: FXSelector;
-    FXRadioButton1: FXRadioButton;
-    FXRadioButton2: FXRadioButton;
+    FXBlurMaterial2: FXBlurMaterial;
     FXEdit1: FXEdit;
     FXEdit2: FXEdit;
     FXButton1: FXButton;
-    FXButton4: FXButton;
-    FXButton5: FXButton;
     FXMinimisePanel1: FXMinimisePanel;
-    FXLabel1: FXLabel;
-    FXLabel4: FXLabel;
     FXButton2: FXButton;
     FXButton6: FXButton;
     FXButtonDesign3: FXButtonDesign;
@@ -56,23 +48,46 @@ type
     FXButtonDesign4: FXButtonDesign;
     FXButton11: FXButton;
     FXButton12: FXButton;
-    FXPopupMenu1: FXPopupMenu;
+    FXScrollText1: FXScrollText;
+    FXScrollText2: FXScrollText;
+    FXSlider1: FXSlider;
+    FXCheckBox1: FXCheckBox;
+    FXScrollbar1: FXScrollbar;
+    FXSelector1: FXSelector;
+    FXRadioButton1: FXRadioButton;
+    FXRadioButton2: FXRadioButton;
+    FXButton4: FXButton;
+    FXButton5: FXButton;
     FXEdit3: FXEdit;
     FXButton10: FXButton;
+    FXButton13: FXButton;
+    FXTextBox1: FXTextBox;
+    FXTextBox2: FXTextBox;
+    FXTextBox3: FXTextBox;
+    FXTextBox4: FXTextBox;
+    FXTextBox5: FXTextBox;
+    FXTextBox7: FXTextBox;
+    FXPopupMenu1: FXPopupMenu;
     FXBlurMaterial1: FXBlurMaterial;
-    FXLabel5: FXLabel;
-    FXBlurMaterial2: FXBlurMaterial;
-    FXIconView1: FXIconView;
-    FXIconView2: FXIconView;
+    FXButton14: FXButton;
+    FXTextBox6: FXTextBox;
+    FXProgress1: FXProgress;
+    FXButton15: FXButton;
+    FXAnimatedTextBox1: FXAnimatedTextBox;
+    FXButton16: FXButton;
     procedure FXButton4Click(Sender: TObject);
     procedure FXButtonDesign3Click(Sender: TObject);
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
-    procedure FXButton10Click(Sender: TObject);
-    procedure FXButton13Click(Sender: TObject);
     procedure FormResize(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
     procedure FormOnMove(Sender: TObject);
+    procedure FXButton13Click(Sender: TObject);
+    procedure FXButton11Click(Sender: TObject);
+    procedure FXButtonDesign4Click(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FXButton14Click(Sender: TObject);
+    procedure FXButton15Click(Sender: TObject);
+    procedure FXButton16Click(Sender: TObject);
   private
     { Private declarations }
     procedure UpdateBlurs;
@@ -104,9 +119,9 @@ begin
   UpdateBlurs;
 end;
 
-procedure TForm1.FXButton10Click(Sender: TObject);
+procedure TForm1.FXButton11Click(Sender: TObject);
 begin
-  FXBUtton10.UpdateTheme(false);
+  FullScreen := not FullScreen;
 end;
 
 procedure TForm1.FXButton12Click(Sender: TObject);
@@ -116,8 +131,68 @@ begin
 end;
 
 procedure TForm1.FXButton13Click(Sender: TObject);
+var
+  A: FXDialog;
 begin
-  FXButton(Sender).UpdateTheme(false)
+  A := FXDialog.Create;
+
+  with A do
+    try
+      Title := 'Hello World!';
+      Text := 'This is a fluent dialog box! Here you can press any of the buttons below!';
+
+      Kind := FXMessageType.Warning;
+      Buttons := [mbOk, mbCancel];
+      ParentForm := Self;
+
+      Execute;
+    finally
+      Free;
+    end;
+end;
+
+procedure TForm1.FXButton14Click(Sender: TObject);
+var
+  A: FXFormUpdateTemplate;
+begin
+  A := FXFormUpdateTemplate.CreateNew(Self);
+  with A do
+    try
+      FillMode := FXFormFill.TitleBar;
+      FXBlurMaterial2.Hide;
+      Self.Width := Self.Width - 1;
+
+      AppName := 'Cool Cats corp';
+
+      Show;
+    finally
+      //Free;
+    end;
+end;
+
+procedure TForm1.FXButton15Click(Sender: TObject);
+begin
+  FXProgress1.Value := RandomRange(0, 100);
+end;
+
+procedure TForm1.FXButton16Click(Sender: TObject);
+var
+  A: FXFormMessageTemplate;
+begin
+  A := FXFormMessageTemplate.CreateNew(Self);
+  with A do
+    try
+      FillMode := FXFormFill.TitleBar;
+      FXBlurMaterial2.Hide;
+      Self.Width := Self.Width - 1;
+
+      Title := 'Hello world!';
+      Text := 'This is a text message. Read It carefully as It may aid you in the future.';
+
+      Show;
+    finally
+      //Free;
+    end;
 end;
 
 procedure TForm1.FXButton4Click(Sender: TObject);
@@ -126,15 +201,18 @@ var
 begin
   A := FXDialog.Create;
 
-  A.Title := 'Hello World!';
-  A.Text := 'This is a fluent dialog box! Here you can press any of the buttons below!';
+  with A do
+    try
+      Title := 'Hello World!';
+      Text := 'This is a fluent dialog box! Here you can press any of the buttons below!';
 
-  A.Kind := FXMessageType.Warning;
-  A.Buttons := [mbOk, mbCancel];
+      Kind := FXMessageType.Warning;
+      Buttons := [mbOk, mbCancel];
 
-  A.Execute;
-
-  A.Free;
+      Execute;
+    finally
+      Free;
+    end;
 end;
 
 procedure TForm1.FXButton5Click(Sender: TObject);
@@ -381,6 +459,41 @@ begin
   end;
 
   P.PopupAtCursor;
+end;
+
+procedure TForm1.FXButtonDesign4Click(Sender: TObject);
+var
+  A: FXInputBox;
+  D: FXDialog;
+  S: string;
+begin
+  A := FXInputBox.Create;
+
+  with A do
+    try
+      Title := 'Search';
+      Text := 'Enter the search query to begin searching';
+
+      ParentForm := Self;
+      Value := 'Text text';
+
+      S := Execute;
+
+      D := FXDialog.Create;
+      with D do
+        try
+          Title := 'Search Query';
+          Text := Format('Your search for "%S" returned no results.', [S]);
+
+          ParentForm := Self;
+
+          Execute;
+        finally
+          Free;
+        end;
+    finally
+      Free;
+    end;
 end;
 
 procedure TForm1.UpdateBlurs;

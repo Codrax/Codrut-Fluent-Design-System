@@ -22,7 +22,6 @@ uses
   IOUtils,
   CFX.Utilities,
   CFX.ThemeManager,
-  CFX.BlurMaterial,
   CFX.Classes,
   CFX.UIConsts,
   CFX.Colors,
@@ -36,6 +35,7 @@ uses
     // Class
     FXPopupComponent = class;
     FXPopupItem = class;
+    FXPopupMenu = class;
 
     // Types
     TOnItemClick = procedure(Sender: TObject; Item: FXPopupComponent; Index: integer) of object;
@@ -62,6 +62,7 @@ uses
       // Items
       property Item[AIndex: Integer]: FXPopupItem read GetItem; default;
 
+      // Data
       function Count: integer;
       function IndexOf(AText: string): integer;
       procedure Add(AItem: FXPopupItem);
@@ -73,9 +74,11 @@ uses
     // Popup Container
     FXPopupContainer = class({TPopupMenu}FXComponent)
     private
+      // Properties
       FText: string;
       FHint: string;
 
+      FAutoCheck: Boolean;
       FChecked: Boolean;
       FEnabled: Boolean;
       FDefault: Boolean;
@@ -87,12 +90,12 @@ uses
 
       FShortCut: string;
 
+      // Notify Events
       FOnClick: TNotifyEvent;
       FOnHover: TNotifyEvent;
       FOnCheck: TNotifyEvent;
 
-      FAutoCheck: Boolean;
-
+      // Internal for Drawing
       FBounds: TRect;
 
       function HasSubItems: boolean;
@@ -153,35 +156,49 @@ uses
       FAnim: TIntAni;
       FAnimType: FXAnimateSelection;
 
+      // Parent
+      FParentPopup: FXPopupComponent;
+      FParentMenu: FXPopupMenu;
+
       // Size and Position
       NormalHeight,
       NormalWidth: integer;
 
       FDropPoint: TPoint;
 
-      // Form
+      // Form & Controls
       FForm: TForm;
+      FGlassBlur: TGraphicControl;
 
-      FGlassBlur: FXBlurMaterial;
-
+      // Colors
       FCustomColors: FXColorSets;
       FDrawColors: FXColorSet;
 
-      // Settings
-      FItemPressed: boolean;
+      // Drawing internal
       FHoverOver: integer;
 
+      // Settings
+      FItemPressed: boolean;
       FFlatMenu: boolean;
       FEnableRadius: boolean;
       FEnableBorder: boolean;
 
+      // Animate
       procedure Animation;
 
+      // Items
       procedure SetHover(Index: integer);
+      function IndexIsValid(Index: integer): boolean;
 
+      procedure OpenItem(MenuIndex: integer);
+      procedure ExecuteItem(AMenuIndex: integer);
+      function GetOpenChildIndex: integer;
+      function HasChildOpen: boolean;
+
+      // Menu
       function IsOpen: boolean;
-      function GetParentPopupMenu: FXPopupComponent;
 
+      // Glass interaction
       procedure GlassUp(Sender: TObject; Button: TMouseButton;
                         Shift: TShiftState; X, Y: Integer);
       procedure GlassDown(Sender: TObject; Button: TMouseButton;
@@ -189,22 +206,21 @@ uses
       procedure GlassEnter(Sender: TObject);
       procedure GlassMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 
+      // FXPopupMenu Only
+      procedure CheckFocusLoss;
+
+      // Form
       procedure FormPosition;
 
-      procedure OpenItem(MenuIndex: integer);
-      procedure ExecuteItem(AMenuIndex: integer);
-      function GetOpenChildIndex: integer;
-      function HasChildOpen: boolean;
-      procedure CloseChildWindow;
-
-      function IndexIsValid(Index: integer): boolean;
-
       procedure FormLoseFocus(Sender: TObject);
+      procedure FormGainFocus(Sender: TObject);
       procedure FormKeyPress(ender: TObject; var Key: Word; Shift: TShiftState);
-
       procedure FormOnShow(Sender: TObject);
+
+      // Paint Glass
       procedure OnPaintControl(Sender: TObject);
 
+      // Popup Internal
       procedure PopupAtPointS(Point: TPoint);
 
     protected
@@ -222,7 +238,8 @@ uses
 
       // Close
       procedure CloseMenu(FreeMem: boolean = false);
-      procedure CloseAllWindows;
+      procedure CloseWindowsBackwards;
+      procedure CloseWindowsForward(CloseSelf: boolean = false);
 
       // Interface
       function IsContainer: Boolean;
@@ -303,6 +320,9 @@ uses
     end;
 
 implementation
+
+uses
+  CFX.Controls, CFX.BlurMaterial;
 
 { FXPopupContainer }
 
@@ -441,13 +461,15 @@ begin
   CloseOnExecute := true;
   CloseOnNoExecuteClick := true;
 
+  // Is Root Menu
+  FParentMenu := Self;
+
   // Update Children (children not required)
   UpdateTheme(false);
 end;
 
 destructor FXPopupMenu.Destroy;
 begin
-
   inherited;
 end;
 
@@ -571,34 +593,61 @@ begin
   Result := FDrawColors.Background;
 end;
 
-procedure FXPopupComponent.CloseAllWindows;
+procedure FXPopupComponent.CheckFocusLoss;
+var
+  Focused: boolean;
+  Item: FXPopupComponent;
 begin
-  CloseMenu(true);
+  // Focus
+  Item := Self;
+  Focused := FForm.Focused;
 
-  if Owner is FXPopupComponent then
-    FXPopupComponent(Owner).CloseAllWindows;
+  while Item.HasChildOpen do
+    begin
+      Item := Item.Items[Item.GetOpenChildIndex];
+
+      if Item.FForm.Focused then
+        begin
+          Focused := true;
+          Break;
+        end;
+    end;
+
+  if not Focused then
+    Item.CloseWindowsBackwards;
 end;
 
-procedure FXPopupComponent.CloseChildWindow;
-var
-  Index: integer;
+procedure FXPopupComponent.CloseWindowsBackwards;
 begin
-  Index := GetOpenChildIndex;
+  CloseMenu(false);
 
-  if Index <> -1 then
-    FXPopupComponent(MenuItems[Index]).CloseMenu;
+  if FParentPopup is FXPopupComponent then
+    FParentPopup.CloseWindowsBackwards;
+end;
+
+procedure FXPopupComponent.CloseWindowsForward(CloseSelf: boolean);
+begin
+  // Close
+  if CloseSelf then
+    CloseMenu(false);
+
+  // Parent
+  if HasChildOpen then
+    Items[GetOpenChildIndex].CloseWindowsForward(true);
 end;
 
 procedure FXPopupComponent.CloseMenu(FreeMem: boolean);
 begin
-  if IsOpen then
-    FForm.Close;
-
+  // Child
   if FreeMem and (FForm <> nil) then
     begin
       FForm.Free;
       FForm := nil;
     end;
+
+  // Close
+  if IsOpen then
+    FForm.Close;
 end;
 
 constructor FXPopupComponent.Create(AOwner: TComponent);
@@ -626,10 +675,8 @@ end;
 procedure FXPopupComponent.ExecuteItem(AMenuIndex: integer);
 var
   Item: FXPopupItem;
-  AMenu: FXPopupMenu;
 begin
   Item := FXPopupItem(MenuItems[AMenuIndex]);
-  AMenu := FXPopupMenu(GetParentPopupMenu);
 
   // Execute
   if (not Item.HasSubItems) then
@@ -648,27 +695,33 @@ begin
       // Close Menu
       if Assigned( Item.OnClick ) then
         begin
-          if (AMenu.CloseOnExecute) then
-            CloseAllWindows;
+          if (FParentMenu.CloseOnExecute) then
+            CloseWindowsBackwards;
         end
       else
         if Item.AutoCheck then
           begin
-            if AMenu.CloseOnCheck then
-              CloseAllWindows;
+            if FParentMenu.CloseOnCheck then
+              CloseWindowsBackwards;
           end
         else
-          if (AMenu.CloseOnNoExecuteClick) then
-            CloseAllWindows;
+          if (FParentMenu.CloseOnNoExecuteClick) then
+            CloseWindowsBackwards;
 
       // Select Item
-      if Assigned(AMenu.OnItemClick) then
-        AMenu.OnItemClick(AMenu, Item, AMenuIndex);
+      if Assigned(FParentMenu.OnItemClick) then
+        FParentMenu.OnItemClick(FParentMenu, Item, AMenuIndex);
 
       // Execute
       if Assigned( Item.OnClick ) then
         Item.OnClick(Item);
     end;
+end;
+
+procedure FXPopupComponent.FormGainFocus(Sender: TObject);
+begin
+  if HasChildOpen then
+    CloseWindowsForward(false);
 end;
 
 procedure FXPopupComponent.FormKeyPress(ender: TObject; var Key: Word;
@@ -715,18 +768,7 @@ end;
 procedure FXPopupComponent.FormLoseFocus(Sender: TObject);
 begin
   if not HasChildOpen then
-    if Self is FXPopupMenu then
-      CloseAllWindows
-    else
-      begin
-        // Moved back in the menu
-        CloseMenu;
-
-        // Entire Menu Lost Focus
-        if Self.Owner is FXPopupComponent then
-          if FXPopupComponent(Self.Owner).IsOpen then
-            FXPopupComponent(Self.Owner).FForm.SetFocus;
-      end;
+    FParentMenu.CheckFocusLoss;
 end;
 
 procedure FXPopupComponent.FormOnShow(Sender: TObject);
@@ -782,21 +824,6 @@ begin
       Exit(I);
 end;
 
-function FXPopupComponent.GetParentPopupMenu: FXPopupComponent;
-begin
-  Result := Self;
-
-  while not (Result is FXPopupMenu) do
-    begin
-      Result := FXPopupComponent(Result.Owner);
-    end;
-
-  if not (Result is FXPopupMenu) then
-    Result := nil
-  else
-    Result := FXPopupMenu(Result);
-end;
-
 procedure FXPopupComponent.GlassDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
@@ -842,10 +869,15 @@ begin
   // Notify
   if (FHoverOver <> -1) and (FHoverOver <> FHoverPrevious) then
     begin
+      // Focus
+      FForm.SetFocus;
+
+      // Get Item
       Item := FXPopupMenu(MenuItems[FHoverOver]);
 
       // Close windows if exists
-      CloseChildWindow;;
+      if HasChildOpen then
+        Items[GetOpenChildIndex].CloseMenu;
 
       // Hover
       if Assigned( Item.OnHover ) then
@@ -917,7 +949,7 @@ var
   AnyHasIcon,
   AnyCanBeChecked: boolean;
 begin
-  with FGlassBlur.GetCanvas do
+  with FXBlurMaterial(FGlassBlur).Buffer do
     begin
       FForm.Font.Color := FDrawColors.ForeGround;
 
@@ -1013,7 +1045,7 @@ begin
                       if not MenuItems[I].Enabled then
                         Font.Color := POPUP_TEXT_DISABLED;
 
-                      Font.Height :=  GetMaxFontHeight(FGlassBlur.GetCanvas, Text, R.Width, R.Height);
+                      Font.Height :=  GetMaxFontHeight(FXBlurMaterial(FGlassBlur).Buffer, Text, R.Width, R.Height);
 
                       TextRect(R, Text, TextDrawFlags);
                     end;
@@ -1032,7 +1064,7 @@ begin
                       Font.Color := POPUP_TEXT_DISABLED;
 
                     R := Rect( X, Y, X + POPUP_ITEM_SPACINT, Y + POPUP_ITEM_HEIGHT );
-                    DrawIcon(FGlassBlur.GetCanvas, R);
+                    DrawIcon(FXBlurMaterial(FGlassBlur).Buffer, R);
                   end;
 
               if MenuItems[I].Image.Enabled or (AnyHasIcon and not AnyCanBeChecked) then
@@ -1182,6 +1214,10 @@ begin
   // Update Theme
   Item.UpdateTheme(false);
 
+  // Parent
+  Item.FParentPopup := Self;
+  Item.FParentMenu := FParentMenu;
+
   // Open
   Item.PopupAtPointS(Point(FForm.Left + FForm.Width - POPUP_ITEMS_OVERLAY_DISTANCE,
     FGlassBlur.ClientToScreen(Point(0, Item.FBounds.Top)).Y ));
@@ -1198,18 +1234,12 @@ begin
 
       with FForm do
         begin
-          // Parent
-          {if Self is FXPopupMenu then
-            Parent := TControl(Self).Parent
-          else
-            Parent := TControl(FXPopupComponent(Self).GetParentPopupMenu).Parent; }
-
           // Prepare Form
           Position := poDesigned;
           AlphaBlend := true;
           Caption := POPUP_CAPTION_DEFAULT;
 
-          DoubleBuffered := true;
+          DoubleBuffered := false;
 
           BorderStyle := bsNone;
 
@@ -1223,6 +1253,7 @@ begin
 
           OnShow := FormOnShow;
           OnDeactivate := FormLoseFocus;
+          OnActivate := FormGainFocus;
           OnKeyDown := FormKeyPress;
 
           // Math
@@ -1233,25 +1264,25 @@ begin
 
           // Create Blur
           FGlassBlur := FXBlurMaterial.Create( FForm );
-          with FGlassBlur do
+          with FXBlurMaterial(FGlassBlur) do
             begin
               Parent := FForm;
               Align := alClient;
 
-              FGlassBlur.Version := FXBlurVersion.Screenshot;
-              if GetParentPopupMenu.FFlatMenu then
-                FGlassBlur.Version := FXBlurVersion.None;
+              Version := FXBlurVersion.Screenshot;
+              if FParentMenu.FFlatMenu then
+                Version := FXBlurVersion.None;
 
-              FGlassBlur.CustomColors.Assign( GetParentPopupMenu.CustomColors );
-              FGlassBlur.UpdateTheme(false);
+              CustomColors.Assign( FParentMenu.CustomColors );
+              UpdateTheme(false);
 
               RefreshMode := FXGlassRefreshMode.Manual;
             end;
 
           // Form-Create
-          with FGlassBlur do
+          with FXBlurMaterial(FGlassBlur) do
             begin
-              OnPaint := OnPaintControl;
+              OnPaintBuffer := OnPaintControl;
 
               OnMouseUp := GlassUp;
               OnMouseDown := GlassDown;
@@ -1259,7 +1290,7 @@ begin
               OnMouseEnter := GlassEnter;
 
               SyncroniseImage;
-              OnPaint(FGlassBlur);
+              OnPaintBuffer(FGlassBlur);
             end;
         end;
     end;
@@ -1272,7 +1303,7 @@ procedure FXPopupComponent.SetHover(Index: integer);
 begin
   FHoverOver := Index;
 
-  FGlassBlur.ReDraw;
+  FXBlurMaterial(FGlassBlur).Invalidate;
 end;
 
 procedure FXPopupComponent.UpdateTheme(const UpdateChildren: Boolean);
@@ -1293,7 +1324,7 @@ begin
 
             // Update Glass Blur
             if FGlassBlur <> nil then
-              FGlassBlur.CustomColors.Assign( CustomColors );
+              FXBlurMaterial(FGlassBlur).CustomColors.Assign( CustomColors );
           end
         else
           begin

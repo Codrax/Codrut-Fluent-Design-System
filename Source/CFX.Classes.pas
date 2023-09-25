@@ -4,7 +4,7 @@ interface
   uses
     Vcl.Graphics, Classes, Types, CFX.Types, CFX.UIConsts, SysUtils,
     CFX.Graphics, CFX.VarHelpers, CFX.ThemeManager, Vcl.Controls,
-    TypInfo;
+    TypInfo, CFX.Linker;
 
   type
     // Base Clases
@@ -23,6 +23,42 @@ interface
       procedure Assign(Source: TPersistent); override;
     end;
 
+    // Padding
+    FXPadding = class(TAssignPersistent)
+    private
+      FLeft,
+      FTop,
+      FRight,
+      FBottom: integer;
+
+      FOnChange: TNotifyEvent;
+
+      procedure UpdateOwner;
+
+      procedure SetLeft(const Value: integer);
+      procedure SetBottom(const Value: integer);
+      procedure SetRight(const Value: integer);
+      procedure SetTop(const Value: integer);
+
+    published
+      property Left: integer read FLeft write SetLeft default 0;
+      property Top: integer read FTop write SetTop default 0;
+      property Right: integer read FRight write SetRight default 0;
+      property Bottom: integer read FBottom write SetBottom default 0;
+
+      property OnChange: TNotifyEvent read FOnChange write FOnChange;
+
+      function PadWidth: integer;
+      function PadHeight: integer;
+
+      procedure ScaleChanged(Scaling: single);
+
+    public
+      constructor Create(AOwner : TPersistent); override;
+
+      function ApplyTo(ARect: TRect): TRect;
+    end;
+
     // Icon
     FXIconSelect = class(TMPersistent)
     private
@@ -34,8 +70,14 @@ interface
       FSegoeText: string;
       FImageIndex: integer;
 
+      // Settters
       procedure SetBitMap(const Value: TBitMap);
       procedure SetPicture(const Value: TPicture);
+      procedure SetImageIndex(const Value: integer);
+      procedure SetSegoe(const Value: string);
+
+      // Update
+      procedure UpdateParent;
 
     published
       property Enabled: boolean read FEnabled write FEnabled default False;
@@ -43,8 +85,8 @@ interface
 
       property SelectPicture: TPicture read FPicture write SetPicture;
       property SelectBitmap: TBitMap read FBitMap write SetBitMap;
-      property SelectSegoe: string read FSegoeText write FSegoeText;
-      property SelectImageIndex: integer read FImageIndex write FImageIndex default -1;
+      property SelectSegoe: string read FSegoeText write SetSegoe;
+      property SelectImageIndex: integer read FImageIndex write SetImageIndex default -1;
 
     public
       constructor Create(AOwner : TPersistent); override;
@@ -143,6 +185,19 @@ begin
     FBitmap := TBitMap.Create;
 
   FBitmap.Assign(value);
+
+  // Update
+  if IconType = FXIconType.BitMap then
+    UpdateParent;
+end;
+
+procedure FXIconSelect.SetImageIndex(const Value: integer);
+begin
+  FImageIndex := Value;
+
+  // Update
+  if IconType = FXIconType.ImageList then
+    UpdateParent;
 end;
 
 procedure FXIconSelect.SetPicture(const Value: TPicture);
@@ -151,6 +206,25 @@ begin
     FPicture := TPicture.Create;
 
   FPicture.Assign(Value);
+
+  // Update
+  if IconType = FXIconType.Image then
+    UpdateParent;
+end;
+
+procedure FXIconSelect.SetSegoe(const Value: string);
+begin
+  FSegoeText := Value;
+
+  // Update
+  if IconType = FXIconType.SegoeIcon then
+    UpdateParent;
+end;
+
+procedure FXIconSelect.UpdateParent;
+begin
+  if Owner is TControl then
+    TControl(Owner).Invalidate;
 end;
 
 { TMPersistent }
@@ -186,6 +260,82 @@ begin
   end
   else
     inherited Assign(Source);
+end;
+
+{ FXPadding }
+
+function FXPadding.ApplyTo(ARect: TRect): TRect;
+begin
+  Result := ARect;
+
+  Inc(Result.Left, FLeft);
+  Inc(Result.Top, FTop);
+  Dec(Result.Right, FRight);
+  Dec(Result.Bottom, FBottom);
+end;
+
+constructor FXPadding.Create(AOwner: TPersistent);
+begin
+  inherited;
+  FLeft := 0;
+  FTop := 0;
+  FRight := 0;
+  FBottom := 0;
+end;
+
+function FXPadding.PadHeight: integer;
+begin
+  Result := Top + Bottom;
+end;
+
+function FXPadding.PadWidth: integer;
+begin
+  Result := Left + Right;
+end;
+
+procedure FXPadding.ScaleChanged(Scaling: single);
+begin
+  FLeft := trunc(FLeft * Scaling);
+  FTop := trunc(FTop * Scaling);
+  FRight := trunc(FRight * Scaling);
+  FBottom := trunc(FBottom * Scaling);
+end;
+
+procedure FXPadding.SetBottom(const Value: integer);
+begin
+  FBottom := Value;
+
+  UpdateOwner;
+end;
+
+procedure FXPadding.SetLeft(const Value: integer);
+begin
+  FLeft := Value;
+
+  UpdateOwner;
+end;
+
+procedure FXPadding.SetRight(const Value: integer);
+begin
+  FRight := Value;
+
+  UpdateOwner;
+end;
+
+procedure FXPadding.SetTop(const Value: integer);
+begin
+  FTop := Value;
+
+  UpdateOwner;
+end;
+
+procedure FXPadding.UpdateOwner;
+begin
+  if (Owner <> nil) and Supports(Owner, FXControl) and not (csReading in TComponent(Owner).ComponentState) then
+    (TComponent(Owner) as FXControl).UpdateTheme(true);
+
+  if Assigned(FOnChange) then
+    FOnChange(Self);
 end;
 
 end.

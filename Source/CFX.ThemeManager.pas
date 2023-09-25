@@ -51,8 +51,6 @@ uses
       property FormFontHeight: integer read FFormFontHeight write FFormFontHeight;
       property LargeFontHeight: integer read FLargeFontHeight write FLargeFontHeight;
       property IconFont: string read FIconFont write FIconFont;
-      property LegacyFontColor: boolean read FLegacyFontColor write FLegacyFontColor;
-      { Legacy Font Color defines if the Form should change It's font to accomodate inheritable font properties }
 
       (* Accent Color *)
       property AccentColor: TColor read LoadAccentColor write SaveAccentColor;

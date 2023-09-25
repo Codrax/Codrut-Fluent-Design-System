@@ -4,7 +4,7 @@
     </PropertyGroup>
     <ItemGroup>
         <Projects Include="FluentUXDemo.dproj">
-            <Dependencies/>
+            <Dependencies>CodFluentUX.dproj</Dependencies>
         </Projects>
         <Projects Include="CodFluentUX.dproj">
             <Dependencies/>
@@ -17,13 +17,13 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
-    <Target Name="FluentUXDemo">
+    <Target Name="FluentUXDemo" DependsOnTargets="CodFluentUX">
         <MSBuild Projects="FluentUXDemo.dproj"/>
     </Target>
-    <Target Name="FluentUXDemo:Clean">
+    <Target Name="FluentUXDemo:Clean" DependsOnTargets="CodFluentUX:Clean">
         <MSBuild Projects="FluentUXDemo.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="FluentUXDemo:Make">
+    <Target Name="FluentUXDemo:Make" DependsOnTargets="CodFluentUX:Make">
         <MSBuild Projects="FluentUXDemo.dproj" Targets="Make"/>
     </Target>
     <Target Name="CodFluentUX">

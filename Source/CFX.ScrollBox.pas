@@ -11,6 +11,7 @@ uses
   Vcl.Controls,
   Vcl.Graphics,
   Types,
+  Vcl.ExtCtrls,
   CFX.Colors,
   Vcl.Dialogs,
   CFX.ThemeManager,
@@ -22,6 +23,7 @@ uses
   CFX.Linker,
   CFX.Controls,
   CFX.Scrollbar,
+  CFX.Math,
   Math,
   Vcl.Forms;
 
@@ -39,10 +41,12 @@ uses
 
     FXScrollBox = class(TScrollBox, FXControl)
     private
-      FCustomColors: FXColorSets;
-      FDrawColors: FXColorSet;
+      FCustomColors: FXCompleteColorSets;
+      FDrawColors: FXCompleteColorSet;
 
       FScrollSpeed: integer;
+
+      FBackground: FXBackgroundColor;
 
       FVertScroll,
       FHorzScroll: FXScrollBoxScrollBar;
@@ -52,6 +56,15 @@ uses
 
       FPosX, FPosY: integer;
       FExtendX, FExtendY: integer;
+
+      FAnim: TTimer;
+      FAnimX,
+      FAnimY: integer;
+
+      FAnimation: boolean;
+
+      // Anim
+      procedure AnimationTimer(Sender: TObject);
 
       // Scroll
       procedure WhenScroll(Sender: TObject);
@@ -64,6 +77,7 @@ uses
       // Set
       procedure SetExtX(const Value: integer);
       procedure SetExtY(const Value: integer);
+      procedure SetBackground(const Value: FXBackgroundColor);
 
       // Utils
       function IsDesigning: boolean;
@@ -80,7 +94,8 @@ uses
       procedure AdjustClientRect(var Rect: TRect); override;
 
     published
-      property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
+      property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
+      property BackgroundColor: FXBackgroundColor read FBackground write SetBackground default FXBackgroundColor.Background;
 
       property ScrollExtendX: integer read FExtendX write SetExtX default 0;
       property ScrollExtendY: integer read FExtendY write SetExtY default 100;
@@ -132,9 +147,56 @@ begin
     end;
 end;
 
+procedure FXScrollBox.AnimationTimer(Sender: TObject);
+var
+  X, Y: integer;
+begin
+  X := Sign(FAnimX) * SCROLL_SPEED_VALUE;
+  Y := Sign(FAnimY) * SCROLL_SPEED_VALUE;
+
+  FAnimX := FAnimX - X;
+  FAnimY := FAnimY - Y;
+
+  // Scroll
+  FVertScroll.Position := FVertScroll.Position + Y;
+  FHorzScroll.Position := FHorzScroll.Position + X;
+
+  // Draw
+  Invalidate;
+
+  // Max
+  if (FVertScroll.Position = 0) or (FVertScroll.Position = FVertScroll.Max) then
+    FAnimY := 0;
+
+  if (FHorzScroll.Position = 0) or (FHorzScroll.Position = FHorzScroll.Max) then
+    FAnimX := 0;
+
+  // Disable
+  if EqualApprox(FAnimX, 0, SCROLL_SPEED_VALUE)
+    and EqualApprox(FAnimY, 0, SCROLL_SPEED_VALUE) then
+    begin
+      FAnim.Enabled := false;
+
+      // Add leftovers
+      if FAnimY <> 0 then
+        FVertScroll.Position := FVertScroll.Position + FAnimY;
+      if FAnimX <> 0 then
+        FHorzScroll.Position := FHorzScroll.Position + FAnimX;
+
+      // Clear data
+      FAnimY := 0;
+      FAnimY := 0;
+    end;
+end;
+
 function FXScrollBox.Background: TColor;
 begin
-  Result := FDrawColors.BackGround;
+  case FBackground of
+    FXBackgroundColor.Background: Result := FDrawColors.BackGround;
+    FXBackgroundColor.Content: Result := FDrawColors.BackGroundInterior;
+    else
+      Result := 0;
+  end;
 end;
 
 procedure FXScrollBox.CalculateRange;
@@ -146,8 +208,8 @@ end;
 constructor FXScrollBox.Create(aOwner: TComponent);
 begin
   inherited;
-  FDrawColors := FXColorSet.Create(Self);
-  FCustomColors := FXColorSets.Create(Self);
+  FDrawColors := FXCompleteColorSet.Create(Self);
+  FCustomColors := FXCompleteColorSets.Create(Self);
 
   // Scroll (Only works with legacy scrollbars visible)
   //UseWheelForScrolling := true;
@@ -164,6 +226,17 @@ begin
   // Create
   FVertScroll := FXScrollBoxScrollBar.Create(Self);
   FHorzScroll := FXScrollBoxScrollBar.Create(Self);
+
+  // Animate
+  FAnim := TTimer.Create(nil);
+  with FAnim do
+    begin
+      Enabled := false;
+      Interval := 1;
+      OnTimer := AnimationTimer;
+    end;
+
+  FAnimation := true;
 
   // Prepare Scrollbars
   with FVertScroll do
@@ -242,10 +315,20 @@ begin
       end;
 
       // Scroll
-      case Prefer of
-        TScrollPrefer.Vertical: FVertScroll.Position := trunc(FVertScroll.Position + WheelDelta / abs(WheelDelta) * -ScrollSpeed);
-        TScrollPrefer.Horizontal: FHorzScroll.Position := trunc(FHorzScroll.Position + WheelDelta / abs(WheelDelta) * -ScrollSpeed);
-      end;
+      if FAnimation then
+        begin
+          case Prefer of
+            TScrollPrefer.Vertical: FAnimY := FAnimY + trunc(WheelDelta / abs(WheelDelta) * -ScrollSpeed);
+            TScrollPrefer.Horizontal: FAnimX := FAnimX + trunc(WheelDelta / abs(WheelDelta) * -ScrollSpeed);
+          end;
+
+          FAnim.Enabled := true;
+        end
+        else
+          case Prefer of
+            TScrollPrefer.Vertical: FVertScroll.Position := trunc(FVertScroll.Position + WheelDelta / abs(WheelDelta) * -ScrollSpeed);
+            TScrollPrefer.Horizontal: FHorzScroll.Position := trunc(FHorzScroll.Position + WheelDelta / abs(WheelDelta) * -ScrollSpeed);
+          end;
     end;
 
   Result := inherited;
@@ -302,6 +385,17 @@ begin
   Realign;
 end;
 
+procedure FXScrollBox.SetBackground(const Value: FXBackgroundColor);
+begin
+  if FBackground <> Value then
+    begin
+      FBackground := Value;
+
+      UpdateColors;
+      Invalidate;
+    end;
+end;
+
 procedure FXScrollBox.SetExtX(const Value: integer);
 begin
   FExtendX := Value;
@@ -324,7 +418,10 @@ begin
         ThemeManager.LoadColorSet( FDrawColors );
 
   // Update
-  Color := FDrawColors.BackGround;
+  if FBackground = FXBackgroundColor.Background then
+    Color := FDrawColors.BackGround
+  else
+    Color := FDrawColors.BackGroundInterior;
 end;
 
 procedure FXScrollBox.UpdateScrollbars;

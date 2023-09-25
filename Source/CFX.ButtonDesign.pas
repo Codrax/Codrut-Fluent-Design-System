@@ -306,7 +306,7 @@ implementation
 functiOn FXButtonDesignColors.Paint: Boolean;
 begin
   if Self.Owner is FXButtonDesign then begin
-    FXButtonDesign(Self.Owner).PaintBuffer;
+    FXButtonDesign(Self.Owner).Invalidate;
     Result := True;
   end else Result := False;
 end;
@@ -315,7 +315,7 @@ end;
 functiOn FXButtonDesignPen.Paint: Boolean;
 begin
   if Self.Owner is FXButtonDesign then begin
-    FXButtonDesign(Self.Owner).PaintBuffer;
+    FXButtonDesign(Self.Owner).Invalidate;
     Result := True;
   end else Result := False;
 end;
@@ -329,7 +329,6 @@ begin
   if not FAnimations.FPAn then Exit;
 
   if FAnimations.PAAnimateEngine = cbneAtDraw then begin
-
     for i := 1 to FAnimations.FAnimshq do begin
       Sleep(FAnimations.FAnimdelay);
 
@@ -351,6 +350,7 @@ begin
       FTimerAct(nil);
 
       Invalidate;
+      Paint;
     end;
   end else
   begin
@@ -690,17 +690,15 @@ begin
   if NOT (FAnimations.TimeProg >= FAnimations.FASpeed) then
   begin
     inc(FAnimations.TimeProg);
-     PaintBuffer;
+     Invalidate;
   end else
   FadeAnim.Enabled := false;
 end;
 
 procedure FXButtonDesign.Invalidate;
 begin
-  inherited;
-  PaintBuffer;
-
   ApplyAccentColor;
+  inherited;
 end;
 
 function FXButtonDesign.IsContainer: Boolean;
@@ -738,7 +736,7 @@ begin
 
   SetState(mbsEnter);
   if Assigned(FOnStateChange) then FOnStateChange(Self, FState);
-  PaintBuffer;
+  Invalidate;
   Animation(true);
 end;
 
@@ -1101,20 +1099,20 @@ procedure FXButtonDesign.SetActionText(const Value: string);
 begin
   FActionText := Value;
 
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXButtonDesign.SetActionToggle(const Value: boolean);
 begin
   FActionToggle := Value;
 
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXButtonDesign.SetAlign(const Value: TAlignment);
 begin
   FAlign := Value;
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXButtonDesign.SetCancel(const Value: boolean);
@@ -1130,14 +1128,14 @@ end;
 procedure FXButtonDesign.SetEnabled(Value: Boolean);
 begin
   inherited;
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXButtonDesign.SetEnableSubText(const Value: boolean);
 begin
   FEnableSubText := Value;
 
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXButtonDesign.SetFlatComplete(const Value: boolean);
@@ -1147,13 +1145,13 @@ begin
   if Value then
     FUnderline.Enable := false;
 
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXButtonDesign.SetFlatnes(const Value: boolean);
 begin
   FFlatBT := Value;
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXButtonDesign.SetFocus;
@@ -1168,7 +1166,7 @@ end;
 procedure FXButtonDesign.SetFont(const Value: TFont);
 begin
   FFont.Assign( Value );
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXButtonDesign.SetFontAutoSize(const Value: FXButtonDesignFontAutoSize);
@@ -1179,14 +1177,14 @@ end;
 procedure FXButtonDesign.SetGradient(const Value: FXButtonDesignGradientSet);
 begin
   FGradientSet := Value;
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXButtonDesign.SetImage(const Value: FXIconSelect);
 begin
   FImage := Value;
 
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXButtonDesign.SetImageLayour(const Value: CPosition);
@@ -1201,20 +1199,20 @@ begin
   if not Value then
     ApplyAccentColor;
 
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXButtonDesign.SetRoundVal(const Value: integer);
 begin
   FRoundAmount := Value;
 
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXButtonDesign.SetShowCaption(const Value: boolean);
 begin
   FEnableCaption := Value;
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXButtonDesign.SetState(const Value: FXButtonDesignState);
@@ -1222,40 +1220,42 @@ begin
   StTimer;
   FPreviousState := FState;
   FState := Value;
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXButtonDesign.SetSubFont(const Value: TFont);
 begin
   FSubTextFont := Value;
 
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXButtonDesign.SetSubText(const Value: string);
 begin
   FSubText := Value;
 
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXButtonDesign.SetText(const Value: string);
 begin
   FText := Value;
-  PaintBuffer;
+
+  Invalidate;
 end;
 
 procedure FXButtonDesign.SetTextWall(const Value: integer);
 begin
   FTxtWSpace := Value;
 
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXButtonDesign.SetTransparent(const Value: boolean);
 begin
   FTransparent := Value;
-  PaintBuffer;
+
+  Invalidate;
 end;
 
 procedure FXButtonDesign.StTimer;
@@ -1272,7 +1272,7 @@ end;
 procedure FXButtonDesign.UpdateTheme(const UpdateChildren: Boolean);
 begin
   ApplyAccentColor;
-  PaintBuffer;
+  Invalidate;
 end;
 
 { FXButtonDesignUnderLine }
@@ -1280,19 +1280,19 @@ end;
 procedure FXButtonDesignUnderLine.SetUline(const Value: boolean);
 begin
   FUnderLn := Value;
-  FXButtonDesign(Self.Owner).PaintBuffer;
+  FXButtonDesign(Self.Owner).Invalidate;
 end;
 
 procedure FXButtonDesignUnderLine.SetULRound(const Value: boolean);
 begin
   FUnderLnRound := Value;
-  FXButtonDesign(Self.Owner).PaintBuffer;
+  FXButtonDesign(Self.Owner).Invalidate;
 end;
 
 procedure FXButtonDesignUnderLine.SetUlThick(const Value: integer);
 begin
   FUnderThick := Value;
-  FXButtonDesign(Self.Owner).PaintBuffer;
+  FXButtonDesign(Self.Owner).Invalidate;
 end;
 
 { FXButtonDesignFontAutoSize }
@@ -1300,7 +1300,7 @@ end;
 function FXButtonDesignFontAutoSize.Paint: Boolean;
 begin
   if Self.Owner is FXButtonDesign then begin
-    FXButtonDesign(Self.Owner).PaintBuffer;
+    FXButtonDesign(Self.Owner).Invalidate;
     Result := True;
   end else Result := False;
 end;
@@ -1310,7 +1310,7 @@ end;
 function FXButtonDesignGradientSet.Paint: Boolean;
 begin
   if Self.Owner is FXButtonDesign then begin
-    FXButtonDesign(Self.Owner).PaintBuffer;
+    FXButtonDesign(Self.Owner).Invalidate;
     Result := True;
   end else Result := False;
 end;

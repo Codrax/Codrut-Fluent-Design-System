@@ -25,22 +25,20 @@ uses
   CFX.GDI,
   CFX.Colors,
   CFX.Types,
+  CFX.Controls,
   CFX.Linker,
   Vcl.Imaging.GIFImg,
   Vcl.Imaging.pngimage,
   Vcl.Imaging.jpeg;
 
 type
-  FXBlurMaterial = class(TGraphicControl, FXControl)
+  FXBlurMaterial = class(FXBufferGraphicControl, FXControl)
   private
-    FPicture: TPicture;
-    FIncrementalDisplay: Boolean;
     FRefreshMode: FXGlassRefreshMode;
     Tick: TTimer;
     FDrawing: Boolean;
     FInvalidateAbove: boolean;
     FVersion: FXBlurVersion;
-    FOnPaint: FXControlOnPaint;
 
     FDarkTintOpacity,
     FWhiteTintOpacity: integer;
@@ -52,8 +50,6 @@ type
 
     procedure TimerExecute(Sender: TObject);
     procedure SetRefreshMode(const Value: FXGlassRefreshMode);
-    procedure PictureChanged(Sender: TObject);
-    procedure SetPicture(const Value: TPicture);
     procedure SetVersion(const Value: FXBlurVersion);
 
     function ImageTypeExists(ImgType: FXBlurVersion): boolean;
@@ -66,16 +62,11 @@ type
 
   protected
     function DestRect: TRect;
-    procedure Paint; override;
+    procedure PaintBuffer; override;
 
-    procedure Progress(Sender: TObject; Stage: TProgressStage;
-      PercentDone: Byte; RedrawNow: Boolean; const R: TRect; const Msg: string); dynamic;
-    procedure FindGraphicClass(Sender: TObject; const Context: TFindGraphicClassContext;
-      var GraphicClass: TGraphicClass); dynamic;
+    procedure InteractionStateChanged(AState: FXControlState); override;
 
     procedure OnVisibleChange(var Message : TMessage); message CM_VISIBLECHANGED;
-
-    property Picture: TPicture read FPicture write SetPicture;
 
   published
     property Align;
@@ -93,6 +84,9 @@ type
     property Visible;
     property OnClick;
 
+    property OnPaint;
+    property OnPaintBuffer;
+
     property Version: FXBlurVersion read FVersion write SetVersion default FXBlurVersion.WallpaperBlurred;
     property RefreshMode: FXGlassRefreshMode read FRefreshMode write SetRefreshMode default FXGlassRefreshMode.Manual;
     property InvalidateAbove: boolean read FInvalidateAbove write FInvalidateAbove default false;
@@ -101,7 +95,6 @@ type
     property WhiteTintOpacity: integer read FWhiteTintOpacity write SetWhiteTint default 200;
 
     property CustomColors: FXColorSets read FCustomColors write SetCustomColor;
-    property OnPaint: FXControlOnPaint read FOnPaint write FOnPaint;
     property OnContextPopup;
     property OnDblClick;
     property OnDragDrop;
@@ -122,7 +115,6 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    procedure InvalidateControl;
     procedure Inflate(up,right,down,lft: integer);
 
     procedure FormMoveSync;
@@ -130,8 +122,6 @@ type
     procedure SyncroniseImage;
     procedure RebuildImage;
     procedure ReDraw;
-
-    function GetCanvas: TCanvas;
 
     // Interface
     function IsContainer: Boolean;
@@ -354,6 +344,7 @@ constructor FXBlurMaterial.Create(AOwner: TComponent);
 begin
   inherited;
   //interceptmouse:=True;
+  //Transparent := false;
 
   FCustomColors := FXColorSets.Create(false);
   with FCustomColors do
@@ -364,12 +355,6 @@ begin
     end;
 
   FDrawColors := FXColorSet.Create;
-
-  // Picture
-  FPicture := TPicture.Create;
-  FPicture.OnChange := PictureChanged;
-  FPicture.OnProgress := Progress;
-  FPicture.OnFindGraphicClass := FindGraphicClass;
 
   ControlStyle := ControlStyle + [csReplicatable, csPannable];
 
@@ -424,29 +409,15 @@ end;
 
 destructor FXBlurMaterial.Destroy;
 begin
-  FPicture.Free;
-
   Tick.Enabled := false;
   FreeAndNil(Tick);
   FreeAndNil(FCustomColors);
   inherited;
 end;
 
-
-procedure FXBlurMaterial.FindGraphicClass(Sender: TObject;
-  const Context: TFindGraphicClassContext; var GraphicClass: TGraphicClass);
-begin
-
-end;
-
 procedure FXBlurMaterial.FormMoveSync;
 begin
   SyncroniseImage;
-end;
-
-function FXBlurMaterial.GetCanvas: TCanvas;
-begin
-  Result := Self.Canvas;
 end;
 
 function FXBlurMaterial.ImageTypeExists(ImgType: FXBlurVersion): boolean;
@@ -461,23 +432,21 @@ end;
 
 procedure FXBlurMaterial.Inflate(up, right, down, lft: integer);
 begin
-  //UP
+  // UP
   Top := Top - Up;
   Height := Height + Up;
-//RIGHT
+  // RIGHT
   Width := Width + right;
-//DOWN
+  // DOWN
   Height := Height + down;
-//LEFT
+  // LEFT
   Left := Left - lft;
   Width := Width + lft;
 end;
 
-procedure FXBlurMaterial.InvalidateControl;
+procedure FXBlurMaterial.InteractionStateChanged(AState: FXControlState);
 begin
-  Self.Invalidate;
-
-  Paint;
+  // nothing
 end;
 
 function FXBlurMaterial.IsContainer: Boolean;
@@ -491,9 +460,8 @@ begin
     SyncroniseImage;
 end;
 
-procedure FXBlurMaterial.Paint;
+procedure FXBlurMaterial.PaintBuffer;
 var
-  Save: Boolean;
   Pict: TBitMap;
   DrawRect, ImageRect: Trect;
 begin
@@ -503,117 +471,65 @@ begin
 
   // Draw
   if csDesigning in ComponentState then
-    with inherited Canvas do
+    with Buffer do
     begin
+      Pen.Color := clAqua;
       Pen.Style := psDash;
-      Brush.Style := bsClear;
-      Rectangle(0, 0, Width, Height);
+      Brush.Style := bsSolid;
+      Rectangle(ClientRect);
+
+      Exit;
     end;
 
-  Save := FDrawing;
   FDrawing := True;
   try
-      with inherited Canvas do
-        begin
-          // Draw Canvas
-          { Image Draw }
+    with Buffer do
+      begin
+        // Draw Canvas
+        { Image Draw }
+        if (WorkingAP) or not ImageTypeExists(Version) then
+          begin
+            Brush.Color := FDrawColors.BackGround;
+            FillRect(ClipRect);
 
-          if (WorkingAP) or not ImageTypeExists(Version) then
-            begin
-              Brush.Color := FDrawColors.BackGround;
-              FillRect(ClipRect);
-
-              Exit;
-            end;
-
-          DrawRect := Rect(0, 0, Width, Height);
-
-          ImageRect := ClientToScreen( ClientRect );
-          ImageRect.Offset(Screen.DesktopRect.Left * -1, Screen.DesktopRect.Top * -1);
-
-          // Calc Rect
-          {PictureRect.Top := trunc((ImageRect.Top * WallpaperBlurred.Height) / Screen.Height);
-          PictureRect.Left := trunc((ImageRect.Left * WallpaperBlurred.Width) / Screen.Width);
-          PictureRect.Bottom := trunc((ImageRect.Bottom * WallpaperBlurred.Height) / Screen.Height);
-          PictureRect.Right := trunc((ImageRect.Right * WallpaperBlurred.Width) / Screen.Width);    }
-
-          // Create Picture
-          Pict := TBitMap.Create(Width, Height);
-
-          // Copy Rect
-          case Version of
-            FXBlurVersion.WallpaperBlurred: Pict.Canvas.CopyRect(DrawRect, WallpaperBlurred.Canvas, ImageRect);
-            FXBlurVersion.Wallpaper: Pict.Canvas.CopyRect(DrawRect, WallpaperBMP.Canvas, ImageRect);
-            FXBlurVersion.Screenshot: Pict.Canvas.CopyRect(DrawRect, ScreenshotBlurred.Canvas, ImageRect);
+            Exit;
           end;
 
-          // Draw
-          FPicture.Bitmap.Assign(Pict);
+        DrawRect := Rect(0, 0, Width, Height);
 
-          DrawHighQuality(DestRect, FPicture.Graphic, 255, false);
+        ImageRect := ClientToScreen( ClientRect );
+        ImageRect.Offset(Screen.DesktopRect.Left * -1, Screen.DesktopRect.Top * -1);
 
-          Pict.Free;
+        // Create Picture
+        Pict := TBitMap.Create(Width, Height);
 
-          // Tint Item
-          if EnableTinting then
-            begin
-              DrawRect := ClipRect;
-              DrawRect.Inflate(1, 1);
-
-              if ThemeManager.DarkTheme then
-                GDITint( DrawRect, FDrawColors.BackGround, FDarkTintOpacity )
-              else
-                GDITint( DrawRect, FDrawColors.BackGround, FWhiteTintOpacity );
-            end;
+        // Copy Rect
+        case Version of
+          FXBlurVersion.WallpaperBlurred: Pict.Canvas.CopyRect(DrawRect, WallpaperBlurred.Canvas, ImageRect);
+          FXBlurVersion.Wallpaper: Pict.Canvas.CopyRect(DrawRect, WallpaperBMP.Canvas, ImageRect);
+          FXBlurVersion.Screenshot: Pict.Canvas.CopyRect(DrawRect, ScreenshotBlurred.Canvas, ImageRect);
         end;
+
+        // Draw
+        DrawHighQuality(DestRect, Pict, 255, false);
+
+        // Tint Item
+        if EnableTinting then
+          begin
+            DrawRect := ClipRect;
+            DrawRect.Inflate(1, 1);
+
+            if ThemeManager.DarkTheme then
+              GDITint( DrawRect, FDrawColors.BackGround, FDarkTintOpacity )
+            else
+              GDITint( DrawRect, FDrawColors.BackGround, FWhiteTintOpacity );
+          end;
+      end;
   finally
-    FDrawing := Save;
-
-    // Notify
-    if Assigned(FOnPaint) then
-      FOnPaint( Self );
+    FDrawing := false;
   end;
-end;
 
-procedure FXBlurMaterial.PictureChanged(Sender: TObject);
-var
-  G: TGraphic;
-  D : TRect;
-begin
-  if Observers.IsObserving(TObserverMapping.EditLinkID) then
-    if TLinkObservers.EditLinkEdit(Observers) then
-      TLinkObservers.EditLinkModified(Observers);
-
-  if AutoSize and (Picture.Width > 0) and (Picture.Height > 0) then
-	SetBounds(Left, Top, Picture.Width, Picture.Height);
-  G := Picture.Graphic;
-  if G <> nil then
-  begin
-    if Assigned(Picture.Graphic) and not ((Picture.Graphic is TMetaFile) or (Picture.Graphic is TIcon)) then
-      G.Transparent := false;
-    D := DestRect;
-    if (not G.Transparent) and (D.Left <= 0) and (D.Top <= 0) and
-       (D.Right >= Width) and (D.Bottom >= Height) then
-      ControlStyle := ControlStyle + [csOpaque]
-    else  // picture might not cover entire clientrect
-      ControlStyle := ControlStyle - [csOpaque];
-
-  end
-  else ControlStyle := ControlStyle - [csOpaque];
-  if not FDrawing then Invalidate;
-
-  if Observers.IsObserving(TObserverMapping.EditLinkID) then
-    if TLinkObservers.EditLinkIsEditing(Observers) then
-      TLinkObservers.EditLinkUpdate(Observers);
-end;
-
-procedure FXBlurMaterial.Progress(Sender: TObject; Stage: TProgressStage;
-  PercentDone: Byte; RedrawNow: Boolean; const R: TRect; const Msg: string);
-begin
-if FIncrementalDisplay and RedrawNow then
-  begin
-    Paint;
-  end;
+  inherited;
 end;
 
 procedure FXBlurMaterial.RebuildImage;
@@ -626,7 +542,7 @@ end;
 
 procedure FXBlurMaterial.ReDraw;
 begin
-  PictureChanged(Self);
+  Invalidate;
 end;
 
 procedure FXBlurMaterial.SetCustomColor(const Value: FXColorSets);
@@ -641,11 +557,6 @@ begin
   FDarkTintOpacity := Value;
 
   Paint;
-end;
-
-procedure FXBlurMaterial.SetPicture(const Value: TPicture);
-begin
-  FPicture.Assign(Value);
 end;
 
 procedure FXBlurMaterial.SetRefreshMode(const Value: FXGlassRefreshMode);

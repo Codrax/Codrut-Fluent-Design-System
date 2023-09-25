@@ -110,7 +110,7 @@ begin
   Width := 60;
   Height := 60;
 
-  UpdateColors
+  UpdateColors;
 end;
 
 destructor FXStandardIcon.Destroy;

@@ -24,8 +24,8 @@ uses
 type
   FXCheckBox = class(FXWindowsControl, FXControl)
     private
-      var IconRect, TextRect: TRect;
-      FTextFont, FIconFont: TFont;
+      var DrawRect, IconRect, TextRect, ImageRect: TRect;
+      FIconFont: TFont;
       FAllowGrayed: Boolean;
       FState: FXCheckBoxState;
       FTextSpacing: Integer;
@@ -39,6 +39,10 @@ type
       FAnimationEnabled: boolean;
       FAnimationStatus: integer;
       FAnimateTimer: TTimer;
+      FImage: FXIconSelect;
+      FImageScale: single;
+      FLayout: FXDrawLayout;
+      FTextLayout: FXLayout;
 
       //  Internal
       procedure UpdateColors;
@@ -51,9 +55,15 @@ type
       procedure SetState(const Value: FXCheckBoxState);
       procedure SetTextSpacing(const Value: Integer);
       procedure SetChecked(const Value: Boolean);
+      procedure SetImage(const Value: FXIconSelect);
+      procedure SetLayout(const Value: FXDrawLayout);
+      procedure SetImageScale(const Value: single);
 
       // State
       procedure ProgressState;
+
+      // Draw functions
+      function GetTextHeight: integer;
 
       // Get properties
       function GetChecked: Boolean;
@@ -68,7 +78,9 @@ type
     protected
       procedure PaintBuffer; override;
       procedure Resize; override;
-      procedure ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF}); override;
+
+      // Scaler
+      procedure ScaleChanged(Scaler: single); override;
 
       // State
       procedure InteractionStateChanged(AState: FXControlState); override;
@@ -90,12 +102,17 @@ type
       property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default true;
 
       property Text: string read FText write SetText;
-      property Font: TFont read FTextFont write FTextFont;
       property WordWrap: boolean read FWordWrap write SetWordWrap default true;
+      property Image: FXIconSelect read FImage write SetImage;
+      property ImageScale: single read FImageScale write SetImageScale;
+      property Layout: FXDrawLayout read FLayout write SetLayout default FXDrawLayout.Left;
 
       property AnimationEnabled: boolean read FAnimationEnabled write FAnimationEnabled;
 
+      property Font;
+
       property Align;
+      property PaddingFill;
       property Constraints;
       property Anchors;
       property Hint;
@@ -129,7 +146,7 @@ implementation
 procedure FXCheckBox.InteractionStateChanged(AState: FXControlState);
 begin
   inherited;
-  PaintBuffer;
+  Invalidate;
 end;
 
 function FXCheckBox.IsContainer: Boolean;
@@ -201,13 +218,91 @@ end;
 
 procedure FXCheckBox.UpdateRects;
 var
-  AWidth: integer;
+  AWidth, ASize: integer;
 begin
-  Buffer.Font.Assign(Self.Font);
+  // Rect
+  DrawRect := GetClientRect;
+
+  // Font
+  Buffer.Font.Assign(IconFont);
   AWidth := Buffer.TextWidth(CHECKBOX_OUTLINE);
 
-  IconRect := Rect(0, 0, AWidth + TextSpacing * 2, Height);   //  Left square
-  TextRect := Rect(IconRect.Right + TextSpacing, 0, Width, Height);
+  // Image
+  ASize := 0;
+  if FImage.Enabled then
+    ASize := round(GetTextHeight * FImageScale);
+
+  case Layout of
+    FXDrawLayout.Left: begin
+      IconRect := Rect(DrawRect.Left, DrawRect.Top,
+        DrawRect.Left + AWidth + TextSpacing * 2, DrawRect.Bottom);
+      TextRect := Rect(IconRect.Right + TextSpacing, DrawRect.Top,
+        DrawRect.Right, DrawRect.Bottom);
+      FTextLayout := FXLayout.Beginning;
+
+      // Image
+      if Image.Enabled then
+        begin
+          ImageRect := Rect(TextRect.Left, DrawRect.Top, TextRect.Left + ASize, DrawRect.Bottom);
+          TextRect.Left := ImageRect.Right + TextSpacing;
+        end;
+    end;
+
+    FXDrawLayout.Right: begin
+      IconRect := Rect(DrawRect.Right-AWidth-TextSpacing, DrawRect.Top, DrawRect.Right, DrawRect.Bottom);
+      TextRect := Rect(DrawRect.Left, DrawRect.Top, IconRect.Left - TextSpacing * 2, DrawRect.Bottom);
+      FTextLayout := FXLayout.Beginning;
+
+      // Image
+      if Image.Enabled then
+        begin
+          ImageRect := Rect(TextRect.Left, DrawRect.Top, TextRect.Left + ASize, DrawRect.Bottom);
+          TextRect.Left := ImageRect.Right + TextSpacing;
+        end;
+    end;
+
+    FXDrawLayout.Top: begin
+      IconRect := Rect(DrawRect.Left, DrawRect.Top, DrawRect.Right, AWidth + TextSpacing * 2);
+      TextRect := Rect(DrawRect.Left, IconRect.Bottom + TextSpacing, DrawRect.Right, DrawRect.Bottom);
+      IconRect.Width := AWidth;
+      IconRect.Height := AWidth;
+      IconRect.Offset((DrawRect.Width-AWidth) div 2, 0);
+
+      FTextLayout := FXLayout.Center;
+
+      // Image
+      if Image.Enabled then
+        begin
+          ImageRect := Rect(DrawRect.Left, TextRect.Top, DrawRect.Right, TextRect.Top + ASize);
+          TextRect.Top := ImageRect.Bottom + TextSpacing;
+        end;
+    end;
+
+    FXDrawLayout.Bottom: begin
+      IconRect := Rect(DrawRect.Left, DrawRect.Bottom - AWidth - TextSpacing * 2, DrawRect.Right, DrawRect.Bottom);
+      TextRect := Rect(DrawRect.Left, DrawRect.Top, DrawRect.Right, DrawRect.Bottom - AWidth + TextSpacing * 2);
+      IconRect.Width := AWidth;
+      IconRect.Top := DrawRect.Bottom-AWidth;
+      IconRect.Offset((DrawRect.Width-AWidth) div 2, 0);
+
+      FTextLayout := FXLayout.Center;
+
+      // Image
+      if Image.Enabled then
+        begin
+          ImageRect := Rect(DrawRect.Left, TextRect.Top, DrawRect.Right, TextRect.Top + ASize);
+          TextRect.Top := ImageRect.Bottom + TextSpacing;
+        end;
+    end;
+  end;
+end;
+
+procedure FXCheckBox.ScaleChanged(Scaler: single);
+begin
+  IconFont.Height := round(IconFont.Height * Scaler);
+  FTextSpacing := round(FTextSpacing * Scaler);
+  FImageScale := FImageScale * Scaler;
+  inherited;
 end;
 
 procedure FXCheckBox.SetAllowGrayed(const Value: Boolean);
@@ -284,9 +379,52 @@ begin
     State := FXCheckBoxState.Unchecked;
 end;
 
+procedure FXCheckBox.SetImage(const Value: FXIconSelect);
+begin
+  if FImage <> Value then
+    begin
+      FImage := Value;
+
+      UpdateRects;
+      Invalidate;
+    end;
+end;
+
+procedure FXCheckBox.SetImageScale(const Value: single);
+begin
+  if FImageScale <> Value then
+    begin
+      FImageScale := Value;
+
+      UpdateRects;
+      Invalidate;
+    end;
+end;
+
+procedure FXCheckBox.SetLayout(const Value: FXDrawLayout);
+begin
+  if FLayout <> Value then
+    begin
+      FLayout := Value;
+
+      UpdateRects;
+      Invalidate;
+    end;
+end;
+
 function FXCheckBox.GetChecked;
 begin
   Result := State <> FXCheckBoxState.Unchecked;
+end;
+
+function FXCheckBox.GetTextHeight: integer;
+begin
+  with Canvas do
+    begin
+      Font.Assign(Self.Font);
+
+      Result := TextHeight(TEXT_SIZE_COMPARER)
+    end;
 end;
 
 constructor FXCheckBox.Create(aOwner: TComponent);
@@ -296,10 +434,6 @@ begin
   FIconFont.Name := ThemeManager.IconFont;
   FIconFont.Size := 16;
   FAnimationEnabled := true;
-
-  FTextFont := TFont.Create;
-  FTextFont.Name := FORM_FONT_NAME;
-  FTextFont.Size := ThemeManager.FormFontHeight;
 
   FAnimateTimer := TTimer.Create(nil);
   with FAnimateTimer do
@@ -316,6 +450,10 @@ begin
   AutoFocusLine := true;
   BufferedComponent := true;
   FWordWrap := true;
+
+  // Icon
+  FImage := FXIconSelect.Create(Self);
+  FImageScale := GENERAL_IMAGE_SCALE;
 
   // Custom Color
   FCustomColors := FXColorSets.Create(Self);
@@ -337,7 +475,7 @@ end;
 destructor FXCheckBox.Destroy;
 begin
   FIconFont.Free;
-  FTextFont.Free;
+  FreeAndNil( FImage );
   FreeAndNil( FCustomColors );
   FreeAndNil( FDrawColors );
   FreeAndNil( FIconAccentColors );
@@ -363,14 +501,6 @@ begin
   Result := FDrawColors.Background;
 end;
 
-procedure FXCheckBox.ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF});
-begin
-  inherited;
-  FIconFont.Height := MulDiv(FIconFont.Height, M, D);
-  FTextSpacing := MulDiv(FTextSpacing, M, D);
-  UpdateRects;
-end;
-
 procedure FXCheckBox.PaintBuffer;
 var
   AText: string;
@@ -391,6 +521,13 @@ begin
       Font.Assign(Self.Font);
       Font.Color := FDrawColors.Foreground;
       DrawFlags := [FXTextFlag.VerticalCenter];
+
+      case FTextLayout of
+        FXLayout.Beginning: DrawFlags := DrawFlags + [FXTextFlag.Left];
+        FXLayout.Center: DrawFlags := DrawFlags + [FXTextFlag.Center];
+        FXLayout.Ending: DrawFlags := DrawFlags + [FXTextFlag.Right];
+      end;
+
       if WordWrap then
         DrawFlags := DrawFlags + [FXTextFlag.WordWrap];
       DrawTextRect(Buffer, Self.TextRect, FText, DrawFlags);
@@ -398,6 +535,10 @@ begin
       //  Set Brush Accent Color
       Font.Assign(IconFont);
       Font.Color := FIconAccentColors.GetColor(InteractionState);
+
+      // Paint Image
+      if Image.Enabled then
+        Image.DrawIcon(Buffer, ImageRect);
 
       //  Draw icon
       IconFormat := [tfVerticalCenter, tfCenter, tfSingleLine];

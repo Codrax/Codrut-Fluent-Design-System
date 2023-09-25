@@ -88,6 +88,9 @@ type
       procedure PaintBuffer; override;
       procedure WMSize(var Message: TWMSize); message WM_SIZE;
 
+      // Scale
+      procedure ScaleChanged(Scaler: single); override;
+
       // State
       procedure InteractionStateChanged(AState: FXControlState); override;
 
@@ -106,13 +109,16 @@ type
       property Min: int64 read FMin write SetMin default 0;
       property Max: int64 read FMax write SetMax default 100;
       property Animation: boolean read FAnimation write FAnimation;
+      property Minimised: boolean read FMinimised write FMinimised;
 
       property CustomScrollbarSize: integer read FCustomScrollBarHeight write SetCustomScrollbarSize;
       property PageSize: integer read FPageSize write SetPageSize default 1;
       property EnableButtons: boolean read FEnableButtons write SetEnableButtons default true;
       property AutoMinimise: boolean read FAutoMinimise write FAutoMinimise default true;
       property PreferLeftSide: boolean read FPreferLeftSide write FPreferLeftSide default false;
+
       property Align;
+      property PaddingFill;
       property Constraints;
       property Anchors;
       property Hint;
@@ -166,7 +172,7 @@ begin
 
   // Redraw
   UpdateRects;
-  PaintBuffer;
+  Invalidate;
 end;
 
 function FXScrollbar.IsContainer: Boolean;
@@ -238,9 +244,9 @@ begin
       else
         begin
           if Orientation = FXOrientation.Horizontal then
-            NewPosition := round((X - FScrollBarHeight / 2) / (Width - FScrollBarHeight) * (FMax - FMin))
+            NewPosition := round((X-DrawRect.Left - FScrollBarHeight / 2) / (DrawRect.Width - FScrollBarHeight) * (FMax - FMin))
           else
-            NewPosition := round((Y - FScrollBarHeight / 2) / (Height - FScrollBarHeight) * (FMax - FMin));
+            NewPosition := round((Y-DrawRect.Top - FScrollBarHeight / 2) / (DrawRect.Height - FScrollBarHeight) * (FMax - FMin));
         end;
 
       Position := NewPosition + FMin;
@@ -251,7 +257,7 @@ procedure FXScrollbar.UpdateTheme(const UpdateChildren: Boolean);
 begin
   UpdateColors;
   UpdateRects;
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXScrollbar.UpdateColors;
@@ -293,8 +299,10 @@ var
   ButtonsSize: integer;
   SliderSize: integer;
 begin
-  DrawRect := Rect(0, 0, Width, Height);
+  // Rect
+  DrawRect := GetClientRect;
 
+  // Build Rects
   if FOrientation = FXOrientation.Horizontal then
     begin
       // Slider
@@ -302,9 +310,10 @@ begin
       SliderSize := DrawRect.Height;
 
       // Button Rect
-      Button1 := Rect(0, 0, SliderSize, SliderSize);
+      Button1 := Rect(DrawRect.Left, DrawRect.Top,
+        DrawRect.Left+SliderSize, DrawRect.Top+SliderSize);
       Button2 := Button1;
-      Button2.Offset(Width - SliderSize, 0);
+      Button2.Offset(DrawRect.Width - SliderSize, 0);
 
       ButtonsSize := GetButtonsSize;
 
@@ -314,7 +323,7 @@ begin
       MaxPosition := MaxPossibleLength - FScrollBarHeight;
 
       SliderRect.Width := FScrollBarHeight;
-      SliderRect.Offset( SliderRect.Left + ButtonsSize div 2 + trunc(GetPercentage * MaxPosition),
+      SliderRect.Offset( ButtonsSize div 2 + trunc(GetPercentage * MaxPosition),
         0
         );
 
@@ -328,9 +337,10 @@ begin
       SliderSize := DrawRect.Width;
 
       // Button Rect
-      Button1 := Rect(0, 0, SliderSize, SliderSize);
+      Button1 := Rect(DrawRect.Left, DrawRect.Top,
+        DrawRect.Left+SliderSize, DrawRect.Top+SliderSize);
       Button2 := Button1;
-      Button2.Offset(0, Height - SliderSize);
+      Button2.Offset(0, DrawRect.Height - SliderSize);
 
       ButtonsSize := GetButtonsSize;
 
@@ -341,7 +351,7 @@ begin
 
       SliderRect.Height := FScrollBarHeight;
       SliderRect.Offset( 0,
-        SliderRect.Top + ButtonsSize div 2 + trunc(GetPercentage * MaxPosition)
+        ButtonsSize div 2 + trunc(GetPercentage * MaxPosition)
         );
 
       // Round
@@ -491,7 +501,7 @@ begin
       Brush.Style := bsSolid;
 
       // Slider Background
-      GDIRoundRect(MakeRoundRect(ClipRect, FRoundness*2), GetRGB(FBackgroundColor).MakeGDIBrush, nil);
+      GDIRoundRect(MakeRoundRect(DrawRect, FRoundness*2), GetRGB(FBackgroundColor).MakeGDIBrush, nil);
 
       // Full
       ARect := SliderRect;
@@ -605,7 +615,7 @@ begin
   if FEnableButtons <> Value then
     begin
       FEnableButtons := Value;
-      PaintBuffer;
+      Invalidate;
     end;
 end;
 
@@ -625,7 +635,7 @@ begin
         end;
 
       UpdateRects;
-      PaintBuffer;
+      Invalidate;
     end;
 end;
 
@@ -645,7 +655,7 @@ begin
         end;
 
       UpdateRects;
-      PaintBuffer;
+      Invalidate;
     end;
 end;
 
@@ -691,7 +701,7 @@ begin
           Height := AWidth;
 
           UpdateRects;
-          PaintBuffer;
+          Invalidate;;
         end;
     end;
 end;
@@ -703,7 +713,7 @@ begin
       FPageSize := Value;
 
       UpdateRects;
-      PaintBuffer;
+      Invalidate;
     end;
 end;
 
@@ -726,8 +736,14 @@ begin
         end;
 
       UpdateRects;
-      PaintBuffer;
+      Invalidate;
     end;
+end;
+
+procedure FXScrollbar.ScaleChanged(Scaler: single);
+begin
+  CustomScrollbarSize := round(CustomScrollbarSize * Scaler);
+  inherited;
 end;
 
 procedure FXScrollbar.SetCustomScrollbarSize(const Value: integer);
@@ -737,7 +753,7 @@ begin
       FCustomScrollBarHeight := Value;
 
       UpdateRects;
-      PaintBuffer;
+      Invalidate;
     end;
 end;
 
@@ -752,7 +768,7 @@ procedure FXScrollbar.WMSize(var Message: TWMSize);
 begin
   inherited;
   UpdateRects;
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXScrollbar.WM_LButtonUp(var Msg: TWMLButtonUp);
@@ -760,7 +776,7 @@ begin
   inherited;
   FPressInitiated := false;
   if EnableButtons then
-    PaintBuffer;
+    Invalidate;
 
   FRepeater.Enabled := false;
 end;
@@ -779,7 +795,7 @@ begin
       FBackgroundColor := ColorBlend(FDrawColors.BackGround, FDrawColors.BackGroundInterior, FAnimPos);
     end;
 
-  PaintBuffer;
+  Invalidate;
 
   // Stop
   if FAnimPos = 255 then
