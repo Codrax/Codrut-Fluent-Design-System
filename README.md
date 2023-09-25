@@ -16,10 +16,14 @@ The component package is not at a state where it can be considered finished with
 - Checkbox, a animated checkbox that supports 3 states
 - Edit Box, a flue edit box with vertical alignment support
 - Standard icon, a drawable TGraphicControl icon component that has multiple icons
-- IconView, a simple icon view control that relies on the FXIcon class for drawing & storing. Very lightweight
+- IconV iew, a simple icon view control that relies on the FXIcon class for drawing & storing. Very lightweight
 - Slider, a slider with tick support, hint previews and more features
 - Blur Material, a acrilic blur box that can be drawn from the wallaper or a screenshot of the screen. Great for Windows Fluent Design System like apps
 - Popup Menu, it supports (FXIconSelect) icons and can have multiple sub-menus, It used a acrylic effect for the background with a accent colored border. It also has Checkable items, Radio Items, separators and as mentioned before, It can go infinite layers deep
+- Text Box, a simple Label-Like component with more features. It also has a few components dependent on the base class
+- Animated Text Box, a label box with the ability to animate from a TStringList of values
+- Scroll Text, a box with scrolling text. The fade size, fade width and animation speed can be adjusted
+- Progress Bar, a simple animated progress bar with 4 different styles
 - ImageList, a work-in-progress component that can hold images
 
 ## Apps made with CodrutFluentDesignSystem
@@ -29,6 +33,7 @@ The component package is not at a state where it can be considered finished with
 
 ## Image Gallery
 > The following images are ALPHA versions of the component suite, the components are expected to change in the future.
+![Screenshot 2023-09-25 210750](https://github.com/Codrax/CodrutFluentDesignSystem/assets/68193064/7df7f666-a793-4b96-bb77-b3ab9a0fe7c0)
 ![Screenshot 2023-07-25 103550](https://github.com/Codrax/CodrutFluentDesignSystem/assets/68193064/d5245fdc-d226-40df-8d70-424012c3326c)
 ![ezgif com-video-to-gif(1)](https://github.com/Codrax/CodrutFluentDesignSystem/assets/68193064/8a3b3378-2c76-4baf-a1c2-84fa1748dc93)
 ![Screenshot 2023-06-29 185725](https://github.com/Codrax/CodrutFluentDesignSystem/assets/68193064/24959e8c-b207-4d24-9bc2-3a46a6e8708b)
