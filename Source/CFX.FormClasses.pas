@@ -2,12 +2,39 @@
 
 interface
   uses
-    Windows, Vcl.Graphics, Classes, Types, CFX.Types, CFX.UIConsts, SysUtils,
-    CFX.Colors, Vcl.Forms, CFX.Graphics, CFX.VarHelpers, CFX.ThemeManager,
-    Vcl.Controls, Messages, TypInfo, CFX.Linker, CFX.Classes, CFX.Forms,
-    CFX.ToolTip, CFX.TextBox, CFX.Panels, Vcl.StdCtrls, Vcl.ExtCtrls,
-    Vcl.Imaging.pngimage, CFX.Imported, CFX.Button, CFX.Progress,
-    CFX.StandardIcons;
+    Windows,
+    Vcl.Graphics,
+    Classes,
+    Types,
+    Vcl.Clipbrd,
+    CFX.Types,
+    CFX.UIConsts,
+    SysUtils,
+    CFX.Colors,
+    Vcl.Forms,
+    CFX.Graphics,
+    CFX.VarHelpers,
+    CFX.ThemeManager,
+    Vcl.Controls,
+    Messages,
+    TypInfo,
+    CFX.Linker,
+    CFX.Classes,
+    CFX.Forms,
+    CFX.ToolTip,
+    CFX.TextBox,
+    CFX.Panels,
+    Vcl.StdCtrls,
+    Vcl.ExtCtrls,
+    Vcl.Imaging.pngimage,
+    CFX.Imported,
+    CFX.Button,
+    CFX.Progress,
+    CFX.StandardIcons,
+    CFX.Utilities,
+    CFX.StringUtils,
+    CFX.ScrollBox,
+    CFX.Internet;
 
   type
     FXFillForm = class(TForm, FXControl)
@@ -83,26 +110,47 @@ interface
 
         Title_Box: FXTextBox;
 
-        Button_Contain,
-        Download_Progress: FXPanel;
+        LastErrorText: string;
 
+        Main_Contain: FXScrollBox;
+
+        Button_Contain,
+        Download_Progress,
+        Error_Contain,
+        Error_Buttons: FXPanel;
+
+        Animated_Box: FXAnimatedTextBox;
         Progress: FXProgress;
 
-        Button_Download,
+        FDownloadURL,
+        FParams: string;
+
+        FInstallThread: TThread;
+
         Button_Cancel: FXButton;
 
         // On Click
-        procedure SnoozeClick(Sender: TObject);
-        procedure DownloadClick(Sender: TObject);
+        procedure ButtonClick(Sender: TObject);
 
         // Data
         procedure UpdateTitle;
+
+        // Install
+        procedure ThreadedInstall;
+
+        // UI
+        procedure ShowError(Title, Text: string);
 
         // Setters
         procedure SetAllowSnooze(const Value: boolean);
         procedure SetAppName(const Value: string);
 
       protected
+        // Update download
+        function DoDownload(var From: string; ToFile: string): boolean; virtual;
+        procedure DoInstall(FromTempFile: string; Params: string); virtual;
+        function BuildTempFile: string; virtual;
+
         // Build
         procedure BuildControls; override;
 
@@ -115,6 +163,9 @@ interface
       published
         property AppName: string read FAppName write SetAppName;
         property AllowSnooze: boolean read FAllowSnooze write SetAllowSnooze;
+
+        property DownloadURL: string read FDownloadURL write FDownloadURL;
+        property InstallParameters: string read FParams write FParams;
     end;
 
     FXFormMessageTemplate = class(FXFillForm)
@@ -391,9 +442,17 @@ procedure FXFormUpdateTemplate.BuildControls;
 begin
   inherited;
 
-  with FXTextBox.Create(Container) do
+  Main_Contain := FXScrollBox.Create(Container);
+  with Main_Contain do
     begin
       Parent := Container;
+
+      Align := alClient;
+    end;
+
+  with FXTextBox.Create(Main_Contain) do
+    begin
+      Parent := Main_Contain;
       Text := 'On mobile network, data charges may occur. Any charges are not calculated. After the update, the application will re-open automatically.';
 
       Font.Size := 12;
@@ -412,10 +471,10 @@ begin
         end;
     end;
 
-  Title_Box := FXTextBox.Create(Container);
+  Title_Box := FXTextBox.Create(Main_Contain);
   with Title_Box do
     begin
-      Parent := Container;
+      Parent := Main_Contain;
       UpdateTitle;
 
       Font.Size := 18;
@@ -434,9 +493,9 @@ begin
         end;
     end;
 
-  with TImage.Create(Container) do
+  with TImage.Create(Main_Contain) do
     begin
-      Parent := Container;
+      Parent := Main_Contain;
       Top := 50;
       Left := 5;
       Width := 50;
@@ -463,15 +522,13 @@ begin
       Align := alBottom;
     end;
 
-  Button_Download := FXButton.Create(Button_Contain);
-  with Button_Download do
+  with FXButton.Create(Button_Contain) do
     begin
       Parent := Button_Contain;
 
       Height := BUTTON_HEIGHT;
       Width := BUTTON_WIDTH;
-      Top := 0;
-      Left := Container.Width - Width - 10;
+      Align := alRight;
 
       Anchors := [akBottom, akRight];
 
@@ -484,7 +541,8 @@ begin
         end;
 
       Text := 'Download';
-      OnClick := DownloadClick;
+      OnClick := ButtonClick;
+      Tag := 1;
 
       ButtonKind := FXButtonKind.Accent;
     end;
@@ -496,8 +554,7 @@ begin
 
       Height := BUTTON_HEIGHT;
       Width := BUTTON_WIDTH;
-      Top := 0;
-      Left := Container.Width - Width - 10 - BUTTON_WIDTH - 10;
+      Align := alRight;
 
       Anchors := [akBottom, akRight];
 
@@ -512,9 +569,19 @@ begin
         end;
 
       Text := 'Snooze';
-      OnClick := SnoozeClick;
+      OnClick := ButtonClick;
+      Tag := 0;
 
       ButtonKind := FXButtonKind.Normal;
+
+      AlignWithMargins := true;
+      with Margins do
+        begin
+          Left := 0;
+          Top := 0;
+          Right := 15;
+          Bottom := 0;
+        end;
     end;
 
   // Progress
@@ -530,15 +597,17 @@ begin
       Align := alBottom;
     end;
 
-  with FXAnimatedTextBox.Create(Download_Progress) do
+  Animated_Box := FXAnimatedTextBox.Create(Download_Progress);
+  with Animated_Box do
     begin
       Parent := Download_Progress;
-      Text := 'Downloading Updates';
+      AdderMode := true;
+      AdderText := 'Downloading Updates';
 
-      Items.Add(Text + '');
-      Items.Add(Text + '.');
-      Items.Add(Text + '..');
-      Items.Add(Text + '...');
+      Items.Add('');
+      Items.Add('.');
+      Items.Add('..');
+      Items.Add('...');
 
       Font.Size := 12;
 
@@ -567,12 +636,206 @@ begin
 
       Align := alTop;
     end;
+
+  // Error
+  Error_Contain := FXPanel.Create(Main_Contain);
+  with Error_Contain do
+    begin
+      Parent := Main_Contain;
+
+      Height := 150;
+
+      Top := Main_Contain.Height;
+
+      Visible := false;
+
+      Align := alTop;
+
+      AlignWithMargins := true;
+      with Margins do
+        begin
+          Left := 0;
+          Top := 50;
+          Right := 0;
+          Bottom := 0;
+        end;
+    end;
+
+  with FXTextBox.Create(Error_Contain) do
+    begin
+      Parent := Error_Contain;
+
+      Font.Size := 14;
+
+      WordWrap := true;
+
+      Align := alTop;
+      AlignWithMargins := true;
+
+      Caption := 'Unfortunately an error occured and the installation will not be able to continue.';
+
+      with Margins do
+        begin
+          Left := 75;
+          Top := 5;
+          Right := 5;
+          Bottom := 5;
+        end;
+    end;
+
+  with FXTextBox.Create(Error_Contain) do
+    begin
+      Parent := Error_Contain;
+
+      Font.Size := 18;
+
+      WordWrap := true;
+
+      Align := alTop;
+
+      Caption := 'An error occured';
+
+      AlignWithMargins := true;
+      with Margins do
+        begin
+          Left := 75;
+          Top := 5;
+          Right := 5;
+          Bottom := 5;
+        end;
+    end;
+
+  with FXTextBox.Create(Error_Contain) do
+    begin
+      Parent := Error_Contain;
+      Top := 5;
+      Left := 5;
+      Width := 50;
+      Height := 50;
+
+      Font.Size := 40;
+      Font.Name := ThemeManager.IconFont;
+
+      Caption := #$EA39;
+
+      with Margins do
+        begin
+          Left := 75;
+          Top := 5;
+          Right := 5;
+          Bottom := 5;
+        end;
+    end;
+
+  // Error Buttons
+  Error_Buttons := FXPanel.Create(Container);
+  with Error_Buttons do
+    begin
+      Parent := Container;
+
+      Height := 50;
+      Visible := false;
+
+      Align := alBottom;
+    end;
+
+  with FXButton.Create(Error_Buttons) do
+    begin
+      Parent := Error_Buttons;
+
+      Height := BUTTON_HEIGHT;
+      Width := BUTTON_WIDTH;
+      Align := alRight;
+
+      Anchors := [akBottom, akRight];
+
+      with Image do
+        begin
+          Enabled := true;
+          IconType := FXIconType.SegoeIcon;
+
+          SelectSegoe := #$E16F;
+        end;
+
+      AutoStateToggle := true;
+      StateText := 'Copied!';
+      with StateImage do
+        begin
+          Enabled := true;
+          IconType := FXIconType.SegoeIcon;
+
+          SelectSegoe := #$E001;
+        end;
+
+      Text := 'Copy error';
+      OnClick := ButtonClick;
+      Tag := 2;
+
+      ButtonKind := FXButtonKind.Normal;
+
+      AlignWithMargins := true;
+      with Margins do
+        begin
+          Left := 0;
+          Top := 0;
+          Right := 15;
+          Bottom := 0;
+        end;
+    end;
+
+  with FXButton.Create(Error_Buttons) do
+    begin
+      Parent := Error_Buttons;
+
+      Height := BUTTON_HEIGHT;
+      Width := BUTTON_WIDTH;
+      Align := alRight;
+
+      Anchors := [akBottom, akRight];
+
+      with Image do
+        begin
+          Enabled := true;
+          IconType := FXIconType.SegoeIcon;
+
+          SelectSegoe := #$E10A;
+        end;
+
+      Text := 'Close';
+      OnClick := ButtonClick;
+      Tag := 3;
+
+      ButtonKind := FXButtonKind.Accent;
+    end;
 end;
 
-procedure FXFormUpdateTemplate.DownloadClick(Sender: TObject);
+function FXFormUpdateTemplate.BuildTempFile: string;
+var
+  S: string;
 begin
-  Button_Contain.Hide;
-  Download_Progress.Show;
+  S := GenerateString(8, true, false, true, false);
+  Result := ReplaceWinPath(Format('%%TEMP%%\updateinstall_%S.exe', [S]));
+end;
+
+function FXFormUpdateTemplate.DoDownload(var From: string; ToFile: string): boolean;
+begin
+  try
+    Result := DownloadFile(From, ToFile);
+
+    if not Result then
+      LastErrorText := 'The file could not be downloaded.';
+  except
+    on E: Exception do
+      begin
+        Result := false;
+        LastErrorText := E.Message;
+      end;
+  end;
+end;
+
+procedure FXFormUpdateTemplate.DoInstall(FromTempFile, Params: string);
+begin
+  ShellRun( FromTempFile, Params )
 end;
 
 procedure FXFormUpdateTemplate.InitializeNewForm;
@@ -602,9 +865,90 @@ begin
   UpdateTitle;
 end;
 
-procedure FXFormUpdateTemplate.SnoozeClick(Sender: TObject);
+procedure FXFormUpdateTemplate.ShowError(Title, Text: string);
 begin
-  Hide;
+  Download_Progress.Visible := false;
+
+  Button_Contain.Visible := false;
+  Error_Contain.Visible := true;
+  Error_Buttons.Visible := true;
+end;
+
+procedure FXFormUpdateTemplate.ButtonClick(Sender: TObject);
+begin
+  case FXButton(Sender).Tag of
+    0, 3: Hide;
+    1: begin
+      Button_Contain.Hide;
+      Download_Progress.Show;
+
+      ThreadedInstall;
+    end;
+    2: Clipboard.AsText := LastErrorText;
+  end;
+end;
+
+procedure FXFormUpdateTemplate.ThreadedInstall;
+begin
+  BuildTempFile;
+
+  FInstallThread := TThread.CreateAnonymousThread(procedure
+    begin
+      var AFilePath: string;
+      AFilePath := BuildTempFile;
+
+      // Wait
+      Sleep(ONE_SECOND);
+
+      // Download
+      if not DoDownload( FDownloadURL, AFilePath ) then
+        begin
+          TThread.Synchronize(nil, procedure
+          begin
+            // Show download error
+            ShowError('Download error', 'Unfortunately a download error occured and the install cannot continue. Try again at a later time.');
+          end);
+
+          Exit;
+        end;
+
+      // Status
+      TThread.Synchronize(nil, procedure
+        begin
+          Animated_Box.AdderText := 'Installing';
+        end);
+
+      // Wait
+      Sleep(ONE_SECOND);
+
+      // Install
+      TThread.Synchronize(nil, procedure
+        begin
+          DoInstall( AFilePath, FParams );
+        end);
+
+      { Auto deletion is handeled by installer }
+
+      // Statis
+      TThread.Synchronize(nil, procedure
+        begin
+          Animated_Box.AdderText := 'Closing';
+        end);
+
+      // Close app
+      Sleep(FIVE_SECOND);
+
+      TThread.Synchronize(nil, procedure
+        begin
+          Application.MainForm.Close;
+        end);
+    end);
+
+  with FInstallThread do
+    begin
+      FreeOnTerminate := true;
+      Start;
+    end;
 end;
 
 procedure FXFormUpdateTemplate.UpdateTitle;
@@ -672,17 +1016,6 @@ begin
       Height := 50;
 
       SelectedIcon := IconKind;
-    end;
-
-  with FXStandardIcon.Create(Container) do
-    begin
-      Parent := Container;
-      Top := 50;
-      Left := 50;
-      Width := 200;
-      Height := 200;
-
-      SelectedIcon := FXStandardIconType.Error;
     end;
 
   // Buttons

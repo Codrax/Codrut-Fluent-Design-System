@@ -234,6 +234,7 @@ type
     property ShowHint;
     property TabStop;
     property TabOrder;
+    property FocusFlags;
     property Align;
     property Anchors;
     property Constraints;

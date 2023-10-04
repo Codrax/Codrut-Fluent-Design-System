@@ -10,6 +10,7 @@ uses
   Vcl.Graphics,
   Vcl.ExtCtrls,
   Types,
+  SyncObjs,
   Math,
   Threading,
   CFX.Colors,
@@ -46,6 +47,7 @@ type
       FProgressPos: integer;
 
       FAnimateThread: TThread;
+      FThreadFinishedEvent: TEvent;
       FThreadActive: boolean;
 
       FValue: single;
@@ -105,8 +107,9 @@ type
       property Anchors;
       property Hint;
       property ShowHint;
-      property TabStop;
+      property TabStop default false;
       property TabOrder;
+      property FocusFlags;
       property OnEnter;
       property OnExit;
       property OnClick;
@@ -195,6 +198,11 @@ end;
 constructor FXProgress.Create(aOwner: TComponent);
 begin
   inherited;
+  AutoFocusLine := true;
+  BufferedComponent := true;
+
+  TabStop := false;
+
   // Custom Color
   Value := 0;
   FAnimations := true;
@@ -207,6 +215,9 @@ begin
 
   FDrawColors := FXCompleteColorSet.Create;
   FOtherColors := FXColorSet.Create;
+
+  // Threading
+  FThreadFinishedEvent := TEvent.Create(nil, True, False, '');
 
   // Sizing
   Height := 20;
@@ -221,7 +232,17 @@ destructor FXProgress.Destroy;
 begin
   // Stop Threads
   FProgressPos := MAX_ANIM;
-  FThreadActive := false;
+
+  if FThreadActive and (FAnimateThread <> nil) then
+    begin
+      FAnimateThread.Terminate;
+      FThreadFinishedEvent.ResetEvent;
+
+      if FThreadFinishedEvent.WaitFor(FIFTH_SECOND) = wrTimeout then
+        FAnimateThread.Free;
+    end;
+
+  FThreadFinishedEvent.Free;
 
   // Destroy
   FreeAndNil( FCustomColors );
@@ -440,7 +461,14 @@ begin
 
               // Sleep
               Sleep(10);
+
+              // Terminate
+              if FAnimateThread.CheckTerminated then
+                Break;
             end;
+
+          // Done
+          FThreadFinishedEvent.SetEvent;
         end);
       with FAnimateThread do
         begin

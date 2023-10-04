@@ -33,6 +33,7 @@ interface
       FOnPaintBuffer: FXControlOnPaint;
       FPadding: FXPadding;
       FTextFont: TFont;
+      FFocusFlags: FXFocusFlags;
 
       // Events
       procedure WMNCHitTest(var Message: TWMNCHitTest); message WM_NCHITTEST;
@@ -65,6 +66,8 @@ interface
       procedure Paint; override;
       procedure PaintBuffer; virtual;
 
+      property BufferedComponent: boolean read FBufferedComponent write FBufferedComponent;
+
       property OnPaint: FXControlOnPaint read FOnPaint write FOnPaint;
       property OnPaintBuffer: FXControlOnPaint read FOnPaintBuffer write FOnPaintBuffer;
 
@@ -83,9 +86,6 @@ interface
       // Focus Line and Events
       procedure DoEnter; override;
       procedure DoExit; override;
-
-      property FocusRect: TRect read FFocusRect write FFocusRect;
-      property AutoFocusLine: boolean read FAutoFocusLine write FAutoFocusLine;
 
       // Padding
       property PaddingFill: FXPadding read FPadding write FPadding;
@@ -119,18 +119,19 @@ interface
       // Catch Events
       procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
 
-      // Color
-      property Color;
-
-      // Interact State
-      property InteractionState: FXControlState read FInteraction write SetState;
-      property PreviousInteractionState: FXControlState read FPreviousInteraction write FPreviousInteraction;
-
-      // Draw Buffer
-      property BufferedComponent: boolean read FBufferedComponent write FBufferedComponent;
-
       // Scaling
       procedure ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF}); override;
+
+      // Properties
+      property Color;
+
+      property FocusRect: TRect read FFocusRect write FFocusRect;
+      property AutoFocusLine: boolean read FAutoFocusLine write FAutoFocusLine;
+
+      property FocusFlags: FXFocusFlags read FFocusFlags write FFocusFlags default [];
+
+      property InteractionState: FXControlState read FInteraction write SetState;
+      property PreviousInteractionState: FXControlState read FPreviousInteraction write FPreviousInteraction;
 
     published
       // Buffer
@@ -537,7 +538,20 @@ end;
 procedure FXWindowsControl.HandleKeyDown(var CanHandle: boolean; Key: integer;
   ShiftState: TShiftState);
 begin
-  // nothing
+  // Handle options // or nothing
+  if FFocusFlags <> [] then
+    case Key of
+      VK_TAB: if FXFocusFlag.CatchTab in FFocusFlags then
+        CanHandle := false;
+      VK_LEFT: if FXFocusFlag.CatchLeft in FFocusFlags then
+        CanHandle := false;
+      VK_UP: if FXFocusFlag.CatchUp in FFocusFlags then
+        CanHandle := false;
+      VK_RIGHT: if FXFocusFlag.CatchRight in FFocusFlags then
+        CanHandle := false;
+      VK_DOWN: if FXFocusFlag.CatchDown in FFocusFlags then
+        CanHandle := false;
+    end;
 end;
 
 procedure FXWindowsControl.InteractionStateChanged(AState: FXControlState);

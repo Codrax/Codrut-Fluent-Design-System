@@ -18,6 +18,10 @@ interface
     // Icon Type
     FXIconType = (Image, BitMap, ImageList, SegoeIcon);
 
+    // Component
+    FXFocusFlag = (CatchTab, CatchLeft, CatchUp, CatchRight, CatchDown);
+    FXFocusFlags = set of FXFocusFlag;
+
     // FXForm
     FXFormFill = (TitleBar, Complete);
     FXFormCloseAction = (Default, Free, Hide, Minimise);

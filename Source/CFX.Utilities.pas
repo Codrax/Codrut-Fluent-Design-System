@@ -14,7 +14,7 @@ uses
   function GetUserNameString: string;
 
   // Shell
-  procedure ShellRun(Command: string);
+  procedure ShellRun(Command: string; Parameters: string = '');
 
   // String
   function IsStringAlphaNumeric(const S: string): Boolean;
@@ -89,9 +89,9 @@ begin
    RaiseLastOSError;
 end;
 
-procedure ShellRun(Command: string);
+procedure ShellRun(Command, Parameters: string);
 begin
-  ShellExecute(0, 'open', PChar(Command), '', nil, 0);
+  ShellExecute(0, 'open', PChar(Command), PChar(Parameters), nil, 0);
 end;
 
 function IsStringAlphaNumeric(const S: string): Boolean;

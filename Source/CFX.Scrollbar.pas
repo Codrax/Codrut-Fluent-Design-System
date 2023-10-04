@@ -125,6 +125,7 @@ type
       property ShowHint;
       property TabStop;
       property TabOrder;
+      property FocusFlags;
       property OnEnter;
       property OnExit;
       property OnClick;

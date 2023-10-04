@@ -106,6 +106,7 @@ type
       property ShowHint;
       property TabStop default false;
       property TabOrder;
+      property FocusFlags;
       property OnEnter;
       property OnExit;
       property OnClick;
@@ -141,18 +142,31 @@ type
 
       FPosition: integer;
 
+      FAdderMode: boolean;
+      FAdderText: string;
+
       // Settters
       procedure SetAnimating(const Value: boolean);
       procedure SetItems(const Value: TStringList);
+      procedure SetAdderMode(const Value: boolean);
+      procedure SetAdderText(const Value: string);
+      procedure SetDelay(const Value: integer);
+
+      // Text
+      procedure LoadItem(Index: integer);
+      procedure ReloadItem;
 
       // Tick
       procedure TimerTick(Sender: TObject);
-      procedure SetDelay(const Value: integer);
+      procedure ItemsOnChange(Sender: TObject);
 
     published
       property Items: TStringList read FItems write SetItems;
       property Delay: integer read FDelay write SetDelay default 100;
       property Animating: boolean read FAnimating write SetAnimating default true;
+
+      property AdderMode: boolean read FAdderMode write SetAdderMode default false;
+      property AdderText: string read FAdderText write SetAdderText;
 
       function Count: integer;
 
@@ -502,7 +516,11 @@ begin
   FDelay := 1000;
   FAnimating := true;
 
+  FAdderMode := false;
+  FAdderText := '';
+
   FItems := TStringList.Create;
+  FItems.OnChange := ItemsOnChange;
   if IsDesigning then
     begin
       with FItems do
@@ -512,7 +530,7 @@ begin
           Add('Item 3');
         end;
 
-      FText := FItems[0];
+      LoadItem(0);
     end
   else
     FText := TEXT_LIST_EMPTY;
@@ -531,6 +549,54 @@ begin
   FreeAndNil( FTimer );
   FreeAndNil( FItems );
   inherited;
+end;
+
+procedure FXAnimatedTextBox.ItemsOnChange(Sender: TObject);
+var
+  ACount: integer;
+begin
+  ACount := Count;
+
+  if (FPosition >= ACount) or (ACount = 0) then
+    FPosition := 0;
+
+  ReloadItem;
+end;
+
+procedure FXAnimatedTextBox.LoadItem(Index: integer);
+begin
+  if (Count > 0) and (Index < Count) then
+    if FAdderMode then
+      Text := FAdderText + FItems[Index]
+    else
+      Text := FItems[Index]
+  else
+    Text := TEXT_LIST_EMPTY;
+end;
+
+procedure FXAnimatedTextBox.ReloadItem;
+begin
+  LoadItem(FPosition);
+end;
+
+procedure FXAnimatedTextBox.SetAdderMode(const Value: boolean);
+begin
+  if FAdderMode <> Value then
+    begin
+      FAdderMode := Value;
+
+      ReloadItem;
+    end;
+end;
+
+procedure FXAnimatedTextBox.SetAdderText(const Value: string);
+begin
+  if FAdderText <> Value then
+    begin
+      FAdderText := Value;
+
+      ReloadItem;
+    end;
 end;
 
 procedure FXAnimatedTextBox.SetAnimating(const Value: boolean);
@@ -558,10 +624,7 @@ begin
   FItems.Assign( Value );
   FPosition := 0;
 
-  if FItems.Count > 0 then
-    Text := FItems[0]
-  else
-    Text := TEXT_LIST_EMPTY;
+  LoadItem(0);
 end;
 
 procedure FXAnimatedTextBox.TimerTick(Sender: TObject);
@@ -570,8 +633,7 @@ begin
     Exit;
 
   // Set
-  if (Count > 0) and (FPosition < Count) then
-    Text := FItems[FPosition];
+  LoadItem(FPosition);
 
   // Next
   Inc(FPosition);

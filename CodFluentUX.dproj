@@ -169,6 +169,7 @@
         <DCCReference Include="Source\CFX.Imported.pas"/>
         <DCCReference Include="Source\CFX.Progress.pas"/>
         <DCCReference Include="Source\CFX.Threading.pas"/>
+        <DCCReference Include="Source\CFX.Internet.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

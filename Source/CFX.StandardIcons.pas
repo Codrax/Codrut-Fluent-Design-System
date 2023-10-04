@@ -30,10 +30,13 @@ type
       FWidth: integer;
       FDrawColors: FXColorSet;
       FCustomColors: FXColorSets;
+      FLastSize: TRect;
 
       procedure SetIcon(const Value: FXStandardIconType);
       procedure SetProport(const Value: boolean);
       procedure SetWid(const Value: integer);
+
+      procedure ApplyProportion;
 
       class procedure DrawPentacle(Canvas : TCanvas; Pent : TPent);
       class function MakePent(X, Y, L : integer) : TPent;
@@ -91,6 +94,32 @@ type
 implementation
 
 { CProgress }
+
+procedure FXStandardIcon.ApplyProportion;
+begin
+  // Set proportion
+  if FProport then begin
+    case Align of
+      // Defaultt
+      alNone: begin
+        if width < height then
+          height := width
+        else
+          width := height;
+      end;
+
+      alTop, alBottom: begin
+        if width <> height then
+          width := height;
+      end;
+
+      alLeft, alRight: begin
+        if width <> height then
+          height := width;
+      end;
+    end;
+  end;
+end;
 
 function FXStandardIcon.Background: TColor;
 begin
@@ -311,28 +340,15 @@ end;
 procedure FXStandardIcon.Resize;
 begin
   inherited;
-  // Set proportion
-  if FProport then begin
-    case Align of
-      // Defaultt
-      alNone: begin
-        if width < height then
-          height := width
-        else
-          width := height;
-      end;
-
-      alTop, alBottom: begin
-        if width <> height then
-          width := height;
-      end;
-
-      alLeft, alRight: begin
-        if width <> height then
-          height := width;
-      end;
+  if FProport and not IsReading then
+    begin
+      if Width <> FLastSize.Width then
+        Height := Width
+      else
+        Width := Height;
     end;
-  end;
+
+  FLastSize := ClientRect;
 end;
 
 procedure FXStandardIcon.SetIcon(const Value: FXStandardIconType);
@@ -358,7 +374,10 @@ begin
       FProport := Value;
 
       if not IsReading then
-        Paint;
+        begin
+          // Apply
+          ApplyProportion;
+        end;
     end;
 end;
 

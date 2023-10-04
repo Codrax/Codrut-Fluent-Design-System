@@ -213,6 +213,7 @@ type
       property ShowHint;
       property TabStop;
       property TabOrder;
+      property FocusFlags;
       property OnEnter;
       property OnExit;
       property OnClick;
@@ -273,7 +274,7 @@ implementation
 procedure FXCustomEdit.InteractionStateChanged(AState: FXControlState);
 begin
   inherited;
-  PaintBuffer;
+  Invalidate;
 end;
 
 function FXCustomEdit.IsContainer: Boolean;
@@ -472,7 +473,7 @@ begin
     FLineColor := FDrawColors.Accent
   else
     FLineColor := FDrawColors.BackGroundInterior;
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXCustomEdit.UpdateRects;
@@ -612,7 +613,7 @@ begin
 
       FSelLength := 0;
 
-      PaintBuffer;
+      Invalidate;
     end;
 end;
 
@@ -835,7 +836,7 @@ begin
                 DeleteChar(Position);
                 IncPosition(-1);
 
-                PaintBuffer;
+                Invalidate;
                 CanHandle := false;
               end;
           end;
@@ -849,7 +850,7 @@ begin
         begin
           DeleteChar(Position+1);
 
-          PaintBuffer;
+          Invalidate;
           CanHandle := false;
         end;
     end;
@@ -913,7 +914,7 @@ begin
 
   // Update
   UpdateRects;
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXCustomEdit.Clear;
@@ -1277,7 +1278,7 @@ begin
       UpdateAutoSize;
 
       UpdateRects;
-      PaintBuffer;
+      Invalidate;
     end;
 end;
 
@@ -1354,7 +1355,7 @@ begin
       FLineSize := Value;
 
       UpdateRects;
-      PaintBuffer;
+      Invalidate;
     end;
 end;
 
@@ -1407,7 +1408,7 @@ begin
     begin
       FRoundness := Value;
 
-      PaintBuffer;
+      Invalidate;
     end;
 end;
 
@@ -1443,7 +1444,7 @@ begin
 
   // Update
   UpdateRects;
-  PaintBuffer;
+  Invalidate;
 end;
 
 procedure FXCustomEdit.SetTextHint(const Value: string);

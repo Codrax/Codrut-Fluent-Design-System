@@ -98,7 +98,8 @@ contains
   CFX.FormClasses in 'Source\CFX.FormClasses.pas',
   CFX.Imported in 'Source\CFX.Imported.pas',
   CFX.Progress in 'Source\CFX.Progress.pas',
-  CFX.Threading in 'Source\CFX.Threading.pas';
+  CFX.Threading in 'Source\CFX.Threading.pas',
+  CFX.Internet in 'Source\CFX.Internet.pas';
 
 end.
 
