@@ -8,6 +8,7 @@ uses
   Vcl.Controls,
   Vcl.Graphics,
   Types,
+  Math,
   UITypes,
   CFX.Colors,
   CFX.ThemeManager,
@@ -118,14 +119,24 @@ type
       property PreferLeftSide: boolean read FPreferLeftSide write FPreferLeftSide default false;
 
       property Align;
+      property Transparent;
+      property Opacity;
       property PaddingFill;
       property Constraints;
       property Anchors;
       property Hint;
       property ShowHint;
+      property ParentShowHint;
       property TabStop;
       property TabOrder;
       property FocusFlags;
+      property DragKind;
+      property DragCursor;
+      property DragMode;
+      property OnDragDrop;
+      property OnDragOver;
+      property OnEndDrag;
+      property OnStartDrag;
       property OnEnter;
       property OnExit;
       property OnClick;
@@ -299,6 +310,19 @@ var
   MaxPosition: integer;
   ButtonsSize: integer;
   SliderSize: integer;
+procedure CalculateScrollbarHeight;
+begin
+  // Scrollbar Size
+  if CustomScrollbarSize > 0 then
+    FScrollBarHeight := CustomScrollbarSize
+  else
+    begin
+      if PageSize > 1 then
+        FScrollBarHeight := Math.Max( trunc(GetPercentageCustom(PageSize) * MaxPossibleLength), SCROLLBAR_MIN_SIZE)
+      else
+        FScrollBarHeight := SCROLLBAR_DEFAULT_SIZE;
+    end;
+end;
 begin
   // Rect
   DrawRect := GetClientRect;
@@ -321,6 +345,7 @@ begin
       // Value
       SliderRect.Inflate(-FSliderSpacing, -FSliderSpacing);
       MaxPossibleLength := SliderRect.Width - FSliderSpacing * 2 - ButtonsSize;
+      CalculateScrollbarHeight;
       MaxPosition := MaxPossibleLength - FScrollBarHeight;
 
       SliderRect.Width := FScrollBarHeight;
@@ -348,6 +373,7 @@ begin
       // Value
       SliderRect.Inflate(-FSliderSpacing, -FSliderSpacing);
       MaxPossibleLength := SliderRect.Height - FSliderSpacing * 2 - ButtonsSize;
+      CalculateScrollbarHeight;
       MaxPosition := MaxPossibleLength - FScrollBarHeight;
 
       SliderRect.Height := FScrollBarHeight;
@@ -357,17 +383,6 @@ begin
 
       // Round
       FRoundness := DrawRect.Width div 2;
-    end;
-
-  // Scrollbar Size
-  if CustomScrollbarSize > 0 then
-    FScrollBarHeight := CustomScrollbarSize
-  else
-    begin
-      if PageSize > 1 then
-        FScrollBarHeight := trunc(GetPercentageCustom(PageSize) * MaxPossibleLength)
-      else
-        FScrollBarHeight := SCROLLBAR_DEFAULT_SIZE;
     end;
 
   // Re-Minimise

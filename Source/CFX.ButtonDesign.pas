@@ -235,6 +235,13 @@ type
     property TabStop;
     property TabOrder;
     property FocusFlags;
+    property DragKind;
+    property DragCursor;
+    property DragMode;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDrag;
+    property OnStartDrag;
     property Align;
     property Anchors;
     property Constraints;
@@ -655,6 +662,9 @@ begin
     end;
   end;
 
+  c1 := colortorgb(c1);
+  c2 := colortorgb(c2);
+
   if FAnimations.FFadeAnimation then
     Result := ColorBlend(c1, c2, progress * (255 div FAnimations.FASpeed))
   else
@@ -679,6 +689,9 @@ begin
     mbsLeave: c2 := FTextColors.Leave;
     mbsEnter: c2 := FTextColors.Enter;
   end;
+
+  c1 := colortorgb(c1);
+  c2 := colortorgb(c2);
 
   if FAnimations.FFadeAnimation then
     Result := ColorBlend(c1, c2, progress * (255 div FAnimations.FASpeed))

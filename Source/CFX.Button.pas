@@ -32,6 +32,9 @@ type
 
   FXButton = class(FXWindowsControl, FXControl)
     private
+      const
+        KEY_PRESS_KEYS = [13, 32];
+
       var DrawRect, CaptionRect, IndicatorRect, ImageRect, TheTextRect: TRect;
       FCustomColors: FXCompleteColorSets;
       FCustomButtonColors: FXColorStateSets;
@@ -74,6 +77,7 @@ type
       FLineWidth: real;
       FDetail: FXDetailType;
       FShowText: boolean;
+      FArrowOffset: integer;
 
       //  Internal
       procedure UpdateColors;
@@ -129,6 +133,8 @@ type
       procedure InteractionStateChanged(AState: FXControlState); override;
 
       // Key Presses
+      procedure KeyDown(var Key: Word; Shift: TShiftState); override;
+      procedure KeyUp(var Key: Word; Shift: TShiftState); override;
       procedure KeyPress(var Key: Char); override;
 
       // Mouse
@@ -144,7 +150,6 @@ type
 
       property ShowText: boolean read FShowText write SetShowText default true;
       property Text: string read FText write SetText;
-      property Font;
       property WordWrap: boolean read FWordWrap write SetWordWrap default true;
       property Image: FXIconSelect read FImage write SetImage;
       property ImageScale: real read FImageScale write SetImageScale;
@@ -180,14 +185,25 @@ type
 
       // Properties
       property Align;
+      property Font;
+      property Transparent;
+      property Opacity;
       property PaddingFill;
       property Constraints;
       property Anchors;
       property Hint;
       property ShowHint;
+      property ParentShowHint;
       property TabStop;
       property TabOrder;
       property FocusFlags;
+      property DragKind;
+      property DragCursor;
+      property DragMode;
+      property OnDragDrop;
+      property OnDragOver;
+      property OnEndDrag;
+      property OnStartDrag;
       property OnEnter;
       property OnExit;
       property OnClick;
@@ -232,9 +248,22 @@ begin
       FAnim.StartValue := 0;
       FAnim.DeltaValue := 255;
 
+      const MaxArrowOffset = GetTextH / 8;
       FAnim.OnSync := procedure(Value: integer)
       begin
         FAnimPos := trunc(FAnim.Percent * 255);
+
+        if (ButtonKind = FXButtonKind.Dropdown) then
+          begin
+            case PreviousInteractionState of
+              FXControlState.Hover: if InteractionState = FXControlState.Press then
+                FArrowOffset := round(FAnim.Percent * MaxArrowOffset);
+
+              FXControlState.Press: FArrowOffset := round(MaxArrowOffset - FAnim.Percent * MaxArrowOffset);
+
+              else FArrowOffset := 0;
+            end;
+          end;
 
         if Destroyed then
           begin
@@ -261,15 +290,27 @@ begin
   Result := false;
 end;
 
+procedure FXButton.KeyDown(var Key: Word; Shift: TShiftState);
+begin
+  inherited;
+  if Key in KEY_PRESS_KEYS then
+    SetNewInteractionState(FXControlState.Press, false, false);
+end;
+
 procedure FXButton.KeyPress(var Key: Char);
 begin
   inherited;
   if (Key = #13) or (Key = #32) then
     begin
-      PreviousInteractionState := FXControlState.Press;
       Click;
-      SetNewInteractionState(FXControlState.None, true, false);
     end;
+end;
+
+procedure FXButton.KeyUp(var Key: Word; Shift: TShiftState);
+begin
+  inherited;
+  if Key in KEY_PRESS_KEYS then
+    SetNewInteractionState(FXControlState.None, true, false);
 end;
 
 procedure FXButton.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
@@ -343,6 +384,13 @@ begin
           else
             LoadPreset := FXButtonKind.Normal;
         end;
+
+        FXButtonKind.FlatToggle: begin
+          if Checked then
+            LoadPreset := FXButtonKind.Accent
+          else
+            LoadPreset := FXButtonKind.Flat;
+        end;
       end;
 
       // Load from FDrawColors
@@ -357,7 +405,7 @@ begin
 
       with FButtonColors do
         case LoadPreset of
-          FXButtonKind.Normal, FXButtonKind.Dropdown, FXButtonKind.Toggle:
+          FXButtonKind.Normal, FXButtonKind.Dropdown:
             begin
               if AutomaticCursorPointer and not IsReading then
                 Cursor := crDefault;
@@ -446,7 +494,7 @@ begin
 
   // Button Kind
   case ButtonKind of
-    FXButtonKind.Normal, FXButtonKind.Accent, FXButtonKind.Toggle, FXButtonKind.Link, FXButtonKind.Flat:
+    FXButtonKind.Normal, FXButtonKind.Accent, FXButtonKind.Toggle, FXButtonKind.FlatToggle, FXButtonKind.Link, FXButtonKind.Flat:
       begin
         CaptionRect := DrawRect;
         CaptionRect.Inflate(AMargin, AMargin);
@@ -835,7 +883,12 @@ begin
 
       UpdateRects;
       Invalidate;
-    end;
+    end
+  else
+    if Value and FAutoStopState.Enabled then
+      begin
+        FAutoStopState.ResetTimer;
+      end;
 end;
 
 procedure FXButton.SetStateImage(const Value: FXIconSelect);
@@ -854,7 +907,6 @@ end;
 
 procedure FXButton.SetStateText(const Value: string);
 begin
-  FStateText := Value;
   if FStateText <> Value then
     begin
       FStateText := Value;
@@ -981,7 +1033,7 @@ begin
   FButtonColors := FXColorStateSet.Create;
 
   FText := 'Button';
-  FStateText := 'Success';
+  //FStateText := BUTTON_STATE_TEXT;
 
   // Sizing
   Height := 35;
@@ -1018,7 +1070,7 @@ var
 begin
   // Toggle Button
   case ButtonKind of
-    FXButtonKind.Toggle:
+    FXButtonKind.Toggle, FXButtonKind.FlatToggle:
       begin
         Checked := not Checked;
 
@@ -1065,6 +1117,7 @@ begin
         Form.ModalResult := ModalResult;
     end;
 
+  // Check freed by form..?
   inherited;
 end;
 
@@ -1105,7 +1158,7 @@ begin
       AWidth := 0;
       FPen := nil;
       case Detail of
-        FXDetailType.None, FXDetailType.Underline: begin
+        FXDetailType.None: begin
           if FBorderWidth <> 0 then
             FPen := GetRGB(FDrawColors.BackGroundInterior).MakeGDIPen(FBorderWidth);
           AWidth := trunc(FBorderWidth);
@@ -1113,6 +1166,12 @@ begin
         FXDetailType.Outline: begin
           FPen := GetRGB(FDrawColors.BackGroundInterior).MakeGDIPen(LineWidth);
           AWidth := round(LineWidth);
+        end;
+        FXDetailType.Underline: begin
+          GDIRoundRect(MakeRoundRect(ARect, Roundness), GetRGB(FDrawColors.Accent).MakeGDIBrush, nil);
+
+          // Offset
+          ARect.Bottom := round(ARect.Bottom - LineWidth);
         end;
       end;
 
@@ -1132,6 +1191,11 @@ begin
         end;
 
       // Icon
+      { Anim }
+      ARect := IndicatorRect;
+      ARect.Offset(0, FArrowOffset);
+
+      { Draw }
       case ButtonKind of
         FXButtonKind.Dropdown:
           begin
@@ -1142,7 +1206,7 @@ begin
             Font.Height := ThemeManager.FormFontHeight;
             AText := #$E70D;
 
-            TextRect(IndicatorRect, AText, [tfSingleLine, tfVerticalCenter, tfCenter]);
+            TextRect(ARect, AText, [tfSingleLine, tfVerticalCenter, tfCenter]);
           end;
       end;
 

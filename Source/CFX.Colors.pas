@@ -2,6 +2,8 @@
 
 unit CFX.Colors;
 
+{$SCOPEDENUMS ON}
+
 interface
 
 uses
@@ -19,6 +21,10 @@ uses
   CFX.Linker;
 
   type
+    { Color }
+    FXColor = CFX.Types.FXColor;
+
+    { Persistent Color Class }
     FXPersistentColor = class(TPersistent)
     private
       Owner : TPersistent;
@@ -251,8 +257,6 @@ uses
         property BackGroundInterior: TColor read FBackGroundInterior write FBackGroundInterior;
     end;
 
-  (* Extract Color is in CFX.ThemeManager! *)
-
   // Color Manipulation
   function ChangeColorLight( clr: TColor; changeby: integer ): TColor;
   function GetColorLight( clr: TColor ): integer;
@@ -309,7 +313,6 @@ uses
     end;
 
 implementation
-
 
 function ChangeColorLight( clr: TColor; changeby: integer ): TColor;
 var
@@ -373,15 +376,15 @@ end;
 
 function ColorBlend(Color1, Color2: TColor; A: Byte): TColor;
 var
-  RGB1, RGB2: FXRGBA;
+  RGB1, RGB2: FXColor;
   R, G, B: integer;
 begin
-  RGB1.FromColor(Color1);
-  RGB2.FromColor(Color2);
+  RGB1 := FXColor.Create(Color1);
+  RGB2 := FXColor.Create(Color2);
 
-  R := RGB1.R + (RGB2.R - RGB1.R) * A div 255;
-  G := RGB1.G + (RGB2.G - RGB1.G) * A div 255;
-  B := RGB1.B + (RGB2.B - RGB1.B) * A div 255;
+  R := RGB1.GetR + (RGB2.GetR - RGB1.GetR) * A div 255;
+  G := RGB1.GetG + (RGB2.GetG - RGB1.GetG) * A div 255;
+  B := RGB1.GetB + (RGB2.GetB - RGB1.GetB) * A div 255;
 
   R := EnsureRange(R, 0, 255);
   G := EnsureRange(G, 0, 255);

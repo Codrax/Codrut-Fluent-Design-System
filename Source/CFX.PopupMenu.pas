@@ -66,6 +66,7 @@ uses
       function Count: integer;
       function IndexOf(AText: string): integer;
       procedure Add(AItem: FXPopupItem);
+      function AddNew: FXPopupItem;
       procedure Delete(Index: integer; AndFree: boolean = true);
 
       procedure Clear(AndFree: boolean = true);
@@ -1239,7 +1240,7 @@ begin
           AlphaBlend := true;
           Caption := POPUP_CAPTION_DEFAULT;
 
-          DoubleBuffered := false;
+          DoubleBuffered := true;
 
           BorderStyle := bsNone;
 
@@ -1359,6 +1360,14 @@ begin
   SetLength(FItems, Index + 1);
 
   FItems[Index] := AItem;
+  Pointer((@FItems[Index].Owner)^) := Self.Owner;
+end;
+
+function FXPopupItems.AddNew: FXPopupItem;
+begin
+  Result := FXPopupItem.Create(Self.Owner as TComponent);
+
+  Add(Result);
 end;
 
 procedure FXPopupItems.Clear(AndFree: boolean);

@@ -22,55 +22,75 @@ uses
   CFX.Controls;
 
 type
-  FXIconView = class(FXGraphicControl, FXControl)
+  FXIconView = class(FXWindowsControl, FXControl)
     private
-      var IconRect: TRect;
+      var DrawRect, IconRect: TRect;
+      FDrawColors: FXCompleteColorSet;
+      FCustomColors: FXColorSets;
       FScale: real;
       FImage: FXIconSelect;
       FVertLayout: FXLayout;
       FHorizLayout: FXLayout;
-      FCustomColors: FXColorSets;
-      FDrawColors: FXColorSet;
 
       //  Internal
       procedure UpdateColors;
       procedure UpdateRects;
 
-      // Set properties
+      // Getters
+
+      // Setters
       procedure SetHorizLayout(const Value: FXLayout);
       procedure SetImage(const Value: FXIconSelect);
       procedure SetScale(const Value: real);
       procedure SetVertLayout(const Value: FXLayout);
 
-      // Handle Messages
-      procedure WM_LButtonUp(var Msg: TWMLButtonUp); message WM_LBUTTONUP;
-      procedure WMSize(var Message: TWMSize); message WM_SIZE;
-
     protected
-      procedure Paint; override;
+      procedure PaintBuffer; override;
       procedure Resize; override;
-      procedure ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF}); override;
+
+      // Scaler
+      procedure ScaleChanged(Scaler: single); override;
 
       // State
-      procedure ComponentCreated; override;
       procedure InteractionStateChanged(AState: FXControlState); override;
 
     published
+      // Custom Colors
       property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
+
+      // Props
       property Image: FXIconSelect read FImage write SetImage;
       property Scale: real read FScale write SetScale;
       property LayoutHorizontal: FXLayout read FHorizLayout write SetHorizLayout default FXLayout.Center;
       property LayoutVertical: FXLayout read FVertLayout write SetVertLayout default FXLayout.Center;
 
-      property OnClick;
-      property OnDblClick;
-      property Transparent;
-
+      // Default props
       property Align;
+      property Font;
+      property Transparent;
+      property Opacity;
+      property PaddingFill;
       property Constraints;
       property Anchors;
       property Hint;
       property ShowHint;
+      property ParentShowHint;
+      property TabStop;
+      property TabOrder;
+      property FocusFlags;
+      property DragKind;
+      property DragCursor;
+      property DragMode;
+      property OnDragDrop;
+      property OnDragOver;
+      property OnEndDrag;
+      property OnStartDrag;
+      property OnEnter;
+      property OnExit;
+      property OnClick;
+      property OnKeyDown;
+      property OnKeyUp;
+      property OnKeyPress;
       property OnMouseUp;
       property OnMouseDown;
       property OnMouseEnter;
@@ -89,68 +109,15 @@ type
 
 implementation
 
-procedure FXIconView.InteractionStateChanged(AState: FXControlState);
+function FXIconView.Background: TColor;
 begin
-  inherited;
-end;
-
-function FXIconView.IsContainer: Boolean;
-begin
-  Result := false;
-end;
-
-procedure FXIconView.UpdateTheme(const UpdateChildren: Boolean);
-begin
-  UpdateColors;
-  UpdateRects;
-  Invalidate;
-end;
-
-procedure FXIconView.UpdateColors;
-begin
-  // Access theme manager
-  if FCustomColors.Enabled then
-    begin
-      // Custom Colors
-      FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme);
-    end
-  else
-    begin
-      FDrawColors.Assign( ThemeManager.SystemColor );
-    end;
-end;
-
-procedure FXIconView.UpdateRects;
-begin
-  // Fill
-  IconRect := ClientRect;
-
-  // Scale
-  IconRect.Width := round(IconRect.Width * Scale);
-  IconRect.Height := round(IconRect.Height * Scale);
-
-  if IconRect.Height < IconRect.Width then
-    IconRect.Width := IconRect.Height
-  else
-    IconRect.Height := IconRect.Width;
-
-  // Allign
-  case FHorizLayout of
-    FXLayout.Beginning: ;
-    FXLayout.Center: IconRect.Offset((ClientRect.Width - IconRect.Width) div 2, 0);
-    FXLayout.Ending: IconRect.Offset(ClientRect.Width - IconRect.Width, 0);
-  end;
-
-  case FVertLayout of
-    FXLayout.Beginning: ;
-    FXLayout.Center: IconRect.Offset(0, (ClientRect.Height - IconRect.Height) div 2);
-    FXLayout.Ending: IconRect.Offset(0, ClientRect.Height - IconRect.Height);
-  end;
+  Result := FDrawColors.BackGround;
 end;
 
 constructor FXIconView.Create(aOwner: TComponent);
 begin
   inherited;
+  // Props
   FScale := 1;
   FImage := FXIconSelect.Create(Self);
   FImage.Enabled := true;
@@ -158,11 +125,14 @@ begin
   FHorizLayout := FXLayout.Center;
   FVertLayout := FXLayout.Center;
 
+  // Custom Color
   FCustomColors := FXColorSets.Create(Self);
-  FDrawColors := FXColorSet.Create(Self);
 
-  Width := 60;
+  FDrawColors := FXCompleteColorSet.Create;
+
+  // Sizing
   Height := 60;
+  Width := 60;
 
   // Update
   UpdateRects;
@@ -177,27 +147,25 @@ begin
   inherited;
 end;
 
-function FXIconView.Background: TColor;
-begin
-  Result := FDrawColors.Background;
-end;
-
-procedure FXIconView.ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF});
-begin
-  inherited;
-  UpdateRects;
-end;
-
-procedure FXIconView.ComponentCreated;
+procedure FXIconView.InteractionStateChanged(AState: FXControlState);
 begin
   inherited;
   Invalidate;
 end;
 
-procedure FXIconView.Paint;
+function FXIconView.IsContainer: Boolean;
 begin
-  inherited;
-  with Canvas do
+  Result := false;
+end;
+
+procedure FXIconView.PaintBuffer;
+begin
+  // Background
+  Color := FDrawColors.BackGround;
+  PaintBackground;
+
+  // Draw
+  with Buffer do
     begin
       // Fill
       if not Transparent then
@@ -210,20 +178,87 @@ begin
       // Write
       Brush.Style := bsClear;
       Font.Color := FDrawColors.ForeGround;
-      FImage.DrawIcon(Canvas, IconRect);
+      FImage.DrawIcon(Buffer, IconRect);
     end;
+
+  // Inherit
+  inherited;
 end;
 
 procedure FXIconView.Resize;
 begin
   inherited;
   UpdateRects;
+end;
+
+procedure FXIconView.UpdateTheme(const UpdateChildren: Boolean);
+begin
+  UpdateColors;
+  UpdateRects;
   Invalidate;
+end;
+
+procedure FXIconView.UpdateColors;
+begin
+  FDrawColors.Assign( ThemeManager.SystemColor );
+
+  if not Enabled then
+    begin
+      FDrawColors.Foreground := $808080;
+    end
+  else
+    begin
+      // Access theme manager
+      if FCustomColors.Enabled then
+        // Load custom
+        FDrawColors.LoadFrom( FCustomColors, ThemeManager.DarkTheme )
+      else
+        // Build color palette
+        FDrawColors.LoadFrom( ThemeManager.SystemColorSet, ThemeManager.DarkTheme );
+      FDrawColors.BackGround := GetParentBackgroundColor(FDrawColors.BackGround);
+    end;
+end;
+
+procedure FXIconView.UpdateRects;
+begin
+  // Rect
+  DrawRect := ClientRect;
+
+  // Fill
+  IconRect := DrawRect;
+
+  // Scale
+  IconRect.Width := round(DrawRect.Width * Scale);
+  IconRect.Height := round(DrawRect.Height * Scale);
+
+  if IconRect.Height < IconRect.Width then
+    IconRect.Width := IconRect.Height
+  else
+    IconRect.Height := IconRect.Width;
+
+  // Allign
+  case FHorizLayout of
+    FXLayout.Beginning: ;
+    FXLayout.Center: IconRect.Offset((DrawRect.Width - IconRect.Width) div 2, 0);
+    FXLayout.Ending: IconRect.Offset(DrawRect.Width - IconRect.Width, 0);
+  end;
+
+  case FVertLayout of
+    FXLayout.Beginning: ;
+    FXLayout.Center: IconRect.Offset(0, (ClientRect.Height - IconRect.Height) div 2);
+    FXLayout.Ending: IconRect.Offset(0, DrawRect.Height - IconRect.Height);
+  end;
+end;
+
+procedure FXIconView.ScaleChanged(Scaler: single);
+begin
+  inherited;
+  // update scale
 end;
 
 procedure FXIconView.SetHorizLayout(const Value: FXLayout);
 begin
-  if FHorizLayout <> Value then
+if FHorizLayout <> Value then
     begin
       FHorizLayout := Value;
 
@@ -262,17 +297,6 @@ begin
       UpdateRects;
       Invalidate;
     end;
-end;
-
-procedure FXIconView.WMSize(var Message: TWMSize);
-begin
-  UpdateRects;
-  Invalidate;
-end;
-
-procedure FXIconView.WM_LButtonUp(var Msg: TWMLButtonUp);
-begin
-  inherited;
 end;
 
 end.

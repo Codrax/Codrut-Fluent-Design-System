@@ -1,3 +1,4 @@
+
 unit CFX.ScrollBox;
 
 {$SCOPEDENUMS ON}
@@ -43,6 +44,8 @@ uses
     private
       FCustomColors: FXCompleteColorSets;
       FDrawColors: FXCompleteColorSet;
+
+      FOnScroll: TNotifyEvent;
 
       FScrollSpeed: integer;
 
@@ -93,6 +96,8 @@ uses
         MousePos: TPoint): Boolean; override;
       procedure AdjustClientRect(var Rect: TRect); override;
 
+      function ContentRect: TRect;
+
     published
       property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
       property BackgroundColor: FXBackgroundColor read FBackground write SetBackground default FXBackgroundColor.Background;
@@ -107,6 +112,11 @@ uses
 
       property ScrollBarVert: FXScrollBoxScrollBar read FVertScroll write FVertScroll;
       property ScrollBarHorz: FXScrollBoxScrollBar read FHorzScroll write FHorzScroll;
+
+      property OnScroll: TNotifyEvent read FOnScroll write FOnScroll;
+
+      // Utils
+      procedure DestroyAll;
 
     public
       constructor Create(aOwner: TComponent); override;
@@ -205,6 +215,18 @@ begin
   FHorzScroll.CalcAutoRange;
 end;
 
+function FXScrollBox.ContentRect: TRect;
+begin
+  Result := ClientRect;
+
+  // Remove scrollbars from client
+  if FVertScroll.Visible then
+    Result.Width := Result.Width - FVertScroll.Width;
+
+  if FHorzScroll.Visible then
+    Result.Height := Result.Height - FHorzScroll.Height;
+end;
+
 constructor FXScrollBox.Create(aOwner: TComponent);
 begin
   inherited;
@@ -283,6 +305,20 @@ begin
   inherited;
 end;
 
+procedure FXScrollBox.DestroyAll;
+var
+  I: integer;
+  Control: TControl;
+begin
+  for I := ControlCount-1 downto 0 do
+    if not (Controls[I] is FXScrollBoxScrollBar) then
+      begin
+        Control := Controls[I];
+        RemoveControl(Control);
+        Control.Free;
+      end;
+end;
+
 function FXScrollBox.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
   MousePos: TPoint): Boolean;
 var
@@ -336,7 +372,7 @@ end;
 
 function FXScrollBox.IsContainer: Boolean;
 begin
-  Result := false;
+  Result := true;
 end;
 
 function FXScrollBox.IsDesigning: boolean;
@@ -362,10 +398,22 @@ var
   IsVisible: Boolean;
   I: Integer;
   Control: TControl;
+  UpdateRect: TRect;
 begin
-  // Temp
+  // Get visible
   IsVisible := (WindowHandle <> 0) and IsWindowVisible(WindowHandle);
+
+  // Rect
+  UpdateRect := ContentRect;
+  UpdateRect.Width := Width;
+
+  // Scroll
   if IsVisible then ScrollWindow(WindowHandle, DeltaX, DeltaY, nil, nil);
+    {ScrollWindowEx(WindowHandle, DeltaX, DeltaY, @UpdateRect, @UpdateRect, 0, @UpdateRect,
+      SW_ERASE or SW_SCROLLCHILDREN or SW_INVALIDATE);}
+    //ScrollWindow(WindowHandle, DeltaX, DeltaY, @UpdateRect, @UpdateRect);
+
+  // Not visible
   for I := 0 to ControlCount - 1 do
   begin
     Control := Controls[I];
@@ -382,6 +430,8 @@ begin
           SetWindowPos(WindowHandle, 0, Left + DeltaX, Top + DeltaY,
             Width, Height, SWP_NOZORDER + SWP_NOACTIVATE);
   end;
+
+  // Align
   Realign;
 end;
 
@@ -393,6 +443,10 @@ begin
 
       UpdateColors;
       Invalidate;
+
+      // Apply to scrollbars
+      FVertScroll.UpdateTheme(false);
+      FHorzScroll.UpdateTheme(false);
     end;
 end;
 
@@ -415,7 +469,11 @@ begin
       FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme)
     end
       else
-        ThemeManager.LoadColorSet( FDrawColors );
+    begin
+      ThemeManager.LoadColorSet( FDrawColors );
+
+      FDrawColors.BackGround := GetParentBackgroundColorEx(Self, FDrawColors.BackGround);
+    end;
 
   // Update
   if FBackground = FXBackgroundColor.Background then
@@ -467,9 +525,22 @@ begin
 end;
 
 procedure FXScrollBox.UpdateTheme(const UpdateChildren: Boolean);
+var
+  I: integer;
 begin
   UpdateColors;
   UpdateScrollbars;
+
+  FVertScroll.UpdateTheme(true);
+  FHorzScroll.UpdateTheme(true);
+
+  // Update Children
+  if IsContainer and UpdateChildren then
+    begin
+      for i := 0 to ControlCount - 1 do
+        if Supports(Controls[i], FXControl) then
+          (Controls[i] as FXControl).UpdateTheme(UpdateChildren);
+    end;
 end;
 
 procedure FXScrollBox.WhenScroll(Sender: TObject);
@@ -501,6 +572,10 @@ begin
         FPosX := ANewPos;
       end;
     end;
+
+  // Notify Event
+  if Assigned(OnScroll) then
+    OnScroll(Self);
 
   // Update
   UpdateScrollbars;

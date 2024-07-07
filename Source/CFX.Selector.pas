@@ -26,7 +26,8 @@ type
       var DrawRect: TRect;
       ItemRects: TArray<TRect>;
       ItemWidth: integer;
-      FOnSelect: TNotifyEvent;
+      FOnChange: TNotifyEvent;
+      FOnChangeValue: TNotifyEvent;
       FCustomColors: FXCompleteColorSets;
       FItemAccentColors: FXSingleColorStateSet;
       FDrawColors: FXCompleteColorSet;
@@ -52,6 +53,8 @@ type
       procedure SelectNext;
       procedure SelectLast;
       function MakeDrawPositionRect: TRect;
+
+      procedure SelectorItemsChange(Sender: TObject);
 
       // Paint
       function GetRoundness: integer;
@@ -80,24 +83,34 @@ type
 
     published
       property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
-      property OnSelect: TNotifyEvent read FOnSelect write FOnSelect;
+      property OnChange: TNotifyEvent read FOnChange write FOnChange;
+      property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
 
       property SelectedItem: integer read FSelectedItem write SetSelectedItem;
       property Items: TStringList read FItems write SetItems;
 
       property Animation: boolean read FAnimation write FAnimation default true;
 
-      property Font;
-
       property Align;
+      property Font;
+      property Transparent;
+      property Opacity;
       property PaddingFill;
       property Constraints;
       property Anchors;
       property Hint;
       property ShowHint;
+      property ParentShowHint;
       property TabStop;
       property TabOrder;
       property FocusFlags;
+      property DragKind;
+      property DragCursor;
+      property DragMode;
+      property OnDragDrop;
+      property OnDragOver;
+      property OnEndDrag;
+      property OnStartDrag;
       property OnEnter;
       property OnExit;
       property OnClick;
@@ -270,6 +283,8 @@ begin
   FItems.Add('Item2');
   FItems.Add('Item3');
 
+  FItems.OnChange := SelectorItemsChange;
+
   FSelectedItem := 0;
 
   // Anim
@@ -434,12 +449,26 @@ procedure FXSelector.SelectLast;
 begin
   if SelectedItem > 0 then
     SelectedItem := SelectedItem - 1;
+
+  // Notify
+  if Assigned(FOnChange) then
+    FOnChange(Self);
 end;
 
 procedure FXSelector.SelectNext;
 begin
   if SelectedItem < FItems.Count then
     SelectedItem := SelectedItem + 1;
+
+  // Notify
+  if Assigned(FOnChange) then
+    FOnChange(Self);
+end;
+
+procedure FXSelector.SelectorItemsChange(Sender: TObject);
+begin
+  UpdateRects;
+  Invalidate;
 end;
 
 procedure FXSelector.SetItems(const Value: TStringList);
@@ -463,8 +492,8 @@ begin
 
       // Notify
       if not IsReading then
-        if Assigned(FOnSelect) then
-          FOnSelect(Self);
+        if Assigned(FOnChangeValue) then
+          FOnChangeValue(Self);
 
       // Draw
       Invalidate;
@@ -482,6 +511,10 @@ begin
   if (FHoverOver <> SelectedItem) and (FHoverOver <> -1) then
     begin
       SelectedItem := FHoverOver;
+
+      // Notify
+      if Assigned(FOnChange) then
+        FOnChange(Self);
 
       Invalidate;
     end;

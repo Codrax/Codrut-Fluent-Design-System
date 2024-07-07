@@ -17,11 +17,17 @@ uses
   CFX.Types,
   CFX.Animations,
   CFX.Linker,
+  CFX.Messages,
+  CFX.Controls,
   CFX.ThemeManager;
 
 type
+  FXPanelBase = class(TPanel)
+  protected
+    procedure WndProc(var Msg: TMessage); override;
+  end;
 
-  FXPanel = class(TPanel, FXControl)
+  FXPanel = class(FXPanelBase, FXControl)
     private
       FCustomColors: FXCompleteColorSets;
 
@@ -69,7 +75,7 @@ type
       function Background: TColor;
   end;
 
-  FXMinimisePanel = class(TPanel, FXControl)
+  FXMinimisePanel = class(FXPanelBase, FXControl)
     private
       var
       FCustomColors: FXCompleteColorSets;
@@ -740,9 +746,8 @@ end;
 
 procedure FXPanel.Paint;
 begin
-  DrawAccentLine;
-
   inherited;
+  DrawAccentLine;
 end;
 
 procedure FXPanel.Resize;
@@ -757,7 +762,10 @@ begin
   FAccentLine := Value;
 
   if not (csReading in ComponentState) then
-    RePaint;
+    begin
+      RePaint;
+      DrawAccentLine;
+    end;
 end;
 
 procedure FXPanel.SetAccentLineWidth(const Value: integer);
@@ -791,6 +799,7 @@ begin
     FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme)
   else
     FDrawColors.Assign(ThemeManager.SystemColor);
+  //FDrawColors.BackGround := GetParentBackgroundColorEx(Self, FDrawColors.BackGround);
 
   // Font Color
   Font.Color := FDrawColors.ForeGround;
@@ -818,6 +827,15 @@ begin
         if Supports(Controls[i], FXControl) then
           (Controls[i] as FXControl).UpdateTheme(UpdateChildren);
     end;
+end;
+
+{ FXPanelBase }
+
+procedure FXPanelBase.WndProc(var Msg: TMessage);
+begin
+  inherited;
+  if (Msg.Msg >= WM_CFX_MESSAGES) and (Msg.Msg <= WM_CFX_MESSAGES_END) then
+    Broadcast(Msg);
 end;
 
 end.

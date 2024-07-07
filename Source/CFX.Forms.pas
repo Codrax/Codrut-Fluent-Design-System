@@ -21,106 +21,142 @@ uses
   Vcl.ExtCtrls,
   CFX.Classes,
   CFX.Types,
+  CFX.Messages,
   CFX.Linker;
 
 type
+  // Proc
   FXFormProcedure = procedure(Sender: TObject) of object;
 
+  // Types define
+  FXThemeType = CFX.Types.FXThemeType;
+
+  // Form
   FXForm = class(TForm, FXControl)
-    private
-        FCustomColors: FXColorSets;
-        FDrawColors: FXColorSet;
+  private
+    FCustomColors: FXColorSets;
+    FDrawColors: FXColorSet;
 
-        FFullScreen: Boolean;
-        FRestoredPosition: TRect;
-        FRestoredBorder: TBorderStyle;
+    FWindowUpdateLock: boolean;
 
-        FMicaEffect: boolean;
-        FSmokeEffect: boolean;
+    // Settings
+    FFullScreen: Boolean;
+    FRestoredPosition: TRect;
+    FRestoredBorder: TBorderStyle;
 
-        FThemeChange: FXThemeChange;
-        FOnMove: FXFormProcedure;
+    FMicaEffect: boolean;
+    FSmokeEffect: boolean;
+    FAllowThemeChangeAnim: boolean;
 
-        FAllowThemeChangeAnim: boolean;
+    // Notify
+    FThemeChange: FXThemeChange;
+    FOnMove: FXFormProcedure;
 
-        FTitlebarInitialized: boolean;
+    // Status
+    FDestColor: TColor;
 
-        FEnableTitlebar: boolean;
-        TTlCtrl: TTitleBarpanel;
+    // Titlebar
+    FTitlebarInitialized: boolean;
+    FEnableTitlebar: boolean;
+    TTlCtrl: TTitleBarpanel;
 
-        Smoke: TForm;
-        SmokeAnimation: TIntAni;
+    // Smoke
+    Smoke: TForm;
+    SmokeAnimation: TIntAni;
 
-      // Functions
-      procedure SetFullScreen(const Value: Boolean);
-      procedure CreateSmokeSettings;
+    // Functions
+    procedure SetFullScreen(const Value: Boolean);
+    procedure CreateSmokeSettings;
 
-      // Messages
-      procedure WM_SysCommand(var Msg: TWMSysCommand); message WM_SYSCOMMAND;
-      procedure WM_DWMColorizationColorChanged(var Msg: TMessage); message WM_DWMCOLORIZATIONCOLORCHANGED;
-      procedure WM_Activate(var Msg: TWMActivate); message WM_ACTIVATE;
-      procedure WM_MOVE(var Msg: Tmessage); message WM_MOVE;
-      procedure WM_GETMINMAXINFO(var Msg: TMessage); message WM_GETMINMAXINFO;
+    // Messages
+    procedure WM_SysCommand(var Msg: TWMSysCommand); message WM_SYSCOMMAND;
+    procedure WM_DWMColorizationColorChanged(var Msg: TMessage); message WM_DWMCOLORIZATIONCOLORCHANGED;
+    procedure WM_Activate(var Msg: TWMActivate); message WM_ACTIVATE;
+    procedure WM_MOVE(var Msg: Tmessage); message WM_MOVE;
+    procedure WM_SIZE(var Msg: Tmessage); message WM_SIZE;
+    procedure WM_GETMINMAXINFO(var Msg: TMessage); message WM_GETMINMAXINFO;
 
-      // Procedures
-      procedure SetMicaEffect(const Value: boolean);
-      procedure SetSmokeEffect(const Value: boolean);
+    procedure QuickBroadcast(MessageID: integer);
 
-      // Utilities
-      procedure FormCloseIgnore(Sender: TObject; var CanClose: Boolean);
+    // Procedures
+    procedure SetMicaEffect(const Value: boolean);
+    procedure SetSmokeEffect(const Value: boolean);
+    procedure SetWindowUpdateLock(const Value: boolean);
 
-    protected
-      procedure CreateParams(var Params: TCreateParams); override;
-      procedure Paint; override;
-      procedure Resize; override;
+    // Utilities
+    procedure FormCloseIgnore(Sender: TObject; var CanClose: Boolean);
 
-      procedure DoShow; override;
+  protected
+    procedure CreateParams(var Params: TCreateParams); override;
+    procedure Paint; override;
+    procedure Resize; override;
 
-      procedure InitializeNewForm; override;
+    // Utils
+    function HasActiveCustomTitleBar: boolean;
 
-    published
-      property MicaEffect: boolean read FMicaEffect write SetMicaEffect;
-      property SmokeEffect: boolean read FSmokeEffect write SetSmokeEffect;
-      property CustomColors: FXColorSets read FCustomColors write FCustomColors;
-      property AllowThemeChangeAnimation: boolean read FAllowThemeChangeAnim write FAllowThemeChangeAnim;
-      property FullScreen: Boolean read FFullScreen write SetFullScreen default false;
+    // Sizing
+    function GetClientRect: TRect; override;
+    procedure AdjustClientRect(var Rect: TRect); override;
+    function CanAutoSize(var NewWidth, NewHeight: Integer): Boolean; override;
 
-      // On Change...
-      property OnMove: FXFormProcedure read FOnMove write FOnMove;
+    // Do
+    procedure DoShow; override;
 
-      // Theming Engine
-      property OnThemeChange: FXThemeChange read FThemeChange write FThemeChange;
+    procedure InitializeNewForm; override;
 
-    public
-      constructor Create(aOwner: TComponent); override;
-      constructor CreateNew(aOwner: TComponent; Dummy: Integer = 0); override;
-      destructor Destroy; override;
+  published
+    property MicaEffect: boolean read FMicaEffect write SetMicaEffect;
+    property SmokeEffect: boolean read FSmokeEffect write SetSmokeEffect;
+    property CustomColors: FXColorSets read FCustomColors write FCustomColors;
+    property AllowThemeChangeAnimation: boolean read FAllowThemeChangeAnim write FAllowThemeChangeAnim;
+    property FullScreen: Boolean read FFullScreen write SetFullScreen default false;
+    property WindowUpdateLocked: boolean read FWindowUpdateLock write SetWindowUpdateLock;
 
-      procedure InitForm;
+    // On Change...
+    property OnMove: FXFormProcedure read FOnMove write FOnMove;
 
-      // Procedures
-      procedure SetBoundsRect(Bounds: TRect);
+    // Theming Engine
+    property OnThemeChange: FXThemeChange read FThemeChange write FThemeChange;
 
-      // Utils
-      function IsResizable: Boolean;
+  public
+    constructor Create(aOwner: TComponent); override;
+    constructor CreateNew(aOwner: TComponent; Dummy: Integer = 0); override;
+    destructor Destroy; override;
 
-      function GetTitlebarHeight: integer;
+    procedure InitForm;
 
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChildren: Boolean);
+    // Procedures
+    procedure SetBoundsRect(Bounds: TRect);
 
-      function Background: TColor;
+    // Utils
+    function IsResizable: Boolean;
+
+    function GetTitlebarHeight: integer;
+
+    // Interface
+    function IsContainer: Boolean;
+    procedure UpdateTheme(const UpdateChildren: Boolean);
+
+    function Background: TColor;
   end;
-
 
 implementation
 
 { FXForm }
 
+procedure FXForm.AdjustClientRect(var Rect: TRect);
+begin
+  inherited;
+end;
+
 function FXForm.Background: TColor;
 begin
   Result := FDrawColors.Background;
+end;
+
+function FXForm.CanAutoSize(var NewWidth, NewHeight: Integer): Boolean;
+begin
+  Result := inherited;
 end;
 
 constructor FXForm.Create(aOwner: TComponent);
@@ -266,6 +302,11 @@ begin
     CanClose := false;
 end;
 
+function FXForm.GetClientRect: TRect;
+begin
+  Result := inherited;
+end;
+
 function FXForm.GetTitlebarHeight: integer;
 var
   I: Integer;
@@ -276,10 +317,27 @@ begin
       Result := TTitlebarPanel(Controls[I]).Height;
 end;
 
+function FXForm.HasActiveCustomTitleBar: boolean;
+begin
+  Result := CustomTitleBar.Enabled and (CustomTitleBar.Control <> nil);
+end;
+
 procedure FXForm.Paint;
 begin
   inherited;
 
+end;
+
+procedure FXForm.QuickBroadcast(MessageID: integer);
+var
+  AMsg: TMessage;
+begin
+  AMsg.Msg := MessageID;
+  AMsg.WParam := 0;
+  AMsg.LParam := LongInt(Self);
+  AMsg.Result := 0;
+
+  Broadcast(AMsg);
 end;
 
 procedure FXForm.Resize;
@@ -374,6 +432,19 @@ begin
     end;
 end;
 
+procedure FXForm.SetWindowUpdateLock(const Value: boolean);
+begin
+  if FWindowUpdateLock <> Value then
+    begin
+      FWindowUpdateLock := Value;
+
+      if Value then
+        LockWindowUpdate(Handle)
+      else
+        LockWindowUpdate(0);
+    end;
+end;
+
 procedure FXForm.UpdateTheme(const UpdateChildren: Boolean);
 var
   i: Integer;
@@ -381,6 +452,9 @@ var
   a: TIntAni;
   ThemeReason: FXThemeType;
 begin
+  // Lock
+  LockWindowUpdate(Handle);
+
   // Update Colors
   if CustomColors.Enabled then
     begin
@@ -394,7 +468,7 @@ begin
     end;
 
   // Transizion Animation
-  PrevColor := Self.Color;
+  PrevColor := FDestColor;
 
   // Theme Change Engine
   if PrevColor <> FDrawColors.Background then
@@ -403,21 +477,30 @@ begin
     ThemeReason := FXThemeType.Redraw;
 
   // Start Transition
+  FDestColor := FDrawColors.Background;
   if Self.Visible and FAllowThemeChangeAnim then
     begin
       a := TIntAni.Create(true, TAniKind.akIn, TAniFunctionKind.afkLinear, 25, 100,
       procedure (Value: integer)
       begin
-        Self.Color := ColorBlend(PrevColor, FDrawColors.Background, Value);
+        // Lock
+        LockWindowUpdate(Handle);
+
+        // Step
+        Self.Color := ColorBlend(PrevColor, FDestColor, Value);
 
         if FEnableTitlebar then
           PrepareCustomTitleBar( TForm( Self ), Self.Color, FDrawColors.Foreground );
+
+        // Unlock
+        Invalidate;
+        LockWindowUpdate(0);
       end,
       procedure
       begin
-        Self.Color := FDrawColors.Background;
+        Self.Color := FDestColor;
         if FEnableTitlebar then
-          PrepareCustomTitleBar( TForm( Self ), FDrawColors.Background, FDrawColors.Foreground );
+          PrepareCustomTitleBar( TForm( Self ), FDestColor, FDrawColors.Foreground );
       end);
 
       a.Duration := 200;
@@ -427,10 +510,11 @@ begin
       a.Start;
     end
       else
+        // No animation
         begin
-          Self.Color := FDrawColors.Background;
+          Color := FDestColor;
           if FEnableTitlebar then
-            PrepareCustomTitleBar( TForm( Self ), FDrawColors.Background, FDrawColors.Foreground );
+            PrepareCustomTitleBar( TForm( Self ), FDestColor, FDrawColors.Foreground );
         end;
 
   //  Update tooltip style
@@ -449,12 +533,14 @@ begin
   //  Update children
   if IsContainer and UpdateChildren then
     begin
-      LockWindowUpdate(Handle);
       for i := 0 to ComponentCount -1 do
         if Supports(Components[i], FXControl) then
           (Components[i] as FXControl).UpdateTheme(UpdateChildren);
-      LockWindowUpdate(0);
     end;
+
+  // Unlock
+  if not AllowThemeChangeAnimation then
+    LockWindowUpdate(0);
 end;
 
 procedure FXForm.WM_Activate(var Msg: TWMActivate);
@@ -494,8 +580,20 @@ end;
 
 procedure FXForm.WM_MOVE(var Msg: Tmessage);
 begin
+  inherited;
   if Assigned(FOnMove) then
     FOnMove(Self);
+
+  // Broadcast
+  QuickBroadcast(WM_WINDOW_MOVE);
+end;
+
+procedure FXForm.WM_SIZE(var Msg: Tmessage);
+begin
+  inherited;
+
+  // Broadcast
+  QuickBroadcast(WM_WINDOW_RESIZE);
 end;
 
 procedure FXForm.WM_SysCommand(var Msg: TWMSysCommand);

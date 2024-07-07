@@ -19,6 +19,7 @@ uses
   CFX.Controls,
   CFX.Linker,
   CFX.VarHelpers,
+  CFX.Messages,
   CFX.Types;
 
 type
@@ -30,7 +31,8 @@ type
     private
       var DrawRect, IconRect, SliderRect, SliderFull: TRect;
       FHint: FXHintPopup;
-      FOnChange: TNotifyEvent;
+      FOnChange,
+      FOnChangeValue: TNotifyEvent;
       FAutomaticMouseCursor: boolean;
       FOrientation: FXOrientation;
       FSliderHeight: integer;
@@ -65,7 +67,7 @@ type
       procedure SetMax(const Value: int64);
       procedure SetMin(const Value: int64);
       procedure SetPosition(const Value: int64);
-      procedure SetPositionEx(const Value: int64; Redraw: boolean);
+      procedure SetPositionEx(const Value: int64; Redraw: boolean; UserExecuted: boolean = true);
       procedure SetSliderHeight(const Value: integer);
       procedure SetIconSize(const Value: integer);
 
@@ -89,7 +91,7 @@ type
 
     protected
       procedure PaintBuffer; override;
-      procedure WMSize(var Message: TWMSize); message WM_SIZE;
+      procedure Resize; override;
 
       // Scale
       procedure ScaleChanged(Scaler: single); override;
@@ -108,6 +110,7 @@ type
     published
       property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
       property OnChange: TNotifyEvent read FOnChange write FOnChange;
+      property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
       property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default true;
       property Orientation: FXOrientation read FOrientation write SetOrientation default FXOrientation.Horizontal;
       property SliderHeight: integer read FSliderHeight write SetSliderHeight default 6;
@@ -125,14 +128,24 @@ type
       property ParentColor;
 
       property Align;
+      property Transparent;
+      property Opacity;
       property PaddingFill;
       property Constraints;
       property Anchors;
       property Hint;
       property ShowHint;
+      property ParentShowHint;
       property TabStop;
       property TabOrder;
       property FocusFlags;
+      property DragKind;
+      property DragCursor;
+      property DragMode;
+      property OnDragDrop;
+      property OnDragOver;
+      property OnEndDrag;
+      property OnStartDrag;
       property OnEnter;
       property OnExit;
       property OnClick;
@@ -182,9 +195,9 @@ begin
   if (key = '-') or (key = '+') or (key = '=') then
     begin
       if Key = '-' then
-        Position := Position - FSmallChange
+        SetPositionEx(Position - FSmallChange, true)
       else
-        Position := Position + FSmallChange;
+        SetPositionEx(Position + FSmallChange, true);
 
       ShowPositionHint;
       FHint.AutoHide := true;
@@ -333,8 +346,6 @@ begin
 end;
 
 procedure FXSlider.UpdateRects;
-var
-  DisplayPosition: integer;
 begin
   // Rect
   DrawRect := GetClientRect;
@@ -350,7 +361,30 @@ begin
       // Slider
       SliderRect.Offset(0, (SliderRect.Height - FSliderHeight) div 2);
       SliderRect.Height := FSliderHeight;
+    end
+  else
+    begin
+      // Slider
+      SliderRect.Offset((SliderRect.Width - FSliderHeight) div 2, 0);
+      SliderRect.Width := FSliderHeight;
+    end;
 
+  // Round
+  FRoundness := FSliderHeight div 2;
+
+  // Position
+  UpdateSliderPosition;
+end;
+
+procedure FXSlider.UpdateSliderPosition;
+var
+  DisplayPosition: integer;
+begin
+  // Draw
+  FPositionDraw := trunc( GetPercentage * (GetSliderSize - FIconSize) );
+
+  if FOrientation = FXOrientation.Horizontal then
+    begin
       // Icon
       DisplayPosition := FPositionDraw;
       IconRect.Offset(DisplayPosition, (DrawRect.Height - FIconSize) div 2);
@@ -362,10 +396,6 @@ begin
     end
   else
     begin
-      // Slider
-      SliderRect.Offset((SliderRect.Width - FSliderHeight) div 2, 0);
-      SliderRect.Width := FSliderHeight;
-
       // Icon
       DisplayPosition := FPositionDraw;
       IconRect.Offset((DrawRect.Width - FIconSize) div 2, DisplayPosition);
@@ -375,14 +405,6 @@ begin
 
       SliderFull.Height := DisplayPosition + IconSize div 2;
     end;
-
-  // Round
-  FRoundness := FSliderHeight div 2;
-end;
-
-procedure FXSlider.UpdateSliderPosition;
-begin
-  FPositionDraw := trunc( GetPercentage * (GetSliderSize - FIconSize) );
 end;
 
 procedure FXSlider.CMHintShow(var Message: TCMHintShow);
@@ -640,6 +662,13 @@ begin
   inherited;
 end;
 
+procedure FXSlider.Resize;
+begin
+  UpdateRects;
+  Invalidate;
+  inherited;
+end;
+
 procedure FXSlider.ScaleChanged(Scaler: single);
 begin
   inherited;
@@ -675,8 +704,8 @@ begin
             FMin := FMax;
         end;
 
-      UpdateRects;
       UpdateSliderPosition;
+      UpdateRects;
       Invalidate;
     end;
 end;
@@ -696,8 +725,8 @@ begin
             FMax := FMin;
         end;
 
-      UpdateRects;
       UpdateSliderPosition;
+      UpdateRects;
       Invalidate;
     end;
 end;
@@ -724,10 +753,11 @@ end;
 
 procedure FXSlider.SetPosition(const Value: int64);
 begin
-  SetPositionEx(Value, true);
+  SetPositionEx(Value, true, false);
 end;
 
-procedure FXSlider.SetPositionEx(const Value: int64; Redraw: boolean);
+procedure FXSlider.SetPositionEx(const Value: int64; Redraw: boolean;
+  UserExecuted: boolean);
 begin
   if FPosition <> Value then
     begin
@@ -741,8 +771,12 @@ begin
           if FPosition > FMax then
             FPosition := FMax;
 
-          if Assigned(OnChange) then
-            OnChange(Self);
+          if UserExecuted then
+            if Assigned(OnChange) then
+              OnChange(Self);
+
+          if Assigned(OnChangeValue) then
+            OnChangeValue(Self);
         end;
 
       if Redraw then
@@ -814,13 +848,6 @@ begin
 
       FHint.Show;
     end;
-end;
-
-procedure FXSlider.WMSize(var Message: TWMSize);
-begin
-  inherited;
-  UpdateRects;
-  UpdateSliderPosition;
 end;
 
 procedure FXSlider.WM_LButtonUp(var Msg: TWMLButtonUp);

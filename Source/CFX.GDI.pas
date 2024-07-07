@@ -4,7 +4,7 @@ interface
   uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Imaging.pngimage, Vcl.Imaging.GIFImg, Vcl.Imaging.jpeg,
-  Winapi.GDIPAPI, Winapi.GDIPOBJ, CFX.Types, CFX.Colors;
+  Winapi.GDIPAPI, Winapi.GDIPOBJ, CFX.Types, CFX.Colors, Math;
 
   type
     // Requirements
@@ -17,16 +17,11 @@ interface
     TGDIBrush = TGPSolidBrush;
     TGDIPen = TGPPen;
 
-    function MakeBrush(Color: TColor; Opacity: byte = 255): TGDIBrush; overload;
-    function MakeBrush(R, G, B: Byte; Opacity: byte = 255): TGDIBrush; overload;
-
-    function MakePen(Color: TColor; Width: Single = 1; Opacity: byte = 255): TGDIPen; overload;
-    function MakePen(R, G, B: Byte; Width: Single = 1; Opacity: byte = 255): TGDIPen; overload;
-
     // Effects
-    procedure TintPicture(Canvas: TCanvas; Rectangle: TRect; Color: TColor = clBlack; Opacity: byte = 75; Buffered: boolean = true);
+    procedure TintPicture(Canvas: TCanvas; Rectangle: TRect; Color: FXColor = clBlack; Buffered: boolean = true);
 
     // Drawing functions
+    procedure DrawText(Canvas: TCanvas; Text: string; Rectangle: TRect; Font: TGPFont; Format: TGPStringFormat; Brush: TGDIBrush; Angle: single = 0; Buffered: boolean = false);
     procedure DrawRectangle(Canvas: TCanvas; Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen; Buffered: boolean = true);
     procedure DrawRoundRect(Canvas: TCanvas; RoundRect: TRoundRect; Brush: TGDIBrush; Pen: TGDIPen; Buffered: boolean = true);
     procedure DrawCircle(Canvas: TCanvas; Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen; Buffered: boolean = true);
@@ -44,40 +39,51 @@ interface
     procedure DrawBitmapHighQuality(Handle: THandle; ARect: TRect; Bitmap: TBitmap; Opacity: Byte = 255;
     HighQality: Boolean = False; EgdeFill: Boolean = False);
 
+    // Bitmap
+    procedure GrayscaleBitmap(Bitmap: TBitmap);
+
+    procedure ApplyGlowEffect(Bitmap: TBitmap; GlowColor: FXColor; GlowSize: Integer);
+
 implementation
 
-function MakeBrush(Color: TColor; Opacity: byte = 255): TGDIBrush;
+procedure ApplyGlowEffect(Bitmap: TBitmap; GlowColor: FXColor; GlowSize: Integer);
+begin
+
+end;
+
+procedure GrayscaleBitmap(Bitmap: TBitmap);
 var
-  RGB: FXRGBA;
+  I, J: Integer;
+  ScanLine: PRGBQuad;
+  Color: TRGBQuad;
 begin
-  RGB := GetRGB( Color );
-
-  Result := TGDIBrush.Create( MakeColor(RGB.R, RGB.G, RGB.B, Opacity) );
-end;
-
-function MakeBrush(R, G, B: Byte; Opacity: byte = 255): TGDIBrush;
-begin
-  Result := TGDIBrush.Create( MakeColor(R, G, B, Opacity) );
-end;
-
-function MakePen(Color: TColor; Width: Single = 1; Opacity: byte = 255): TGDIPen; overload;
-var
-  RGB: FXRGBA;
-begin
-  RGB := GetRGB( Color );
-
-  Result := TGDIPen.Create( MakeColor(RGB.R, RGB.G, RGB.B, Opacity), Width );
-end;
-
-function MakePen(R, G, B: Byte; Width: Single = 1; Opacity: byte = 255): TGDIPen; overload;
-begin
-  Result := TGDIPen.Create( MakeColor(R, G, B, Opacity), Width );
+  if (Bitmap.PixelFormat = pf32bit) then
+  begin
+    Bitmap.PixelFormat := pf32bit;
+    for I := 0 to Bitmap.Height - 1 do
+    begin
+      ScanLine := Bitmap.ScanLine[I];
+      for J := 0 to Bitmap.Width - 1 do
+      begin
+        Color := ScanLine^;
+        // Grayscale conversion (weighted average)
+        Color.rgbBlue := (Color.rgbBlue + Color.rgbGreen + Color.rgbRed) div 3;
+        Color.rgbGreen := Color.rgbBlue;
+        Color.rgbRed := Color.rgbBlue;
+        ScanLine^ := Color;
+        Inc(ScanLine);
+      end;
+    end;
+  end;
 end;
 
 procedure PrepareBMP(bmp: TBitmap; Width, Height: Integer);
 var
   p: Pointer;
 begin
+  Width := Max(Width, 0);
+  Height := Max(Height, 0);
+
   bmp.PixelFormat := pf32Bit;
   bmp.Width := Width;
   bmp.Height := Height;
@@ -92,7 +98,7 @@ begin
   end;
 end;
 
-procedure TintPicture(Canvas: TCanvas; Rectangle: TRect; Color: TColor; Opacity: byte; Buffered: boolean);
+procedure TintPicture(Canvas: TCanvas; Rectangle: TRect; Color: FXColor; Buffered: boolean);
 var
   G: TGPGRaphics;
   B: TGDIBrush;
@@ -109,7 +115,7 @@ begin
         R := Rectangle;
         R.Offset(-Rectangle.Left, -Rectangle.Top);
 
-        TintPicture( BMP.Canvas, R, Color, Opacity, false);
+        TintPicture( BMP.Canvas, R, Color, false);
 
         Canvas.Draw(Rectangle.Left, Rectangle.Top, BMP);
       finally
@@ -120,7 +126,7 @@ begin
 
   // Client Draw
   G := TGPGRaphics.Create(Canvas.Handle);
-  B := GetRGB(Color, Opacity).MakeGDIBrush;
+  B := Color.MakeGDIBrush;
   try
     G.SetSmoothingMode(SmoothingModeHighQuality);
 
@@ -133,6 +139,60 @@ begin
   finally
     G.Free;
     B.Free;
+  end;
+end;
+
+procedure DrawText(Canvas: TCanvas; Text: string; Rectangle: TRect; Font: TGPFont; Format: TGPStringFormat; Brush: TGDIBrush; Angle: single; Buffered: boolean);
+var
+  G: TGPGRaphics;
+begin
+  // Bitmap Buffered Draw
+  if Buffered then
+    begin
+      var BMP: TBitMap;
+      var R: TRect;
+
+      BMP := TBitMap.Create;
+      PrepareBMP(BMP, Rectangle.Width, Rectangle.Height);
+      try
+        R := Rectangle;
+        R.Offset(-Rectangle.Left, -Rectangle.Top);
+
+        DrawText( BMP.Canvas, Text, R,Font, Format, Brush, Angle, false);
+
+        Canvas.Draw(Rectangle.Left, Rectangle.Top, BMP);
+      finally
+        BMP.Free;
+      end;
+      Exit;
+    end;
+
+  // Client Draw
+  G := TGPGRaphics.Create(Canvas.Handle);
+  try
+    G.SetSmoothingMode(SmoothingModeHighQuality);
+
+    G.TranslateTransform(Rectangle.Left + Rectangle.Width div 2, Rectangle.Top + Rectangle.Height div 2);
+    Rectangle.Offset(-Rectangle.Left - Rectangle.Width div 2, -Rectangle.Top - Rectangle.Height div 2);
+
+     if Angle <> 0 then
+      // Rotate
+      G.RotateTransform(Angle);
+
+    if Brush <> nil then
+      begin
+        const R: TGPRectF = MakeRect(Single(Rectangle.Left), Rectangle.Top, Rectangle.Width, Rectangle.Height);
+        G.DrawString(PChar(Text), -1, Font, R, Format, Brush );
+      end;
+
+    // Reset Rotation
+    G.ResetTransform;
+
+    // Canvas Notify
+    if Assigned(Canvas.OnChange) then
+      Canvas.OnChange(Canvas);
+  finally
+    G.Free;
   end;
 end;
 

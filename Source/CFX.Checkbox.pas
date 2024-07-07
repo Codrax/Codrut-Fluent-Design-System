@@ -30,6 +30,7 @@ type
       FState: FXCheckBoxState;
       FTextSpacing: Integer;
       FOnChange: TNotifyEvent;
+      FOnChangeValue: TNotifyEvent;
       FCustomColors: FXColorSets;
       FIconAccentColors: FXSingleColorStateSet;
       FText: string;
@@ -99,6 +100,7 @@ type
       property TextSpacing: Integer read FTextSpacing write SetTextSpacing default CHECKBOX_TEXT_SPACE;
       property Checked: Boolean read GetChecked write SetChecked default false;
       property OnChange: TNotifyEvent read FOnChange write FOnChange;
+      property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
       property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default true;
 
       property Text: string read FText write SetText;
@@ -107,19 +109,28 @@ type
       property ImageScale: single read FImageScale write SetImageScale;
       property Layout: FXDrawLayout read FLayout write SetLayout default FXDrawLayout.Left;
 
-      property AnimationEnabled: boolean read FAnimationEnabled write FAnimationEnabled;
-
-      property Font;
+      property AnimationEnabled: boolean read FAnimationEnabled write FAnimationEnabled default true;
 
       property Align;
+      property Font;
+      property Transparent;
+      property Opacity;
       property PaddingFill;
       property Constraints;
       property Anchors;
       property Hint;
       property ShowHint;
+      property ParentShowHint;
       property TabStop;
       property TabOrder;
       property FocusFlags;
+      property DragKind;
+      property DragCursor;
+      property DragMode;
+      property OnDragDrop;
+      property OnDragOver;
+      property OnEndDrag;
+      property OnStartDrag;
       property OnEnter;
       property OnExit;
       property OnClick;
@@ -336,8 +347,8 @@ begin
 
       // Set
       FState := Value;
-      if Assigned(FOnChange) then
-        FOnChange(Self);
+      if Assigned(OnChangeValue) then
+        OnChangeValue(Self);
       Invalidate;
     end;
 end;
@@ -597,6 +608,8 @@ begin
 
         FXCheckBoxState.Grayed:
           begin
+            AText := CHECKBOX_OUTLINE;
+            TextRect(IconRect, AText, IconFormat);
             AText := CHECKBOX_FILL;
             TextRect(IconRect, AText, IconFormat);
 
@@ -641,6 +654,10 @@ begin
       FXCheckBoxState.Grayed:
         State := FXCheckBoxState.Unchecked;
     end;
+
+  // Notify
+  if Assigned(OnChange) then
+    OnChange(Self);
 end;
 
 procedure FXCheckBox.Resize;

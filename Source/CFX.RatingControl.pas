@@ -1,4 +1,4 @@
-unit CFX.Template;
+unit CFX.RatingControl;
 
 interface
 
@@ -22,7 +22,7 @@ uses
   CFX.Controls;
 
 type
-  FXTemplate = class(FXWindowsControl, FXControl)
+  FXRatingControl = class(FXWindowsControl, FXControl)
     private
       var DrawRect: TRect;
       FDrawColors: FXCompleteColorSet;
@@ -54,6 +54,8 @@ type
 
       // Default props
       property Align;
+      property Transparent;
+      property Opacity;
       property PaddingFill;
       property Constraints;
       property Anchors;
@@ -93,12 +95,12 @@ type
 
 implementation
 
-function FXTemplate.Background: TColor;
+function FXRatingControl.Background: TColor;
 begin
   Result := FDrawColors.BackGround;
 end;
 
-constructor FXTemplate.Create(aOwner: TComponent);
+constructor FXRatingControl.Create(aOwner: TComponent);
 begin
   inherited;
   // Custom Color
@@ -107,33 +109,33 @@ begin
   FDrawColors := FXCompleteColorSet.Create;
 
   // Sizing
-  Height := 30;
-  Width := 180;
+  Height := 40;
+  Width := 200;
 
   // Update
   UpdateRects;
   UpdateColors;
 end;
 
-destructor FXTemplate.Destroy;
+destructor FXRatingControl.Destroy;
 begin
   FreeAndNil( FCustomColors );
   FreeAndNil( FDrawColors );
   inherited;
 end;
 
-procedure FXTemplate.InteractionStateChanged(AState: FXControlState);
+procedure FXRatingControl.InteractionStateChanged(AState: FXControlState);
 begin
   inherited;
   Invalidate;
 end;
 
-function FXTemplate.IsContainer: Boolean;
+function FXRatingControl.IsContainer: Boolean;
 begin
   Result := false;
 end;
 
-procedure FXTemplate.PaintBuffer;
+procedure FXRatingControl.PaintBuffer;
 begin
   // Background
   Color := FDrawColors.BackGround;
@@ -145,20 +147,20 @@ begin
   inherited;
 end;
 
-procedure FXTemplate.Resize;
+procedure FXRatingControl.Resize;
 begin
   inherited;
   UpdateRects;
 end;
 
-procedure FXTemplate.UpdateTheme(const UpdateChildren: Boolean);
+procedure FXRatingControl.UpdateTheme(const UpdateChildren: Boolean);
 begin
   UpdateColors;
   UpdateRects;
   Invalidate;
 end;
 
-procedure FXTemplate.UpdateColors;
+procedure FXRatingControl.UpdateColors;
 begin
   FDrawColors.Assign( ThemeManager.SystemColor );
 
@@ -178,13 +180,13 @@ begin
     end;
 end;
 
-procedure FXTemplate.UpdateRects;
+procedure FXRatingControl.UpdateRects;
 begin
   // Rect
   DrawRect := GetClientRect;
 end;
 
-procedure FXTemplate.ScaleChanged(Scaler: single);
+procedure FXRatingControl.ScaleChanged(Scaler: single);
 begin
   inherited;
   // update scale

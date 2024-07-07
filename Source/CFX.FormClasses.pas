@@ -16,6 +16,7 @@ interface
     CFX.VarHelpers,
     CFX.ThemeManager,
     Vcl.Controls,
+    CFX.Files,
     Messages,
     TypInfo,
     CFX.Linker,
@@ -47,14 +48,14 @@ interface
         FCloseAction: FXFormCloseAction;
         FTitlebarHeight: integer;
 
-        var Margin: integer;
-        var Container: FXPanel;
-
         // Setters
         procedure SetParentForm(const Value: TForm);
         procedure SetFillMode(const Value: FXFormFill);
 
       protected
+        var Margin: integer;
+        var Container: FXPanel;
+
         procedure InitializeNewForm; override;
 
         procedure BuildControls; virtual;
@@ -82,7 +83,11 @@ interface
         property OnThemeChange: FXThemeChange read FThemeChange write FThemeChange;
 
       public
+        { Create a FXFillForm based on a FXForm that exists in the project,
+          loading It's settings and controls. }
         constructor Create(aOwner: TComponent); override;
+
+        { Create a FXFillForm based on a custom class. Freed on close }
         constructor CreateNew(aOwner: TComponent; Dummy: Integer = 0); override;
         destructor Destroy; override;
 
@@ -154,9 +159,6 @@ interface
         // Build
         procedure BuildControls; override;
 
-        // Position
-        procedure Resize; override;
-
         // Init
         procedure InitializeNewForm; override;
 
@@ -168,11 +170,69 @@ interface
         property InstallParameters: string read FParams write FParams;
     end;
 
+    FXTaskExecutingTemplate = class(FXFillForm)
+      private
+        const
+        BUTTON_HEIGHT = 50;
+        BUTTON_WIDTH = 200;
+
+        var
+        FTitle, FText, FProgressText: string;
+        FSelectedIcon: FXStandardIconType;
+        FShowCancel: boolean;
+        FCanceled: boolean;
+        FOnCancel: TNotifyEvent;
+
+        Title_Box,
+        Text_Box: FXTextBox;
+        Main_Contain: FXScrollBox;
+        Dialog_Icon: FXStandardIcon;
+
+        Button_Contain,
+        Download_Progress: FXPanel;
+
+        Animated_Box: FXAnimatedTextBox;
+        Progress: FXProgress;
+
+        Button_Cancel: FXButton;
+
+        // On Click
+        procedure ButtonClick(Sender: TObject);
+
+        // Setters
+        procedure SetProgressText(const Value: string);
+        procedure SetText(const Value: string);
+        procedure SetTitle(const Value: string);
+        procedure SetSelectedIcon(const Value: FXStandardIconType);
+        procedure SetShowCancel(const Value: boolean);
+
+      protected
+        // Build
+        procedure BuildControls; override;
+
+        // UI
+        procedure AlignLayout;
+
+        // Init
+        procedure InitializeNewForm; override;
+
+      published
+        property Canceled: boolean read FCanceled;
+        property OnCancel: TNotifyEvent read FOnCancel write FOnCancel;
+
+        property Title: string read FTitle write SetTitle;
+        property Text: string read FText write SetText;
+        property ProgressText: string read FProgressText write SetProgressText;
+        property SelectedIcon: FXStandardIconType read FSelectedIcon write SetSelectedIcon;
+        property ShowCancel: boolean read FShowCancel write SetShowCancel;
+    end;
+
     FXFormMessageTemplate = class(FXFillForm)
       private
         const
         BUTTON_HEIGHT = 50;
         BUTTON_WIDTH = 200;
+        procedure OkClick(Sender: TObject);
 
         var
         FTitle,
@@ -191,7 +251,6 @@ interface
 
         Icon_Box: FXStandardIcon;
 
-        procedure OkClick(Sender: TObject);
         procedure CancelClick(Sender: TObject);
 
         // Setters
@@ -203,9 +262,6 @@ interface
       protected
         // Build
         procedure BuildControls; override;
-
-        // Position
-        procedure Resize; override;
 
         // Init
         procedure InitializeNewForm; override;
@@ -224,12 +280,13 @@ implementation
 
 procedure FXFillForm.ApplyFillMode;
 begin
+  if ParentForm = nil then
+    Exit;
+
   FTitlebarHeight := FXForm(ParentForm).GetTitlebarHeight;
 
-  if FFillMode = FXFormFill.Complete then
-    SetBoundsRect( ParentForm.ClientRect )
-  else
-    begin
+  case FFillMode of
+    FXFormFill.TitleBar: begin
       var ARect: TRect;
 
       ARect := ParentForm.ClientRect;
@@ -237,6 +294,8 @@ begin
 
       SetBoundsRect( ARect );
     end;
+    FXFormFill.Complete: SetBoundsRect( ParentForm.ClientRect );
+  end;
 end;
 
 procedure FXFillForm.ApplyMargins;
@@ -276,6 +335,11 @@ constructor FXFillForm.Create(aOwner: TComponent);
 begin
   inherited;
 
+  if aOwner is TForm then
+    ParentForm := TForm(aOwner);
+
+  FCloseAction := FXFormCloseAction.Hide;
+
   // Initialise
   InitForm;
 end;
@@ -286,6 +350,8 @@ begin
 
   if aOwner is TForm then
     ParentForm := TForm(aOwner);
+
+  FCloseAction := FXFormCloseAction.Free;
 
   // Initialise
   InitForm;
@@ -325,15 +391,18 @@ begin
   ApplyFillMode;
 
   // Container
-  Container := FXPanel.Create(Self);
-  with Container do
+  if ControlCount = 0 then
     begin
-      Parent := Self;
+      Container := FXPanel.Create(Self);
+      with Container do
+        begin
+          Parent := Self;
 
-      Align := alClient;
-      AlignWithMargins := true;
+          Align := alClient;
+          AlignWithMargins := true;
+        end;
+      ApplyMargins;
     end;
-  ApplyMargins;
 
   // Build
   BuildControls;
@@ -407,7 +476,8 @@ begin
       FDrawColors.Foreground := ThemeManager.SystemColor.ForeGround;
     end;
 
-  Container.CustomColors.Assign( CustomColors );
+  if Container <> nil then
+    Container.CustomColors.Assign( CustomColors );
 
   // Color
   Color := FDrawColors.BackGround;
@@ -453,7 +523,7 @@ begin
   with FXTextBox.Create(Main_Contain) do
     begin
       Parent := Main_Contain;
-      Text := 'On mobile network, data charges may occur. Any charges are not calculated. After the update, the application will re-open automatically.';
+      Text := 'On mobile networks, data charges may occur. After the update, the application will re-open automatically.';
 
       Font.Size := 12;
 
@@ -602,7 +672,7 @@ begin
     begin
       Parent := Download_Progress;
       AdderMode := true;
-      AdderText := 'Downloading Updates';
+      AdderText := 'Downloading updates';
 
       Items.Add('');
       Items.Add('.');
@@ -843,12 +913,6 @@ begin
   inherited;
   FAppName := 'Test Codrut Fluent Application';
   FAllowSnooze := true;
-end;
-
-procedure FXFormUpdateTemplate.Resize;
-begin
-  inherited;
-
 end;
 
 procedure FXFormUpdateTemplate.SetAllowSnooze(const Value: boolean);
@@ -1097,12 +1161,6 @@ begin
   FShowCancel := true;
 end;
 
-procedure FXFormMessageTemplate.Resize;
-begin
-  inherited;
-
-end;
-
 procedure FXFormMessageTemplate.SetIcon(const Value: FXStandardIconType);
 begin
   FIconKind := Value;
@@ -1134,6 +1192,252 @@ end;
 procedure FXFormMessageTemplate.CancelClick(Sender: TObject);
 begin
   Close;
+end;
+
+{ FXTaskExecutingTemplate }
+
+procedure FXTaskExecutingTemplate.AlignLayout;
+begin
+  if Dialog_Icon.Visible then begin
+    Title_Box.Margins.Left := 75;
+    Text_Box.Margins.Left := 75;
+  end else begin
+    Title_Box.Margins.Left := 5;
+    Text_Box.Margins.Left := 5;
+  end;
+end;
+
+procedure FXTaskExecutingTemplate.BuildControls;
+begin
+  inherited;
+
+  Main_Contain := FXScrollBox.Create(Container);
+  with Main_Contain do
+    begin
+      Parent := Container;
+
+      Align := alClient;
+    end;
+
+  Text_Box := FXTextBox.Create(Main_Contain);
+  with Text_Box do
+    begin
+      Parent := Main_Contain;
+      Text := FText;
+
+      Font.Size := 12;
+
+      WordWrap := true;
+
+      Align := alTop;
+      AlignWithMargins := true;
+
+      with Margins do
+        begin
+          Left := 75;
+          Top := 5;
+          Right := 5;
+          Bottom := 5;
+        end;
+    end;
+
+  Title_Box := FXTextBox.Create(Main_Contain);
+  with Title_Box do
+    begin
+      Parent := Main_Contain;
+      Text := FTitle;
+
+      Font.Size := 18;
+
+      WordWrap := true;
+
+      Align := alTop;
+      AlignWithMargins := true;
+
+      with Margins do
+        begin
+          Left := 75;
+          Top := 50;
+          Right := 5;
+          Bottom := 5;
+        end;
+    end;
+
+  Dialog_Icon := FXStandardIcon.Create(Main_Contain);
+  with Dialog_Icon do
+    begin
+      Parent := Main_Contain;
+      Proportional := false;
+      Top := 50;
+      Left := 5;
+      Width := 50;
+      Height := 50;
+
+      var P: TPngImage;
+
+      P := TPngImage.Create;
+      ConvertToPNG(Application.Icon, P);
+
+      SelectedIcon := FSelectedIcon;
+      Visible := SelectedIcon <> FXStandardIconType.None;
+    end;
+
+  // Buttons
+  Button_Contain := FXPanel.Create(Container);
+  with Button_Contain do
+    begin
+      Parent := Container;
+
+      Height := 50;
+
+      Align := alBottom;
+      Visible := FShowCancel;
+    end;
+
+  Button_Cancel := FXButton.Create(Button_Contain);
+  with Button_Cancel do
+    begin
+      Parent := Button_Contain;
+
+      Height := BUTTON_HEIGHT;
+      Width := BUTTON_WIDTH;
+      Align := alRight;
+
+      Anchors := [akBottom, akRight];
+
+      with Image do
+        begin
+          Enabled := true;
+          IconType := FXIconType.SegoeIcon;
+
+          SelectSegoe := #$E711;
+        end;
+
+      Text := 'Cancel';
+      OnClick := ButtonClick;
+
+      ButtonKind := FXButtonKind.Normal;
+
+      AlignWithMargins := true;
+      with Margins do
+        begin
+          Left := 0;
+          Top := 0;
+          Right := 15;
+          Bottom := 0;
+        end;
+    end;
+
+  // Progress
+  Download_Progress := FXPanel.Create(Container);
+  with Download_Progress do
+    begin
+      Parent := Container;
+
+      Height := 50;
+
+      Align := alBottom;
+    end;
+
+  Animated_Box := FXAnimatedTextBox.Create(Download_Progress);
+  with Animated_Box do
+    begin
+      Parent := Download_Progress;
+      AdderMode := true;
+      AdderText := FProgressText;
+
+      Items.Add('');
+      Items.Add('.');
+      Items.Add('..');
+      Items.Add('...');
+
+      Font.Size := 12;
+
+      WordWrap := true;
+
+      LayoutHorizontal := FXLayout.Center;
+
+      Align := alTop;
+      AlignWithMargins := true;
+
+      with Margins do
+        begin
+          Left := 5;
+          Top := 5;
+          Right := 5;
+          Bottom := 20;
+        end;
+    end;
+
+  Progress := FXProgress.Create(Download_Progress);
+  with Progress do
+    begin
+      Parent := Download_Progress;
+
+      ProgressKind := FXProgressKind.Intermediate;
+
+      Align := alTop;
+    end;
+
+  // Layout
+  AlignLayout;
+end;
+
+procedure FXTaskExecutingTemplate.ButtonClick(Sender: TObject);
+begin
+  FCanceled := true;
+  if Assigned(FOnCancel) then
+    FOnCancel(Self);
+end;
+
+procedure FXTaskExecutingTemplate.InitializeNewForm;
+begin
+  inherited;
+  FTitle := 'Title';
+  FText := 'Title';
+  FProgressText := 'Loading';
+  FSelectedIcon := FXStandardIconType.Information;
+  FShowCancel := true;
+
+  FCanceled := false;
+end;
+
+procedure FXTaskExecutingTemplate.SetProgressText(const Value: string);
+begin
+  FProgressText := Value;
+
+  Animated_Box.AdderText := Value;
+end;
+
+procedure FXTaskExecutingTemplate.SetSelectedIcon(
+  const Value: FXStandardIconType);
+begin
+  FSelectedIcon := Value;
+  Dialog_Icon.SelectedIcon := Value;
+  Dialog_Icon.Visible := SelectedIcon <> FXStandardIconType.None;
+
+  AlignLayout;
+end;
+
+procedure FXTaskExecutingTemplate.SetShowCancel(const Value: boolean);
+begin
+  FShowCancel := Value;
+
+  Button_Contain.Visible := Value;
+end;
+
+procedure FXTaskExecutingTemplate.SetText(const Value: string);
+begin
+  FText := Value;
+
+  Text_Box.Text := Value;
+end;
+
+procedure FXTaskExecutingTemplate.SetTitle(const Value: string);
+begin
+  FTitle := Value;
+
+  Title_Box.Text := Value;
 end;
 
 end.

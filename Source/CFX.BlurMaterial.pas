@@ -5,6 +5,7 @@ interface
 uses
   SysUtils,
   Winapi.Windows,
+  Winapi.Messages,
   Classes,
   Types,
   Vcl.Controls,
@@ -13,7 +14,6 @@ uses
   CFX.Graphics,
   CFX.VarHelpers,
   Vcl.Forms,
-  Messaging,
   DateUtils,
   System.Threading,
   System.Win.Registry,
@@ -23,7 +23,10 @@ uses
   CFX.Classes,
   CFX.Math,
   CFX.GDI,
+  CFX.Files,
+  CFX.Messages,
   CFX.Colors,
+  CFX.UIConsts,
   CFX.Types,
   CFX.Controls,
   CFX.Linker,
@@ -67,6 +70,9 @@ type
     procedure InteractionStateChanged(AState: FXControlState); override;
 
     procedure OnVisibleChange(var Message : TMessage); message CM_VISIBLECHANGED;
+
+    // Handle messages
+    procedure WndProc(var Message: TMessage); override;
 
   published
     property Align;
@@ -381,8 +387,8 @@ begin
   // Tintin
   FEnableTinting := true;
 
-  FWhiteTintOpacity := 200;
-  FDarkTintOpacity := 75;
+  FWhiteTintOpacity := LIGHT_TINT_OPACITY;
+  FDarkTintOpacity := DARK_TINT_OPACITY;
 end;
 
 procedure FXBlurMaterial.CustomColorGet;
@@ -411,6 +417,7 @@ destructor FXBlurMaterial.Destroy;
 begin
   Tick.Enabled := false;
   FreeAndNil(Tick);
+  FreeAndNil(FDrawColors);
   FreeAndNil(FCustomColors);
   inherited;
 end;
@@ -618,6 +625,14 @@ begin
 
   if not (csReadingState in ControlState) then
     RebuildImage;
+end;
+
+procedure FXBlurMaterial.WndProc(var Message: TMessage);
+begin
+  inherited;
+  if Message.Msg = WM_WINDOW_MOVE then
+    if FRefreshMode = FXGlassRefreshMode.Automatic then
+      SyncroniseImage;
 end;
 
 end.

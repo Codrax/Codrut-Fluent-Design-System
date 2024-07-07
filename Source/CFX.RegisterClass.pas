@@ -1,13 +1,13 @@
 unit CFX.RegisterClass;
 
 interface
-  uses Classes, CFX.Classes, CFX.UIConsts,
+  uses Classes, CFX.Classes, CFX.UIConsts, CFX.Controls,
        CFX.Button, CFX.ButtonDesign, CFX.Checkbox, CFX.Panels,
        CFX.StandardIcons, CFX.Slider, CFX.BlurMaterial, CFX.PopupMenu,
        CFX.ImageList, CFX.TextBox, CFX.RadioButton, CFX.Scrollbar,
        CFX.ScrollBox, CFX.Selector, CFX.Edit, CFX.PopupConnector,
-       CFX.IconView, CFX.ScrollText, CFX.Progress;
-
+       CFX.IconView, CFX.ScrollText, CFX.Progress, CFX.RatingControl,
+       CFX.Effects, CFX.AppManager, CFX.PaintBox, CFX.TabStrip;
 
 procedure Register;
 
@@ -16,15 +16,18 @@ implementation
 procedure Register;
 begin
   // Visual Components
-  RegisterComponents(REGISTER_CLASS_NAME,[FXMinimisePanel, FXPanel]);
+  RegisterComponents(REGISTER_CLASS_NAME, [FXMinimisePanel, FXPanel]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXButton]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXButtonDesign]);
+  RegisterComponents(REGISTER_CLASS_NAME, [FXPaintBox]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXCheckBox]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXStandardIcon]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXSlider]);
+  RegisterComponents(REGISTER_CLASS_NAME, [FXTabStrip]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXBlurMaterial]);
-  RegisterComponents(REGISTER_CLASS_NAME, [FXTextBox]);
-  RegisterComponents(REGISTER_CLASS_NAME, [FXAnimatedTextBox]);
+
+  RegisterComponents(REGISTER_CLASS_NAME, [FXTextBox, FXValueTextBox, FXAnimatedTextBox]);
+
   RegisterComponents(REGISTER_CLASS_NAME, [FXRadioButton]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXScrollbar]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXScrollBox]);
@@ -33,13 +36,19 @@ begin
   RegisterComponents(REGISTER_CLASS_NAME, [FXIconView]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXScrollText]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXProgress]);
+  RegisterComponents(REGISTER_CLASS_NAME, [FXRatingControl]);
+
+  // Effects
+  RegisterComponents(REGISTER_CLASS_EFFECTS_NAME, [FXBlurEffect,
+    FXColorEffect, FXZoomEffect, FXGrayscaleEffect, FXInvertEffect,
+    FXDeepFryEffect, FXGlowEffect]);
 
   // Non-Visual Components
-  RegisterComponents(REGISTER_CLASS_NAME, [FXPopupMenu]);
-  RegisterComponents(REGISTER_CLASS_NAME, [FXImageList]);
+  RegisterComponents(REGISTER_CLASS_NAME, [FXPopupMenu, FXImageList]);
 
   // Utils
   RegisterComponents(REGISTER_CLASS_UTILS_NAME, [FXPopupConnector]);
+  RegisterComponents(REGISTER_CLASS_UTILS_NAME, [FXAppManager]);
 end;
 
 end.

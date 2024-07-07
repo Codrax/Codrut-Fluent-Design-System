@@ -34,6 +34,7 @@ uses
   CFX.Types,
   CFX.Forms,
   CFX.FontIcons,
+  CFX.Version,
   CFX.ButtonDesign,
   CFX.PopupMenu,
   CFX.ImageList,
@@ -42,7 +43,9 @@ uses
   DesignEditors,
   DesignIntf,
   RTTI,
-  TypInfo;
+  TypInfo,
+  VCLEditors,
+  CFX.DesignEditors;
 
   type
     // Default Edit Form Template
@@ -82,7 +85,6 @@ uses
 
       constructor CreateNew(AOwner: TComponent; Dummy: Integer  = 0); override;
       destructor Destroy; override;
-
     end;
 
     // Popup Menu Items
@@ -105,6 +107,44 @@ uses
       function GetAttributes: TPropertyAttributes; override;
       function GetValue: string; override;
       procedure SetValue(const Value: string); override;
+    end;
+
+    // Color Property
+    TFXColorProperty = class(FXPropertyEditor, ICustomPropertyDrawing,
+      ICustomPropertyListDrawing, ICustomPropertyDrawing80)
+    private
+      const
+        COLBOX_WIDTH = 25;
+        COLBOX_SPACING = 5;
+
+      procedure DrawColorBox(ACanvas: TCanvas; ARect: TRect; AColor: FXColor);
+      function OpenEditor: FXColor;
+
+    public
+      procedure Edit(const Host: IPropertyHost; DblClick: Boolean); override;
+
+      function GetAttributes: TPropertyAttributes; override;
+      function GetValue: string; override;
+      procedure SetValue(const Value: string); override;
+
+      procedure GetValues(Proc: TGetStrProc); override;
+
+      { ICustomPropertyListDrawing }
+      procedure ListMeasureHeight(const Value: string; ACanvas: TCanvas;
+        var AHeight: Integer);
+      procedure ListMeasureWidth(const Value: string; ACanvas: TCanvas;
+        var AWidth: Integer);
+      procedure ListDrawValue(const Value: string; ACanvas: TCanvas;
+        const ARect: TRect; ASelected: Boolean);
+
+      { ICustomPropertyDrawing }
+      procedure PropDrawName(ACanvas: TCanvas; const ARect: TRect;
+        ASelected: Boolean);
+      procedure PropDrawValue(ACanvas: TCanvas; const ARect: TRect;
+        ASelected: Boolean);
+      { ICustomPropertyDrawing80 }
+      function PropDrawNameRect(const ARect: TRect): TRect;
+      function PropDrawValueRect(const ARect: TRect): TRect;
     end;
 
     // FXPictureImages Items
@@ -148,6 +188,10 @@ uses
 
       procedure ShowPanel(Index: integer);
     end;
+
+
+const
+  SET_CUSTOM = 'Custom...';
 
 implementation
 
@@ -680,7 +724,7 @@ begin
 
                   AutoSize := false;
                   WordWrap := true;
-                  Caption := 'Paste the Font Unicode Character below, or enter the Unicode Point and press enter';
+                  Caption := 'Paste the Font Unicode Character below, or enter the Unicode Point and press enter. You may paste multiple characters to overlay them';
 
                   Height := Form.Margin * 4 - Top;
 
@@ -1044,6 +1088,169 @@ begin
   SetOrdValue(V);
 end;
 
+{ TFXColorProperty }
+
+procedure TFXColorProperty.DrawColorBox(ACanvas: TCanvas; ARect: TRect;
+  AColor: FXColor);
+const
+  PEN_W = 1;
+begin
+  // Check Board
+  DrawCheckedboard(ACanvas, ARect, 4, 4, clWhite, clGray);
+
+  // Color
+  ACanvas.GDIRectangle(ARect, AColor.MakeGDIBrush, FXColors.Black.MakeGDIPen(PEN_W));
+
+  // Reset Style
+  ACanvas.Brush.Style := bsClear;
+end;
+
+procedure TFXColorProperty.Edit(const Host: IPropertyHost; DblClick: Boolean);
+begin
+  inherited;
+  // Open dialog editor
+  if DblClick then
+    begin
+
+    end;
+end;
+
+function TFXColorProperty.GetAttributes: TPropertyAttributes;
+begin
+  Result := inherited GetAttributes + [paMultiSelect, paDialog, paValueList, paRevertable];
+end;
+
+function TFXColorProperty.GetValue: string;
+begin
+  Result := ColorToStringN( GetOrdValue );
+end;
+
+procedure TFXColorProperty.GetValues(Proc: TGetStrProc);
+var
+  I: FXColorID;
+begin
+  inherited;
+  Proc(SET_CUSTOM);
+
+  // Add Colors
+  for I := Low(FXColorID) to High(FXColorID) do
+    Proc( TFXColorNames[I] );
+end;
+
+procedure TFXColorProperty.ListDrawValue(const Value: string; ACanvas: TCanvas;
+  const ARect: TRect; ASelected: Boolean);
+var
+  R: TRect;
+  S: string;
+begin
+  R := ARect;
+  R.Left := COLBOX_WIDTH + COLBOX_SPACING;
+
+  S := Value;
+  with ACanvas do
+    begin
+      // Selected
+      if ASelected then
+        Brush.Color := clHighlight;
+      FillRect(ARect);
+
+      // Text
+      TextRect(R, S, [tfSingleLine, tfVerticalCenter]);
+
+      // Rect
+      R := ARect;
+      R.Width := COLBOX_WIDTH;
+
+      R.Inflate(-2, -2);
+
+      // Color
+      try
+        DrawColorBox(ACanvas, R, StringNToColor(Value));
+      except
+        DrawColorBox(ACanvas, R, FXColors.None);
+      end;
+    end;
+end;
+
+procedure TFXColorProperty.ListMeasureHeight(const Value: string;
+  ACanvas: TCanvas; var AHeight: Integer);
+begin
+  inherited;
+end;
+
+procedure TFXColorProperty.ListMeasureWidth(const Value: string;
+  ACanvas: TCanvas; var AWidth: Integer);
+begin
+  AWidth := ACanvas.TextWidth(Value) + COLBOX_WIDTH + COLBOX_SPACING;
+end;
+
+function TFXColorProperty.OpenEditor: FXColor;
+begin
+  Result := 0;
+end;
+
+procedure TFXColorProperty.PropDrawName(ACanvas: TCanvas; const ARect: TRect;
+  ASelected: Boolean);
+begin
+  DefaultPropertyDrawName(TPropertyEditor(Self), ACanvas, ARect);
+end;
+
+function TFXColorProperty.PropDrawNameRect(const ARect: TRect): TRect;
+begin
+  inherited;
+end;
+
+procedure TFXColorProperty.PropDrawValue(ACanvas: TCanvas; const ARect: TRect;
+  ASelected: Boolean);
+begin
+  ARect.Inflate(0, -1);
+  DrawColorBox(ACanvas, ARect, FXColor(GetOrdValue));
+end;
+
+function TFXColorProperty.PropDrawValueRect(const ARect: TRect): TRect;
+begin
+  Result := Rect(ARect.Left-COLBOX_SPACING, ARect.Top, ARect.Left + COLBOX_WIDTH-COLBOX_SPACING*2, ARect.Bottom);
+end;
+
+procedure TFXColorProperty.SetValue(const Value: string);
+var
+  CID: FXColorID;
+  Color: FXColor;
+begin
+  // Empty
+  if Value = '' then
+    Exit;
+
+  // Analise
+  { HEX }
+  if Value[1] = '#' then
+    begin
+      Color := StrToIntDef('$' + Value.Remove(0, 1), 0);
+
+      if Length(Value) = 6 + 1{#} then
+        Color.SetA(255);
+    end
+  else
+  { Name }
+  if FindColorName(Value, CID) then
+    Color := GetColor(CID)
+  else
+  { Custom }
+  if Value = SET_CUSTOM then
+    Color := OpenEditor
+  else
+  { Numeric }
+  try
+    Color := Value.ToInteger;
+  except
+    raise Exception.Create('Invalid Color Type:'#13'Color types can be:'#13+
+      '-HEX (#AARRGGBB)'#13'-Identifiers (Color Name)'#13'-Decimal');
+  end;
+
+  // Set
+  SetOrdValue( Color );
+end;
+
 initialization
   { Initialize }
   RegisterPropertyEditor(TypeInfo(FXIconSelect), nil, '', TFXIconSelectProperty);
@@ -1052,6 +1259,7 @@ initialization
   RegisterPropertyEditor(TypeInfo(FXPictureImages), nil, '', TFXPictureImagesProperty);
 
   RegisterPropertyEditor(TypeInfo(FXPercent), nil, '', TFXPercentProperty);
+  RegisterPropertyEditor(TypeInfo(FXColor), nil, '', TFXColorProperty);
   (*
   Parameter 1: Edited Class for Property Edit
   Parameter 2: Compoent to work with. Enter nil for it to work with all

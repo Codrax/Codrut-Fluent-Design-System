@@ -5,7 +5,7 @@ interface
     Winapi.Windows, Vcl.Graphics, Classes, Types, Winapi.Messages, CFX.Types,
     CFX.UIConsts, SysUtils, CFX.Graphics, CFX.VarHelpers, CFX.ThemeManager,
     Vcl.Controls, CFX.PopupMenu, CFX.Linker, Vcl.Forms, CFX.Forms,
-    Vcl.Dialogs, CFX.Classes;
+    Vcl.Dialogs, CFX.Classes, Math;
 
   type
     // Canvas-Based Control
@@ -34,6 +34,7 @@ interface
       FPadding: FXPadding;
       FTextFont: TFont;
       FFocusFlags: FXFocusFlags;
+      FHitTest: boolean;
 
       // Events
       procedure WMNCHitTest(var Message: TWMNCHitTest); message WM_NCHITTEST;
@@ -42,9 +43,6 @@ interface
       procedure ResizeBuffer;
       function GetBuffer: TCanvas;
       function CanDrawFocusLine: boolean;
-
-      // Background
-      procedure DrawBackground;
 
       // Draw
       procedure SolidifyBuffer;
@@ -66,12 +64,15 @@ interface
       procedure Paint; override;
       procedure PaintBuffer; virtual;
 
+      property HitTest: boolean read FHitTest write FHitTest default true;
+
       property BufferedComponent: boolean read FBufferedComponent write FBufferedComponent;
 
       property OnPaint: FXControlOnPaint read FOnPaint write FOnPaint;
       property OnPaintBuffer: FXControlOnPaint read FOnPaintBuffer write FOnPaintBuffer;
 
       // Background
+      procedure DrawBackground(var Background: TBitMap); virtual;
       procedure PaintBackground;
       function GetBackground: TCanvas;
 
@@ -93,6 +94,9 @@ interface
 
       // Created
       procedure CreateWnd; override;
+
+      // Visible Change
+      procedure OnVisibleChange(var Message : TMessage); message CM_VISIBLECHANGED;
 
       // Mouse Events
       procedure CMMouseEnter(var Message : TMessage); message CM_MOUSEENTER;
@@ -133,6 +137,11 @@ interface
       property InteractionState: FXControlState read FInteraction write SetState;
       property PreviousInteractionState: FXControlState read FPreviousInteraction write FPreviousInteraction;
 
+      property Font: TFont read FTextFont write FTextFont;
+
+      property Transparent: boolean read FTransparent write SetTransparent default true;
+      property Opacity: byte read FOpacity write SetOpacity default 255;
+
     published
       // Buffer
       property Buffer: TCanvas read GetBuffer;
@@ -140,14 +149,13 @@ interface
       // Popup Menu
       property PopupMenu: FXPopupMenu read FPopupMenu write FPopupMenu;
 
+      property Hint;
+
+      property TabStop default true;
+
       property Enabled;
       property Visible;
       property Tag;
-
-      property Font: TFont read FTextFont write FTextFont;
-
-      property Transparent: boolean read FTransparent write SetTransparent default true;
-      property Opacity: byte read FOpacity write SetOpacity default 255;
 
     public
       // Constructors
@@ -199,6 +207,9 @@ interface
       // Created
       procedure ComponentCreated; virtual;
 
+      // Visible Change
+      procedure OnVisibleChange(var Message : TMessage); message CM_VISIBLECHANGED;
+
       // Interaction
       procedure InteractionStateChanged(AState: FXControlState); virtual;
 
@@ -219,8 +230,12 @@ interface
       function GetCanvas: TCanvas;
 
     public
+      // Constructors
       constructor Create(AOwner: TComponent); override;
       destructor Destroy; override;
+
+      // Parent Utilities
+      function GetParentBackgroundColor(Default: TColor): TColor;
 
       // Invalidate
       procedure Invalidate; override;
@@ -276,10 +291,20 @@ interface
 
       // Parent Utilities
       function GetParentBackgroundColor(Default: TColor): TColor;
-
     end;
 
+  // Utilities
+  function GetParentBackgroundColorEx(Control: TControl; Default: TColor): TColor;
+
 implementation
+
+function GetParentBackgroundColorEx(Control: TControl; Default: TColor): TColor;
+begin
+  if (Control.Parent <> nil) and Supports(Control.Parent, FXControl) then
+    Result := (Control.Parent as FXControl).Background
+      else
+        Result := Default;
+end;
 
 { FXTransparentControl }
 
@@ -348,6 +373,7 @@ begin
   FTransparent := true;
   FOpacity := 255;
   FPadding := FXPadding.Create(Self);
+  FHitTest := true;
 
   // Font
   FTextFont := TFont.Create;
@@ -417,9 +443,10 @@ begin
     end;
 end;
 
-procedure FXWindowsControl.DrawBackground;
+procedure FXWindowsControl.DrawBackground(var Background: TBitMap);
 var
-  FControl: FXWindowsControl;
+  FControl: TControl;
+  FWinControl: FXWindowsControl;
   FGraphic: FXBufferGraphicControl;
   I: integer;
   Intersection: TRect;
@@ -428,75 +455,78 @@ var
   Host: TRect;
 begin
   // Draw Background
-  with FBackground.Canvas do
+  with Background.Canvas do
     begin
-      if Transparent then
-        begin
-          // Color backup
-          Brush.Color := Color;
-          FillRect(ClipRect);
+      // Solid color background
+      Brush.Color := Color;
+      FillRect(ClipRect);
 
-          // FX Control
-          if (Parent is TWinControl) then
+      // Opaque
+      if not (Transparent and (Parent is TWinControl)) then
+        Exit;
+
+      for I := 0 to Parent.ControlCount-1 do
+        begin
+          FControl := Parent.Controls[I];
+
+          // Hidden
+          if not FControl.Visible then
+            Continue;
+
+          // Bounds
+          HostBounds := FControl.BoundsRect;
+
+          // Intersect
+          if not HostBounds.IntersectsWith(BoundsRect) then
+            Continue;
+
+          if Parent.Controls[I] is FXWindowsControl then
             begin
-              for I := 0 to Parent.ControlCount-1 do
-                if Parent.Controls[I].Visible then
-                  if Parent.Controls[I] is FXWindowsControl then
-                    begin
-                      // Load controls
-                      FControl := FXWindowsControl(Parent.Controls[I]);
-                      HostBounds := FControl.BoundsRect;
+              FWinControl := FXWindowsControl(Parent.Controls[I]);
 
-                      // Insersect
-                      if HostBounds.IntersectsWith(BoundsRect)
-                        and (FControl.ComponentIndex < ComponentIndex) then
-                          begin
-                            Intersection := TRect.Intersect(HostBounds, BoundsRect);
+              // Check behind
+              if (FWinControl.ComponentIndex < ComponentIndex) then
+                begin
+                  Intersection := TRect.Intersect(HostBounds, BoundsRect);
 
-                            Local := Intersection;
-                            Local.Offset(-BoundsRect.Left, -BoundsRect.Top);
+                  Local := Intersection;
+                  Local.Offset(-BoundsRect.Left, -BoundsRect.Top);
 
-                            Host := Intersection;
-                            Host.Offset(-HostBounds.Left, -HostBounds.Top);
+                  Host := Intersection;
+                  Host.Offset(-HostBounds.Left, -HostBounds.Top);
 
-                            // Copy colliding
-                            CopyRect(Local, FControl.Buffer, Host);
-                          end;
-                    end
-                  else
-                  if Parent.Controls[I] is FXBufferGraphicControl then
-                    begin
-                      // Load controls
-                      FGraphic := FXBufferGraphicControl(Parent.Controls[I]);
-                      HostBounds := FGraphic.BoundsRect;
+                  // Copy colliding
+                  CopyRect(Local, FWinControl.Buffer, Host);
+                end;
+            end
+          else
+            if Parent.Controls[I] is FXBufferGraphicControl then
+              begin
+                FGraphic := FXBufferGraphicControl(Parent.Controls[I]);
+                HostBounds := FGraphic.BoundsRect;
 
-                      // Insersect
-                      if HostBounds.IntersectsWith(BoundsRect)
-                        and (FGraphic.ComponentIndex < ComponentIndex) then
-                          begin
-                            Intersection := TRect.Intersect(HostBounds, BoundsRect);
+                // Check behind
+                if (FGraphic.ComponentIndex < ComponentIndex) then
+                  begin
+                    Intersection := TRect.Intersect(HostBounds, BoundsRect);
 
-                            Local := Intersection;
-                            Local.Offset(-BoundsRect.Left, -BoundsRect.Top);
+                    Local := Intersection;
+                    Local.Offset(-BoundsRect.Left, -BoundsRect.Top);
 
-                            Host := Intersection;
-                            Host.Offset(-HostBounds.Left, -HostBounds.Top);
+                    Host := Intersection;
+                    Host.Offset(-HostBounds.Left, -HostBounds.Top);
 
-                            // Copy colliding
-                            CopyRect(Local, FGraphic.Buffer, Host);
-                          end;
-                    end;
-
-              // Opacity support
-              if Opacity <> 255 then
-                Canvas.Draw(0, 0, FBuffer, 255);
-            end;
-        end
-      else
-        begin
-          Brush.Color := Color;
-          FillRect(ClipRect);
+                    // Copy colliding
+                    CopyRect(Local, FGraphic.Buffer, Host);
+                  end;
+              end;
         end;
+
+      // Opacity support
+      { this will ensure that the background is already drawn when the
+        composite background is drawn on top }
+      if Opacity <> 255 then
+        Self.Canvas.Draw(0, 0, FBuffer, 255);
     end;
 end;
 
@@ -529,10 +559,7 @@ end;
 
 function FXWindowsControl.GetParentBackgroundColor(Default: TColor): TColor;
 begin
-  if (Parent <> nil) and Supports(Parent, FXControl) then
-    Result := (Parent as FXControl).Background
-      else
-        Result := Default;
+  Result := GetParentBackgroundColorEx(Self, Default);
 end;
 
 procedure FXWindowsControl.HandleKeyDown(var CanHandle: boolean; Key: integer;
@@ -612,7 +639,7 @@ begin
     InteractionState := FXControlState.Press;
 
   // Focus
-  if (InteractionState = FXControlState.Press) and not Focused then
+  if (InteractionState = FXControlState.Press) and CanFocus and not Focused then
     SetFocus;
 
   // Entered
@@ -635,6 +662,12 @@ begin
     OpenPopupMenu(X, Y);
 end;
 
+procedure FXWindowsControl.OnVisibleChange(var Message: TMessage);
+begin
+  inherited;
+  InvalidateControlsAbove;
+end;
+
 procedure FXWindowsControl.OpenPopupMenu(X, Y: integer);
 begin
   if Assigned(PopupMenu) then
@@ -644,6 +677,7 @@ end;
 procedure FXWindowsControl.Paint;
 var
   Composite: TBitMap;
+  ARect: TRect;
 begin
   inherited;
   if BufferedComponent then
@@ -667,7 +701,6 @@ begin
             end;
         end
       else
-
         // Draw Buffer
         Canvas.Draw(0, 0, FBuffer, FOpacity);
     end;
@@ -677,7 +710,12 @@ begin
     begin
       UpdateFocusRect;
 
-      Canvas.GDIRoundRect(MakeRoundRect(FocusRect, FOCUS_LINE_ROUND, FOCUS_LINE_ROUND),
+      // Offset by width
+      ARect := FocusRect;
+      ARect.Width := ARect.Width+FOCUS_LINE_SIZE div 2;
+      ARect.Height := ARect.Height+FOCUS_LINE_SIZE div 2;
+
+      Canvas.GDIRoundRect(MakeRoundRect(ARect, FOCUS_LINE_ROUND, FOCUS_LINE_ROUND),
         nil,
         GetRGB(ThemeManager.SystemColor.ForeGround).MakeGDIPen(FOCUS_LINE_SIZE))
     end;
@@ -693,7 +731,7 @@ end;
 
 procedure FXWindowsControl.PaintBackground;
 begin
-  DrawBackground;
+  DrawBackground(FBackground);
   FBuffer.Canvas.Draw(0, 0, FBackground);
 end;
 
@@ -713,6 +751,9 @@ procedure FXWindowsControl.ResizeBuffer;
 begin
   if BufferedComponent then
     begin
+      Width := Max(Width, 0);
+      Height := Max(Height, 0);
+
       if (FBuffer.Width <> Width) or (FBuffer.Height <> Height) then
         begin
           FBuffer.SetSize(Width, Height);
@@ -790,8 +831,10 @@ end;
 
 procedure FXWindowsControl.WMNCHitTest(var Message: TWMNCHitTest);
 begin
-  Message.Result := 0;
-  inherited;
+  if FHitTest or (csDesigning in ComponentState) then
+    inherited
+  else
+    Message.Result := HTTRANSPARENT;
 end;
 
 procedure FXWindowsControl.WMSize(var Message: TWMSize);
@@ -952,6 +995,12 @@ begin
   Result := Canvas;
 end;
 
+function FXBufferGraphicControl.GetParentBackgroundColor(
+  Default: TColor): TColor;
+begin
+  Result := GetParentBackgroundColorEx(Self, Default);
+end;
+
 procedure FXBufferGraphicControl.InteractionStateChanged(
   AState: FXControlState);
 begin
@@ -960,12 +1009,13 @@ end;
 
 procedure FXBufferGraphicControl.Invalidate;
 begin
-  inherited;
   if Parent = nil then
     Exit;
 
   ResizeBuffer;
   PaintBuffer;
+
+  inherited;
 end;
 
 procedure FXBufferGraphicControl.InvalidateControlsAbove;
@@ -1012,6 +1062,11 @@ begin
   // Popup Menu
   if (Button = mbRight) and Assigned(PopupMenu) then
     FPopupMenu.PopupAtPoint( ClientToScreen(Point(X,Y)) );
+end;
+
+procedure FXBufferGraphicControl.OnVisibleChange(var Message: TMessage);
+begin
+  InvalidateControlsAbove;
 end;
 
 procedure FXBufferGraphicControl.Paint;

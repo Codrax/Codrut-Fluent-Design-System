@@ -20,7 +20,8 @@ interface
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, IdHTTP,
   VCL.Graphics, Winapi.ActiveX, Winapi.URLMon, IOUtils, System.Generics.Collections,
   System.Generics.Defaults, Vcl.Imaging.pngimage, CFX.UIConsts,
-  WinApi.GdipObj, WinApi.GdipApi, Win.Registry, CFX.GDI, CFX.Types;
+  WinApi.GdipObj, WinApi.GdipApi, Win.Registry, CFX.GDI, CFX.Types,
+  Vcl.ExtCtrls, UITypes;
 
   type
     // Requirements
@@ -30,11 +31,17 @@ interface
     TRGBArray = array[Word] of TRGBTriple;
     PRGBArray = ^TRGBArray;
 
-    // Color Helper
+    // Color Helper (ex)
     TColorHelper = record helper for TColor
     public
       function ToString: string; overload; inline;
       function ToInteger: integer; overload; inline;
+    end;
+
+    // TTimer
+    TTimerHelper = class helper for TTimer
+    public
+      procedure ResetTimer;
     end;
 
     // TFont
@@ -55,7 +62,9 @@ interface
 
       procedure DrawFocusedLine(ARect: TRect);
 
-      procedure GDITint(Rectangle: TRect; Color: TColor; Opacity: byte = 75);
+      procedure GDIText(Text: string; Rectangle: TRect; Flags: FXTextFlags = [FXTextFlag.WordWrap]; Angle: single = 0);
+      procedure GDITint(Rectangle: TRect; Color: TColor; Opacity: byte = 75); overload;
+      procedure GDITint(Rectangle: TRect; Color: FXColor); overload;
       procedure GDIRectangle(Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen);
       procedure GDIRoundRect(RoundRect: TRoundRect; Brush: TGDIBrush; Pen: TGDIPen);
       procedure GDICircle(Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen);
@@ -350,7 +359,7 @@ end;
 
 procedure TCanvasHelper.GDITint(Rectangle: TRect; Color: TColor; Opacity: byte = 75);
 begin
-  TintPicture(Self, Rectangle, Color, Opacity);
+  TintPicture(Self, Rectangle, GetRGB(Color, Opacity));
 end;
 
 procedure TCanvasHelper.GDIRectangle(Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen);
@@ -361,6 +370,95 @@ end;
 procedure TCanvasHelper.GDIRoundRect(RoundRect: TRoundRect; Brush: TGDIBrush; Pen: TGDIPen);
 begin
   DrawRoundRect(Self, RoundRect, Brush, Pen);
+end;
+
+procedure TCanvasHelper.GDIText(Text: string; Rectangle: TRect;
+  Flags: FXTextFlags; Angle: single);
+var
+  AFont: TGPFont;
+  AFormat: TGPStringFormat;
+  FontStyle: integer;
+  FontFlags: integer;
+begin
+  // Font Style
+  FontStyle := 0;
+  if fsBold in Font.Style then
+    FontStyle := FontStyle or FontStyleBold;
+  if fsItalic in Font.Style then
+    FontStyle := FontStyle or FontStyleItalic;
+  if fsUnderline in Font.Style then
+    FontStyle := FontStyle or FontStyleUnderline;
+  if fsStrikeOut in Font.Style then
+    FontStyle := FontStyle or FontStyleStrikeout;
+
+  // Font
+  AFont := TGPFont.Create(Font.Name, Font.Height, FontStyle, UnitPoint);
+  AFormat:= TGPStringFormat.Create;
+  try
+    // Format Flags
+    FontFlags := AFormat.GetFormatFlags;
+    if not (FXTextFlag.WordWrap in Flags) then
+      FontFlags := FontFlags or StringFormatFlagsNoWrap;
+
+    if FXTextFlag.NoClip in Flags then
+      FontFlags := FontFlags or StringFormatFlagsNoClip;
+
+    AFormat.SetFormatFlags(FontFlags);
+
+    // Alignment
+    if FXTextFlag.Left in Flags then
+      AFormat.SetAlignment(StringAlignment.StringAlignmentNear);
+    if FXTextFlag.Center in Flags then
+      AFormat.SetAlignment(StringAlignment.StringAlignmentCenter);
+    if FXTextFlag.Right in Flags then
+      AFormat.SetAlignment(StringAlignment.StringAlignmentFar);
+
+    if FXTextFlag.Top in Flags then
+      AFormat.SetLineAlignment(StringAlignment.StringAlignmentNear);
+    if FXTextFlag.VerticalCenter in Flags then
+      AFormat.SetLineAlignment(StringAlignment.StringAlignmentCenter);
+    if FXTextFlag.Bottom in Flags then
+      AFormat.SetLineAlignment(StringAlignment.StringAlignmentFar);
+
+    // Accel & chars
+    if FXTextFlag.HotkeyChars in Flags then
+      AFormat.SetHotkeyPrefix(HotkeyPrefixShow)
+    else
+      AFormat.SetHotkeyPrefix(HotkeyPrefixNone);
+
+    // trimming
+    AFormat.SetTrimming(StringTrimming.StringTrimmingNone);
+    if FXTextFlag.TrimCutoff in Flags then
+      begin
+        if FXTextFlag.TrimCharacter in Flags then
+          AFormat.SetTrimming(StringTrimming.StringTrimmingCharacter)
+        else
+        if FXTextFlag.TrimWord in Flags then
+          AFormat.SetTrimming(StringTrimming.StringTrimmingWord);
+      end
+    else
+      begin
+        if FXTextFlag.TrimCharacter in Flags then
+          AFormat.SetTrimming(StringTrimming.StringTrimmingEllipsisCharacter)
+        else
+        if FXTextFlag.TrimWord in Flags then
+          AFormat.SetTrimming(StringTrimming.StringTrimmingEllipsisWord)
+        else
+        if FXTextFlag.TrimPath in Flags then
+          AFormat.SetTrimming(StringTrimming.StringTrimmingEllipsisPath);
+      end;
+
+    // Draw
+    DrawText(Self, Text, Rectangle, AFont, AFormat, GetRGB(Font.Color).MakeGDIBrush, Angle);
+  finally
+    AFont.Free;
+    AFormat.Free;
+  end;
+end;
+
+procedure TCanvasHelper.GDITint(Rectangle: TRect; Color: FXColor);
+begin
+  TintPicture(Self, Rectangle, Color);
 end;
 
 procedure TCanvasHelper.GDICircle(Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen);
@@ -483,6 +581,16 @@ begin
     if Delete then
       Self.DeleteKey(OldName);
   end;
+end;
+
+{ TTimerHelper }
+
+procedure TTimerHelper.ResetTimer;
+begin
+  Enabled := false;
+
+  // Re-enable
+  Enabled := true;
 end;
 
 end.

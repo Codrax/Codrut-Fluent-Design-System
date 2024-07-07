@@ -4,7 +4,6 @@ uses
   Vcl.Forms,
   CFX.ThemeManager,
   CFXTest in 'Demo\CFXTest.pas' {Form1},
-  CFX.ArrayHelpers in 'Source\CFX.ArrayHelpers.pas',
   CFX.Template in 'Source\CFX.Template.pas';
 
 {$R *.res}

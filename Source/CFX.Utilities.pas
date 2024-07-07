@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, Win.Registry, System.UITypes,
   Types, Vcl.Forms, Vcl.Graphics, CFX.Colors, CFX.Registry, ShellAPI,
-  CFX.Types, IOUTils, RegularExpressions;
+  CFX.Types, IOUTils, RegularExpressions, CFX.Files;
 
   function GetAppsUseDarkTheme: Boolean;
   function GetAccentColor( brightencolor: boolean = true ): TColor;
@@ -20,13 +20,12 @@ uses
   function IsStringAlphaNumeric(const S: string): Boolean;
 
   // File
-  function GetFileSize(FileName: WideString): Int64;
-
-  function ReplaceWinPath(SrcString: string): string;
-  function GetUserShellLocation(ShellLocation: FXUserShell): string;
-
   function GetFileBytesString(FileName: string; FirstCount: integer): TArray<string>;
   function ReadFileSignature(FileName: string): TFileType;
+
+  // General Folder
+  function GetAppDataFolder: string;
+  function GetPackagesFolder: string;
 
   // Screen
   procedure QuickScreenShot(var BitMap: TBitMap; Monitor: integer = -2);
@@ -91,90 +90,12 @@ end;
 
 procedure ShellRun(Command, Parameters: string);
 begin
-  ShellExecute(0, 'open', PChar(Command), PChar(Parameters), nil, 0);
+  ShellExecute(0, 'open', PChar(Command), PChar(Parameters), nil, SW_NORMAL);
 end;
 
 function IsStringAlphaNumeric(const S: string): Boolean;
 begin
   Result := TRegEx.IsMatch(S, '^[a-zA-Z0-9]+$');
-end;
-
-function GetFileSize(FileName: WideString): Int64;
-var
-  sr : TSearchRec;
-begin
-  {$WARN SYMBOL_PLATFORM OFF}
-  if FindFirst(fileName, faAnyFile, sr ) = 0 then
-    result := Int64(sr.FindData.nFileSizeHigh) shl Int64(32) + Int64(sr.FindData.nFileSizeLow)
-  else
-    result := -1;
-  FindClose(sr);
-   {$WARN SYMBOL_PLATFORM ON}
-end;
-
-function ReplaceWinPath(SrcString: string): string;
-var
-  RFlags: TReplaceFlags;
-begin
-  RFlags := [rfReplaceAll, rfIgnoreCase];
-
-  Result := SrcString;
-
-  // Remove "
-  Result := Result.Replace('"', '');
-
-  // Windows Vista 2008 and above
-  Result := StringReplace(Result, '%AppData%', 'C:\Users' + GetUserNameString + '\AppData\Roaming', RFlags);
-  Result := StringReplace(Result, '%LocalAppData%', 'C:\Users\' + GetUserNameString + '\AppData\Local', RFlags);
-  Result := StringReplace(Result, '%Public%', 'C:\Users\Public', RFlags);
-  Result := StringReplace(Result, '%Temp%', 'C:\Users\' + GetUserNameString + '\AppData\Local\Temp', RFlags);
-  Result := StringReplace(Result, '%Tmp%', 'C:\Users\' + GetUserNameString + '\AppData\Local\Temp', RFlags);
-  Result := StringReplace(Result, '%HomePath%', 'C:\Users\' + GetUserNameString + '\', RFlags);
-  Result := StringReplace(Result, '%UserProfile%', 'C:\Users\' + GetUserNameString + '\', RFlags);
-
-  // General
-  Result := StringReplace(Result, '%AllUsersProfile%', 'C:\ProgramData', RFlags);
-  Result := StringReplace(Result, '%CommonProgramFiles%', 'C:\Program Files\Common Files', RFlags);
-  Result := StringReplace(Result, '%CommonProgramFiles(x86)%', 'C:\Program Files (x86)\Common Files', RFlags);
-  Result := StringReplace(Result, '%HomeDrive%', 'C:\', RFlags);
-  Result := StringReplace(Result, '%ProgramData%', 'C:\ProgramData', RFlags);
-  Result := StringReplace(Result, '%ProgramFiles%', 'C:\Program Files', RFlags);
-  Result := StringReplace(Result, '%ProgramFiles(x86)%', 'C:\Program Files (x86)', RFlags);
-  Result := StringReplace(Result, '%SystemDrive%', 'C:', RFlags);
-  Result := StringReplace(Result, '%SystemRoot%', 'C:\Windows', RFlags);
-  Result := StringReplace(Result, '%OneDrive%', 'C:\Users\' + GetUserNameString + '\Onedrive\', RFlags);
-  Result := StringReplace(Result, '%OneDriveConsumer%', 'C:\Users\' + GetUserNameString + '\Onedrive\', RFlags);
-
-  // Custom additions
-  Result := StringReplace(Result, '%WindowsApps%', 'C:\Program Files\WindowsApps', RFlags);
-  Result := StringReplace(Result, '%UserWindowsApps%', 'C:\Users\' + GetUserNameString + '\AppData\Local\Microsoft\WindowsApps\', RFlags);
-end;
-
-
-function GetUserShellLocation(ShellLocation: FXUserShell): string;
-var
-  RegString, RegValue: string;
-begin
-  case ShellLocation of
-    FXUserShell.User: Exit( ReplaceWinPath('%USERPROFILE%') );
-    FXUserShell.AppData: RegValue := 'AppData';
-    FXUserShell.AppDataLocal: RegValue := 'Local AppData';
-    FXUserShell.Documents: RegValue := 'Personal';
-    FXUserShell.Pictures: RegValue := 'My Pictures';
-    FXUserShell.Desktop: RegValue := 'Desktop';
-    FXUserShell.Music: RegValue := 'My Music';
-    FXUserShell.Videos: RegValue := 'My Video';
-    FXUserShell.Network: RegValue := 'NetHood';
-    FXUserShell.Recent: RegValue := 'Recent';
-    FXUserShell.StartMenu: RegValue := 'Start Menu';
-    FXUserShell.Programs: RegValue := 'Programs';
-    FXUserShell.Startup: RegValue := 'Startup';
-    FXUserShell.Downloads: RegValue := '{374DE290-123F-4565-9164-39C4925E467B}';
-  end;
-
-  RegString := FXQuickReg.GetStringValue('HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders', RegValue);
-
-  Result := ReplaceWinPath(RegString);
 end;
 
 function GetFileBytesString(FileName: string; FirstCount: integer): TArray<string>;
@@ -353,6 +274,15 @@ begin
     Exit( TFileType.CHM );
 end;
 
+function GetAppDataFolder: string;
+begin
+  Result := IncludeTrailingPathDelimiter(ReplaceWinPath('%APPDATA%'));
+end;
+
+function GetPackagesFolder: string;
+begin
+  Result := IncludeTrailingPathDelimiter(GetAppDataFolder + 'Packages');
+end;
 
 procedure QuickScreenShot(var BitMap: TBitMap; Monitor: integer);
 var

@@ -100,7 +100,6 @@ type
       property TextSpacing: Integer read FTextSpacing write SetTextSpacing default CHECKBOX_TEXT_SPACE;
 
       property Text: string read FText write SetText;
-      property Font;
       property SpacePercent: FXPercent read FSpacePercent write FSpacePercent default 75;
       property FadeSize: integer read FFadeSize write SetFadeSize default SCROLL_TEXT_FADE_SIZE;
 
@@ -114,14 +113,25 @@ type
       property LayoutVertical: FXLayout read FVertLayout write SetVertLayout default FXLayout.Center;
 
       property Align;
+      property Font;
+      property Transparent;
+      property Opacity;
       property PaddingFill;
       property Constraints;
       property Anchors;
       property Hint;
       property ShowHint;
+      property ParentShowHint;
       property TabStop;
       property TabOrder;
       property FocusFlags;
+      property DragKind;
+      property DragCursor;
+      property DragMode;
+      property OnDragDrop;
+      property OnDragOver;
+      property OnEndDrag;
+      property OnStartDrag;
       property OnEnter;
       property OnExit;
       property OnClick;
@@ -187,6 +197,7 @@ begin
     begin
       // Global Colors
       FDrawColors.LoadFrom(ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
+      FDrawColors.BackGround := GetParentBackgroundColor(FDrawColors.BackGround);
     end;
 end;
 

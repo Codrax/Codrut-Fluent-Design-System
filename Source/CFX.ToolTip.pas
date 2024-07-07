@@ -4,6 +4,7 @@ interface
 uses
   Classes, Types, Windows, Messages, Vcl.Controls, Vcl.Graphics, CFX.UIConsts,
   CFX.ThemeManager, CFX.Colors, CFX.Graphics;
+
 type
   FXCustomTooltip = class(THintWindow)
     const
@@ -35,31 +36,37 @@ type
 
       procedure ApplyColor;
   end;
+
 implementation
+
 { FXLightTooltip }
 constructor FXLightTooltip.Create(aOwner: TComponent);
 begin
   inherited;
   ApplyColor;
 end;
+
 procedure FXLightTooltip.ApplyColor;
 begin
   inherited;
   BackColor := ThemeManager.FSystemToolTip.LightBackGround;
   BorderColor := ThemeManager.FSystemToolTip.LightBackGroundInterior;
 end;
+
 { FXDarkTooltip }
 constructor FXDarkTooltip.Create(aOwner: TComponent);
 begin
   inherited;
   ApplyColor;
 end;
+
 procedure FXDarkTooltip.ApplyColor;
 begin
   inherited;
   BackColor := ThemeManager.FSystemToolTip.DarkBackGround;
   BorderColor := ThemeManager.FSystemToolTip.DarkBackGroundInterior;
 end;
+
 { FXCustomTooltip }
 //  MAIN CLASS
 constructor FXCustomTooltip.Create(aOwner: TComponent);
@@ -70,6 +77,7 @@ begin
   Font.Name := TOOLTIP_FONT_NAME;
   Font.Size := TOOLTIP_FONT_SIZE;
 end;
+
 procedure FXCustomTooltip.CreateParams(var Params: TCreateParams);
 begin
   inherited;
@@ -77,6 +85,7 @@ begin
   if not ShowShadow then
     Params.WindowClass.style := Params.WindowClass.style and not CS_DROPSHADOW;
 end;
+
 //  CUSTOM METHODS
 function FXCustomTooltip.CalcHintRect(MaxWidth: Integer; const AHint: string; AData: Pointer): TRect;
 begin
@@ -87,6 +96,7 @@ begin
   Inc(Result.Right, 2 * (HORZ_SPACE + BorderThickness));
   Inc(Result.Bottom, 2 * (VERT_SPACE + BorderThickness));
 end;
+
 procedure FXCustomTooltip.Paint;
 var
   TextRect: TRect;
@@ -107,6 +117,7 @@ begin
     Width - HORZ_SPACE - BorderThickness, Height - VERT_SPACE - BorderThickness);
   DrawText(Canvas.Handle, Caption, -1, TextRect, DT_WORDBREAK or DT_LEFT or DT_VCENTER or DT_END_ELLIPSIS);
 end;
+
 procedure FXCustomTooltip.NCPaint(DC: HDC);
 begin
   //  Do nothing

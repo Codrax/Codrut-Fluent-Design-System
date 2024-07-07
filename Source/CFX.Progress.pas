@@ -65,7 +65,7 @@ type
 
       // Thread
       procedure SetAnimationThread(Enabled: boolean);
-      procedure AnimateTo(Position: single);
+      procedure AnimateValue(From: single);
 
       // Setters
       procedure SetProgressHeight(const Value: integer);
@@ -100,16 +100,30 @@ type
       property ProgressHeight: integer read FProgressHeight write SetProgressHeight default PROGRESS_HEIGHT;
       property ProgressLineHeight: integer read FProgressLineHeight write SetProgressLineHeight default PROGRESS_LINE_HEIGHT;
 
+      // Utils
+      procedure Reset; (* reset to 0 without animation *)
+
       // Default props
       property Align;
+      property Font;
+      property Transparent;
+      property Opacity;
       property PaddingFill;
       property Constraints;
       property Anchors;
       property Hint;
       property ShowHint;
+      property ParentShowHint;
       property TabStop default false;
       property TabOrder;
       property FocusFlags;
+      property DragKind;
+      property DragCursor;
+      property DragMode;
+      property OnDragDrop;
+      property OnDragOver;
+      property OnEndDrag;
+      property OnStartDrag;
       property OnEnter;
       property OnExit;
       property OnClick;
@@ -134,18 +148,22 @@ type
 
 implementation
 
-procedure FXProgress.AnimateTo(Position: single);
+procedure FXProgress.AnimateValue(From: single);
+var
+  Position: single;
 begin
+  // Prep
+  Position := Value; // this is what the thread will animate TO
+
   // Started
   if (FProgressThread <> nil) and FProgressThread.Running then
     begin
-      FValue := FValue + FValueAdd;
-
-      TerminateThread(FProgressThread.Handle, 0);
+      // The thread will automatically configure any changes
+      Exit;
     end;
 
   // Values
-  FValueAdd := Value - Position;
+  FValueAdd := From - Position;
   FValueAddMax := FValueAdd;
   FProgressPos := 0;
 
@@ -168,7 +186,18 @@ begin
 
         // Sleep
         Sleep(10);
-      until FProgressPos >= MAX_ANIM;
+
+        // Check for sys modifications
+        if Position <> Value then
+          begin
+            From := Position;
+            Position := Value;
+
+            FValueAdd := From - Position;
+            FValueAddMax := FValueAdd;
+            FProgressPos := 0;
+          end;
+      until (FProgressPos >= MAX_ANIM);
 
       // Reset
       FValueAdd := 0;
@@ -180,7 +209,6 @@ begin
           Invalidate;
         end);
     end);
-
   with FProgressThread do
     begin
       Priority := tpLowest;
@@ -308,6 +336,14 @@ begin
   inherited;
 end;
 
+procedure FXProgress.Reset;
+begin
+  FValue := Value;
+
+  UpdateRects;
+  Invalidate;
+end;
+
 procedure FXProgress.Resize;
 begin
   inherited;
@@ -344,6 +380,9 @@ begin
             FDrawColors.BackGroundInterior := ColorRepository.LightBackgroundControl
           else
             FDrawColors.BackGroundInterior := ColorRepository.DarkBackgroundControl;
+
+          // Background
+          FDrawColors.BackGround := GetParentBackgroundColor(FDrawColors.BackGround);
         end;
 
       if FCustomOtherColors.Enabled then
@@ -482,7 +521,11 @@ begin
     end
   else
     if (FAnimateThread <> nil) and FAnimateThread.Running then
-      FAnimateThread.Halt;
+      begin
+        // Wait for thread to finalise work
+        FAnimateThread.Terminate;
+        FThreadFinishedEvent.WaitFor(FIFTH_SECOND)
+      end;
 end;
 
 procedure FXProgress.SetProgressHeight(const Value: integer);
@@ -524,10 +567,11 @@ procedure FXProgress.SetValue(const Value: single);
 begin
   if FValue <> Value then
     begin
-      if Animations and not IsReading then
-        AnimateTo(Value);
-
+      const Previous = FValue;
       FValue := Value;
+
+      if Animations and not IsReading then
+        AnimateValue(Previous);
 
       UpdateRects;
       Invalidate;

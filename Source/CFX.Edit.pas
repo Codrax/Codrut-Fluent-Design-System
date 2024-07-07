@@ -41,6 +41,7 @@ type
       FDrawPosition: integer;
       FSelLength: integer;
       FIndicatorWidth: integer;
+      FReadOnly: boolean;
       FRoundness: integer;
       FLineColor: TColor;
       FLayout: FXLayout;
@@ -59,6 +60,7 @@ type
       FNumbersOnly: boolean;
       FClearSelOnExit: boolean;
       FOnChange: TNotifyEvent;
+      FOnChangeValue: TNotifyEvent;
       FTextHint: string;
       FDetail: FXDetailType;
 
@@ -126,6 +128,8 @@ type
       procedure Resize; override;
       procedure ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF}); override;
 
+      function CanEdit: boolean;
+
       // State
       procedure InteractionStateChanged(AState: FXControlState); override;
 
@@ -164,6 +168,7 @@ type
       property CanUndo: boolean read FCanUndo write SetCanUndo default true;
       property CharCase: FXCharCase read FCharCase write SetCharCase default FXCharCase.Both;
       property NumbersOnly: boolean read FNumbersOnly write SetNumbersOnly default false;
+      property ReadOnly: boolean read FReadOnly write FReadOnly;
       property EnableSelection: boolean read FEnableSelection write SetEnableSelection default true;
       property AutoSize: boolean read FAutoSize write SetAutoSizing default true;
       property LineSize: integer read FLineSize write SetLineSize default EDIT_LINE_SIZE;
@@ -198,14 +203,17 @@ type
 
       // Other
       property HandleUpDown: boolean read FHandleUpDown write FHandleUpDown default true;
-      property Font;
 
       // Events
       property OnChange: TNotifyEvent read FOnChange write FOnChange;
+      property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
 
       // Inherited properties
       property Cursor default crIBeam;
       property Align;
+      property Font;
+      property Transparent;
+      property Opacity;
       property PaddingFill;
       property Constraints;
       property Anchors;
@@ -214,6 +222,13 @@ type
       property TabStop;
       property TabOrder;
       property FocusFlags;
+      property DragKind;
+      property DragCursor;
+      property DragMode;
+      property OnDragDrop;
+      property OnDragOver;
+      property OnEndDrag;
+      property OnStartDrag;
       property OnEnter;
       property OnExit;
       property OnClick;
@@ -257,6 +272,7 @@ type
       property CanUndo;
       property CharCase;
       property NumbersOnly;
+      property ReadOnly;
       property EnableSelection;
       property AutoSize;
       property LineSize;
@@ -297,9 +313,13 @@ begin
   if NumbersOnly and not CharInSet(Key, ['0'..'9']) then
     Exit;
 
+  // Read Only
+  if ReadOnly then
+    Exit;
+
   // Override Selection
   if (Key <> '') and HasSelection then
-    Self.DeleteSelection;
+    DeleteSelection;
 
   // Add
   ChangeText( Copy(Text, 1, FPosition) + Key + Copy(Text, + FPosition+1, Length(Text)) );
@@ -693,7 +713,7 @@ begin
       begin
         Dec(Result);
 
-        if AnaliseChar(FText[Result]) then
+        if (Result = 0) or AnaliseChar(FText[Result]) then
           begin
             Exit(Result);
           end;
@@ -818,7 +838,7 @@ begin
     end;
 
     // Del + Backspace
-    VK_BACK: begin
+    VK_BACK: if CanEdit then begin
       if HasSelection then
         DeleteSelection
       else
@@ -842,7 +862,7 @@ begin
           end;
     end;
 
-    VK_DELETE: begin
+    VK_DELETE: if CanEdit then begin
       if HasSelection then
         Self.DeleteSelection
       else
@@ -860,11 +880,11 @@ begin
       SelectAll;
     67: if ssCtrl in ShiftState then
       CopyToClipBoard;
-    86: if ssCtrl in ShiftState then
+    86: if CanEdit and (ssCtrl in ShiftState) then
       PasteFromClipBoard;
-    88: if ssCtrl in ShiftState then
-      CutToClipBoard;
-    90: if ssCtrl in ShiftState then
+    88: if CanEdit and (ssCtrl in ShiftState) then
+        CutToClipBoard;
+    90: if CanEdit and (ssCtrl in ShiftState) then
       Undo;
   end;
 end;
@@ -885,6 +905,11 @@ end;
 function FXCustomEdit.Background: TColor;
 begin
   Result := FDrawColors.Background;
+end;
+
+function FXCustomEdit.CanEdit: boolean;
+begin
+  Result := not FReadOnly;
 end;
 
 procedure FXCustomEdit.ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF});
@@ -908,6 +933,8 @@ begin
   // Notify
   if Assigned(OnChange) then
     OnChange(Self);
+  if Assigned(OnChangeValue) then
+    OnChangeValue(Self);
 
   // Scroll
   ScrollForCursor;
@@ -1082,6 +1109,10 @@ begin
   FDefaultMenu.Items[1].Visible := HasSelection and not IsPassword;
   FDefaultMenu.Items[2].Visible := Clipboard.AsText <> '';
   FDefaultMenu.Items[3].Visible := (FHistory.Count > 0) and FCanUndo;
+
+  FDefaultMenu.Items[0].Enabled := CanEdit;
+  FDefaultMenu.Items[2].Enabled := CanEdit;
+  FDefaultMenu.Items[3].Enabled := CanEdit;
 end;
 
 procedure FXCustomEdit.PopupItemClick(Sender: TObject; Item: FXPopupComponent;
@@ -1441,6 +1472,10 @@ begin
   FHistory.Clear;
 
   ApplyCharCase;
+
+  // Notify
+  if Assigned(OnChangeValue) and not (csReading in ComponentState) then
+    OnChangeValue(Self);
 
   // Update
   UpdateRects;

@@ -85,7 +85,7 @@ type
       property TextSpacing: Integer read FTextSpacing write SetTextSpacing default RADIO_TEXT_SPACE;
       property Checked: Boolean read GetChecked write SetChecked default false;
       property OnCheck: TNotifyEvent read FOnCheck write FOnCheck;
-      property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor;
+      property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default false;
 
       property Text: string read FText write SetText;
       property WordWrap: boolean read FWordWrap write SetWordWrap default true;
@@ -94,17 +94,26 @@ type
 
       property Layout: FXDrawLayout read FLayout write SetLayout default FXDrawLayout.Left;
 
-      property Font;
-
       property Align;
+      property Font;
+      property Transparent;
+      property Opacity;
       property PaddingFill;
       property Constraints;
       property Anchors;
       property Hint;
       property ShowHint;
+      property ParentShowHint;
       property TabStop;
       property TabOrder;
       property FocusFlags;
+      property DragKind;
+      property DragCursor;
+      property DragMode;
+      property OnDragDrop;
+      property OnDragOver;
+      property OnEndDrag;
+      property OnStartDrag;
       property OnEnter;
       property OnExit;
       property OnClick;
@@ -428,7 +437,7 @@ begin
 
   FChecked := false;
   FTextSpacing := RADIO_TEXT_SPACE;
-  FAutomaticMouseCursor := true;
+  FAutomaticMouseCursor := false;
   AutoFocusLine := true;
   BufferedComponent := true;
   FWordWrap := true;

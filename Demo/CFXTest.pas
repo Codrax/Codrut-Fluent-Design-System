@@ -14,11 +14,15 @@ uses
   CFX.Slider, CFX.ImageList, CFX.Controls, CFX.Test, CFX.TextBox, CFX.RadioButton,
   CFX.Scrollbar, CFX.ScrollBox, CFX.Edit, Cod.Graphics, CFX.Button,
   CFX.PopupConnector, Vcl.Buttons, CFX.IconView, CFX.ScrollText, CFX.FormClasses,
+  CFX.Messages, CFX.VarHelpers, CFX.Graphics, CFX.RatingControl, CFX.Effects,
+  CFX.Progress, CFX.GDI, CFX.Utilities, CFX.QuickDialogs, CFX.Instances,
+  CFX.PaintBox,
 
   // VCL COMPONENTS
   Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage,
   Vcl.ExtDlgs, System.ImageList, UITypes,
-  Vcl.ComCtrls, Vcl.Mask, Cod.Visual.ColorBox, CFX.Progress;
+  Vcl.ComCtrls, Vcl.Mask, UxTheme, Vcl.Themes, CFX.AppManager,
+  System.Generics.Collections, CFX.TabStrip;
 
 type
   TForm1 = class(FXForm)
@@ -28,8 +32,6 @@ type
     FXStandardIcon4: FXStandardIcon;
     FXStandardIcon5: FXStandardIcon;
     FXStandardIcon6: FXStandardIcon;
-    FXIconView1: FXIconView;
-    FXIconView2: FXIconView;
     TitleBarPanel1: TTitleBarPanel;
     FXBlurMaterial2: FXBlurMaterial;
     FXEdit1: FXEdit;
@@ -61,7 +63,6 @@ type
     FXEdit3: FXEdit;
     FXButton10: FXButton;
     FXButton13: FXButton;
-    FXTextBox1: FXTextBox;
     FXTextBox2: FXTextBox;
     FXTextBox3: FXTextBox;
     FXTextBox4: FXTextBox;
@@ -71,26 +72,34 @@ type
     FXBlurMaterial1: FXBlurMaterial;
     FXButton14: FXButton;
     FXTextBox6: FXTextBox;
-    FXProgress1: FXProgress;
     FXButton15: FXButton;
     FXAnimatedTextBox1: FXAnimatedTextBox;
     FXButton16: FXButton;
+    FXProgress1: FXProgress;
+    PaintBox1: TPaintBox;
+    FXTextBox8: FXTextBox;
+    FXIconView1: FXIconView;
+    FXTextBox1: FXTextBox;
+    FXAppManager1: FXAppManager;
+    FXTabStrip1: FXTabStrip;
     procedure FXButton4Click(Sender: TObject);
     procedure FXButtonDesign3Click(Sender: TObject);
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
-    procedure FormResize(Sender: TObject);
-    procedure FormOnMove(Sender: TObject);
     procedure FXButton13Click(Sender: TObject);
     procedure FXButton11Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
     procedure FXButton14Click(Sender: TObject);
     procedure FXButton15Click(Sender: TObject);
     procedure FXButton16Click(Sender: TObject);
+    procedure PaintBox1Paint(Sender: TObject);
+    procedure FXSlider1Change(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FXAppManager1UpdateChecked(Sender: TObject);
+    procedure FXPaintBox1Draw(Sender: TObject);
   private
     { Private declarations }
-    procedure UpdateBlurs;
+    procedure FormMove(Sender: TObject);
   public
     { Public declarations }
   end;
@@ -106,17 +115,22 @@ implementation
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  OnMove := FormOnMove;
+  OnMove := FormMove;
+
+  FXPopupMenu1.Items[1].Text := '-';
 end;
 
-procedure TForm1.FormOnMove(Sender: TObject);
+procedure TForm1.FormMove(Sender: TObject);
 begin
-  UpdateBlurs;
+  FXBlurMaterial2.FormMoveSync;
 end;
 
-procedure TForm1.FormResize(Sender: TObject);
+procedure TForm1.FXAppManager1UpdateChecked(Sender: TObject);
 begin
-  UpdateBlurs;
+  if not AppManager.UpdateCheckSuccess then
+    OpenMessage('Update checking failed')
+  else
+    OpenMessage('Latest server version: ' + AppManager.ServerVersion.ToString)
 end;
 
 procedure TForm1.FXButton11Click(Sender: TObject);
@@ -162,7 +176,10 @@ begin
       FXBlurMaterial2.Hide;
       Self.Width := Self.Width - 1;
 
-      AppName := 'Cool Cats corp';
+      AppName := 'Cool Application';
+
+      DownloadURL := 'https://codrutsoft.com/downloads/software/ibroadcast/Cods%20iBroadcast%201.7.0-x64.exe';
+      InstallParameters := '-ad';
 
       Show;
     finally
@@ -185,6 +202,8 @@ begin
       FillMode := FXFormFill.TitleBar;
       FXBlurMaterial2.Hide;
       Self.Width := Self.Width - 1;
+
+      IconKind := FXStandardIconType.Warning;
 
       Title := 'Hello world!';
       Text := 'This is a text message. Read It carefully as It may aid you in the future.';
@@ -475,7 +494,8 @@ begin
       Text := 'Enter the search query to begin searching';
 
       ParentForm := Self;
-      Value := 'Text text';
+      Value := '';
+      TextHint := 'Type here';
 
       S := Execute;
 
@@ -496,10 +516,36 @@ begin
     end;
 end;
 
-procedure TForm1.UpdateBlurs;
+procedure TForm1.FXPaintBox1Draw(Sender: TObject);
 begin
-  FXBlurMaterial1.SyncroniseImage;
-  FXBlurMaterial2.SyncroniseImage;
+  with FXPaintBox(Sender).Buffer do
+    begin
+      Brush.Color := clRed;
+      Rectangle(100, 100, 200, 200);
+    end;
+end;
+
+procedure TForm1.FXSlider1Change(Sender: TObject);
+begin
+  PaintBox1.Tag := round(FXSlider(Sender).Position / 100 * 360);
+  PaintBox1.Repaint;
+end;
+
+procedure TForm1.PaintBox1Paint(Sender: TObject);
+var
+  R: TRect;
+begin
+  with TPaintBox(Sender).Canvas do
+    begin
+      R := ClipRect;
+
+      Font.Height := 22;
+
+      GDIText('Hello world! This is truly incredibile, text rotating! :)',
+        R, [FXTextFlag.WordWrap, FXTextFlag.NoClip, FXTextFlag.VerticalCenter,
+          FXTextFlag.Center],
+        TPaintBox(Sender).Tag);
+    end;
 end;
 
 end.

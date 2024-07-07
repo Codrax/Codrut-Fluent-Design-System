@@ -4,7 +4,7 @@ interface
   uses
     Vcl.Graphics, Classes, Types, CFX.Types, CFX.UIConsts, SysUtils,
     CFX.Graphics, CFX.VarHelpers, CFX.ThemeManager, Vcl.Controls,
-    TypInfo, CFX.Linker;
+    TypInfo, CFX.Linker, CFX.Colors;
 
   type
     // Base Clases
@@ -57,6 +57,40 @@ interface
       constructor Create(AOwner : TPersistent); override;
 
       function ApplyTo(ARect: TRect): TRect;
+    end;
+
+    // Blur Settings
+    FXBlurSettings = class(TMPersistent)
+    private
+      FEnabled: boolean;
+
+      FBlurVersion: FXBlurVersion;
+
+      FTint: boolean;
+      FTintLightOpacity: byte;
+      FTintDarkOpacity: byte;
+      FTintColors: FXColorSets;
+
+      // Update
+      procedure UpdateParent;
+
+      // Setters
+      procedure SetTintOpacity(const Index: Integer; const Value: byte);
+      procedure SetTint(const Value: boolean);
+
+    published
+      property Enabled: boolean read FEnabled write FEnabled;
+
+      property BlurVersion: FXBlurVersion read FBlurVersion write FBlurVersion;
+
+      property Tint: boolean read FTint write SetTint;
+      property TintLightOpacity: byte index 0 read FTintLightOpacity write SetTintOpacity;
+      property TintDarkOpacity: byte index 1 read FTintDarkOpacity write SetTintOpacity;
+      property TintColors: FXColorSets read FTintColors write FTintColors;
+
+    public
+      constructor Create(AOwner : TPersistent); override;
+      destructor Destroy; override;
     end;
 
     // Icon
@@ -142,14 +176,13 @@ procedure FXIconSelect.DrawIcon(Canvas: TCanvas; ARectangle: TRect);
 var
   TextDraw: string;
   FontPrevious: TFont;
+  I: integer;
 begin
   case IconType of
     FXIconType.Image: DrawImageInRect( Canvas, ARectangle, SelectPicture.Graphic, FXDrawMode.CenterFit );
     FXIconType.BitMap: DrawImageInRect( Canvas, ARectangle, SelectBitmap, FXDrawMode.CenterFit );
     FXIconType.ImageList: (* Work In Progress;*);
     FXIconType.SegoeIcon: begin
-      TextDraw := SelectSegoe;
-
       with Canvas do
         begin
           FontPrevious := TFont.Create;
@@ -158,8 +191,12 @@ begin
 
             // Draw
             Font.Name := ThemeManager.IconFont;
-            Font.Height := GetMaxFontHeight(Canvas, TextDraw, ARectangle.Width, ARectangle.Height);
-            TextRect( ARectangle, TextDraw, [tfSingleLine, tfCenter, tfVerticalCenter] );
+            Font.Height := GetMaxFontHeight(Canvas, Copy(SelectSegoe, 1, 1), ARectangle.Width, ARectangle.Height);
+            for I := Low(SelectSegoe) to High(SelectSegoe) do
+              begin
+                TextDraw := SelectSegoe[I];
+                TextRect( ARectangle, TextDraw, [tfSingleLine, tfCenter, tfVerticalCenter] );
+              end;
 
             Font.Assign(FontPrevious);
           finally
@@ -336,6 +373,53 @@ begin
 
   if Assigned(FOnChange) then
     FOnChange(Self);
+end;
+
+{ FXBlurSettings }
+
+constructor FXBlurSettings.Create(AOwner: TPersistent);
+begin
+  inherited;
+  FBlurVersion := FXBlurVersion.WallpaperBlurred;
+
+  FTint := true;
+  FTintLightOpacity := LIGHT_TINT_OPACITY;
+  FTintDarkOpacity := DARK_TINT_OPACITY;
+
+  FTintColors := FTintColors.Create(AOwner);
+end;
+
+destructor FXBlurSettings.Destroy;
+begin
+  FreeAndNil( FTintColors );
+  inherited;
+end;
+
+procedure FXBlurSettings.SetTint(const Value: boolean);
+begin
+  if FTint <> Value then
+    begin
+      FTint := Value;
+
+      UpdateParent;
+    end;
+end;
+
+procedure FXBlurSettings.SetTintOpacity(const Index: Integer;
+  const Value: byte);
+begin
+  if Index = 1 then
+    FTintDarkOpacity := Value
+  else
+    FTintLightOpacity := Value;
+
+  UpdateParent;
+end;
+
+procedure FXBlurSettings.UpdateParent;
+begin
+  if Owner is TControl then
+    TControl(Owner).Invalidate;
 end;
 
 end.

@@ -99,9 +99,23 @@ contains
   CFX.Imported in 'Source\CFX.Imported.pas',
   CFX.Progress in 'Source\CFX.Progress.pas',
   CFX.Threading in 'Source\CFX.Threading.pas',
-  CFX.Internet in 'Source\CFX.Internet.pas';
+  CFX.Internet in 'Source\CFX.Internet.pas',
+  CFX.Messages in 'Source\CFX.Messages.pas',
+  CFX.RatingControl in 'Source\CFX.RatingControl.pas',
+  CFX.Effects in 'Source\CFX.Effects.pas',
+  CFX.DesignEditors in 'Source\CFX.DesignEditors.pas',
+  CFX.AppManager in 'Source\CFX.AppManager.pas',
+  CFX.QuickDialogs in 'Source\CFX.QuickDialogs.pas',
+  CFX.Files in 'Source\CFX.Files.pas',
+  CFX.Version in 'Source\CFX.Version.pas',
+  CFX.AppIntegration in 'Source\CFX.AppIntegration.pas',
+  CFX.Instances in 'Source\CFX.Instances.pas',
+  CFX.PaintBox in 'Source\CFX.PaintBox.pas',
+  CFX.TabStrip in 'Source\CFX.TabStrip.pas',
+  CFX.UXTheme in 'Source\CFX.UXTheme.pas';
 
 end.
+
 
 
 

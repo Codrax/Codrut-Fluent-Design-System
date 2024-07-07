@@ -5,10 +5,26 @@ unit CFX.ThemeManager;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, Win.Registry, System.UITypes,
-  Types, Vcl.Graphics, CFX.Colors, CFX.Utilities, Vcl.ExtCtrls, Vcl.Dialogs,
-  Vcl.Forms, Classes, Vcl.Themes, Vcl.Styles, CFX.UIConsts,
-  CFX.Types, DateUtils, CFX.Linker;
+  Winapi.Windows,
+  Winapi.Messages,
+  System.SysUtils,
+  Win.Registry,
+  System.UITypes,
+  Types,
+  Vcl.Graphics,
+  CFX.Colors,
+  CFX.Utilities,
+  Vcl.ExtCtrls,
+  Vcl.Dialogs,
+  Vcl.Forms,
+  Classes,
+  Vcl.Themes,
+  Vcl.Styles,
+  CFX.UIConsts,
+  CFX.Types,
+  CFX.UXTheme,
+  DateUtils,
+  CFX.Linker;
 
   type
     // Theme Manager
@@ -389,7 +405,9 @@ begin
 end;
 
 initialization
+  // Manager
   ThemeManager := FXThemeManager.Create;
+
 finalization
   ThemeManager.Free;
 end.

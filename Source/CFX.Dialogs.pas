@@ -9,11 +9,13 @@ interface
     Vcl.Forms, Vcl.Themes, Vcl.Styles, Vcl.Graphics, CFX.Types,
     Vcl.Controls, CFX.Colors, SysUtils, Vcl.ExtCtrls, Vcl.ComCtrls,
     Vcl.TitleBarCtrls, Math, CFX.Math, Vcl.StdCtrls, CFX.Forms,
-    UITypes, CFX.Edit;
+    UITypes, CFX.Edit, CFX.TextBox, CFX.Panels;
 
   type
     FXMessageType = (Information, Error, Question, Sucess, Warning, Star);
     FXInputBoxResult = (Cancel, Ok);
+
+    TButtonLabelsArray = array[TMsgDlgBtn] of string;
 
     FXButtonDesignHelper = class helper for FXButton
       procedure ApplyButtonSettings(LoadFromButton: FXButton);
@@ -27,6 +29,7 @@ interface
         FTextFont: TFont;
         FButtonDesign: FXButton;
         FFormColor: TColor;
+        FButtonLabels: TButtonLabelsArray;
 
         FParent: TForm;
 
@@ -43,8 +46,8 @@ interface
         // Inherited Creation
         Form: FXForm;
         MainPrompt,
-        Prompt,
-        Footer: TLabel;
+        Prompt: FXTextBox;
+        ButtonFooter: FXPanel;
 
         // Utils
         function GetTextWidth(Text: string; Font: TFont): integer;
@@ -62,7 +65,8 @@ interface
 
       public
         // Public Settings
-        constructor Create; virtual;
+        constructor Create; overload; virtual;
+        constructor Create(Owner: TForm); overload; virtual;
 
         // Settings
         procedure HighlightDefaultButton;
@@ -77,6 +81,7 @@ interface
         property Title: string read FTitle write FTitle;
         property Text: string read FText write FText;
         property ButtonDesign: FXButton read FButtonDesign write FButtonDesign;
+        property ButtonLabels: TButtonLabelsArray read FButtonLabels write FButtonLabels;
     end;
 
     FXMessageBox = class(FXDialogBox)
@@ -99,7 +104,7 @@ interface
         constructor Create; override;
         destructor Destroy; override;
 
-        function Execute: integer; overload;
+        function Execute: TModalResult; overload;
 
         property Kind: FXMessageType read FKind write FKind;
         property Buttons: TMsgDlgButtons read FButtons write FButtons;
@@ -131,8 +136,8 @@ interface
     end;
 
 var
-  ButtonLabels: TArray<string> =
-                        [
+  GlobalButtonLabels: TButtonLabelsArray =
+                        (
                         'Yes',        // Yes
                         'No',         // No
                         'Ok',         // Ok
@@ -145,7 +150,7 @@ var
                         'No to All',  // NoAll
                         'Help',       // Help
                         'Close'       //Close
-                        ];
+                        );
 
 implementation
 
@@ -166,7 +171,7 @@ begin
   inherited;
 end;
 
-function FXDialog.Execute: integer;
+function FXDialog.Execute: TModalResult;
 var
   I: TMsgDlgBtn;
 begin
@@ -326,6 +331,8 @@ begin
         Result := Value;
       end;
 
+    FValue := Result;
+
     // Free form
     Form.Free;
   end;
@@ -373,6 +380,8 @@ begin
   // Style Default
   FButtonDesign := FXButton.Create(nil);
 
+  FButtonLabels := GlobalButtonLabels;
+
   // Font Default
   FTextFont := TFont.Create;
   with FTextFont do
@@ -397,6 +406,12 @@ begin
   FFormColor := clWindow;
 end;
 
+constructor FXDialogBox.Create(Owner: TForm);
+begin
+  Create;
+  Self.ParentForm := Owner;
+end;
+
 procedure FXDialogBox.CreateButtons(Buttons: TMsgDlgButtons);
 var
   I: TMsgDlgBtn;
@@ -405,13 +420,13 @@ var
 begin
   // Prepare Values
   Right := Form.Width - FButtonOffset * 2;
-  ATop := Form.ClientHeight - FButtonHeight - FButtonOffset;
+  ATop := (FButtonHeight - FButtonOffset) div 2;
 
   // Create
   for I in Buttons do
-  with FXButton.Create(Form) do
+  with FXButton.Create(ButtonFooter) do
     begin
-      Parent := Form;
+      Parent := ButtonFooter; // Set parent to Footer
       Animation := false;
 
       Anchors := [akRight,akBottom];
@@ -424,7 +439,7 @@ begin
 
       ModalResult := ButtonTypeToModal( I );
 
-      Text := ButtonLabels[ Integer(I) ];
+      Text := FButtonLabels[ I ];
 
       ApplyButtonSettings( FButtonDesign );
 
@@ -436,10 +451,9 @@ begin
   if Right < 0 then
     begin
       Form.ClientWidth := Form.ClientWidth + abs(Right) + FButtonOffset;
-      if Footer <> nil then
-        Footer.Width := Form.ClientWidth;
+      if ButtonFooter <> nil then
+        ButtonFooter.Width := Form.ClientWidth;
     end;
-
 end;
 
 procedure FXDialogBox.ExecuteInherited;
@@ -499,12 +513,14 @@ begin
           else
             TxtUnits_X := 260 div 4;
 
-          MainPrompt      := TLabel.Create(Form);
+          MainPrompt      := FXTextBox.Create(Form);
           with MainPrompt do
           begin
             Parent   := Form;
 
-            Caption  := FTitle;
+            LayoutVertical := FXLayout.Beginning;
+
+            Text  := FTitle;
             Font.Assign( FTitleFont );
 
             Left     := MulDiv(6, DialogUnits.X, 2);
@@ -514,18 +530,20 @@ begin
             WordWrap := False;
           end;
 
-          Prompt      := TLabel.Create(Form);
+          Prompt      := FXTextBox.Create(Form);
           with Prompt do
           begin
             Parent   := Form;
 
-            Caption  := FText;
+            LayoutVertical := FXLayout.Beginning;
+
+            Text  := FText;
             Font.Assign( FTextFont );
 
             Left     := MulDiv(6, DialogUnits.X, 2);
             Top      := MainPrompt.Top + MulDiv(2, DialogUnits.Y, 1) + FTitlebarHeight;
 
-            Layout := tlCenter;
+            //Layout := tlCenter;
 
             Constraints.MaxWidth := MulDiv(TxtUnits_X, DialogUnits.X, 1);
             WordWrap := True;
@@ -533,7 +551,7 @@ begin
             // Respect title
             Constraints.MinWidth := MainPrompt.Width;
 
-            if MainPrompt.Caption = '' then
+            if MainPrompt.Text = '' then
               Top := MainPrompt.Top;
           end;
 
@@ -546,22 +564,20 @@ begin
       if HasButtons then
         begin
           // Change form size
-
-          FButtonHeight :=  trunc(80 / 100 * CalculateButtonHeight );
+          FButtonHeight :=  trunc(90 / 100 * CalculateButtonHeight ); // Reduce button height to 90%
           Form.ClientHeight := Form.ClientHeight + FButtonHeight;
 
           FButtonOffset := MulDiv(1, DialogUnits.Y, 2);
 
           // Create Bottom
-          Footer := TLabel.Create(Form);
-          with Footer do
+          ButtonFooter := FXPanel.Create(Form);
+          with ButtonFooter do
           begin
             Parent   := Form;
 
             Anchors := [akLeft, akBottom];
 
             AutoSize := false;
-            Transparent := false;
 
             Color := ChangeColorLight(Form.Color,-10);
 
@@ -581,10 +597,10 @@ var
   I: Integer;
 begin
   Result := nil;
-  for I := 0 to Form.ControlCount - 1 do
-    if Form.Controls[I] is FXButton then
-      if FXButton(Form.Controls[I]).ModalResult = ModalResult then
-        Result := FXButton(Form.Controls[I]);
+  for I := 0 to ButtonFooter.ControlCount - 1 do
+    if ButtonFooter.Controls[I] is FXButton then
+      if FXButton(ButtonFooter.Controls[I]).ModalResult = ModalResult then
+        Result := FXButton(ButtonFooter.Controls[I]);
 end;
 
 function FXDialogBox.GetButonWidth(Text: string; Font: TFont): integer;
@@ -624,10 +640,10 @@ procedure FXDialogBox.HighlightDefaultButton;
 var
   A: integer;
 begin
-  for A := 0 to Form.ControlCount - 1 do
-      if Form.Controls[A] is FXButton then
-        if (Form.Controls[A] as FXButton).Default then
-          with (Form.Controls[A] as FXButton) do
+  for A := 0 to ButtonFooter.ControlCount - 1 do
+      if ButtonFooter.Controls[A] is FXButton then
+        if (ButtonFooter.Controls[A] as FXButton).Default then
+          with (ButtonFooter.Controls[A] as FXButton) do
             ButtonKind := FXButtonKind.Accent;
 end;
 
@@ -689,10 +705,10 @@ begin
   if NewHeight <> -1 then
     Form.ClientHeight := NewHeight;
 
-  if footer <> nil then
+  if ButtonFooter <> nil then
     begin
-      Footer.Width := Form.ClientWidth;
-      Footer.Top := Form.ClientHeight - Footer.Height;
+      ButtonFooter.Width := Form.ClientWidth;
+      ButtonFooter.Top := Form.ClientHeight - ButtonFooter.Height;
     end;
 end;
 

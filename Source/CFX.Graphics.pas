@@ -48,9 +48,14 @@ uses
 
   procedure CopyRectWithOpacity(Dest: TCanvas; DestRect: TRect; Source: TCanvas; SourceRect: TRect; Opacity: Byte);
 
+  procedure DrawCheckedboard(Canvas: TCanvas; ARect: TRect; Width, Height: Integer; Color1, Color2: TColor);
+
   // Color Inversion
   procedure StretchInvertedMask(Source: TBitMap; Destination: TCanvas; DestRect: TRect); overload;
   procedure StretchInvertedMask(Source: TCanvas; Destination: TCanvas; DestRect: TRect); overload;
+
+  function Desaturate(Color: TColor): TColor; overload;
+  procedure Desaturate(Bitmap: TBitmap); overload;
 
   // Draw Rectangles
   function GetDrawModeRects(Rect: TRect; Image: TGraphic; DrawMode: FXDrawMode; ImageMargin:
@@ -400,6 +405,14 @@ begin
         TextFormat := TextFormat + [tfRight];
       if FXTextFlag.NoClip in Flags then
         TextFormat := TextFormat + [tfNoClip];
+      if FXTextFlag.TrimPath in Flags then
+        TextFormat := TextFormat + [tfPathEllipsis];
+      if FXTextFlag.TrimCutoff in Flags then
+        TextFormat := TextFormat + [tfEndEllipsis];
+      if FXTextFlag.TrimWord in Flags then
+        TextFormat := TextFormat + [tfWordEllipsis];
+      if not (FXTextFlag.ShowAccelChar in Flags) then
+        TextFormat := TextFormat + [tfNoPrefix];
 
       Lines := GetWordWrapLines(Canvas, Text, ARect);
 
@@ -482,9 +495,17 @@ begin
       if FXTextFlag.Center in Flags then
         TextFormat := TextFormat + [tfCenter];
       if FXTextFlag.Right in Flags then
-        TextFormat := TextFormat + [tfRight];
+        TextFormat := TextFormat + [];
       if FXTextFlag.NoClip in Flags then
         TextFormat := TextFormat + [tfNoClip];
+      if FXTextFlag.TrimPath in Flags then
+        TextFormat := TextFormat + [tfPathEllipsis];
+      if FXTextFlag.TrimCutoff in Flags then
+        TextFormat := TextFormat + [tfEndEllipsis];
+      if FXTextFlag.TrimWord in Flags then
+        TextFormat := TextFormat + [tfWordEllipsis];
+      if not (FXTextFlag.ShowAccelChar in Flags) then
+        TextFormat := TextFormat + [tfNoPrefix];
 
       // Lines
       Lines := GetWordWrapLines(Canvas, Text, ARect);
@@ -543,6 +564,10 @@ begin
   LineWidth := 0;
 end;
 begin
+  // Replace WIN CL format
+  Text := Text.Replace(#$A#$D, #13);
+  Text := Text.Replace(#$A, #13);
+
   // Get Words
   Words := GetAllSeparatorItems(Text, [' ']);
   for I := 0 to High(Words)-1 do
@@ -791,6 +816,38 @@ begin
   );
 end;
 
+procedure DrawCheckedboard(Canvas: TCanvas; ARect: TRect; Width, Height: Integer; Color1, Color2: TColor);
+var
+  Row, Col, SquareWidth, SquareHeight: Integer;
+  Rect: TRect;
+  IsColor1: Boolean;
+begin
+  SquareWidth := ARect.Width div Width;
+  SquareHeight := ARect.Height div Height;
+  IsColor1 := True;
+
+  for Row := 0 to Height - 1 do
+  begin
+    for Col := 0 to Width - 1 do
+    begin
+      Rect.Left := ARect.Left + Col * SquareWidth;
+      Rect.Top := ARect.Top + Row * SquareHeight;
+      Rect.Right := Rect.Left + SquareWidth;
+      Rect.Bottom := Rect.Top + SquareHeight;
+
+      if IsColor1 then
+        Canvas.Brush.Color := Color1
+      else
+        Canvas.Brush.Color := Color2;
+
+      Canvas.FillRect(Rect);
+      IsColor1 := not IsColor1;
+    end;
+
+    IsColor1 := not IsColor1;
+  end;
+end;
+
 procedure StretchInvertedMask(Source: TCanvas; Destination: TCanvas; DestRect: TRect);
 begin
   BitBlt(Destination.Handle, DestRect.Left, DestRect.Top, DestRect.Width, DestRect.Height,
@@ -800,6 +857,37 @@ end;
 procedure StretchInvertedMask(Source: TBitMap; Destination: TCanvas; DestRect: TRect);
 begin
   StretchInvertedMask(Source.Canvas, Destination, DestRect);
+end;
+
+function Desaturate(Color: TColor): TColor;
+const
+  LuminanceMultR = 54;
+  LuminanceMultG = 184;
+  LuminanceMultB = 18;
+var
+  Luminance: byte;
+begin
+  Luminance :=
+    (((Color and $00FF0000) shr 16 * LuminanceMultR) +
+     ((Color and $0000FF00) shr 8 * LuminanceMultG) +
+     ((Color and $000000FF) * LuminanceMultB)) shr 8;
+  Result := (Color and $FF000000) or (Luminance shl 16) or (Luminance shl 8) or Luminance;
+end;
+
+procedure Desaturate(Bitmap: TBitmap);
+begin
+  ASSERT(Bitmap.PixelFormat = pf32bit);
+  for var Row := 0 to Bitmap.Height-1 do
+  begin
+    var p := PDword(Bitmap.ScanLine[Row]);
+    var Col := Bitmap.Width;
+    while (Col > 0) do
+    begin
+      p^ := Desaturate(p^);
+      inc(p);
+      dec(Col);
+    end;
+  end;
 end;
 
 procedure DrawBorder(const Canvas: TCanvas; R: TRect; Color: TColor; Thickness: Byte; Roundness: integer);

@@ -1,4 +1,4 @@
-unit CFX.Template;
+unit CFX.TabStrip;
 
 interface
 
@@ -22,7 +22,7 @@ uses
   CFX.Controls;
 
 type
-  FXTemplate = class(FXWindowsControl, FXControl)
+  FXTabStrip = class(FXWindowsControl, FXControl)
     private
       var DrawRect: TRect;
       FDrawColors: FXCompleteColorSet;
@@ -93,12 +93,12 @@ type
 
 implementation
 
-function FXTemplate.Background: TColor;
+function FXTabStrip.Background: TColor;
 begin
   Result := FDrawColors.BackGround;
 end;
 
-constructor FXTemplate.Create(aOwner: TComponent);
+constructor FXTabStrip.Create(aOwner: TComponent);
 begin
   inherited;
   // Custom Color
@@ -107,33 +107,33 @@ begin
   FDrawColors := FXCompleteColorSet.Create;
 
   // Sizing
-  Height := 30;
-  Width := 180;
+  Height := 40;
+  Width := 300;
 
   // Update
   UpdateRects;
   UpdateColors;
 end;
 
-destructor FXTemplate.Destroy;
+destructor FXTabStrip.Destroy;
 begin
   FreeAndNil( FCustomColors );
   FreeAndNil( FDrawColors );
   inherited;
 end;
 
-procedure FXTemplate.InteractionStateChanged(AState: FXControlState);
+procedure FXTabStrip.InteractionStateChanged(AState: FXControlState);
 begin
   inherited;
   Invalidate;
 end;
 
-function FXTemplate.IsContainer: Boolean;
+function FXTabStrip.IsContainer: Boolean;
 begin
   Result := false;
 end;
 
-procedure FXTemplate.PaintBuffer;
+procedure FXTabStrip.PaintBuffer;
 begin
   // Background
   Color := FDrawColors.BackGround;
@@ -145,20 +145,20 @@ begin
   inherited;
 end;
 
-procedure FXTemplate.Resize;
+procedure FXTabStrip.Resize;
 begin
   inherited;
   UpdateRects;
 end;
 
-procedure FXTemplate.UpdateTheme(const UpdateChildren: Boolean);
+procedure FXTabStrip.UpdateTheme(const UpdateChildren: Boolean);
 begin
   UpdateColors;
   UpdateRects;
   Invalidate;
 end;
 
-procedure FXTemplate.UpdateColors;
+procedure FXTabStrip.UpdateColors;
 begin
   FDrawColors.Assign( ThemeManager.SystemColor );
 
@@ -178,13 +178,13 @@ begin
     end;
 end;
 
-procedure FXTemplate.UpdateRects;
+procedure FXTabStrip.UpdateRects;
 begin
   // Rect
   DrawRect := GetClientRect;
 end;
 
-procedure FXTemplate.ScaleChanged(Scaler: single);
+procedure FXTabStrip.ScaleChanged(Scaler: single);
 begin
   inherited;
   // update scale
