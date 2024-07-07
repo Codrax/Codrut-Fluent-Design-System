@@ -39,8 +39,8 @@ type
 
       FAnimations: boolean;
 
-      FOffset: integer;
-      FInterSize: integer;
+      FOffset: integer; // the offset position for the marquee animation
+      FInterSize: integer; // the internal size of the drawing width
       FLengthState: integer;
 
       FProgressThread: TThread;
@@ -338,7 +338,12 @@ end;
 
 procedure FXProgress.Reset;
 begin
-  FValue := Value;
+  SetAnimationThread(false);
+
+  FValue := 0;
+  FValueAdd := 0;
+  FOffset := 0;
+  FInterSize := 0;
 
   UpdateRects;
   Invalidate;

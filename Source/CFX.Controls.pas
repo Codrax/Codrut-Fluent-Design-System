@@ -323,6 +323,7 @@ end;
 procedure FXWindowsControl.CMEnabledChanged(var Message: TMessage);
 begin
   inherited;
+  SetState( FXControlState.None );
   if BufferedComponent and Supports(Self, FXControl) then
     begin
       (Self as FXControl).UpdateTheme(false);
@@ -655,7 +656,8 @@ procedure FXWindowsControl.MouseUp(Button: TMouseButton; Shift: TShiftState;
   X, Y: integer);
 begin
   inherited;
-  InteractionState := FXControlState.Hover;
+  if InteractionState = FXControlState.Press then
+    InteractionState := FXControlState.Hover;
 
   // Popup Menu
   if (Button = mbRight) then

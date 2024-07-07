@@ -48,6 +48,7 @@ uses
       FOnScroll: TNotifyEvent;
 
       FScrollSpeed: integer;
+      FKeepScrollAlign: boolean;
 
       FBackground: FXBackgroundColor;
 
@@ -104,6 +105,7 @@ uses
 
       property ScrollExtendX: integer read FExtendX write SetExtX default 0;
       property ScrollExtendY: integer read FExtendY write SetExtY default 100;
+      property KeepScrollAlignment: boolean read FKeepScrollAlign write FKeepScrollAlign;
 
       property ScrollbarEnableVertical: boolean read FEnableVertical write FEnableVertical default true;
       property ScrollbarEnableHorizontal: boolean read FEnableHorizontal write FEnableHorizontal default true;
@@ -149,10 +151,10 @@ begin
         FVertScroll.Max));
 
       // Remove scrollbars from client
-      if FVertScroll.Visible then
+      if FVertScroll.Visible or (FKeepScrollAlign and FEnableVertical) then
         Rect.Width := Rect.Width - FVertScroll.Width;
 
-      if FHorzScroll.Visible then
+      if FHorzScroll.Visible or (FKeepScrollAlign and FEnableHorizontal) then
         Rect.Height := Rect.Height - FHorzScroll.Height;
     end;
 end;
