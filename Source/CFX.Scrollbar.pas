@@ -30,6 +30,7 @@ type
     private
       var DrawRect, SliderRect, Button1, Button2: TRect;
       FOnChange: TNotifyEvent;
+      FOnChangeValue: TNotifyEvent;
       FOrientation: FXOrientation;
       FRoundness: integer;
       FPosition, FMin, FMax: int64;
@@ -60,6 +61,9 @@ type
       // Update
       procedure UpdateColors;
       procedure UpdateRects;
+
+      // Internal
+      procedure InteractSetPosition(Value: integer);
 
       // Timer
       procedure RepeaterExecute(Sender: TObject);
@@ -104,6 +108,7 @@ type
     published
       property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
       property OnChange: TNotifyEvent read FOnChange write FOnChange;
+      property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
       property Orientation: FXOrientation read FOrientation write SetOrientation default FXOrientation.Vertical;
       property Position: int64 read FPosition write SetPosition;
       property SmallChange: integer read FSmallChange write SetSmallChange default 1;
@@ -187,6 +192,13 @@ begin
   Invalidate;
 end;
 
+procedure FXScrollbar.InteractSetPosition(Value: integer);
+begin
+  Position := Value;
+  if Assigned(OnChange) then
+    OnChange(Self);
+end;
+
 function FXScrollbar.IsContainer: Boolean;
 begin
   Result := false;
@@ -198,9 +210,9 @@ begin
   if (key = '-') or (key = '+') then
     begin
       if Key = '-' then
-        Position := Position - FSmallChange
+        InteractSetPosition( Position - FSmallChange )
       else
-        Position := Position + FSmallChange;
+        InteractSetPosition( Position + FSmallChange );
     end;
 end;
 
@@ -261,7 +273,7 @@ begin
             NewPosition := round((Y-DrawRect.Top - FScrollBarHeight / 2) / (DrawRect.Height - FScrollBarHeight) * (FMax - FMin));
         end;
 
-      Position := NewPosition + FMin;
+      InteractSetPosition( NewPosition + FMin );
     end;
 end;
 
@@ -621,9 +633,9 @@ begin
   FRepeater.Interval := 50;
 
   if Contains1 then
-    Position := Position - SmallChange;
+    InteractSetPosition( Position - SmallChange );
   if Contains2 then
-    Position := Position + SmallChange;
+    InteractSetPosition( Position + SmallChange );
 end;
 
 procedure FXScrollbar.SetEnableButtons(const Value: boolean);
@@ -747,8 +759,8 @@ begin
           if FPosition > FMax then
             FPosition := FMax;
 
-          if Assigned(OnChange) then
-            OnChange(Self);
+          if Assigned(OnChangeValue) then
+            OnChangeValue(Self);
         end;
 
       UpdateRects;

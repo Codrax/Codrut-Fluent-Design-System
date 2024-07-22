@@ -266,10 +266,14 @@ begin
       FAnimateThread.Terminate;
       FThreadFinishedEvent.ResetEvent;
 
-      if FThreadFinishedEvent.WaitFor(FIFTH_SECOND) = wrTimeout then
-        FAnimateThread.Free;
+      FThreadFinishedEvent.WaitFor(FIFTH_SECOND){ = wrTimeout};
+        // FAnimateThread.Free; // The thread WILL free Itself, since FreeOnTerminate is TRUE
     end;
 
+  // Set refrerence to nil
+  FAnimateThread := nil;
+
+  // Free event
   FThreadFinishedEvent.Free;
 
   // Destroy
@@ -499,20 +503,27 @@ begin
               // Update
               TThread.Synchronize(nil, procedure
                 begin
+                  /// Now that the thread has access to the main thread,
+                  ///  perform a check that the main thread did not free the object
+                  ///  in the meanwhile.
+                  if FAnimateThread = nil then
+                    Exit;
+
                   UpdateRects;
                   Invalidate;
                 end);
 
               // Sleep
-              Sleep(10);
-
-              // Terminate
-              if FAnimateThread.CheckTerminated then
-                Break;
+              for var I := 1 to 10 do begin
+                if (FAnimateThread = nil) or FAnimateThread.CheckTerminated then
+                  Exit;
+                Sleep(1);
+              end;
             end;
 
           // Done
-          FThreadFinishedEvent.SetEvent;
+          if FThreadFinishedEvent <> nil then
+            FThreadFinishedEvent.SetEvent;
         end);
       with FAnimateThread do
         begin

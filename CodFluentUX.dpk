@@ -9,6 +9,10 @@
 {                    v0.1                      }
 {*============================================*}
 
+{$IFDEF WIN32}
+  {$DEFINE COMPILEDESIGN}
+{$ENDIF}
+
 package CodFluentUX;
 
 {$R *.res}
@@ -44,12 +48,18 @@ requires
   vcl,
   vclimg,
   vclwinx,
+  {$IFDEF COMPILEDESIGN}
+  DesignIDE,
+  {$ENDIF}
   IndySystem,
   IndyProtocols,
-  IndyCore,
-  DesignIDE;
+  IndyCore;
 
 contains
+  {$IFDEF COMPILEDESIGN}
+  CFX.PropertyEditors in 'Source\CFX.PropertyEditors.pas',
+  CFX.DesignEditors in 'Source\CFX.DesignEditors.pas',
+  {$ENDIF}
   CFX.RegisterClass in 'Source\CFX.RegisterClass.pas',
   CFX.Colors in 'Source\CFX.Colors.pas',
   CFX.Classes in 'Source\CFX.Classes.pas',
@@ -74,7 +84,6 @@ contains
   CFX.GDI in 'Source\CFX.GDI.pas',
   CFX.Types in 'Source\CFX.Types.pas',
   CFX.PopupMenu in 'Source\CFX.PopupMenu.pas',
-  CFX.PropertyEditors in 'Source\CFX.PropertyEditors.pas',
   CFX.Controls in 'Source\CFX.Controls.pas',
   CFX.FontIcons in 'Source\CFX.FontIcons.pas',
   CFX.ImageList in 'Source\CFX.ImageList.pas',
@@ -102,8 +111,8 @@ contains
   CFX.Internet in 'Source\CFX.Internet.pas',
   CFX.Messages in 'Source\CFX.Messages.pas',
   CFX.RatingControl in 'Source\CFX.RatingControl.pas',
+  CFX.Lists in 'Source\CFX.Lists.pas',
   CFX.Effects in 'Source\CFX.Effects.pas',
-  CFX.DesignEditors in 'Source\CFX.DesignEditors.pas',
   CFX.AppManager in 'Source\CFX.AppManager.pas',
   CFX.QuickDialogs in 'Source\CFX.QuickDialogs.pas',
   CFX.Files in 'Source\CFX.Files.pas',
@@ -112,7 +121,10 @@ contains
   CFX.Instances in 'Source\CFX.Instances.pas',
   CFX.PaintBox in 'Source\CFX.PaintBox.pas',
   CFX.TabStrip in 'Source\CFX.TabStrip.pas',
-  CFX.UXTheme in 'Source\CFX.UXTheme.pas';
+  CFX.UXTheme in 'Source\CFX.UXTheme.pas',
+  CFX.Animation.Component in 'Source\CFX.Animation.Component.pas',
+  CFX.Animation.Main in 'Source\CFX.Animation.Main.pas',
+  CFX.Animation.Utils in 'Source\CFX.Animation.Utils.pas';
 
 end.
 

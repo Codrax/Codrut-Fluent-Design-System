@@ -4,9 +4,10 @@ interface
 
 const
   // CLASSES
-  REGISTER_CLASS_NAME = 'Cods Fluent UX';
+  REGISTER_CLASS_NAME = 'CFX Main';
   REGISTER_CLASS_UTILS_NAME = 'CFX Utils';
   REGISTER_CLASS_EFFECTS_NAME = 'CFX Effects';
+  REGISTER_CLASS_ANIM_NAME = 'CFX Animations';
 
   // Strings
   STRING_NONE = 'none';
@@ -19,9 +20,13 @@ const
   DEFAULT_UPDATE_NAME = 'updateurl';
   DEFAULT_COMPANY = 'Codrut Software';
 
+  // System interaction
+  DEFAULT_SCROLL_LINES = 3;
+  DEFAULT_LINE_SIZE = 25;
+
   // TIME
   ONE_MS = 1;
-  FIFTH_SECOND = 100;
+  FIFTH_SECOND = 200;
   ONE_SECOND = 1000;
   FIVE_SECOND = ONE_SECOND * 5;
 
@@ -39,6 +44,7 @@ const
   REPEAT_START_DELAY = 500;
   HOLD_REPEAT_INTERVAL = 50;
 
+  SCROLL_DURATION = 1;
   SCROLL_SPEED_VALUE = 20;
 
   (* Composite the form with Parital Transparency *)

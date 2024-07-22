@@ -26,6 +26,11 @@ interface
     FXFormFill = (TitleBar, Complete);
     FXFormCloseAction = (Default, Free, Hide, Minimise);
 
+    // Animation
+    FXTaskStatus = (Stopped, Running, Paused);
+    FXAnimationKind = (Linear, Exponential, ReverseExpo, Random, Spring, Sinus,
+      SinusArc, Wobbly, Pulse);
+
     // Detail
     FXDetailType = (None, Underline, Outline);
 
@@ -58,6 +63,7 @@ interface
 
     // FXSlider
     FXOrientation = (Horizontal, Vertical);
+    FXContentJustify = (Start, Center, SpaceBetween, SpaceAround, SpaceEvenly, Ending, Stretch(*Not widely supported*));
 
     // Graphics
     FXDrawMode = (Fill, Fit, Stretch, Center, CenterFill,

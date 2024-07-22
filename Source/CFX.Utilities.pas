@@ -5,10 +5,14 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, Win.Registry, System.UITypes,
   Types, Vcl.Forms, Vcl.Graphics, CFX.Colors, CFX.Registry, ShellAPI,
-  CFX.Types, IOUTils, RegularExpressions, CFX.Files;
+  CFX.Types, IOUTils, RegularExpressions, CFX.Files, CFX.UIConsts;
 
   function GetAppsUseDarkTheme: Boolean;
   function GetAccentColor( brightencolor: boolean = true ): TColor;
+  /// <summary> Returns the scroll amount in Pixels. </summary>
+  function GetScrollAmount(Delta: integer; ViewHeight: integer): integer;
+  function GetLinesPerScroll: integer;
+  function GetLineScrollHeight: integer;
   function GetNTKernelVersion: single;
 
   function GetUserNameString: string;
@@ -74,6 +78,46 @@ begin
 
   if brightencolor then
     Result := ChangeColorLight(Result, 50);
+end;
+
+function GetLinesPerScroll: integer;
+var
+  R: TRegistry;
+  ARGB: cardinal;
+begin
+  Result := DEFAULT_SCROLL_LINES; // default value
+  R := TRegistry.Create;
+  try
+    R.RootKey := HKEY_CURRENT_USER;
+    if R.OpenKeyReadOnly('Control Panel\Desktop') and R.ValueExists('WheelScrollLines') then begin
+      try
+        Result := R.ReadString('WheelScrollLines').ToInteger;
+      except
+      end;
+    end;
+  finally
+    R.Free;
+  end;
+end;
+
+function GetScrollAmount(Delta: integer; ViewHeight: integer): integer;
+begin
+  // Sign
+  Result := -(Delta div abs(Delta));
+
+  // Registry
+  const LinePerScroll = GetLinesPerScroll;
+
+  // Full page
+  if LinePerScroll = -1 then
+    Result := Result * ViewHeight
+  else
+    Result := Result * LinePerScroll * GetLineScrollHeight;
+end;
+
+function GetLineScrollHeight: integer;
+begin
+  Result := DEFAULT_LINE_SIZE;
 end;
 
 function GetUserNameString: string;

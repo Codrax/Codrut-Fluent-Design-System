@@ -16,13 +16,12 @@ uses
   CFX.PopupConnector, Vcl.Buttons, CFX.IconView, CFX.ScrollText, CFX.FormClasses,
   CFX.Messages, CFX.VarHelpers, CFX.Graphics, CFX.RatingControl, CFX.Effects,
   CFX.Progress, CFX.GDI, CFX.Utilities, CFX.QuickDialogs, CFX.Instances,
-  CFX.PaintBox,
+  CFX.PaintBox, CFX.Lists, CFX.TabStrip, CFX.AppManager,
 
   // VCL COMPONENTS
   Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage,
-  Vcl.ExtDlgs, System.ImageList, UITypes,
-  Vcl.ComCtrls, Vcl.Mask, UxTheme, Vcl.Themes, CFX.AppManager,
-  System.Generics.Collections, CFX.TabStrip;
+  Vcl.ExtDlgs, System.ImageList, UITypes, Vcl.ComCtrls, Vcl.Mask,
+  UxTheme, Vcl.Themes, System.Generics.Collections;
 
 type
   TForm1 = class(FXForm)
@@ -82,6 +81,7 @@ type
     FXTextBox1: FXTextBox;
     FXAppManager1: FXAppManager;
     FXTabStrip1: FXTabStrip;
+    FXLinearDrawList1: FXLinearDrawList;
     procedure FXButton4Click(Sender: TObject);
     procedure FXButtonDesign3Click(Sender: TObject);
     procedure FXButton5Click(Sender: TObject);

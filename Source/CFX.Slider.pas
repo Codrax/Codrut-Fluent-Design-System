@@ -220,11 +220,11 @@ end;
 procedure FXSlider.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
   NewPosition: int64;
-  IsHover: boolean;
+  //IsHover: boolean;
 begin
   inherited;
   // Mouse Enter
-  if (InteractionState = FXControlState.None) then
+  {if (InteractionState = FXControlState.None) then
     begin
       IsHover := false;
       case Orientation of
@@ -233,9 +233,9 @@ begin
       end;
 
       if IsHover then
-        InteractionState := FXControlState.Hover;
+        SetState( FXControlState.Hover );
       AnimateToFill;
-    end;
+    end;}
 
   // Cursor
   if Self.FAutomaticMouseCursor then

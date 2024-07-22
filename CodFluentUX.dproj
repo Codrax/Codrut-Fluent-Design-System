@@ -161,10 +161,12 @@
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="vclimg.dcp"/>
         <DCCReference Include="vclwinx.dcp"/>
+        <DCCReference Include="DesignIDE.dcp"/>
         <DCCReference Include="IndySystem.dcp"/>
         <DCCReference Include="IndyProtocols.dcp"/>
         <DCCReference Include="IndyCore.dcp"/>
-        <DCCReference Include="DesignIDE.dcp"/>
+        <DCCReference Include="Source\CFX.PropertyEditors.pas"/>
+        <DCCReference Include="Source\CFX.DesignEditors.pas"/>
         <DCCReference Include="Source\CFX.RegisterClass.pas"/>
         <DCCReference Include="Source\CFX.Colors.pas"/>
         <DCCReference Include="Source\CFX.Classes.pas"/>
@@ -189,7 +191,6 @@
         <DCCReference Include="Source\CFX.GDI.pas"/>
         <DCCReference Include="Source\CFX.Types.pas"/>
         <DCCReference Include="Source\CFX.PopupMenu.pas"/>
-        <DCCReference Include="Source\CFX.PropertyEditors.pas"/>
         <DCCReference Include="Source\CFX.Controls.pas"/>
         <DCCReference Include="Source\CFX.FontIcons.pas"/>
         <DCCReference Include="Source\CFX.ImageList.pas"/>
@@ -217,8 +218,8 @@
         <DCCReference Include="Source\CFX.Internet.pas"/>
         <DCCReference Include="Source\CFX.Messages.pas"/>
         <DCCReference Include="Source\CFX.RatingControl.pas"/>
+        <DCCReference Include="Source\CFX.Lists.pas"/>
         <DCCReference Include="Source\CFX.Effects.pas"/>
-        <DCCReference Include="Source\CFX.DesignEditors.pas"/>
         <DCCReference Include="Source\CFX.AppManager.pas"/>
         <DCCReference Include="Source\CFX.QuickDialogs.pas"/>
         <DCCReference Include="Source\CFX.Files.pas"/>
@@ -228,6 +229,9 @@
         <DCCReference Include="Source\CFX.PaintBox.pas"/>
         <DCCReference Include="Source\CFX.TabStrip.pas"/>
         <DCCReference Include="Source\CFX.UXTheme.pas"/>
+        <DCCReference Include="Source\CFX.Animation.Component.pas"/>
+        <DCCReference Include="Source\CFX.Animation.Main.pas"/>
+        <DCCReference Include="Source\CFX.Animation.Utils.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

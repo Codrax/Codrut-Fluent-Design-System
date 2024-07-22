@@ -119,7 +119,7 @@ begin
   Height := 200;
 
   // Tintin
-  FEnableTinting := true;
+  FEnableTinting := false;
 
   FWhiteTintOpacity := LIGHT_TINT_OPACITY;
   FDarkTintOpacity := DARK_TINT_OPACITY;
@@ -173,6 +173,9 @@ var
   //Pict: TBitMap;
   DrawRect{, ImageRect}: Trect;
 begin
+  // Background
+  Color := FDrawColors.BackGround;
+
   // Draw
   if csDesigning in ComponentState then
     with Buffer do

@@ -559,10 +559,10 @@ object Form1: TForm1
     State = mbsLeave
     FlatButton = False
     FlatComplete = False
-    Colors.Enter = 3370495
-    Colors.Leave = 2383600
-    Colors.Down = 738775
-    Colors.BLine = 14024
+    Colors.Enter = 15035380
+    Colors.Leave = 14048485
+    Colors.Down = 12403660
+    Colors.BLine = 11416765
     UnderLine.Enable = True
     UnderLine.UnderLineRound = True
     UnderLine.UnderLineThicknes = 6
@@ -887,10 +887,10 @@ object Form1: TForm1
     State = mbsLeave
     FlatButton = False
     FlatComplete = False
-    Colors.Enter = 3370495
-    Colors.Leave = 2383600
-    Colors.Down = 738775
-    Colors.BLine = 14024
+    Colors.Enter = 15035380
+    Colors.Leave = 14048485
+    Colors.Down = 12403660
+    Colors.BLine = 11416765
     UnderLine.Enable = True
     UnderLine.UnderLineRound = True
     UnderLine.UnderLineThicknes = 6
@@ -1800,8 +1800,8 @@ object Form1: TForm1
     TabOrder = 20
   end
   object FXTabStrip1: FXTabStrip
-    Left = 472
-    Top = 520
+    Left = 400
+    Top = 598
     Width = 300
     Height = 40
     CustomColors.Enabled = False
@@ -1811,6 +1811,31 @@ object Form1: TForm1
     CustomColors.DarkBackGround = 2105376
     CustomColors.DarkForeGround = clWhite
     TabOrder = 41
+  end
+  object FXLinearDrawList1: FXLinearDrawList
+    Left = 519
+    Top = 364
+    Width = 330
+    Height = 228
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    NoOutOfBoundsDraw = True
+    MultiSelect = True
+    OpacityHover = 35
+    OpacitySelected = 75
+    TabOrder = 42
+    JustifyContent = Stretch
+    ItemCount = 20
+    ItemWidth = 150
+    ItemHeight = 100
+    FullLine = True
+    Wrap = True
+    SpacingRow = 8
+    SpacingColumn = 8
   end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False
@@ -1848,9 +1873,7 @@ object Form1: TForm1
   end
   object FXAppManager1: FXAppManager
     ApplicationIdentifier = 'fluentdesigntest'
-    UpdateCheckInterval = 1
     AppVersion = '1.0.0.0'
-    APIName = 'ibroadcast'
     SingleInstance = True
     ApplicationName = 'Codrut Fluent Design Test'
     HasAppData = True

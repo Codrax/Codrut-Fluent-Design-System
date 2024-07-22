@@ -499,6 +499,7 @@ begin
             Brush.Color := FDrawColors.BackGround;
             FillRect(ClipRect);
 
+            inherited;
             Exit;
           end;
 

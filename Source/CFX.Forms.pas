@@ -59,6 +59,7 @@ type
     FTitlebarInitialized: boolean;
     FEnableTitlebar: boolean;
     TTlCtrl: TTitleBarpanel;
+    FDisableTitlebarAlign: boolean;
 
     // Smoke
     Smoke: TForm;
@@ -111,6 +112,7 @@ type
     property AllowThemeChangeAnimation: boolean read FAllowThemeChangeAnim write FAllowThemeChangeAnim;
     property FullScreen: Boolean read FFullScreen write SetFullScreen default false;
     property WindowUpdateLocked: boolean read FWindowUpdateLock write SetWindowUpdateLock;
+    property DisableTitlebarAlign: boolean read FDisableTitlebarAlign write FDisableTitlebarAlign;
 
     // On Change...
     property OnMove: FXFormProcedure read FOnMove write FOnMove;
@@ -147,6 +149,8 @@ implementation
 procedure FXForm.AdjustClientRect(var Rect: TRect);
 begin
   inherited;
+  if DisableTitlebarAlign then
+    Dec(Rect.Top, GlassFrame.Top);
 end;
 
 function FXForm.Background: TColor;

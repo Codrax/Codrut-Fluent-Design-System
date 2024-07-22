@@ -28,108 +28,109 @@ uses
   Math,
   Vcl.Forms;
 
-  type
-    // Cardinal
-    TScrollPrefer = (Vertical, Horizontal, None);
+type
+  // Cardinal
+  TScrollPrefer = (Vertical, Horizontal, None);
 
-    // Scrollbox Scrollbar
-    FXScrollBoxScrollBar = class(FXScrollbar, FXControl)
-    protected
-      procedure PaintBuffer; override;
-    public
-      procedure CalcAutoRange;
-    end;
+  // Scrollbox Scrollbar
+  FXScrollBoxScrollBar = class(FXScrollbar, FXControl)
+  protected
+    procedure PaintBuffer; override;
+  public
+    procedure CalcAutoRange;
+  end;
 
-    FXScrollBox = class(TScrollBox, FXControl)
-    private
-      FCustomColors: FXCompleteColorSets;
-      FDrawColors: FXCompleteColorSet;
+  FXScrollBox = class(TScrollBox, FXControl)
+  private
+    FCustomColors: FXCompleteColorSets;
+    FDrawColors: FXCompleteColorSet;
 
-      FOnScroll: TNotifyEvent;
+    FOnScroll: TNotifyEvent;
 
-      FScrollSpeed: integer;
-      FKeepScrollAlign: boolean;
+    FScrollSpeed: integer;
+    FKeepScrollAlign: boolean;
 
-      FBackground: FXBackgroundColor;
+    FBackground: FXBackgroundColor;
 
-      FVertScroll,
-      FHorzScroll: FXScrollBoxScrollBar;
+    FVertScroll,
+    FHorzScroll: FXScrollBoxScrollBar;
 
-      FEnableVertical,
-      FEnableHorizontal: boolean;
+    FEnableVertical,
+    FEnableHorizontal: boolean;
 
-      FPosX, FPosY: integer;
-      FExtendX, FExtendY: integer;
+    FPosX, FPosY: integer;
+    FExtendX, FExtendY: integer;
 
-      FAnim: TTimer;
-      FAnimX,
-      FAnimY: integer;
+    FAnim: TTimer;
+    FAnimX,
+    FAnimY: integer;
 
-      FAnimation: boolean;
+    FAnimation: boolean;
 
-      // Anim
-      procedure AnimationTimer(Sender: TObject);
+    // Anim
+    procedure AnimationTimer(Sender: TObject);
 
-      // Scroll
-      procedure WhenScroll(Sender: TObject);
+    // Scroll
+    procedure WhenScroll(Sender: TObject);
 
-      procedure CalculateRange;
-      procedure UpdateScrollbars;
-      procedure ResetScrollBars;
-      procedure ScrollByEx(DeltaX, DeltaY: Integer);
+    procedure CalculateRange;
+    procedure UpdateScrollbars;
+    procedure ResetScrollBars;
+    procedure ScrollByEx(DeltaX, DeltaY: Integer);
 
-      // Set
-      procedure SetExtX(const Value: integer);
-      procedure SetExtY(const Value: integer);
-      procedure SetBackground(const Value: FXBackgroundColor);
+    // Set
+    procedure SetExtX(const Value: integer);
+    procedure SetExtY(const Value: integer);
+    procedure SetBackground(const Value: FXBackgroundColor);
 
-      // Utils
-      function IsDesigning: boolean;
+    // Utils
+    function IsDesigning: boolean;
 
-      // Update
-      procedure UpdateColors;
+    // Update
+    procedure UpdateColors;
 
-    protected
-      // Overrode
-      procedure Loaded; override;
+  protected
+    // Overrode
+    procedure Loaded; override;
 
-      function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
-        MousePos: TPoint): Boolean; override;
-      procedure AdjustClientRect(var Rect: TRect); override;
+    function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
+      MousePos: TPoint): Boolean; override;
+    procedure AdjustClientRect(var Rect: TRect); override;
 
-      function ContentRect: TRect;
+    function ContentRect: TRect;
 
-    published
-      property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
-      property BackgroundColor: FXBackgroundColor read FBackground write SetBackground default FXBackgroundColor.Background;
+  published
+    property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
+    property BackgroundColor: FXBackgroundColor read FBackground write SetBackground default FXBackgroundColor.Background;
 
-      property ScrollExtendX: integer read FExtendX write SetExtX default 0;
-      property ScrollExtendY: integer read FExtendY write SetExtY default 100;
-      property KeepScrollAlignment: boolean read FKeepScrollAlign write FKeepScrollAlign;
+    property AnimateScroll: boolean read FAnimation write FAnimation;
+    property ScrollExtendX: integer read FExtendX write SetExtX default 0;
+    property ScrollExtendY: integer read FExtendY write SetExtY default 100;
+    property KeepScrollAlignment: boolean read FKeepScrollAlign write FKeepScrollAlign;
 
-      property ScrollbarEnableVertical: boolean read FEnableVertical write FEnableVertical default true;
-      property ScrollbarEnableHorizontal: boolean read FEnableHorizontal write FEnableHorizontal default true;
+    property ScrollbarEnableVertical: boolean read FEnableVertical write FEnableVertical default true;
+    property ScrollbarEnableHorizontal: boolean read FEnableHorizontal write FEnableHorizontal default true;
 
-      property ScrollSpeed: integer read FScrollSpeed write FScrollSpeed default 10;
+    property ScrollSpeed: integer read FScrollSpeed write FScrollSpeed default 10;
 
-      property ScrollBarVert: FXScrollBoxScrollBar read FVertScroll write FVertScroll;
-      property ScrollBarHorz: FXScrollBoxScrollBar read FHorzScroll write FHorzScroll;
+    property ScrollBarVert: FXScrollBoxScrollBar read FVertScroll write FVertScroll;
+    property ScrollBarHorz: FXScrollBoxScrollBar read FHorzScroll write FHorzScroll;
 
-      property OnScroll: TNotifyEvent read FOnScroll write FOnScroll;
+    property OnScroll: TNotifyEvent read FOnScroll write FOnScroll;
 
-      // Utils
-      procedure DestroyAll;
+    // Utils
+    procedure DestroyAll;
 
-    public
-      constructor Create(aOwner: TComponent); override;
-      destructor Destroy; override;
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
 
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChildren: Boolean);
+    // Interface
+    function IsContainer: Boolean;
+    procedure UpdateTheme(const UpdateChildren: Boolean);
 
-      function Background: TColor;
-    end;
+    function Background: TColor;
+  end;
 
 implementation
 

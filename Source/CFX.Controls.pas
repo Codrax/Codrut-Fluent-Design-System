@@ -134,7 +134,6 @@ interface
 
       property FocusFlags: FXFocusFlags read FFocusFlags write FFocusFlags default [];
 
-      property InteractionState: FXControlState read FInteraction write SetState;
       property PreviousInteractionState: FXControlState read FPreviousInteraction write FPreviousInteraction;
 
       property Font: TFont read FTextFont write FTextFont;
@@ -143,9 +142,6 @@ interface
       property Opacity: byte read FOpacity write SetOpacity default 255;
 
     published
-      // Buffer
-      property Buffer: TCanvas read GetBuffer;
-
       // Popup Menu
       property PopupMenu: FXPopupMenu read FPopupMenu write FPopupMenu;
 
@@ -158,6 +154,12 @@ interface
       property Tag;
 
     public
+      // State
+      property InteractionState: FXControlState read FInteraction write SetState;
+
+      // Buffer
+      property Buffer: TCanvas read GetBuffer;
+
       // Constructors
       constructor Create(AOwner: TComponent); override;
       destructor Destroy; override;
@@ -216,10 +218,10 @@ interface
       // Utilities
       function IsReading: boolean;
 
-      // Interact State
-      property InteractionState: FXControlState read FInteraction write SetState;
-
     published
+      // Interact State
+      property InteractionState: FXControlState read FInteraction;
+
       // Draw Buffer
       property Buffer: TCanvas read GetBuffer;
 
@@ -333,7 +335,7 @@ end;
 
 procedure FXWindowsControl.CMMouseEnter(var Message: TMessage);
 begin
-  InteractionState := FXControlState.Hover;
+  SetState( FXControlState.Hover );
 
   if Assigned(OnMouseEnter) then
     OnMouseenter(Self);
@@ -341,7 +343,7 @@ end;
 
 procedure FXWindowsControl.CMMouseLeave(var Message: TMessage);
 begin
-  InteractionState := FXControlState.None;
+  SetState( FXControlState.None );
 
   if Assigned(OnMouseLeave) then
     OnMouseLeave(Self);
@@ -637,7 +639,7 @@ begin
   inherited;
   // State
   if (InteractionState = FXControlState.Hover) and (Button = mbLeft) then
-    InteractionState := FXControlState.Press;
+    SetState( FXControlState.Press );
 
   // Focus
   if (InteractionState = FXControlState.Press) and CanFocus and not Focused then
@@ -657,7 +659,7 @@ procedure FXWindowsControl.MouseUp(Button: TMouseButton; Shift: TShiftState;
 begin
   inherited;
   if InteractionState = FXControlState.Press then
-    InteractionState := FXControlState.Hover;
+    SetState( FXControlState.Hover );
 
   // Popup Menu
   if (Button = mbRight) then
@@ -681,7 +683,6 @@ var
   Composite: TBitMap;
   ARect: TRect;
 begin
-  inherited;
   if BufferedComponent then
     begin
       // Reset Color
@@ -955,7 +956,7 @@ end;
 
 procedure FXBufferGraphicControl.CMMouseEnter(var Message: TMessage);
 begin
-  InteractionState := FXControlState.Hover;
+  SetState( FXControlState.Hover );
 
   if Assigned(OnMouseEnter) then
     OnMouseenter(Self);
@@ -963,7 +964,7 @@ end;
 
 procedure FXBufferGraphicControl.CMMouseLeave(var Message: TMessage);
 begin
-  InteractionState := FXControlState.None;
+  SetState( FXControlState.None );
 
   if Assigned(OnMouseEnter) then
     OnMouseenter(Self);
@@ -1052,14 +1053,14 @@ begin
   inherited;
   // State
   if (InteractionState = FXControlState.Hover) and (Button = mbLeft) then
-    InteractionState := FXControlState.Press;
+    SetState( FXControlState.Press );
 end;
 
 procedure FXBufferGraphicControl.MouseUp(Button: TMouseButton;
   Shift: TShiftState; X, Y: integer);
 begin
   inherited;
-  InteractionState := FXControlState.Hover;
+  SetState( FXControlState.Hover );
 
   // Popup Menu
   if (Button = mbRight) and Assigned(PopupMenu) then

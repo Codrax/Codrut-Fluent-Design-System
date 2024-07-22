@@ -7,7 +7,8 @@ interface
        CFX.ImageList, CFX.TextBox, CFX.RadioButton, CFX.Scrollbar,
        CFX.ScrollBox, CFX.Selector, CFX.Edit, CFX.PopupConnector,
        CFX.IconView, CFX.ScrollText, CFX.Progress, CFX.RatingControl,
-       CFX.Effects, CFX.AppManager, CFX.PaintBox, CFX.TabStrip;
+       CFX.Effects, CFX.AppManager, CFX.PaintBox, CFX.TabStrip, CFX.Lists,
+       CFX.Animation.Component;
 
 procedure Register;
 
@@ -26,6 +27,8 @@ begin
   RegisterComponents(REGISTER_CLASS_NAME, [FXTabStrip]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXBlurMaterial]);
 
+  RegisterComponents(REGISTER_CLASS_NAME, [FXLinearDrawList]);
+
   RegisterComponents(REGISTER_CLASS_NAME, [FXTextBox, FXValueTextBox, FXAnimatedTextBox]);
 
   RegisterComponents(REGISTER_CLASS_NAME, [FXRadioButton]);
@@ -42,6 +45,9 @@ begin
   RegisterComponents(REGISTER_CLASS_EFFECTS_NAME, [FXBlurEffect,
     FXColorEffect, FXZoomEffect, FXGrayscaleEffect, FXInvertEffect,
     FXDeepFryEffect, FXGlowEffect]);
+
+  // Animations
+  RegisterComponents(REGISTER_CLASS_ANIM_NAME, [FXIntAnim, FXFloatAnim]);
 
   // Non-Visual Components
   RegisterComponents(REGISTER_CLASS_NAME, [FXPopupMenu, FXImageList]);
