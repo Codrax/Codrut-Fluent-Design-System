@@ -34,7 +34,7 @@ uses
   type
 
     // Image Array
-    FXPictureImages = class(TMPersistent)
+    FXPictureImages = class(FXPersistent)
     private
       FPictures: TArray<TPicture>;
 

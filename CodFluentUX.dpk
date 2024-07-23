@@ -124,7 +124,8 @@ contains
   CFX.UXTheme in 'Source\CFX.UXTheme.pas',
   CFX.Animation.Component in 'Source\CFX.Animation.Component.pas',
   CFX.Animation.Main in 'Source\CFX.Animation.Main.pas',
-  CFX.Animation.Utils in 'Source\CFX.Animation.Utils.pas';
+  CFX.Animation.Utils in 'Source\CFX.Animation.Utils.pas',
+  CFX.Shapes in 'Source\CFX.Shapes.pas';
 
 end.
 

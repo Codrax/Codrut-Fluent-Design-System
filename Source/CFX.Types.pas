@@ -18,6 +18,9 @@ interface
     // Icon Type
     FXIconType = (Image, BitMap, ImageList, SegoeIcon);
 
+    // Color
+    FXColorType = (Accent, Foreground, Background, Content, Custom);
+
     // Component
     FXFocusFlag = (CatchTab, CatchLeft, CatchUp, CatchRight, CatchDown);
     FXFocusFlags = set of FXFocusFlag;
@@ -35,7 +38,7 @@ interface
     FXDetailType = (None, Underline, Outline);
 
     // FXPanel
-    FXBackgroundColor = (Background, Content);
+    FXBackgroundColor = FXColorType.Background..FXColorType.Content;
 
     // FXButton
     FXButtonKind = (Normal, Accent, Toggle, FlatToggle, Dropdown, Link, Flat);
@@ -89,7 +92,6 @@ interface
     FXCharCase = (Both, Uppercase, Lowercase);
 
     // Theme Color
-    FXColorType = (Foreground, Accent, BackGround, Content);
     FXDarkSetting = (Auto, ForceDark, ForceLight);
 
     // File
@@ -112,11 +114,12 @@ interface
     FXControlState = (None, Hover, Press);
     FXControlOnPaint = procedure(Sender: TObject) of object;
 
-    // Color
+    // Color  // AA RR GG BB
     FXColor = $00000000..$FFFFFFFF;
 
     // Thingies
-    FXPercent = 0..1000;
+    FXPercent = type Single;
+    FXAngle = type Single; // three decimal places
 
     // FXColor Helper
     FXColorHelper = record helper for FXColor
@@ -1100,12 +1103,12 @@ end;
 
 function FXPercentHelper.OfNumberInt(Value: int64): int64;
 begin
-  Result := trunc(OfNumber(Value));
+  Result := trunc(OfNumber(Value)*Percentage);
 end;
 
 function FXPercentHelper.OfNumberInt(Value: real): int64;
 begin
-  Result := trunc(OfNumber(Value));
+  Result := trunc(OfNumber(Value)*Percentage);
 end;
 
 function FXPercentHelper.Percentage: real;

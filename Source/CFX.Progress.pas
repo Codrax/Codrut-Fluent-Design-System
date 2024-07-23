@@ -50,7 +50,7 @@ type
       FThreadFinishedEvent: TEvent;
       FThreadActive: boolean;
 
-      FValue: single;
+      FValue: FXPercent;
       FValueAdd: single;
       FValueAddMax: single;
 
@@ -71,7 +71,7 @@ type
       procedure SetProgressHeight(const Value: integer);
       procedure SetProgressLineHeight(const Value: integer);
       procedure SetProgressKind(const Value: FXProgressKind);
-      procedure SetValue(const Value: single);
+      procedure SetValue(const Value: FXPercent);
 
       // Colors
       function GetFrontColor: TColor;
@@ -92,7 +92,7 @@ type
       property CustomOtherColors: FXColorSets read FCustomOtherColors write FCustomOtherColors stored true;
 
       // Props
-      property Value: single read FValue write SetValue;
+      property Value: FXPercent read FValue write SetValue;
 
       property Animations: boolean read FAnimations write FAnimations;
 
@@ -579,9 +579,9 @@ begin
     end;
 end;
 
-procedure FXProgress.SetValue(const Value: single);
+procedure FXProgress.SetValue(const Value: FXPercent);
 begin
-  if FValue <> Value then
+  if (FValue <> Value) and (Value <= 100) then
     begin
       const Previous = FValue;
       FValue := Value;

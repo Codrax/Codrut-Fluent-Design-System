@@ -38,7 +38,7 @@ type
                   cicDownload, cicUpload, cicSearch, cicSearchL);
 
 
-  FXButtonDesignUnderLine = class(TMPersistent)
+  FXButtonDesignUnderLine = class(FXPersistent)
     private
       FUnderThick: integer;
       FUnderLn, FUnderLnRound: boolean;
@@ -51,7 +51,7 @@ type
       property UnderLineThicknes : integer read FUnderThick write SetUlThick;
   end;
 
-  FXButtonDesignColors = class(TMPersistent)
+  FXButtonDesignColors = class(FXPersistent)
     private
       FEnter, FLeave, FDown: TColor;
       FLine: TColor;
@@ -63,7 +63,7 @@ type
       property BLine : TColor read FLine write FLine stored Paint;
   end;
 
-  FXButtonDesignGradientSet = class(TMPersistent)
+  FXButtonDesignGradientSet = class(FXPersistent)
     private
       FEnter, FLeave, FDown: TColor;
       FEnabled: boolean;
@@ -75,7 +75,7 @@ type
       property Down : TColor read FDown write FDown stored Paint;
   end;
 
-  FXButtonDesignFontAutoSize = class(TMPersistent)
+  FXButtonDesignFontAutoSize = class(FXPersistent)
     private
       FEnabled: boolean;
       FMax, FMin: integer;
@@ -86,7 +86,7 @@ type
       property Min : integer read FMin write FMin stored Paint;
   end;
 
-  FXButtonDesignAnimations = class(TMPersistent)
+  FXButtonDesignAnimations = class(FXPersistent)
     private
       FPAn, FFadeAnimation: boolean;
       FAnimdelay, FAnimshq, TimeProg, FFadeSpeed: integer;
@@ -101,7 +101,7 @@ type
       property FASpeed: integer read FFadeSpeed write FFadeSpeed;
   end;
 
-  FXButtonDesignPen = class(TMPersistent)
+  FXButtonDesignPen = class(FXPersistent)
     private
       FColor : TColor;
       FWidth : integer;

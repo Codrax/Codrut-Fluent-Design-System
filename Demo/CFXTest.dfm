@@ -158,6 +158,9 @@ object Form1: TForm1
     Top = 80
     Width = 125
     Height = 33
+    Size.X = 125
+    Size.Y = 33
+    Position = 0
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -184,7 +187,6 @@ object Form1: TForm1
     Text = ''
     PasswordChar = #0
     Value = 0
-    Position = 0
     SelectionLength = 0
     TextHint = 'Username'
     ReadOnly = False
@@ -196,6 +198,9 @@ object Form1: TForm1
     Top = 167
     Width = 125
     Height = 33
+    Size.X = 125
+    Size.Y = 33
+    Position = 0
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -222,7 +227,6 @@ object Form1: TForm1
     Text = ''
     PasswordChar = '*'
     Value = 0
-    Position = 0
     SelectionLength = 0
     TextHint = 'Password'
     ReadOnly = False
@@ -234,6 +238,10 @@ object Form1: TForm1
     Top = 208
     Width = 125
     Height = 76
+    Size.X = 125
+    Size.Y = 76
+    Position.X = 519
+    Position.Y = 208
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -329,6 +337,10 @@ object Form1: TForm1
       Top = 165
       Width = 130
       Height = 35
+      Size.X = 130
+      Size.Y = 35
+      Position.X = 14
+      Position.Y = 165
       CustomColors.Enabled = False
       CustomColors.Accent = 13924352
       CustomColors.LightBackGround = 15987699
@@ -373,6 +385,10 @@ object Form1: TForm1
       Top = 165
       Width = 130
       Height = 35
+      Size.X = 130
+      Size.Y = 35
+      Position.X = 150
+      Position.Y = 165
       CustomColors.Enabled = False
       CustomColors.Accent = 13924352
       CustomColors.LightBackGround = 15987699
@@ -416,6 +432,10 @@ object Form1: TForm1
       Top = 81
       Width = 237
       Height = 60
+      Size.X = 237
+      Size.Y = 60
+      Position.X = 30
+      Position.Y = 81
       CustomColors.Enabled = False
       CustomColors.Accent = 13924352
       CustomColors.LightBackGround = 15987699
@@ -440,6 +460,10 @@ object Form1: TForm1
     Top = 419
     Width = 140
     Height = 40
+    Size.X = 140
+    Size.Y = 40
+    Position.X = 1030
+    Position.Y = 419
     Allignment = taCenter
     Default = False
     Cancel = False
@@ -514,6 +538,10 @@ object Form1: TForm1
     Width = 140
     Height = 40
     Hint = 'Hello World!'
+    Size.X = 140
+    Size.Y = 40
+    Position.X = 878
+    Position.Y = 419
     Allignment = taCenter
     Default = False
     Cancel = False
@@ -586,6 +614,10 @@ object Form1: TForm1
     Top = 280
     Width = 140
     Height = 35
+    Size.X = 140
+    Size.Y = 35
+    Position.X = 884
+    Position.Y = 280
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -629,6 +661,10 @@ object Form1: TForm1
     Top = 280
     Width = 140
     Height = 35
+    Size.X = 140
+    Size.Y = 35
+    Position.X = 1030
+    Position.Y = 280
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -675,6 +711,10 @@ object Form1: TForm1
     Width = 142
     Height = 35
     Cursor = crHandPoint
+    Size.X = 142
+    Size.Y = 35
+    Position.X = 875
+    Position.Y = 321
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -719,6 +759,10 @@ object Form1: TForm1
     Top = 321
     Width = 140
     Height = 35
+    Size.X = 140
+    Size.Y = 35
+    Position.X = 1030
+    Position.Y = 321
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -763,6 +807,10 @@ object Form1: TForm1
     Top = 466
     Width = 140
     Height = 75
+    Size.X = 140
+    Size.Y = 75
+    Position.X = 1030
+    Position.Y = 466
     Allignment = taCenter
     Default = False
     Cancel = False
@@ -840,6 +888,10 @@ object Form1: TForm1
     Width = 147
     Height = 75
     Hint = 'Hello World!'
+    Size.X = 147
+    Size.Y = 75
+    Position.X = 877
+    Position.Y = 465
     OnClick = FXButtonDesign4Click
     Allignment = taLeftJustify
     Default = False
@@ -914,6 +966,10 @@ object Form1: TForm1
     Top = 362
     Width = 140
     Height = 35
+    Size.X = 140
+    Size.Y = 35
+    Position.X = 1030
+    Position.Y = 362
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -959,6 +1015,10 @@ object Form1: TForm1
     Top = 362
     Width = 140
     Height = 35
+    Size.X = 140
+    Size.Y = 35
+    Position.X = 877
+    Position.Y = 362
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1005,6 +1065,10 @@ object Form1: TForm1
     Width = 125
     Height = 68
     TabStop = False
+    Size.X = 125
+    Size.Y = 68
+    Position.X = 519
+    Position.Y = 290
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1014,6 +1078,7 @@ object Form1: TForm1
     Text = 
       'This text is way too long to fit here, and now has to scroll jus' +
       't for It to be visible'
+    SpacePercent = 100.000000000000000000
     Image.Enabled = True
     Image.SelectSegoe = #59543
     Image.SelectImageIndex = 0
@@ -1033,6 +1098,10 @@ object Form1: TForm1
     Width = 186
     Height = 50
     TabStop = False
+    Size.X = 186
+    Size.Y = 50
+    Position.X = 15
+    Position.Y = 598
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1040,6 +1109,7 @@ object Form1: TForm1
     CustomColors.DarkBackGround = 2105376
     CustomColors.DarkForeGround = clWhite
     Text = 'Codrut Fluent Design System'
+    SpacePercent = 75.000000000000000000
     Image.Enabled = True
     Image.SelectSegoe = #59718
     Image.SelectImageIndex = 0
@@ -1059,6 +1129,9 @@ object Form1: TForm1
     Top = 203
     Width = 234
     Height = 49
+    Size.X = 234
+    Size.Y = 49
+    Position = 12
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1068,7 +1141,6 @@ object Form1: TForm1
     CustomColors.LightBackGroundInterior = 16514043
     CustomColors.DarkBackGroundInterior = 2829099
     OnChange = FXSlider1Change
-    Position = 12
     TotalTicks = 6
     ParentColor = False
     ShowHint = True
@@ -1080,6 +1152,10 @@ object Form1: TForm1
     Top = 167
     Width = 180
     Height = 30
+    Size.X = 180
+    Size.Y = 30
+    Position.X = 232
+    Position.Y = 167
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1112,6 +1188,9 @@ object Form1: TForm1
     Top = 271
     Width = 233
     Height = 13
+    Size.X = 233
+    Size.Y = 13
+    Position = 0
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1121,7 +1200,6 @@ object Form1: TForm1
     CustomColors.LightBackGroundInterior = 16514043
     CustomColors.DarkBackGroundInterior = 2829099
     Orientation = Horizontal
-    Position = 0
     Animation = True
     Minimised = False
     CustomScrollbarSize = 0
@@ -1132,6 +1210,10 @@ object Form1: TForm1
     Top = 374
     Width = 180
     Height = 30
+    Size.X = 180
+    Size.Y = 30
+    Position.X = 232
+    Position.Y = 374
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1161,6 +1243,10 @@ object Form1: TForm1
     Top = 410
     Width = 180
     Height = 30
+    Size.X = 180
+    Size.Y = 30
+    Position.X = 231
+    Position.Y = 410
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1190,6 +1276,10 @@ object Form1: TForm1
     Width = 130
     Height = 35
     PopupMenu = FXPopupMenu1
+    Size.X = 130
+    Size.Y = 35
+    Position.X = 232
+    Position.Y = 80
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1234,6 +1324,10 @@ object Form1: TForm1
     Top = 80
     Width = 130
     Height = 35
+    Size.X = 130
+    Size.Y = 35
+    Position.X = 368
+    Position.Y = 80
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1277,6 +1371,9 @@ object Form1: TForm1
     Top = 490
     Width = 180
     Height = 33
+    Size.X = 180
+    Size.Y = 33
+    Position = 0
     CustomColors.Enabled = True
     CustomColors.Accent = 3370495
     CustomColors.LightBackGround = 15987699
@@ -1303,7 +1400,6 @@ object Form1: TForm1
     Text = ''
     PasswordChar = #0
     Value = 0
-    Position = 0
     SelectionLength = 0
     TextHint = 'Send a message'
     ReadOnly = False
@@ -1317,6 +1413,10 @@ object Form1: TForm1
     Top = 486
     Width = 35
     Height = 35
+    Size.X = 35
+    Size.Y = 35
+    Position.X = 418
+    Position.Y = 486
     CustomColors.Enabled = True
     CustomColors.Accent = 33023
     CustomColors.LightBackGround = 15987699
@@ -1365,6 +1465,10 @@ object Form1: TForm1
     Top = 126
     Width = 266
     Height = 35
+    Size.X = 266
+    Size.Y = 35
+    Position.X = 232
+    Position.Y = 126
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1406,10 +1510,14 @@ object Form1: TForm1
   end
   object FXTextBox2: FXTextBox
     Left = 519
-    Top = 131
+    Top = 140
     Width = 67
-    Height = 42
+    Height = 21
     TabStop = True
+    Size.X = 67
+    Size.Y = 21
+    Position.X = 519
+    Position.Y = 140
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1423,16 +1531,20 @@ object Form1: TForm1
     Font.Style = []
     TabOrder = 28
     Text = 'Password'
-    AutoSize = False
+    AutoSize = True
     Elipsis = False
     InnerMargin = 0
   end
   object FXTextBox3: FXTextBox
     Left = 519
-    Top = 44
+    Top = 53
     Width = 71
-    Height = 42
+    Height = 21
     TabStop = True
+    Size.X = 71
+    Size.Y = 21
+    Position.X = 519
+    Position.Y = 53
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1446,7 +1558,7 @@ object Form1: TForm1
     Font.Style = []
     TabOrder = 29
     Text = 'Username'
-    AutoSize = False
+    AutoSize = True
     Elipsis = False
     InnerMargin = 0
   end
@@ -1456,6 +1568,10 @@ object Form1: TForm1
     Width = 52
     Height = 42
     TabStop = True
+    Size.X = 52
+    Size.Y = 42
+    Position.X = 237
+    Position.Y = 44
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1479,6 +1595,10 @@ object Form1: TForm1
     Width = 151
     Height = 37
     TabStop = True
+    Size.X = 151
+    Size.Y = 37
+    Position.X = 21
+    Position.Y = 30
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1501,6 +1621,10 @@ object Form1: TForm1
     Top = 546
     Width = 146
     Height = 35
+    Size.X = 146
+    Size.Y = 35
+    Position.X = 878
+    Position.Y = 546
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1545,6 +1669,10 @@ object Form1: TForm1
     Top = 529
     Width = 129
     Height = 21
+    Size.X = 129
+    Size.Y = 21
+    Position.X = 233
+    Position.Y = 529
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1567,6 +1695,10 @@ object Form1: TForm1
     Top = 588
     Width = 140
     Height = 35
+    Size.X = 140
+    Size.Y = 35
+    Position.X = 237
+    Position.Y = 588
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1611,6 +1743,10 @@ object Form1: TForm1
     Top = 632
     Width = 66
     Height = 21
+    Size.X = 66
+    Size.Y = 21
+    Position.X = 231
+    Position.Y = 632
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1638,6 +1774,10 @@ object Form1: TForm1
     Top = 547
     Width = 140
     Height = 35
+    Size.X = 140
+    Size.Y = 35
+    Position.X = 1030
+    Position.Y = 547
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1683,6 +1823,10 @@ object Form1: TForm1
     Width = 156
     Height = 25
     TabStop = True
+    Size.X = 156
+    Size.Y = 25
+    Position.X = 232
+    Position.Y = 556
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1712,6 +1856,10 @@ object Form1: TForm1
     Width = 138
     Height = 70
     TabStop = True
+    Size.X = 138
+    Size.Y = 70
+    Position.X = 668
+    Position.Y = 45
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1735,6 +1883,10 @@ object Form1: TForm1
     Top = 201
     Width = 116
     Height = 60
+    Size.X = 116
+    Size.Y = 60
+    Position.X = 49
+    Position.Y = 201
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1757,6 +1909,10 @@ object Form1: TForm1
     Top = 463
     Width = 129
     Height = 21
+    Size.X = 129
+    Size.Y = 21
+    Position.X = 231
+    Position.Y = 463
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1779,6 +1935,10 @@ object Form1: TForm1
     Top = 305
     Width = 232
     Height = 30
+    Size.X = 232
+    Size.Y = 30
+    Position.X = 232
+    Position.Y = 305
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1804,6 +1964,10 @@ object Form1: TForm1
     Top = 598
     Width = 300
     Height = 40
+    Size.X = 300
+    Size.Y = 40
+    Position.X = 400
+    Position.Y = 598
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1812,30 +1976,29 @@ object Form1: TForm1
     CustomColors.DarkForeGround = clWhite
     TabOrder = 41
   end
-  object FXLinearDrawList1: FXLinearDrawList
-    Left = 519
-    Top = 364
-    Width = 330
-    Height = 228
+  object FXShapeSquare1: FXShapeSquare
+    Left = 600
+    Top = 407
+    Width = 116
+    Height = 116
+    Size.X = 116
+    Size.Y = 116
+    Position.X = 600
+    Position.Y = 407
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
     CustomColors.LightForeGround = 1776410
     CustomColors.DarkBackGround = 2105376
     CustomColors.DarkForeGround = clWhite
-    NoOutOfBoundsDraw = True
-    MultiSelect = True
-    OpacityHover = 35
-    OpacitySelected = 75
+    Drawing.DrawPen = True
+    Drawing.DrawBrush = True
+    Drawing.ColorPen = -65536
+    Drawing.ColorBrush = -256
+    Drawing.PenSize = 4.000000000000000000
+    Proportional = True
+    PaddingFill.Around = 10
     TabOrder = 42
-    JustifyContent = Stretch
-    ItemCount = 20
-    ItemWidth = 150
-    ItemHeight = 100
-    FullLine = True
-    Wrap = True
-    SpacingRow = 8
-    SpacingColumn = 8
   end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False

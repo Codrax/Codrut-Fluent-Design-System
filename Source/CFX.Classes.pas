@@ -13,32 +13,40 @@ interface
     end;
 
     // Persistent
-    TMPersistent = class(TPersistent)
+    FXPersistent = class(TPersistent)
       Owner : TPersistent;
       constructor Create(AOwner : TPersistent); overload; virtual;
     end;
 
-    TAssignPersistent = class(TMPersistent)
+    FXAssignPersistent = class(FXPersistent)
     public
       procedure Assign(Source: TPersistent); override;
     end;
 
     // Padding
-    FXPadding = class(TAssignPersistent)
+    FXSideValues = class(FXPersistent)
     private
       FLeft,
       FTop,
       FRight,
-      FBottom: integer;
+      FBottom,
+      FAround,
+      FHorizontal,
+      FVertical: integer;
 
       FOnChange: TNotifyEvent;
 
-      procedure UpdateOwner;
-
+      // Setters
       procedure SetLeft(const Value: integer);
       procedure SetBottom(const Value: integer);
       procedure SetRight(const Value: integer);
       procedure SetTop(const Value: integer);
+      procedure SetAround(const Value: integer);
+      procedure SetHorizontal(const Value: integer);
+      procedure SetVertical(const Value: integer);
+
+    protected
+      procedure Updated; virtual;
 
     published
       property Left: integer read FLeft write SetLeft default 0;
@@ -46,21 +54,68 @@ interface
       property Right: integer read FRight write SetRight default 0;
       property Bottom: integer read FBottom write SetBottom default 0;
 
+      property Around: integer read FAround write SetAround default 0;
+      property Horizontal: integer read FHorizontal write SetHorizontal default 0;
+      property Vertical: integer read FVertical write SetVertical default 0;
+
+      // Events
       property OnChange: TNotifyEvent read FOnChange write FOnChange;
-
-      function PadWidth: integer;
-      function PadHeight: integer;
-
       procedure ScaleChanged(Scaling: single);
 
     public
       constructor Create(AOwner : TPersistent); override;
 
-      function ApplyTo(ARect: TRect): TRect;
+      // Assignment
+      procedure Assign(Source: TPersistent); override;
+
+      // Data
+      function AbsoluteLeft: integer;
+      function AbsoluteRight: integer;
+      function AbsoluteHorizontal: integer;
+      function AbsoluteTop: integer;
+      function AbsoluteBottom: integer;
+      function AbsoluteVertical: integer;
+
+      // Utils
+      function RectangleExpand(ARect: TRect): TRect;
+      function RectangleInflate(ARect: TRect): TRect;
+    end;
+
+    // Margins and paddings
+    FXControlSideValues = class(FXSideValues)
+    protected
+      procedure Updated; override;
+    end;
+
+    FXPadding = FXControlSideValues;
+    FXMargins = FXControlSideValues;
+
+    // Size class
+    FXPointGeneric = class(FXAssignPersistent)
+    private
+      function GetPoint: TPoint; virtual;
+      procedure SetPoint(const Value: TPoint); virtual;
+
+    protected
+      // Getters
+      function GetX: integer; virtual; abstract;
+      function GetY: integer; virtual; abstract;
+
+      // Setters
+      procedure SetX(const Value: integer); virtual; abstract;
+      procedure SetY(const Value: integer); virtual; abstract;
+
+      // Prop types
+      property X: integer read GetX write SetX;
+      property Y: integer read GetY write SetY;
+      property Width: integer read GetX write SetX;
+      property Height: integer read GetY write SetY;
+
+      property Point: TPoint read GetPoint write SetPoint;
     end;
 
     // Blur Settings
-    FXBlurSettings = class(TMPersistent)
+    FXBlurSettings = class(FXPersistent)
     private
       FEnabled: boolean;
 
@@ -94,7 +149,7 @@ interface
     end;
 
     // Icon
-    FXIconSelect = class(TMPersistent)
+    FXIconSelect = class(FXPersistent)
     private
       FEnabled: boolean;
 
@@ -264,23 +319,23 @@ begin
     TControl(Owner).Invalidate;
 end;
 
-{ TMPersistent }
+{ FXPersistent }
 
-constructor TMPersistent.Create(AOwner: TPersistent);
+constructor FXPersistent.Create(AOwner: TPersistent);
 begin
   inherited Create;
   Owner := AOwner;
 end;
 
 
-{ TAssignPersistent }
+{ FXAssignPersistent }
 
-procedure TAssignPersistent.Assign(Source: TPersistent);
+procedure FXAssignPersistent.Assign(Source: TPersistent);
 var
   PropList: PPropList;
   PropCount, i: Integer;
 begin
-  if Source is TAssignPersistent then
+  if Source is FXAssignPersistent then
   begin
     PropCount := GetPropList(Source.ClassInfo, tkProperties, nil);
     if PropCount > 0 then
@@ -299,78 +354,147 @@ begin
     inherited Assign(Source);
 end;
 
-{ FXPadding }
+{ FXSideValues }
 
-function FXPadding.ApplyTo(ARect: TRect): TRect;
+function FXSideValues.AbsoluteBottom: integer;
 begin
-  Result := ARect;
-
-  Inc(Result.Left, FLeft);
-  Inc(Result.Top, FTop);
-  Dec(Result.Right, FRight);
-  Dec(Result.Bottom, FBottom);
+  Result := FBottom + FVertical + FAround;
 end;
 
-constructor FXPadding.Create(AOwner: TPersistent);
+function FXSideValues.AbsoluteHorizontal: integer;
+begin
+  Result := FLeft + FRight + FHorizontal + FAround;
+end;
+
+function FXSideValues.AbsoluteLeft: integer;
+begin
+  Result := FLeft + FHorizontal + FAround;
+end;
+
+function FXSideValues.AbsoluteRight: integer;
+begin
+  Result := FRight + FHorizontal + FAround;
+end;
+
+function FXSideValues.AbsoluteTop: integer;
+begin
+  Result := FTop + FVertical + FAround;
+end;
+
+function FXSideValues.AbsoluteVertical: integer;
+begin
+  Result := FTop + FBottom + FVertical + FAround;
+end;
+
+procedure FXSideValues.Assign(Source: TPersistent);
+begin
+  if Source is FXSideValues then
+  begin
+    const Src = FXSideValues(Source);
+
+    FLeft := Src.FLeft;
+    FTop := Src.FTop;
+    FRight := Src.FRight;
+    FBottom := Src.FBottom;
+    FAround := Src.FAround;
+    FHorizontal := Src.FHorizontal;
+    FVertical := Src.FVertical;
+
+    // Notify
+    Updated;
+  end
+  else
+    inherited Assign(Source);
+end;
+
+function FXSideValues.RectangleExpand(ARect: TRect): TRect;
+begin
+  Result := ARect;
+  Result.Inflate(AbsoluteLeft, AbsoluteTop, AbsoluteRight, AbsoluteBottom);
+end;
+
+function FXSideValues.RectangleInflate(ARect: TRect): TRect;
+begin
+  Result := ARect;
+  Result.Inflate(-AbsoluteLeft, -AbsoluteTop, -AbsoluteRight, -AbsoluteBottom);
+end;
+
+constructor FXSideValues.Create(AOwner: TPersistent);
 begin
   inherited;
   FLeft := 0;
   FTop := 0;
   FRight := 0;
   FBottom := 0;
+
+  FAround := 0;
+  FHorizontal := 0;
+  FVertical := 0;
 end;
 
-function FXPadding.PadHeight: integer;
-begin
-  Result := Top + Bottom;
-end;
-
-function FXPadding.PadWidth: integer;
-begin
-  Result := Left + Right;
-end;
-
-procedure FXPadding.ScaleChanged(Scaling: single);
+procedure FXSideValues.ScaleChanged(Scaling: single);
 begin
   FLeft := trunc(FLeft * Scaling);
   FTop := trunc(FTop * Scaling);
   FRight := trunc(FRight * Scaling);
   FBottom := trunc(FBottom * Scaling);
+
+  FAround := trunc(FBottom * Scaling);
+  FHorizontal := trunc(FBottom * Scaling);
+  FVertical := trunc(FBottom * Scaling);
 end;
 
-procedure FXPadding.SetBottom(const Value: integer);
+procedure FXSideValues.SetAround(const Value: integer);
+begin
+  FAround := Value;
+
+  Updated;
+end;
+
+procedure FXSideValues.SetBottom(const Value: integer);
 begin
   FBottom := Value;
 
-  UpdateOwner;
+  Updated;
 end;
 
-procedure FXPadding.SetLeft(const Value: integer);
+procedure FXSideValues.SetHorizontal(const Value: integer);
+begin
+  FHorizontal := Value;
+
+  Updated;
+end;
+
+procedure FXSideValues.SetLeft(const Value: integer);
 begin
   FLeft := Value;
 
-  UpdateOwner;
+  Updated;
 end;
 
-procedure FXPadding.SetRight(const Value: integer);
+procedure FXSideValues.SetRight(const Value: integer);
 begin
   FRight := Value;
 
-  UpdateOwner;
+  Updated;
 end;
 
-procedure FXPadding.SetTop(const Value: integer);
+procedure FXSideValues.SetTop(const Value: integer);
 begin
   FTop := Value;
 
-  UpdateOwner;
+  Updated;
 end;
 
-procedure FXPadding.UpdateOwner;
+procedure FXSideValues.SetVertical(const Value: integer);
 begin
-  if (Owner <> nil) and Supports(Owner, FXControl) and not (csReading in TComponent(Owner).ComponentState) then
-    (TComponent(Owner) as FXControl).UpdateTheme(true);
+  FVertical := Value;
 
+  Updated;
+end;
+
+procedure FXSideValues.Updated;
+begin
   if Assigned(FOnChange) then
     FOnChange(Self);
 end;
@@ -420,6 +544,29 @@ procedure FXBlurSettings.UpdateParent;
 begin
   if Owner is TControl then
     TControl(Owner).Invalidate;
+end;
+
+{ FXPointGeneric }
+
+function FXPointGeneric.GetPoint: TPoint;
+begin
+  Result := TPoint.Create(X, Y);
+end;
+
+procedure FXPointGeneric.SetPoint(const Value: TPoint);
+begin
+  X := Value.X;
+  Y := Value.Y;
+end;
+
+{ FXControlSideValues }
+
+procedure FXControlSideValues.Updated;
+begin
+  if (Owner <> nil) and Supports(Owner, FXControl) and not (csReading in TComponent(Owner).ComponentState) then
+    (TComponent(Owner) as FXControl).UpdateTheme(true);
+
+  inherited;
 end;
 
 end.

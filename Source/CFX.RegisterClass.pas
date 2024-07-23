@@ -8,7 +8,7 @@ interface
        CFX.ScrollBox, CFX.Selector, CFX.Edit, CFX.PopupConnector,
        CFX.IconView, CFX.ScrollText, CFX.Progress, CFX.RatingControl,
        CFX.Effects, CFX.AppManager, CFX.PaintBox, CFX.TabStrip, CFX.Lists,
-       CFX.Animation.Component;
+       CFX.Animation.Component, CFX.Shapes;
 
 procedure Register;
 
@@ -40,6 +40,9 @@ begin
   RegisterComponents(REGISTER_CLASS_NAME, [FXScrollText]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXProgress]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXRatingControl]);
+
+  // Shapes
+  RegisterComponents(REGISTER_CLASS_SHAPES, [FXShapeSquare, FXShapeCircle, FXShapeTriangle]);
 
   // Effects
   RegisterComponents(REGISTER_CLASS_EFFECTS_NAME, [FXBlurEffect,

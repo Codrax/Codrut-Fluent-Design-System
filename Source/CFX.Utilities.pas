@@ -83,7 +83,6 @@ end;
 function GetLinesPerScroll: integer;
 var
   R: TRegistry;
-  ARGB: cardinal;
 begin
   Result := DEFAULT_SCROLL_LINES; // default value
   R := TRegistry.Create;

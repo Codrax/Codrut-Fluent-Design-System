@@ -100,7 +100,7 @@ type
       property TextSpacing: Integer read FTextSpacing write SetTextSpacing default CHECKBOX_TEXT_SPACE;
 
       property Text: string read FText write SetText;
-      property SpacePercent: FXPercent read FSpacePercent write FSpacePercent default 75;
+      property SpacePercent: FXPercent read FSpacePercent write FSpacePercent;
       property FadeSize: integer read FFadeSize write SetFadeSize default SCROLL_TEXT_FADE_SIZE;
 
       property Image: FXIconSelect read FImage write SetImage;

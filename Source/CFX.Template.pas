@@ -23,72 +23,72 @@ uses
 
 type
   FXTemplate = class(FXWindowsControl, FXControl)
-    private
-      var DrawRect: TRect;
-      FDrawColors: FXCompleteColorSet;
-      FCustomColors: FXColorSets;
+  private
+    var DrawRect: TRect;
+    FDrawColors: FXCompleteColorSet;
+    FCustomColors: FXColorSets;
 
-      //  Internal
-      procedure UpdateColors;
-      procedure UpdateRects;
+    //  Internal
+    procedure UpdateColors;
+    procedure UpdateRects;
 
-      // Getters
+    // Getters
 
-      // Setters
+    // Setters
 
-    protected
-      procedure PaintBuffer; override;
-      procedure Resize; override;
+  protected
+    procedure PaintBuffer; override;
+    procedure Resize; override;
 
-      // Scaler
-      procedure ScaleChanged(Scaler: single); override;
+    // Scaler
+    procedure ScaleChanged(Scaler: single); override;
 
-      // State
-      procedure InteractionStateChanged(AState: FXControlState); override;
+    // State
+    procedure InteractionStateChanged(AState: FXControlState); override;
 
-    published
-      // Custom Colors
-      property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
+  published
+    // Custom Colors
+    property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
 
-      // Props
+    // Props
 
-      // Default props
-      property Align;
-      property PaddingFill;
-      property Constraints;
-      property Anchors;
-      property Hint;
-      property ShowHint;
-      property TabStop;
-      property TabOrder;
-      property FocusFlags;
-      property DragKind;
-      property DragCursor;
-      property DragMode;
-      property OnDragDrop;
-      property OnDragOver;
-      property OnEndDrag;
-      property OnStartDrag;
-      property OnEnter;
-      property OnExit;
-      property OnClick;
-      property OnKeyDown;
-      property OnKeyUp;
-      property OnKeyPress;
-      property OnMouseUp;
-      property OnMouseDown;
-      property OnMouseEnter;
-      property OnMouseLeave;
+    // Default props
+    property Align;
+    property PaddingFill;
+    property Constraints;
+    property Anchors;
+    property Hint;
+    property ShowHint;
+    property TabStop;
+    property TabOrder;
+    property FocusFlags;
+    property DragKind;
+    property DragCursor;
+    property DragMode;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDrag;
+    property OnStartDrag;
+    property OnEnter;
+    property OnExit;
+    property OnClick;
+    property OnKeyDown;
+    property OnKeyUp;
+    property OnKeyPress;
+    property OnMouseUp;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
 
-    public
-      constructor Create(aOwner: TComponent); override;
-      destructor Destroy; override;
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
 
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChildren: Boolean);
+    // Interface
+    function IsContainer: Boolean;
+    procedure UpdateTheme(const UpdateChildren: Boolean);
 
-      function Background: TColor;
+    function Background: TColor;
   end;
 
 implementation

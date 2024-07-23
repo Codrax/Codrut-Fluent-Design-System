@@ -42,7 +42,7 @@ uses
     TOnBeforePopup = procedure(Sender: TObject; var CanPopup: boolean; Point: TPoint) of object;
 
     // Menu
-    FXPopupItems = class(TMPersistent)
+    FXPopupItems = class(FXPersistent)
     private
       FItems: TArray<FXPopupItem>;
 

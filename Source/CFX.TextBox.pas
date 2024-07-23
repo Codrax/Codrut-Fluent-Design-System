@@ -106,7 +106,6 @@ type
       property Transparent;
       property HitTest;
       property Opacity;
-      property PaddingFill;
       property Constraints;
       property Anchors;
       property Hint;
@@ -291,8 +290,8 @@ begin
           AFlags := BuildFlags;
           ARect := GetTextRect(Canvas, Self.TextRect, FText, AFlags, FInnerMargin);
 
-          Width := ARect.Width + PaddingFill.PadWidth;
-          Height := ARect.Height + PaddingFill.PadHeight;
+          Width := ARect.Width + PaddingFill.AbsoluteHorizontal;
+          Height := ARect.Height + PaddingFill.AbsoluteVertical;
         end
       else
         // Single Line
@@ -300,8 +299,8 @@ begin
           AWidth := TextWidth(FText);
           AHeight := TextHeight(FText);
 
-          Width := AWidth + PaddingFill.PadWidth;
-          Height := AHeight + PaddingFill.PadHeight;
+          Width := AWidth + PaddingFill.AbsoluteHorizontal;
+          Height := AHeight + PaddingFill.AbsoluteVertical;
         end;
     end;
 end;

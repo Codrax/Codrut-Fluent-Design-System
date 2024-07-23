@@ -14,6 +14,49 @@ interface
       property Canvas;
     end;
 
+    // Custom classes
+    FXControlSize = class(FXPointGeneric)
+    private
+      FParent: TControl;
+
+    protected
+      // Getters
+      function GetX: integer; override;
+      function GetY: integer; override;
+
+      // Setters
+      procedure SetX(const Value: integer); override;
+      procedure SetY(const Value: integer); override;
+
+    published
+      property X;
+      property Y;
+
+      constructor Create(Control: TControl);
+    end;
+
+    FXControlPosition = class(FXPointGeneric)
+    private
+      FParent: TControl;
+
+    protected
+      // Getters
+      function GetX: integer; override;
+      function GetY: integer; override;
+
+      // Setters
+      procedure SetX(const Value: integer); override;
+      procedure SetY(const Value: integer); override;
+
+    published
+      property X;
+      property Y;
+
+      property Point;
+
+      constructor Create(Control: TControl);
+    end;
+
     // Control
     FXWindowsControl = class(FXCustomControl)
     private
@@ -31,10 +74,15 @@ interface
       FBackground: TBitMap;
       FOnPaint: FXControlOnPaint;
       FOnPaintBuffer: FXControlOnPaint;
-      FPadding: FXPadding;
       FTextFont: TFont;
       FFocusFlags: FXFocusFlags;
       FHitTest: boolean;
+
+      FPadding: FXPadding;
+      FMargins: FXMargins;
+
+      FSize: FXControlSize;
+      FPosition: FXControlPosition;
 
       // Events
       procedure WMNCHitTest(var Message: TWMNCHitTest); message WM_NCHITTEST;
@@ -54,6 +102,10 @@ interface
       procedure SetState(const Value: FXControlState);
       procedure SetTransparent(const Value: boolean);
       procedure SetOpacity(const Value: byte);
+      procedure SetPosition(const Value: FXControlPosition);
+      procedure SetSize(const Value: FXControlSize);
+      procedure SetMargins(const Value: FXMargins);
+      procedure SetPadding(const Value: FXPadding);
 
     protected
       // Paint
@@ -88,8 +140,7 @@ interface
       procedure DoEnter; override;
       procedure DoExit; override;
 
-      // Padding
-      property PaddingFill: FXPadding read FPadding write FPadding;
+      // Size
       function GetClientRect: TRect; override;
 
       // Created
@@ -98,15 +149,15 @@ interface
       // Visible Change
       procedure OnVisibleChange(var Message : TMessage); message CM_VISIBLECHANGED;
 
-      // Mouse Events
+      // Events
       procedure CMMouseEnter(var Message : TMessage); message CM_MOUSEENTER;
       procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
+      procedure CNKeyDown(var Message: TWMKeyDown); message CN_KEYDOWN;
 
       procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
       procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
 
-      // Key Events
-      procedure CNKeyDown(var Message: TWMKeyDown); message CN_KEYDOWN;
+      procedure MarginsUpdated(Sender: TObject);
 
       // Interaction
       procedure InteractionStateChanged(AState: FXControlState); virtual;
@@ -119,6 +170,9 @@ interface
       function Creating: boolean;
 
       function Destroyed: boolean;
+
+      // Padding
+      property PaddingFill: FXPadding read FPadding write SetPadding;
 
       // Catch Events
       procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
@@ -145,24 +199,30 @@ interface
       // Popup Menu
       property PopupMenu: FXPopupMenu read FPopupMenu write FPopupMenu;
 
+      // Client
+      property MarginsFill: FXMargins read FMargins write SetMargins;
+
+      // Defaults
       property Hint;
 
       property TabStop default true;
+
+      property Size: FXControlSize read FSize write SetSize;
+      property Position: FXControlPosition read FPosition write SetPosition;
 
       property Enabled;
       property Visible;
       property Tag;
 
     public
+      constructor Create(AOwner: TComponent); override;
+      destructor Destroy; override;
+
       // State
       property InteractionState: FXControlState read FInteraction write SetState;
 
       // Buffer
       property Buffer: TCanvas read GetBuffer;
-
-      // Constructors
-      constructor Create(AOwner: TComponent); override;
-      destructor Destroy; override;
 
       // Parent Utilities
       function GetParentBackgroundColor(Default: TColor): TColor;
@@ -375,8 +435,11 @@ begin
   FAutoFocusLine := false;
   FTransparent := true;
   FOpacity := 255;
-  FPadding := FXPadding.Create(Self);
   FHitTest := true;
+
+  FPadding := FXPadding.Create(Self);
+  FMargins := FXMargins.Create(Self);
+  FMargins.OnChange := MarginsUpdated;
 
   // Font
   FTextFont := TFont.Create;
@@ -391,6 +454,9 @@ begin
   // Style
   ControlStyle := ControlStyle + [csOpaque, csCaptureMouse];
   Brush.Style := bsClear;
+
+  FSize := FXControlSize.Create(Self);
+  FPosition := FXControlPosition.Create(Self);
 
   // Initialise Buffer
   FBuffer := TBitMap.Create;
@@ -557,7 +623,7 @@ end;
 function FXWindowsControl.GetClientRect: TRect;
 begin
   // Apply padding
-  Result := FPadding.ApplyTo( Rect(0, 0, Width, Height) );
+  Result := FPadding.RectangleInflate( Rect(0, 0, Width, Height) );
 end;
 
 function FXWindowsControl.GetParentBackgroundColor(Default: TColor): TColor;
@@ -631,6 +697,11 @@ end;
 function FXWindowsControl.IsReading: boolean;
 begin
   Result := csReading in ComponentState;
+end;
+
+procedure FXWindowsControl.MarginsUpdated(Sender: TObject);
+begin
+  Margins.SetBounds(FMargins.AbsoluteLeft, FMargins.AbsoluteTop, FMargins.AbsoluteRight, FMargins.AbsoluteBottom);
 end;
 
 procedure FXWindowsControl.MouseDown(Button: TMouseButton; Shift: TShiftState;
@@ -770,6 +841,12 @@ begin
   FTextFont.Height := round(FTextFont.Height * Scaler);
 
   FPadding.ScaleChanged(Scaler);
+  FMargins.ScaleChanged(Scaler);
+end;
+
+procedure FXWindowsControl.SetMargins(const Value: FXMargins);
+begin
+  FMargins.Assign( Value );
 end;
 
 procedure FXWindowsControl.SetNewInteractionState(AState: FXControlState;
@@ -794,6 +871,21 @@ begin
       // Draw
       Invalidate;
     end;
+end;
+
+procedure FXWindowsControl.SetPadding(const Value: FXPadding);
+begin
+  FPadding.Assign( Value );
+end;
+
+procedure FXWindowsControl.SetPosition(const Value: FXControlPosition);
+begin
+  FPosition.Point := Value.Point;
+end;
+
+procedure FXWindowsControl.SetSize(const Value: FXControlSize);
+begin
+  FSize.Point := Value.Point;
 end;
 
 procedure FXWindowsControl.SetState(const Value: FXControlState);
@@ -1117,6 +1209,62 @@ begin
 
       InteractionStateChanged(Value);
     end;
+end;
+
+{ FXControlSize }
+
+constructor FXControlSize.Create(Control: TControl);
+begin
+  FParent := Control;
+end;
+
+function FXControlSize.GetX: integer;
+begin
+  Result := FParent.Width;
+end;
+
+function FXControlSize.GetY: integer;
+begin
+  Result := FParent.Height;
+end;
+
+procedure FXControlSize.SetX(const Value: integer);
+begin
+  inherited;
+  FParent.Width := Value;
+end;
+
+procedure FXControlSize.SetY(const Value: integer);
+begin
+  inherited;
+  FParent.Height := Value;
+end;
+
+{ FXControlPosition }
+
+constructor FXControlPosition.Create(Control: TControl);
+begin
+  FParent := Control;
+end;
+
+function FXControlPosition.GetX: integer;
+begin
+  Result := FParent.Left;
+end;
+
+function FXControlPosition.GetY: integer;
+begin
+  Result := FParent.Top;
+end;
+
+procedure FXControlPosition.SetX(const Value: integer);
+begin
+  FParent.Left := Value;
+end;
+
+procedure FXControlPosition.SetY(const Value: integer);
+begin
+  FParent.Top := Value;
 end;
 
 end.

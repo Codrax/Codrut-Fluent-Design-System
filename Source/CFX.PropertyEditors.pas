@@ -109,6 +109,15 @@ uses
       procedure SetValue(const Value: string); override;
     end;
 
+    // Angle Property
+    TFXAngleProperty = class(TPropertyEditor)
+    private
+    public
+      function GetAttributes: TPropertyAttributes; override;
+      function GetValue: string; override;
+      procedure SetValue(const Value: string); override;
+    end;
+
     // Color Property
     TFXColorProperty = class(FXPropertyEditor, ICustomPropertyDrawing,
       ICustomPropertyListDrawing, ICustomPropertyDrawing80)
@@ -1074,18 +1083,13 @@ end;
 
 function TFXPercentProperty.GetValue: string;
 begin
-  Result := GetOrdValue.ToString + '%';
+  Result := Format('%.2f', [GetFloatValue]) + '%';
 end;
 
 procedure TFXPercentProperty.SetValue(const Value: string);
-var
-  V: integer;
 begin
   inherited;
-  V := Value.Replace('%', '').ToInteger;
-  V := EnsureRange(V, 0, 1000);
-
-  SetOrdValue(V);
+  SetFloatValue(Value.Replace('%', '').ToExtended);
 end;
 
 { TFXColorProperty }
@@ -1204,6 +1208,8 @@ procedure TFXColorProperty.PropDrawValue(ACanvas: TCanvas; const ARect: TRect;
   ASelected: Boolean);
 begin
   ARect.Inflate(0, -1);
+  ARect.Inflate(-3, 0, 0, 0);
+
   DrawColorBox(ACanvas, ARect, FXColor(GetOrdValue));
 end;
 
@@ -1251,6 +1257,39 @@ begin
   SetOrdValue( Color );
 end;
 
+{ TFXAngleProperty }
+
+function TFXAngleProperty.GetAttributes: TPropertyAttributes;
+begin
+  Result := inherited GetAttributes + [paValueEditable];
+end;
+
+function TFXAngleProperty.GetValue: string;
+begin
+  Result := Format('%.2f', [GetFloatValue]) + '°';
+end;
+
+procedure TFXAngleProperty.SetValue(const Value: string);
+var
+  S: string;
+begin
+  inherited;
+  S := Value.Replace(' ', '').Replace('°', '').Replace('deg', '').ToLower;
+
+  if S.EndsWith('pi') then begin
+    S := S.Replace('pi', '');
+    if S = '' then
+      SetFloatValue( 180 )
+    else
+      SetFloatValue( S.Replace('pi', '').ToExtended*180 )
+  end
+  else
+  if S.EndsWith('rad') then
+    SetFloatValue( RadToDeg(S.Replace('rad', '').ToExtended) )
+  else
+    SetFloatValue(Value.Replace('°', '').ToExtended);
+end;
+
 initialization
   { Initialize }
   RegisterPropertyEditor(TypeInfo(FXIconSelect), nil, '', TFXIconSelectProperty);
@@ -1259,6 +1298,7 @@ initialization
   RegisterPropertyEditor(TypeInfo(FXPictureImages), nil, '', TFXPictureImagesProperty);
 
   RegisterPropertyEditor(TypeInfo(FXPercent), nil, '', TFXPercentProperty);
+  RegisterPropertyEditor(TypeInfo(FXAngle), nil, '', TFXAngleProperty);
   RegisterPropertyEditor(TypeInfo(FXColor), nil, '', TFXColorProperty);
   (*
   Parameter 1: Edited Class for Property Edit

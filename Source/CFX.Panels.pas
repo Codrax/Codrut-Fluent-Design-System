@@ -52,7 +52,7 @@ type
 
     published
       property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors;
-      property BackgroundColor: FXBackgroundColor read FBackground write SetBackground default FXBackgroundColor.Background;
+      property BackgroundColor: FXBackgroundColor read FBackground write SetBackground default FXColorType.Background;
       property AccentLine: boolean read FAccentLine write SetAccentLine default False;
       property AccentLineWidth: integer read FLineWidth write SetAccentLineWidth;
 
@@ -690,8 +690,8 @@ end;
 function FXPanel.Background: TColor;
 begin
   case FBackground of
-    FXBackgroundColor.Background: Result := FDrawColors.Background;
-    FXBackgroundColor.Content: Result := FDrawColors.BackGroundInterior;
+    FXColorType.Background: Result := FDrawColors.Background;
+    FXColorType.Content: Result := FDrawColors.BackGroundInterior;
     else
       Result := 0;
   end;
@@ -712,7 +712,7 @@ begin
   FDrawColors := FXCompleteColorSet.Create(ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
 
   FLineWidth := PANEL_LINE_WIDTH;
-  FBackground := FXBackgroundColor.Background;
+  FBackground := FXColorType.Background;
 
   BevelKind := bkNone;
   BevelOuter := bvNone;
@@ -806,8 +806,8 @@ begin
 
   // Set Color
   case FBackground of
-    FXBackgroundColor.Background: Color := FDrawColors.BackGround;
-    FXBackgroundColor.Content: Color := FDrawColors.BackGroundInterior;
+    FXColorType.Background: Color := FDrawColors.BackGround;
+    FXColorType.Content: Color := FDrawColors.BackGroundInterior;
   end;
 end;
 

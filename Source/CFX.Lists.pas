@@ -9,6 +9,7 @@ uses
   Vcl.Controls,
   Vcl.Graphics,
   Vcl.ExtCtrls,
+  UITypes,
   Types,
   Vcl.Forms,
   Math,
@@ -424,8 +425,7 @@ end;
 function FXDrawList.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
   MousePos: TPoint): Boolean;
 begin
-  if Result then
-    Exit( Result );
+  Result := false;
 
   if FHandleScrolling and not (ssCtrl in Shift) then begin
     const ScrollAmount = GetScrollAmount(WheelDelta, ClientRect.Height);

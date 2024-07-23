@@ -21,7 +21,7 @@ uses
   // VCL COMPONENTS
   Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage,
   Vcl.ExtDlgs, System.ImageList, UITypes, Vcl.ComCtrls, Vcl.Mask,
-  UxTheme, Vcl.Themes, System.Generics.Collections;
+  UxTheme, Vcl.Themes, System.Generics.Collections, CFX.Shapes;
 
 type
   TForm1 = class(FXForm)
@@ -81,7 +81,7 @@ type
     FXTextBox1: FXTextBox;
     FXAppManager1: FXAppManager;
     FXTabStrip1: FXTabStrip;
-    FXLinearDrawList1: FXLinearDrawList;
+    FXShapeSquare1: FXShapeSquare;
     procedure FXButton4Click(Sender: TObject);
     procedure FXButtonDesign3Click(Sender: TObject);
     procedure FXButton5Click(Sender: TObject);
