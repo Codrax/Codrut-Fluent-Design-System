@@ -23,7 +23,7 @@ interface
       procedure Assign(Source: TPersistent); override;
     end;
 
-    // Padding
+    // Side values
     FXSideValues = class(FXPersistent)
     private
       FLeft,
@@ -66,7 +66,7 @@ interface
       constructor Create(AOwner : TPersistent); override;
 
       // Assignment
-      procedure Assign(Source: TPersistent); override;
+      procedure AssignTo(Dest: TPersistent); override;
 
       // Data
       function AbsoluteLeft: integer;
@@ -386,25 +386,25 @@ begin
   Result := FTop + FBottom + FVertical + FAround;
 end;
 
-procedure FXSideValues.Assign(Source: TPersistent);
+procedure FXSideValues.AssignTo(Dest: TPersistent);
 begin
-  if Source is FXSideValues then
+  if Dest is FXSideValues then
   begin
-    const Src = FXSideValues(Source);
+    const Destination = FXSideValues(Dest);
 
-    FLeft := Src.FLeft;
-    FTop := Src.FTop;
-    FRight := Src.FRight;
-    FBottom := Src.FBottom;
-    FAround := Src.FAround;
-    FHorizontal := Src.FHorizontal;
-    FVertical := Src.FVertical;
+    Destination.FLeft := FLeft;
+    Destination.FTop := FTop;
+    Destination.FRight := FRight;
+    Destination.FBottom := FBottom;
+    Destination.FAround := FAround;
+    Destination.FHorizontal := FHorizontal;
+    Destination.FVertical := FVertical;
 
     // Notify
     Updated;
   end
   else
-    inherited Assign(Source);
+    inherited Assign(Dest);
 end;
 
 function FXSideValues.RectangleExpand(ARect: TRect): TRect;
@@ -446,50 +446,64 @@ end;
 
 procedure FXSideValues.SetAround(const Value: integer);
 begin
-  FAround := Value;
+  if FAround = Value then
+    Exit;
 
+  FAround := Value;
   Updated;
 end;
 
 procedure FXSideValues.SetBottom(const Value: integer);
 begin
-  FBottom := Value;
+  if FBottom = Value then
+    Exit;
 
+  FBottom := Value;
   Updated;
 end;
 
 procedure FXSideValues.SetHorizontal(const Value: integer);
 begin
-  FHorizontal := Value;
+  if FHorizontal = Value then
+    Exit;
 
+  FHorizontal := Value;
   Updated;
 end;
 
 procedure FXSideValues.SetLeft(const Value: integer);
 begin
-  FLeft := Value;
+  if FLeft = Value then
+    Exit;
 
+  FLeft := Value;
   Updated;
 end;
 
 procedure FXSideValues.SetRight(const Value: integer);
 begin
-  FRight := Value;
+  if FRight = Value then
+    Exit;
 
+  FRight := Value;
   Updated;
 end;
 
 procedure FXSideValues.SetTop(const Value: integer);
 begin
-  FTop := Value;
+  if FTop = Value then
+    Exit;
 
+  FTop := Value;
   Updated;
 end;
 
 procedure FXSideValues.SetVertical(const Value: integer);
 begin
-  FVertical := Value;
+  if FVertical = Value then
+    Exit;
 
+  FVertical := Value;
   Updated;
 end;
 

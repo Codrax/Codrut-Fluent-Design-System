@@ -1981,6 +1981,10 @@ object Form1: TForm1
     Top = 407
     Width = 116
     Height = 116
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 116
     Size.Y = 116
     Position.X = 600
@@ -1997,7 +2001,6 @@ object Form1: TForm1
     Drawing.ColorBrush = -256
     Drawing.PenSize = 4.000000000000000000
     Proportional = True
-    PaddingFill.Around = 10
     TabOrder = 42
   end
   object FXPopupMenu1: FXPopupMenu
