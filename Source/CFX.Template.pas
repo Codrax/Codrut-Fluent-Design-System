@@ -3,17 +3,17 @@ unit CFX.Template;
 interface
 
 uses
-  Classes,
-  Messages,
-  Windows,
+  Winapi.Messages,
+  Winapi.Windows,
+  System.Classes,
+  System.Types,
   Vcl.Controls,
   Vcl.Graphics,
   Vcl.ExtCtrls,
-  Types,
   CFX.Colors,
   CFX.ThemeManager,
   CFX.Graphics,
-  CFX.UIConsts,
+  CFX.constants,
   SysUtils,
   CFX.Classes,
   CFX.Types,

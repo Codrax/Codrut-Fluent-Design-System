@@ -38,7 +38,7 @@ interface
     FXDetailType = (None, Underline, Outline);
 
     // FXPanel
-    FXBackgroundColor = FXColorType.Background..FXColorType.Content;
+    FXBackgroundColor = (Background, Content);
 
     // FXButton
     FXButtonKind = (Normal, Accent, Toggle, FlatToggle, Dropdown, Link, Flat);

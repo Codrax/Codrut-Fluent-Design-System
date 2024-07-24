@@ -101,7 +101,7 @@ type
 
   published
     property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
-    property BackgroundColor: FXBackgroundColor read FBackground write SetBackground default FXColorType.Background;
+    property BackgroundColor: FXBackgroundColor read FBackground write SetBackground default FXBackgroundColor.Background;
 
     property AnimateScroll: boolean read FAnimation write FAnimation;
     property ScrollExtendX: integer read FExtendX write SetExtX default 0;
@@ -205,8 +205,8 @@ end;
 function FXScrollBox.Background: TColor;
 begin
   case FBackground of
-    FXColorType.Background: Result := FDrawColors.BackGround;
-    FXColorType.Content: Result := FDrawColors.BackGroundInterior;
+    FXBackgroundColor.Background: Result := FDrawColors.BackGround;
+    FXBackgroundColor.Content: Result := FDrawColors.BackGroundInterior;
     else
       Result := 0;
   end;
@@ -479,7 +479,7 @@ begin
     end;
 
   // Update
-  if FBackground = FXColorType.Background then
+  if FBackground = FXBackgroundColor.Background then
     Color := FDrawColors.BackGround
   else
     Color := FDrawColors.BackGroundInterior;

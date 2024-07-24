@@ -96,9 +96,6 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FXAppManager1UpdateChecked(Sender: TObject);
     procedure FXPaintBox1Draw(Sender: TObject);
-    procedure FXButton17Click(Sender: TObject);
-    procedure FXLinearControlList1BeforeDrawItem(Sender: TObject;
-      AIndex: Integer; ARect: TRect; Canvas: TCanvas);
   private
     { Private declarations }
     procedure FormMove(Sender: TObject);
@@ -214,21 +211,6 @@ begin
     finally
       //Free;
     end;
-end;
-
-procedure TForm1.FXButton17Click(Sender: TObject);
-begin
-  with FXButton(Sender) do begin
-    FXLinearControlList1.AddControlToItem(FXButton(Sender));
-    FXLinearControlList1.AddControlToItem(FXAnimatedTextBox1);
-    FXAnimatedTextBox1.Left := 0;
-    FXAnimatedTextBox1.Top := 0;
-
-    Align := alLeft;
-
-    Top := 30;
-    Left := 10;
-  end;
 end;
 
 procedure TForm1.FXButton4Click(Sender: TObject);
@@ -531,12 +513,6 @@ begin
     finally
       Free;
     end;
-end;
-
-procedure TForm1.FXLinearControlList1BeforeDrawItem(Sender: TObject;
-  AIndex: Integer; ARect: TRect; Canvas: TCanvas);
-begin
-  FXButton18.Text := 'Button number '+AIndex.ToString
 end;
 
 procedure TForm1.FXPaintBox1Draw(Sender: TObject);

@@ -78,6 +78,7 @@ type
     FDetail: FXDetailType;
     FShowText: boolean;
     FArrowOffset: integer;
+    FAutomaticCheck: boolean;
 
     //  Internal
     procedure UpdateColors;
@@ -166,6 +167,7 @@ type
     property Animation: boolean read FAnimation write FAnimation default true;
     property Detail: FXDetailType read FDetail write SetDetail default FXDetailType.None;
     property LineWidth: real read FLineWidth write SetLineWidth;
+    property AutomaticCheck: boolean read FAutomaticCheck write FAutomaticCheck default true;
 
     property StateText: string read FStateText write SetStateText;
     property StateImage: FXIconSelect read FStateImage write SetStateImage;
@@ -990,6 +992,7 @@ begin
   FAnimationRunning := false;
 
   FAutomaticMouseCursor := true;
+  FAutomaticCheck := true;
   FButtonKind := FXButtonKind.Normal;
   FImageLayout := FXDrawLayout.Left;
   FHorizLayout := FXLayout.Center;
@@ -1072,7 +1075,8 @@ begin
   case ButtonKind of
     FXButtonKind.Toggle, FXButtonKind.FlatToggle:
       begin
-        Checked := not Checked;
+        if AutomaticCheck then
+          Checked := not Checked;
 
         UpdateColors;
         Invalidate;
