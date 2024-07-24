@@ -26,7 +26,7 @@ uses
   CFX.Files,
   CFX.Messages,
   CFX.Colors,
-  CFX.UIConsts,
+  CFX.Constants,
   CFX.Types,
   CFX.Controls,
   CFX.Linker,

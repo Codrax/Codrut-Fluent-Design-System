@@ -1,7 +1,7 @@
 unit CFX.RegisterClass;
 
 interface
-  uses Classes, CFX.Classes, CFX.UIConsts, CFX.Controls,
+  uses Classes, CFX.Classes, CFX.Constants, CFX.Controls,
        CFX.Button, CFX.ButtonDesign, CFX.Checkbox, CFX.Panels,
        CFX.StandardIcons, CFX.Slider, CFX.BlurMaterial, CFX.PopupMenu,
        CFX.ImageList, CFX.TextBox, CFX.RadioButton, CFX.Scrollbar,

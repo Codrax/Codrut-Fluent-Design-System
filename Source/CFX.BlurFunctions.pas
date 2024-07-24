@@ -2,7 +2,7 @@ unit CFX.BlurFunctions;
 
 interface
 uses
-  UITypes, Types, CFX.UIConsts, VCl.GraphUtil, Winapi.Windows,
+  UITypes, Types, CFX.Constants, VCl.GraphUtil, Winapi.Windows,
   Classes, Vcl.Themes, Vcl.Controls, Vcl.Graphics,
   SysUtils, CFX.VarHelpers;
 

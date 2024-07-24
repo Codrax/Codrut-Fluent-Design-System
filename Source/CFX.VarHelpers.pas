@@ -19,7 +19,7 @@ interface
   uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, IdHTTP,
   VCL.Graphics, Winapi.ActiveX, Winapi.URLMon, IOUtils, System.Generics.Collections,
-  System.Generics.Defaults, Vcl.Imaging.pngimage, CFX.UIConsts,
+  System.Generics.Defaults, Vcl.Imaging.pngimage, CFX.Constants,
   WinApi.GdipObj, WinApi.GdipApi, Win.Registry, CFX.GDI, CFX.Types,
   Vcl.ExtCtrls, UITypes;
 

@@ -174,7 +174,7 @@
         <DCCReference Include="Source\CFX.AnimColection.pas"/>
         <DCCReference Include="Source\CFX.Animations.pas"/>
         <DCCReference Include="Source\CFX.Graphics.pas"/>
-        <DCCReference Include="Source\CFX.UIConsts.pas"/>
+        <DCCReference Include="Source\CFX.Constants.pas"/>
         <DCCReference Include="Source\CFX.Utilities.pas"/>
         <DCCReference Include="Source\CFX.Dialogs.pas"/>
         <DCCReference Include="Source\CFX.ThemeManager.pas"/>

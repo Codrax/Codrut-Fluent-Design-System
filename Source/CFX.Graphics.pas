@@ -5,7 +5,7 @@ interface
 uses
   UITypes,
   Types,
-  CFX.UIConsts,
+  CFX.Constants,
   Vcl.GraphUtil,
   Winapi.Windows,
   Classes,

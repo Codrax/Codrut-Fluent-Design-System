@@ -2,7 +2,7 @@ unit CFX.Hint;
 
 interface
 uses
-  Classes, Types, Windows, Messages, Vcl.Controls, Vcl.Graphics, CFX.UIConsts,
+  Classes, Types, Windows, Messages, Vcl.Controls, Vcl.Graphics, CFX.Constants,
   SysUtils, CFX.ThemeManager, CFX.Colors, CFX.Graphics, CFX.ToolTip,
   Vcl.ExtCtrls;
 

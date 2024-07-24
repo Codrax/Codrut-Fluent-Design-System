@@ -6,7 +6,7 @@ interface
   uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   System.Types, IdSNTP, Registry, DateUtils, IdHTTP, Math, JSON, IdSSLOpenSSL,
-  CFX.Math, CFX.UIConsts;
+  CFX.Math, CFX.Constants;
 
   type
     FXVersion = record
@@ -25,7 +25,7 @@ interface
       procedure Parse(From: string);
       procedure NetworkLoad(URL: string);
       procedure HtmlLoad(URL: string);
-      procedure APILoad(AppName: string; Endpoint: string = 'https://api.codrutsoft.com/'); overload;
+      procedure APILoad(AppName: string; Endpoint: string = DEFAULT_API); overload;
       procedure APILoad(AppName: string; Current: FXVersion; Endpoint: string = DEFAULT_API); overload;
 
       // Comparation

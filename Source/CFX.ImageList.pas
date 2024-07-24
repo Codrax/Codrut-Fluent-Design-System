@@ -24,7 +24,7 @@ uses
   CFX.ThemeManager,
   CFX.BlurMaterial,
   CFX.Classes,
-  CFX.UIConsts,
+  CFX.Constants,
   CFX.Colors,
   CFX.Math,
   CFX.GDI,

@@ -2,7 +2,7 @@ unit CFX.ToolTip;
 
 interface
 uses
-  Classes, Types, Windows, Messages, Vcl.Controls, Vcl.Graphics, CFX.UIConsts,
+  Classes, Types, Windows, Messages, Vcl.Controls, Vcl.Graphics, CFX.Constants,
   CFX.ThemeManager, CFX.Colors, CFX.Graphics;
 
 type

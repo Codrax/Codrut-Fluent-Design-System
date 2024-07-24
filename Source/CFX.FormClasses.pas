@@ -8,7 +8,7 @@ uses
   Types,
   Vcl.Clipbrd,
   CFX.Types,
-  CFX.UIConsts,
+  CFX.Constants,
   SysUtils,
   CFX.Colors,
   Vcl.Forms,

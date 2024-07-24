@@ -21,7 +21,7 @@ uses
   CFX.Animation.Component,
   CFX.ThemeManager,
   CFX.Graphics,
-  CFX.UIConsts,
+  CFX.Constants,
   CFX.Scrollbar,
   SysUtils,
   CFX.Classes,

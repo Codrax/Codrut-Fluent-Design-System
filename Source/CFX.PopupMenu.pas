@@ -23,7 +23,7 @@ uses
   CFX.Utilities,
   CFX.ThemeManager,
   CFX.Classes,
-  CFX.UIConsts,
+  CFX.Constants,
   CFX.Colors,
   CFX.Math,
   CFX.GDI,

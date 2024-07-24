@@ -17,7 +17,7 @@ uses
   Vcl.Dialogs,
   CFX.ThemeManager,
   CFX.Graphics,
-  CFX.UIConsts,
+  CFX.Constants,
   SysUtils,
   CFX.Classes,
   CFX.Types,

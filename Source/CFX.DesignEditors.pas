@@ -17,7 +17,8 @@ unit CFX.DesignEditors;
 
 interface
 uses
-  System.Types, System.SysUtils, System.Classes, Winapi.ActiveX, System.TypInfo, System.Variants, DesignIntf, DesignMenus,
+  System.Types, System.SysUtils, System.Classes, Winapi.ActiveX,
+  System.TypInfo, System.Variants, DesignIntf, DesignMenus,
   ToolsAPI, DesignEditors;
 
 type
@@ -791,3 +792,4 @@ begin
   Result := GetPropType.Kind;
 end;
 end.
+

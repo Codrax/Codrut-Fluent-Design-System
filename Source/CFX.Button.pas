@@ -17,7 +17,7 @@ uses
   CFX.VarHelpers,
   CFX.ThemeManager,
   CFX.Graphics,
-  CFX.UIConsts,
+  CFX.Constants,
   SysUtils,
   CFX.Utilities,
   CFX.Classes,

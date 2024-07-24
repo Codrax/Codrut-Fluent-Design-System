@@ -16,7 +16,7 @@ uses
   CFX.Colors,
   CFX.Graphics,
   CFX.ThemeManager,
-  CFX.UIConsts,
+  CFX.Constants,
   CFX.Linker,
   CFX.VarHelpers,
   UITypes,

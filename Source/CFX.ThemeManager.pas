@@ -20,7 +20,7 @@ uses
   Classes,
   Vcl.Themes,
   Vcl.Styles,
-  CFX.UIConsts,
+  CFX.Constants,
   CFX.Types,
   CFX.UXTheme,
   DateUtils,

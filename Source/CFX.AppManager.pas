@@ -24,7 +24,7 @@ uses
   ShellAPI,
   CFX.QuickDialogs,
   CFX.Utilities,
-  CFX.UIConsts,
+  CFX.Constants,
   CFX.Types,
   Vcl.Controls,
   IniFiles,

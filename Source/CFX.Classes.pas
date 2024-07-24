@@ -2,7 +2,7 @@ unit CFX.Classes;
 
 interface
 uses
-  Vcl.Graphics, Classes, Types, CFX.Types, CFX.UIConsts, SysUtils,
+  Vcl.Graphics, Classes, Types, CFX.Types, CFX.Constants, SysUtils,
   CFX.Graphics, CFX.VarHelpers, CFX.ThemeManager, Vcl.Controls,
   TypInfo, CFX.Linker, CFX.Colors;
 

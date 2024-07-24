@@ -12,7 +12,7 @@ uses
   Vcl.Graphics,
   Vcl.ExtCtrls,
   CFX.Colors,
-  CFX.UIConsts,
+  CFX.Constants,
   CFX.Classes,
   CFX.Types,
   CFX.Animations,

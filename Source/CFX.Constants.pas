@@ -1,4 +1,4 @@
-unit CFX.UIConsts;
+unit CFX.Constants;
 
 interface
 

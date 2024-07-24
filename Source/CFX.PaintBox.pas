@@ -12,7 +12,7 @@ uses
   CFX.VarHelpers,
   CFX.ThemeManager,
   CFX.Colors,
-  CFX.UIConsts,
+  CFX.Constants,
   CFX.Controls,
   CFX.Linker;
 

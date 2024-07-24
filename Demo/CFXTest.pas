@@ -10,7 +10,7 @@ uses
   CFX.Forms, CFX.Colors, CFX.ThemeManager, Vcl.StdCtrls, Vcl.TitleBarCtrls,
   Vcl.ExtCtrls, Vcl.Imaging.jpeg, CFX.ButtonDesign, CFX.Checkbox, CFX.Panels,
   CFX.StandardIcons, CFX.Dialogs, CFX.BlurMaterial, CFX.Selector,
-  CFX.Classes, CFX.PopupMenu, CFX.UIConsts, CFX.Types, CFX.ToolTip, CFX.Hint,
+  CFX.Classes, CFX.PopupMenu, CFX.Constants, CFX.Types, CFX.ToolTip, CFX.Hint,
   CFX.Slider, CFX.ImageList, CFX.Controls, CFX.Test, CFX.TextBox, CFX.RadioButton,
   CFX.Scrollbar, CFX.ScrollBox, CFX.Edit, Cod.Graphics, CFX.Button,
   CFX.PopupConnector, Vcl.Buttons, CFX.IconView, CFX.ScrollText, CFX.FormClasses,
@@ -21,7 +21,7 @@ uses
   // VCL COMPONENTS
   Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage, Vcl.ControlList,
   Vcl.ExtDlgs, System.ImageList, UITypes, Vcl.ComCtrls, Vcl.Mask,
-  UxTheme, Vcl.Themes, System.Generics.Collections;
+  Vcl.Themes, System.Generics.Collections;
 
 type
   TForm1 = class(FXForm)
@@ -81,7 +81,6 @@ type
     FXTextBox1: FXTextBox;
     FXAppManager1: FXAppManager;
     FXTabStrip1: FXTabStrip;
-    FXButton17: FXButton;
     procedure FXButton4Click(Sender: TObject);
     procedure FXButtonDesign3Click(Sender: TObject);
     procedure FXButton5Click(Sender: TObject);

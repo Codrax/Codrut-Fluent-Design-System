@@ -14,7 +14,7 @@ uses
   Messages,
   CFX.ThemeManager,
   CFX.Colors,
-  CFX.UIConsts,
+  CFX.Constants,
   Vcl.TitleBarCtrls,
   CFX.Animations,
   CFX.Utilities,
