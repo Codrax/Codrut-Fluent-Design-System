@@ -1,8 +1,8 @@
 # Codrut-Fluent-Design-System
 Codrut Fluent Design System is a suite of components made to mimic the Interface of Windows 11, the Fluent Design System, This is not to be confused with CodrutsVisualLibrary, as that is ajust a suite of independent components
 
-## Notice: Under Construction!!!
-The component package is not at a state where it can be considered finished without encountering bugs. This package is still in its **Alpha** Stage.
+## Notice: Under Construction!!
+The component package is not at a state where it can be considered finished without encountering bugs. This package has advanced to Its **Alpha** Stage.
 
 ## Components
 - Minimise Panel, a Panel that is able to minimise itself with a optional animation, works best with DoubleBuffered and for more panels, use Align.alTop
@@ -30,9 +30,45 @@ The component package is not at a state where it can be considered finished with
  - Codrut Printing - https://github.com/Codrax/Codrut-Printing
  - File Sync Manager - (work in progress)
 
+## Creatng a CFX Visual Application
+1) Create a new VCL Application in Delphi
+<img src="https://github.com/user-attachments/assets/56ffe547-242d-49c9-a9b0-daa59dff726d" width="300">
+
+2) Include all required Unit Files
+The required unit files are:
+`CFX.Forms`, `CFX.Types`, `CFX.ThemeManager`, `CFX.Colors` and `CFX.Classes`
+
+3) Change Main Form class to FXForm
+<img src="https://github.com/user-attachments/assets/f5e8e3a3-f6dc-4beb-91ca-7bfb9b9decc4" width="300">
+
+4) Place some components
+You can add any components from the Palette. They are grouped under `CFX Main`, `CFX.Shapes`, `CFX Animations` and `CFX Utils`.
+
+5) Adding the Application Manager (`FXAppManager`) from `CFX Utils`
+The App Manager is an optional feature for your application that automatically creates a AppData directory for your application and saves the location on screen where the form was closed, and re-loads that on startup. It can also start an automatic update check for you sending a POST request to the APIEndpoint provided provided under the following format:
+```
+{
+ "mode":"getversion",
+ "app":"app-api-name"
+}
+```
+And It expects a result in the format of
+```
+{
+ "version":"1.0.0",
+ "updateurl":"https://server.com/download-file.exe" // optional
+{
+```
+
+7) Include additional units (optional)
+Some of the most usefull units to use are:
+- `CFX.Dialogs`, For dialogs and the classes for each type
+- `CFX.QuickDialogs`, For executing a quick dialog, with procedures as `OpenMessage()` or `OpenDialog()` or `OpenInput()`
+- `CFX.FormClasses`, This unit contains all classes for Full-Screen dialogs. Such as confirmations, status
 
 ## Image Gallery
 > The following images are ALPHA versions of the component suite, the components are expected to change in the future.
+
 ![Screenshot 2023-09-25 210750](https://github.com/Codrax/CodrutFluentDesignSystem/assets/68193064/7df7f666-a793-4b96-bb77-b3ab9a0fe7c0)
 ![Screenshot 2023-07-25 103550](https://github.com/Codrax/CodrutFluentDesignSystem/assets/68193064/d5245fdc-d226-40df-8d70-424012c3326c)
 ![ezgif com-video-to-gif(1)](https://github.com/Codrax/CodrutFluentDesignSystem/assets/68193064/8a3b3378-2c76-4baf-a1c2-84fa1748dc93)
