@@ -27,7 +27,7 @@ begin
   RegisterComponents(REGISTER_CLASS_NAME, [FXTabStrip]);
   RegisterComponents(REGISTER_CLASS_NAME, [FXBlurMaterial]);
 
-  RegisterComponents(REGISTER_CLASS_NAME, [FXLinearDrawList]);
+  RegisterComponents(REGISTER_CLASS_NAME, [FXLinearDrawList, FXLinearControlList]);
 
   RegisterComponents(REGISTER_CLASS_NAME, [FXTextBox, FXValueTextBox, FXAnimatedTextBox]);
 
@@ -42,7 +42,7 @@ begin
   RegisterComponents(REGISTER_CLASS_NAME, [FXRatingControl]);
 
   // Shapes
-  RegisterComponents(REGISTER_CLASS_SHAPES, [FXShapeSquare, FXShapeCircle, FXShapeTriangle]);
+  RegisterComponents(REGISTER_CLASS_SHAPES, [FXShapeSquare, FXShapeCircle, FXShapeTriangle, FXShapeTriangleCorner]);
 
   // Effects
   RegisterComponents(REGISTER_CLASS_EFFECTS_NAME, [FXBlurEffect,

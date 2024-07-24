@@ -26,263 +26,263 @@ uses
 
 type
   FXCustomEdit = class(FXWindowsControl, FXControl)
-    private
-      var DrawRect, LineRect, TxtRect: TRect;
-      FCustomColors: FXCompleteColorSets;
-      FCustomEditColors: FXSingleColorStateSets;
-      FEditColors: FXSingleColorStateSet;
-      FDrawColors: FXCompleteColorSet;
-      FHandleUpDown: boolean;
-      FLineSize: integer;
-      FAutoSize: boolean;
-      FText: string;
-      FCutPosition,
-      FPosition,
-      FDrawPosition: integer;
-      FSelLength: integer;
-      FIndicatorWidth: integer;
-      FReadOnly: boolean;
-      FRoundness: integer;
-      FLineColor: TColor;
-      FLayout: FXLayout;
-      FLayoutHoriz: FXLayout;
-      FSelGoesLeft: boolean;
-      FDownStart: integer;
-      LastShiftState: TShiftState;
-      FHistory: TStringList;
-      FDefaultMenu: FXPopupMenu;
-      FTextMarginX: integer;
-      FTextMarginY: integer;
-      FPassChar: char;
-      FCanUndo: boolean;
-      FEnableSelection: boolean;
-      FCharCase: FXCharCase;
-      FNumbersOnly: boolean;
-      FClearSelOnExit: boolean;
-      FOnChange: TNotifyEvent;
-      FOnChangeValue: TNotifyEvent;
-      FTextHint: string;
-      FDetail: FXDetailType;
+  private
+    var DrawRect, LineRect, TxtRect: TRect;
+    FCustomColors: FXCompleteColorSets;
+    FCustomEditColors: FXSingleColorStateSets;
+    FEditColors: FXSingleColorStateSet;
+    FDrawColors: FXCompleteColorSet;
+    FHandleUpDown: boolean;
+    FLineSize: integer;
+    FAutoSize: boolean;
+    FText: string;
+    FCutPosition,
+    FPosition,
+    FDrawPosition: integer;
+    FSelLength: integer;
+    FIndicatorWidth: integer;
+    FReadOnly: boolean;
+    FRoundness: integer;
+    FLineColor: TColor;
+    FLayout: FXLayout;
+    FLayoutHoriz: FXLayout;
+    FSelGoesLeft: boolean;
+    FDownStart: integer;
+    LastShiftState: TShiftState;
+    FHistory: TStringList;
+    FDefaultMenu: FXPopupMenu;
+    FTextMarginX: integer;
+    FTextMarginY: integer;
+    FPassChar: char;
+    FCanUndo: boolean;
+    FEnableSelection: boolean;
+    FCharCase: FXCharCase;
+    FNumbersOnly: boolean;
+    FClearSelOnExit: boolean;
+    FOnChange: TNotifyEvent;
+    FOnChangeValue: TNotifyEvent;
+    FTextHint: string;
+    FDetail: FXDetailType;
 
-      //  Internal
-      procedure UpdateColors;
-      procedure UpdateRects;
+    //  Internal
+    procedure UpdateColors;
+    procedure UpdateRects;
 
-      // Canvas
-      function TextW(AText: string): integer;
-      function TextH(AText: string): integer;
+    // Canvas
+    function TextW(AText: string): integer;
+    function TextH(AText: string): integer;
 
-      // Handle Messages
-      procedure WM_LButtonDown(var Msg: TWMMouse); message WM_LBUTTONDOWN;
-      procedure WMSize(var Message: TWMSize); message WM_SIZE;
+    // Handle Messages
+    procedure WM_LButtonDown(var Msg: TWMMouse); message WM_LBUTTONDOWN;
+    procedure WMSize(var Message: TWMSize); message WM_SIZE;
 
-      // Data
-      procedure UpdateAutoSize;
-      procedure UpdateLine;
-      procedure UpdateDrawPosition;
+    // Data
+    procedure UpdateAutoSize;
+    procedure UpdateLine;
+    procedure UpdateDrawPosition;
 
-      // Menu
-      procedure PrepDefaultMenu;
-      procedure PopupBeforePopup(Sender: TObject; var CanPopup: boolean; Point: TPoint);
-      procedure PopupItemClick(Sender: TObject; Item: FXPopupComponent; Index: integer);
+    // Menu
+    procedure PrepDefaultMenu;
+    procedure PopupBeforePopup(Sender: TObject; var CanPopup: boolean; Point: TPoint);
+    procedure PopupItemClick(Sender: TObject; Item: FXPopupComponent; Index: integer);
 
-      // Text
-      procedure ChangeText(AText: string);
-      procedure DeleteChar(Index: integer);
+    // Text
+    procedure ChangeText(AText: string);
+    procedure DeleteChar(Index: integer);
 
-      procedure ScrollForCursor; overload;
-      procedure ScrollForCursor(ADrawPosition: integer); overload;
+    procedure ScrollForCursor; overload;
+    procedure ScrollForCursor(ADrawPosition: integer); overload;
 
-      function SearchPosition(AX: integer): integer;
-      function FindNext(From: integer; GoesLeft: boolean = false): integer;
-      procedure SelectPoints(P1, P2: integer);
+    function SearchPosition(AX: integer): integer;
+    function FindNext(From: integer; GoesLeft: boolean = false): integer;
+    procedure SelectPoints(P1, P2: integer);
 
-      procedure ApplyCharCase;
-      function DrawText: string;
+    procedure ApplyCharCase;
+    function DrawText: string;
 
-      // Getter
-      function GetValue: int64;
+    // Getter
+    function GetValue: int64;
 
-      // Setters
-      procedure SetText(const Value: string);
-      procedure SetAutoSizing(const Value: boolean);
-      procedure SetLineSize(const Value: integer);
-      procedure SetRoundness(const Value: integer);
-      procedure SetPosition(const Value: integer);
-      procedure SetLayout(const Value: FXLayout);
-      procedure SetSelLength(const Value: integer);
-      procedure SetPasswordChar(const Value: char);
-      procedure SetCanUndo(const Value: boolean);
-      procedure SetEnableSelection(const Value: boolean);
-      procedure SetCharCase(const Value: FXCharCase);
-      procedure SetNumbersOnly(const Value: boolean);
-      procedure SetValue(const Value: int64);
-      procedure SetLayoutHoriz(const Value: FXLayout);
-      procedure SetTextHint(const Value: string);
-      procedure SetDetail(const Value: FXDetailType);
-      procedure SetTextMarginX(const Value: integer);
-      procedure SetTextMarginY(const Value: integer);
+    // Setters
+    procedure SetText(const Value: string);
+    procedure SetAutoSizing(const Value: boolean);
+    procedure SetLineSize(const Value: integer);
+    procedure SetRoundness(const Value: integer);
+    procedure SetPosition(const Value: integer);
+    procedure SetLayout(const Value: FXLayout);
+    procedure SetSelLength(const Value: integer);
+    procedure SetPasswordChar(const Value: char);
+    procedure SetCanUndo(const Value: boolean);
+    procedure SetEnableSelection(const Value: boolean);
+    procedure SetCharCase(const Value: FXCharCase);
+    procedure SetNumbersOnly(const Value: boolean);
+    procedure SetValue(const Value: int64);
+    procedure SetLayoutHoriz(const Value: FXLayout);
+    procedure SetTextHint(const Value: string);
+    procedure SetDetail(const Value: FXDetailType);
+    procedure SetTextMarginX(const Value: integer);
+    procedure SetTextMarginY(const Value: integer);
 
-    protected
-      procedure PaintBuffer; override;
-      procedure Resize; override;
-      procedure ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF}); override;
+  protected
+    procedure PaintBuffer; override;
+    procedure Resize; override;
+    procedure ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF}); override;
 
-      function CanEdit: boolean;
+    function CanEdit: boolean;
 
-      // State
-      procedure InteractionStateChanged(AState: FXControlState); override;
+    // State
+    procedure InteractionStateChanged(AState: FXControlState); override;
 
-      // Font
-      procedure FontUpdate; override;
+    // Font
+    procedure FontUpdate; override;
 
-      // Key Presses
-      procedure HandleKeyDown(var CanHandle: boolean; Key: integer; ShiftState: TShiftState); override;
-      procedure KeyPress(var Key: Char); override;
+    // Key Presses
+    procedure HandleKeyDown(var CanHandle: boolean; Key: integer; ShiftState: TShiftState); override;
+    procedure KeyPress(var Key: Char); override;
 
-      // Mouse
-      procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
-      procedure DblClick; override;
+    // Mouse
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    procedure DblClick; override;
 
-      // Inherited
-      procedure ComponentCreated; override;
-      procedure Loaded; override;
-      procedure OpenPopupMenu(X, Y: integer); override;
-      procedure DoEnter; override;
-      procedure DoExit; override;
+    // Inherited
+    procedure ComponentCreated; override;
+    procedure Loaded; override;
+    procedure OpenPopupMenu(X, Y: integer); override;
+    procedure DoEnter; override;
+    procedure DoExit; override;
 
-      // Text
-      property Text: string read FText write SetText;
-      property PasswordChar: char read FPassChar write SetPasswordChar;
+    // Text
+    property Text: string read FText write SetText;
+    property PasswordChar: char read FPassChar write SetPasswordChar;
 
-      property Value: int64 read GetValue write SetValue;
+    property Value: int64 read GetValue write SetValue;
 
-      property Position: integer read FPosition write SetPosition;
-      property SelectionLength: integer read FSelLength write SetSelLength;
-      property Layout: FXLayout read FLayout write SetLayout default FXLayout.Center;
-      property LayoutHorizontal: FXLayout read FLayoutHoriz write SetLayoutHoriz default FXLayout.Beginning;
+    property Position: integer read FPosition write SetPosition;
+    property SelectionLength: integer read FSelLength write SetSelLength;
+    property Layout: FXLayout read FLayout write SetLayout default FXLayout.Center;
+    property LayoutHorizontal: FXLayout read FLayoutHoriz write SetLayoutHoriz default FXLayout.Beginning;
 
-      // Settings
-      property TextHint: string read FTextHint write SetTextHint;
-      property ClearSelectionOnExit: boolean read FClearSelOnExit write FClearSelOnExit default true;
-      property CanUndo: boolean read FCanUndo write SetCanUndo default true;
-      property CharCase: FXCharCase read FCharCase write SetCharCase default FXCharCase.Both;
-      property NumbersOnly: boolean read FNumbersOnly write SetNumbersOnly default false;
-      property ReadOnly: boolean read FReadOnly write FReadOnly;
-      property EnableSelection: boolean read FEnableSelection write SetEnableSelection default true;
-      property AutoSize: boolean read FAutoSize write SetAutoSizing default true;
-      property LineSize: integer read FLineSize write SetLineSize default EDIT_LINE_SIZE;
-      property Roundness: integer read FRoundness write SetRoundness default EDIT_BORDER_ROUND;
-      property TextMarginX: integer read FTextMarginX write SetTextMarginX;
-      property TextMarginY: integer read FTextMarginY write SetTextMarginY;
-      property Detail: FXDetailType read FDetail write SetDetail default FXDetailType.Underline;
+    // Settings
+    property TextHint: string read FTextHint write SetTextHint;
+    property ClearSelectionOnExit: boolean read FClearSelOnExit write FClearSelOnExit default true;
+    property CanUndo: boolean read FCanUndo write SetCanUndo default true;
+    property CharCase: FXCharCase read FCharCase write SetCharCase default FXCharCase.Both;
+    property NumbersOnly: boolean read FNumbersOnly write SetNumbersOnly default false;
+    property ReadOnly: boolean read FReadOnly write FReadOnly;
+    property EnableSelection: boolean read FEnableSelection write SetEnableSelection default true;
+    property AutoSize: boolean read FAutoSize write SetAutoSizing default true;
+    property LineSize: integer read FLineSize write SetLineSize default EDIT_LINE_SIZE;
+    property Roundness: integer read FRoundness write SetRoundness default EDIT_BORDER_ROUND;
+    property TextMarginX: integer read FTextMarginX write SetTextMarginX;
+    property TextMarginY: integer read FTextMarginY write SetTextMarginY;
+    property Detail: FXDetailType read FDetail write SetDetail default FXDetailType.Underline;
 
-    published
-      // Text
-      function SelectionStart: integer;
-      function SelectionEnd: integer;
-      function Selection: string;
-      function TextLength: integer;
-      function HasSelection: boolean;
+  published
+    // Text
+    function SelectionStart: integer;
+    function SelectionEnd: integer;
+    function Selection: string;
+    function TextLength: integer;
+    function HasSelection: boolean;
 
-      function ExtendsBounds: boolean;
-      procedure ClearSelection;
-      procedure DeleteSelection;
-      procedure SelectAll;
-      procedure Clear;
+    function ExtendsBounds: boolean;
+    procedure ClearSelection;
+    procedure DeleteSelection;
+    procedure SelectAll;
+    procedure Clear;
 
-      procedure Undo;
+    procedure Undo;
 
-      procedure CopyToClipBoard;
-      procedure CutToClipBoard;
-      procedure PasteFromClipBoard;
+    procedure CopyToClipBoard;
+    procedure CutToClipBoard;
+    procedure PasteFromClipBoard;
 
-      // Custom Colors
-      property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
-      property CustomEditColors: FXSingleColorStateSets read FCustomEditColors write FCustomEditColors;
+    // Custom Colors
+    property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
+    property CustomEditColors: FXSingleColorStateSets read FCustomEditColors write FCustomEditColors;
 
-      // Other
-      property HandleUpDown: boolean read FHandleUpDown write FHandleUpDown default true;
+    // Other
+    property HandleUpDown: boolean read FHandleUpDown write FHandleUpDown default true;
 
-      // Events
-      property OnChange: TNotifyEvent read FOnChange write FOnChange;
-      property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
+    // Events
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
 
-      // Inherited properties
-      property Cursor default crIBeam;
-      property Align;
-      property Font;
-      property Transparent;
-      property Opacity;
-      property PaddingFill;
-      property Constraints;
-      property Anchors;
-      property Hint;
-      property ShowHint;
-      property TabStop;
-      property TabOrder;
-      property FocusFlags;
-      property DragKind;
-      property DragCursor;
-      property DragMode;
-      property OnDragDrop;
-      property OnDragOver;
-      property OnEndDrag;
-      property OnStartDrag;
-      property OnEnter;
-      property OnExit;
-      property OnClick;
-      property OnKeyDown;
-      property OnKeyUp;
-      property OnKeyPress;
-      property OnMouseUp;
-      property OnMouseDown;
-      property OnMouseEnter;
-      property OnMouseLeave;
+    // Inherited properties
+    property Cursor default crIBeam;
+    property Align;
+    property Font;
+    property Transparent;
+    property Opacity;
+    property PaddingFill;
+    property Constraints;
+    property Anchors;
+    property Hint;
+    property ShowHint;
+    property TabStop;
+    property TabOrder;
+    property FocusFlags;
+    property DragKind;
+    property DragCursor;
+    property DragMode;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDrag;
+    property OnStartDrag;
+    property OnEnter;
+    property OnExit;
+    property OnClick;
+    property OnKeyDown;
+    property OnKeyUp;
+    property OnKeyPress;
+    property OnMouseUp;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
 
-      //  Modify default props
-      property ParentColor default true;
+    //  Modify default props
+    property ParentColor default true;
 
-    public
-      constructor Create(aOwner: TComponent); override;
-      destructor Destroy; override;
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
 
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChildren: Boolean);
+    // Interface
+    function IsContainer: Boolean;
+    procedure UpdateTheme(const UpdateChildren: Boolean);
 
-      function Background: TColor;
+    function Background: TColor;
   end;
 
   FXEdit = class(FXCustomEdit)
-    published
-      property Text;
-      property PasswordChar;
+  published
+    property Text;
+    property PasswordChar;
 
-      property Value;
+    property Value;
 
-      property Position;
-      property SelectionLength;
-      property Layout default FXLayout.Center;
-      property LayoutHorizontal default FXLayout.Beginning;
+    property Position;
+    property SelectionLength;
+    property Layout default FXLayout.Center;
+    property LayoutHorizontal default FXLayout.Beginning;
 
-      // Settings
-      property TextHint;
-      property ClearSelectionOnExit;
-      property CanUndo;
-      property CharCase;
-      property NumbersOnly;
-      property ReadOnly;
-      property EnableSelection;
-      property AutoSize;
-      property LineSize;
-      property Roundness;
-      property TextMarginX;
-      property TextMarginY;
-      property Detail;
-    public
-      constructor Create(aOwner: TComponent); override;
-      destructor Destroy; override;
+    // Settings
+    property TextHint;
+    property ClearSelectionOnExit;
+    property CanUndo;
+    property CharCase;
+    property NumbersOnly;
+    property ReadOnly;
+    property EnableSelection;
+    property AutoSize;
+    property LineSize;
+    property Roundness;
+    property TextMarginX;
+    property TextMarginY;
+    property Detail;
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
   end;
 
 implementation

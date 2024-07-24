@@ -20,297 +20,297 @@ uses
   CFX.TypeInfo,
   CFX.Linker;
 
-  type
-    { Color }
-    FXColor = CFX.Types.FXColor;
+type
+  { Color }
+  FXColor = CFX.Types.FXColor;
 
-    { Persistent Color Class }
-    FXPersistentColor = class(TPersistent)
+  { Persistent Color Class }
+  FXPersistentColor = class(TPersistent)
+  private
+    Owner : TPersistent;
+    FEnable: boolean;
+
+    procedure Updated;
+    procedure SetEnabled(const Value: boolean);
+
+  protected
+    property Enabled: boolean read FEnable write SetEnabled;
+
+  public
+    constructor CreateOwner(AOwner : TPersistent); overload; virtual;
+
+    procedure Assign(Source: TPersistent); override;
+  end;
+
+  { Complete Color State Set }
+  FXColorStateSets = class(FXPersistentColor)
     private
-      Owner : TPersistent;
-      FEnable: boolean;
+      FAccent,
+      FLightBackGroundNone,
+      FLightBackGroundHover,
+      FLightBackGroundPress,
+      FLightForeGroundNone,
+      FLightForeGroundHover,
+      FLightForeGroundPress,
+      FDarkBackGroundNone,
+      FDarkBackGroundHover,
+      FDarkBackGroundPress,
+      FDarkForeGroundNone,
+      FDarkForeGroundHover,
+      FDarkForeGroundPress: TColor;
 
-      procedure Updated;
-      procedure SetEnabled(const Value: boolean);
-
-    protected
-      property Enabled: boolean read FEnable write SetEnabled;
+      procedure SetStateColor(const Index: Integer; const Value: TColor);
 
     public
-      constructor CreateOwner(AOwner : TPersistent); overload; virtual;
+      constructor Create; overload;
+      constructor Create(AOwner : TPersistent); overload;
 
-      procedure Assign(Source: TPersistent); override;
-    end;
+      function GetColor(const DarkTheme, Foreground: boolean; State: FXControlState): TColor;
 
-    { Complete Color State Set }
-    FXColorStateSets = class(FXPersistentColor)
-      private
-        FAccent,
-        FLightBackGroundNone,
-        FLightBackGroundHover,
-        FLightBackGroundPress,
-        FLightForeGroundNone,
-        FLightForeGroundHover,
-        FLightForeGroundPress,
-        FDarkBackGroundNone,
-        FDarkBackGroundHover,
-        FDarkBackGroundPress,
-        FDarkForeGroundNone,
-        FDarkForeGroundHover,
-        FDarkForeGroundPress: TColor;
+    published
+      property Enabled;
 
-        procedure SetStateColor(const Index: Integer; const Value: TColor);
+      property Accent: TColor read FAccent write FAccent;
+      property LightBackgroundNone: TColor index 0 read FLightBackGroundNone write SetStateColor;
+      property LightBackgroundHover: TColor index 1 read FLightBackGroundHover write SetStateColor;
+      property LightBackgroundPress: TColor index 2 read FLightBackGroundPress write SetStateColor;
+      property LightForeGroundNone: TColor index 3 read FLightForeGroundNone write SetStateColor;
+      property LightForeGroundHover: TColor index 4 read FLightForeGroundHover write SetStateColor;
+      property LightForeGroundPress: TColor index 5 read FLightForeGroundPress write SetStateColor;
+      property DarkBackGroundNone: TColor index 6 read FDarkBackGroundNone write SetStateColor;
+      property DarkBackGroundHover: TColor index 7 read FDarkBackGroundHover write SetStateColor;
+      property DarkBackGroundPress: TColor index 8 read FDarkBackGroundPress write SetStateColor;
+      property DarkForeGroundNone: TColor index 9 read FDarkForeGroundNone write SetStateColor;
+      property DarkForeGroundHover: TColor index 10 read FDarkForeGroundHover write SetStateColor;
+      property DarkForeGroundPress: TColor index 11 read FDarkForeGroundPress write SetStateColor;
+  end;
 
-      public
-        constructor Create; overload;
-        constructor Create(AOwner : TPersistent); overload;
+  // Color State Set
+  FXColorStateSet = class(FXPersistentColor)
+    private
+      FAccent,
+      FBackGroundNone,
+      FBackGroundHover,
+      FBackGroundPress,
+      FForeGroundNone,
+      FForeGroundHover,
+      FForeGroundPress: TColor;
 
-        function GetColor(const DarkTheme, Foreground: boolean; State: FXControlState): TColor;
+    public
+      constructor Create; overload;
+      constructor Create(AFrom: FXColorStateSets; const DarkColor: boolean); overload;
 
-      published
-        property Enabled;
+      procedure LoadFrom(AFrom: FXColorStateSets; const DarkColor: boolean);
 
-        property Accent: TColor read FAccent write FAccent;
-        property LightBackgroundNone: TColor index 0 read FLightBackGroundNone write SetStateColor;
-        property LightBackgroundHover: TColor index 1 read FLightBackGroundHover write SetStateColor;
-        property LightBackgroundPress: TColor index 2 read FLightBackGroundPress write SetStateColor;
-        property LightForeGroundNone: TColor index 3 read FLightForeGroundNone write SetStateColor;
-        property LightForeGroundHover: TColor index 4 read FLightForeGroundHover write SetStateColor;
-        property LightForeGroundPress: TColor index 5 read FLightForeGroundPress write SetStateColor;
-        property DarkBackGroundNone: TColor index 6 read FDarkBackGroundNone write SetStateColor;
-        property DarkBackGroundHover: TColor index 7 read FDarkBackGroundHover write SetStateColor;
-        property DarkBackGroundPress: TColor index 8 read FDarkBackGroundPress write SetStateColor;
-        property DarkForeGroundNone: TColor index 9 read FDarkForeGroundNone write SetStateColor;
-        property DarkForeGroundHover: TColor index 10 read FDarkForeGroundHover write SetStateColor;
-        property DarkForeGroundPress: TColor index 11 read FDarkForeGroundPress write SetStateColor;
-    end;
+      function GetColor(const Foreground: boolean; State: FXControlState): TColor;
 
-    // Color State Set
-    FXColorStateSet = class(FXPersistentColor)
-      private
-        FAccent,
-        FBackGroundNone,
-        FBackGroundHover,
-        FBackGroundPress,
-        FForeGroundNone,
-        FForeGroundHover,
-        FForeGroundPress: TColor;
+    published
+      property Enabled;
 
-      public
-        constructor Create; overload;
-        constructor Create(AFrom: FXColorStateSets; const DarkColor: boolean); overload;
+      property Accent: TColor read FAccent write FAccent;
+      property BackgroundNone: TColor index 0 read FBackGroundNone write FBackGroundNone;
+      property BackgroundHover: TColor index 1 read FBackGroundHover write FBackGroundHover;
+      property BackgroundPress: TColor index 2 read FBackGroundPress write FBackGroundPress;
+      property ForeGroundNone: TColor index 3 read FForeGroundNone write FForeGroundNone;
+      property ForeGroundHover: TColor index 4 read FForeGroundHover write FForeGroundHover;
+      property ForeGroundPress: TColor index 5 read FForeGroundPress write FForeGroundPress;
+  end;
 
-        procedure LoadFrom(AFrom: FXColorStateSets; const DarkColor: boolean);
+  { Color State Sets }
+  FXSingleColorStateSets = class(FXPersistentColor)
+    private
+      FAccent,
+      FLightNone,
+      FLightHover,
+      FLightPress,
+      FDarkNone,
+      FDarkHover,
+      FDarkPress: TColor;
 
-        function GetColor(const Foreground: boolean; State: FXControlState): TColor;
+      procedure SetStateColor(const Index: Integer; const Value: TColor);
+    public
+      constructor Create; overload;
+      constructor Create(AOwner: TPersistent); overload;
 
-      published
-        property Enabled;
+      procedure SetLightColor(None, Hover, Press: TColor);
+      procedure SetDarkColor(None, Hover, Press: TColor);
+      function GetColor(const DarkTheme: boolean; State: FXControlState): TColor;
 
-        property Accent: TColor read FAccent write FAccent;
-        property BackgroundNone: TColor index 0 read FBackGroundNone write FBackGroundNone;
-        property BackgroundHover: TColor index 1 read FBackGroundHover write FBackGroundHover;
-        property BackgroundPress: TColor index 2 read FBackGroundPress write FBackGroundPress;
-        property ForeGroundNone: TColor index 3 read FForeGroundNone write FForeGroundNone;
-        property ForeGroundHover: TColor index 4 read FForeGroundHover write FForeGroundHover;
-        property ForeGroundPress: TColor index 5 read FForeGroundPress write FForeGroundPress;
-    end;
+    published
+      property Enabled;
 
-    { Color State Sets }
-    FXSingleColorStateSets = class(FXPersistentColor)
-      private
-        FAccent,
-        FLightNone,
-        FLightHover,
-        FLightPress,
-        FDarkNone,
-        FDarkHover,
-        FDarkPress: TColor;
+      property Accent: TColor read FAccent write FAccent;
+      property LightNone: TColor index 0 read FLightNone write SetStateColor;
+      property LightHover: TColor index 1 read FLightHover write SetStateColor;
+      property LightPress: TColor index 2 read FLightPress write SetStateColor;
+      property DarkNone: TColor index 3 read FDarkNone write SetStateColor;
+      property DarkHover: TColor index 4 read FDarkHover write SetStateColor;
+      property DarkPress: TColor index 5 read FDarkPress write SetStateColor;
+  end;
 
-        procedure SetStateColor(const Index: Integer; const Value: TColor);
-      public
-        constructor Create; overload;
-        constructor Create(AOwner: TPersistent); overload;
+  { Color State Set }
+  FXSingleColorStateSet = class(FXPersistentColor)
+    private
+      FAccent,
+      FNone,
+      FHover,
+      FPress: TColor;
 
-        procedure SetLightColor(None, Hover, Press: TColor);
-        procedure SetDarkColor(None, Hover, Press: TColor);
-        function GetColor(const DarkTheme: boolean; State: FXControlState): TColor;
+    public
+      constructor Create(ANone, AHover, APress: TColor); overload;
+      constructor Create(Colors: FXSingleColorStateSets; const DarkTheme: boolean = false); overload;
 
-      published
-        property Enabled;
+      procedure LoadColors(ANone, AHover, APress: TColor); overload;
+      procedure LoadColors(Colors: FXSingleColorStateSets; const DarkTheme: boolean = false); overload;
 
-        property Accent: TColor read FAccent write FAccent;
-        property LightNone: TColor index 0 read FLightNone write SetStateColor;
-        property LightHover: TColor index 1 read FLightHover write SetStateColor;
-        property LightPress: TColor index 2 read FLightPress write SetStateColor;
-        property DarkNone: TColor index 3 read FDarkNone write SetStateColor;
-        property DarkHover: TColor index 4 read FDarkHover write SetStateColor;
-        property DarkPress: TColor index 5 read FDarkPress write SetStateColor;
-    end;
+      procedure SetStateColor(const Index: Integer; const Value: TColor);
+      function GetColor(const AState: FXControlState): TColor;
 
-    { Color State Set }
-    FXSingleColorStateSet = class(FXPersistentColor)
-      private
-        FAccent,
-        FNone,
-        FHover,
-        FPress: TColor;
+      procedure CopyFrom(FromSet: FXSingleColorStateSet);
 
-      public
-        constructor Create(ANone, AHover, APress: TColor); overload;
-        constructor Create(Colors: FXSingleColorStateSets; const DarkTheme: boolean = false); overload;
+    published
+      property Enabled;
 
-        procedure LoadColors(ANone, AHover, APress: TColor); overload;
-        procedure LoadColors(Colors: FXSingleColorStateSets; const DarkTheme: boolean = false); overload;
+      property Accent: TColor read FAccent write FAccent;
+      property None: TColor read FNone write FNone;
+      property Hover: TColor read FHover write FHover;
+      property Press: TColor read FPress write FPress;
+  end;
 
-        procedure SetStateColor(const Index: Integer; const Value: TColor);
-        function GetColor(const AState: FXControlState): TColor;
+  { Complete color sets with both Dark and Light theme }
+  FXColorSets = class(FXPersistentColor)
+    private
+      FAccent,
+      FLightBackGround,
+      FLightForeground,
+      FDarkBackGround,
+      FDarkForeground: TColor;
 
-        procedure CopyFrom(FromSet: FXSingleColorStateSet);
+      procedure WriteColorValue(const Index: Integer; const Value: TColor);
 
-      published
-        property Enabled;
+    public
+      constructor Create(FocusControl: boolean = false); overload;
+      constructor Create(AOwner: TPersistent; FocusControl: boolean = false); overload;
 
-        property Accent: TColor read FAccent write FAccent;
-        property None: TColor read FNone write FNone;
-        property Hover: TColor read FHover write FHover;
-        property Press: TColor read FPress write FPress;
-    end;
+    published
+      property Enabled;
 
-    { Complete color sets with both Dark and Light theme }
-    FXColorSets = class(FXPersistentColor)
-      private
-        FAccent,
-        FLightBackGround,
-        FLightForeground,
-        FDarkBackGround,
-        FDarkForeground: TColor;
+      property Accent: TColor index 0 read FAccent write WriteColorValue;
+      property LightBackGround: TColor index 1 read FLightBackGround write WriteColorValue;
+      property LightForeGround: TColor index 2 read FLightForeGround write WriteColorValue;
+      property DarkBackGround: TColor index 3 read FDarkBackGround write WriteColorValue;
+      property DarkForeGround: TColor index 4 read FDarkForeground write WriteColorValue;
+  end;
 
-        procedure WriteColorValue(const Index: Integer; const Value: TColor);
+  // Interited from Basic Color Sets
+  FXCompleteColorSets = class(FXColorSets)
+    private
+      FLightBackGroundInterior,
+      FDarkBackGroundInterior: TColor;
+      procedure SetDarkBackGroundInterior(const Value: TColor);
+      procedure SetLightBackGroundInterior(const Value: TColor);
 
-      public
-        constructor Create(FocusControl: boolean = false); overload;
-        constructor Create(AOwner: TPersistent; FocusControl: boolean = false); overload;
+    public
+      constructor Create; overload;
+      constructor Create(AOwner: TPersistent); overload;
 
-      published
-        property Enabled;
+    published
+      property LightBackGroundInterior: TColor read FLightBackGroundInterior write SetLightBackGroundInterior;
+      //
+      property DarkBackGroundInterior: TColor read FDarkBackGroundInterior write SetDarkBackGroundInterior;
+  end;
 
-        property Accent: TColor index 0 read FAccent write WriteColorValue;
-        property LightBackGround: TColor index 1 read FLightBackGround write WriteColorValue;
-        property LightForeGround: TColor index 2 read FLightForeGround write WriteColorValue;
-        property DarkBackGround: TColor index 3 read FDarkBackGround write WriteColorValue;
-        property DarkForeGround: TColor index 4 read FDarkForeground write WriteColorValue;
-    end;
+  { Single Color Set with one option }
+  FXColorSet = class(FXPersistentColor)
+    private
+      FAccent,
+      FBackGround,
+      FForeground: TColor;
 
-    // Interited from Basic Color Sets
-    FXCompleteColorSets = class(FXColorSets)
-      private
-        FLightBackGroundInterior,
-        FDarkBackGroundInterior: TColor;
-        procedure SetDarkBackGroundInterior(const Value: TColor);
-        procedure SetLightBackGroundInterior(const Value: TColor);
+    public
+      constructor Create; overload;
+      constructor Create(AOwner: TPersistent); overload;
+      constructor Create(Colors: FXColorSets; const DarkColor: boolean = false); overload;
+      constructor Create(AOwner: TPersistent; Colors: FXColorSets; const DarkColor: boolean = false); overload;
 
-      public
-        constructor Create; overload;
-        constructor Create(AOwner: TPersistent); overload;
+      procedure UpdateSource;
+      procedure LoadFrom(Colors: FXColorSets; const DarkColor: boolean = false);
 
-      published
-        property LightBackGroundInterior: TColor read FLightBackGroundInterior write SetLightBackGroundInterior;
-        //
-        property DarkBackGroundInterior: TColor read FDarkBackGroundInterior write SetDarkBackGroundInterior;
-    end;
+    published
+      property Accent: TColor read FAccent write FAccent;
+      property BackGround: TColor read FBackGround write FBackGround;
+      property ForeGround: TColor read FForeGround write FForeGround;
+  end;
 
-    { Single Color Set with one option }
-    FXColorSet = class(FXPersistentColor)
-      private
-        FAccent,
-        FBackGround,
-        FForeground: TColor;
+  // Inherited from basic color set
+  FXCompleteColorSet = class(FXColorSet)
+    private
+      FBackGroundInterior: TColor;
 
-      public
-        constructor Create; overload;
-        constructor Create(AOwner: TPersistent); overload;
-        constructor Create(Colors: FXColorSets; const DarkColor: boolean = false); overload;
-        constructor Create(AOwner: TPersistent; Colors: FXColorSets; const DarkColor: boolean = false); overload;
+    public
+      constructor Create(Colors: FXCompleteColorSets; DarkColor: boolean = false); overload;
 
-        procedure UpdateSource;
-        procedure LoadFrom(Colors: FXColorSets; const DarkColor: boolean = false);
+      procedure UpdateSource;
+      procedure LoadFrom(Colors: FXCompleteColorSets; const DarkColor: boolean = false); overload;
 
-      published
-        property Accent: TColor read FAccent write FAccent;
-        property BackGround: TColor read FBackGround write FBackGround;
-        property ForeGround: TColor read FForeGround write FForeGround;
-    end;
+    published
+      property BackGroundInterior: TColor read FBackGroundInterior write FBackGroundInterior;
+  end;
 
-    // Inherited from basic color set
-    FXCompleteColorSet = class(FXColorSet)
-      private
-        FBackGroundInterior: TColor;
+// Color Manipulation
+function ChangeColorLight( clr: TColor; changeby: integer ): TColor;
+function GetColorLight( clr: TColor ): integer;
+function GetColorGrayScale( clr: TColor ): TColor;
+function GetTextColorFromBackground(BackGround: TColor): TColor;
+function ColorBlend(Color1, Color2: TColor; A: Byte): TColor;
+function GetMaxFontSize(Canvas: TCanvas; Text: string; MaxWidth, MaxHeight: Integer): integer;
+procedure PrepareCustomTitleBar(var TitleBar: TForm; const Background: TColor; Foreground: TColor);
 
-      public
-        constructor Create(Colors: FXCompleteColorSets; DarkColor: boolean = false); overload;
+const
+  DEFAULT_ACCENT_COLOR = 13924352;
 
-        procedure UpdateSource;
-        procedure LoadFrom(Colors: FXCompleteColorSets; const DarkColor: boolean = false); overload;
+  DEFAULT_DARK_BACKGROUND_COLOR = 2105376;
+  DEFAULT_DARK_BACKGROUNDCONTROL_COLOR = 2829099;
+  DEFAULT_DARK_GRAY_CONTROL_COLOR = 10657693;
+  DEFAULT_DARK_GRAY_CONTROL_HOVER_COLOR = 12039603;
+  DEFAULT_DARK_GRAY_CONTROL_PRESS_COLOR = 9275783;
+  DEFAULT_DARK_GRAY_CONTROL_FONT_COLOR = 16777215;
+  DEFAULT_DARK_GRAY_CONTROL_HOVER_FONT_COLOR = 16777215;
+  DEFAULT_DARK_GRAY_CONTROL_PRESS_FONT_COLOR = 13553358;
+  DEFAULT_DARK_FOREGROUND_COLOR = 16777215;
 
-      published
-        property BackGroundInterior: TColor read FBackGroundInterior write FBackGroundInterior;
-    end;
+  DEFAULT_LIGHT_BACKGROUND_COLOR = 15987699;
+  DEFAULT_LIGHT_BACKGROUNDCONTROL_COLOR = 16514043;
+  DEFAULT_LIGHT_GRAY_CONTROL_COLOR = 9145227;
+  DEFAULT_LIGHT_GRAY_CONTROL_HOVER_COLOR = 10461087;
+  DEFAULT_LIGHT_GRAY_CONTROL_PRESS_COLOR = 7697781;
+  DEFAULT_LIGHT_GRAY_CONTROL_FONT_COLOR = 1776411;
+  DEFAULT_LIGHT_GRAY_CONTROL_HOVER_FONT_COLOR = 1776411;
+  DEFAULT_LIGHT_GRAY_CONTROL_PRESS_FONT_COLOR = 8882055;
+  DEFAULT_LIGHT_FOREGROUND_COLOR = 1776410;
 
-  // Color Manipulation
-  function ChangeColorLight( clr: TColor; changeby: integer ): TColor;
-  function GetColorLight( clr: TColor ): integer;
-  function GetColorGrayScale( clr: TColor ): TColor;
-  function GetTextColorFromBackground(BackGround: TColor): TColor;
-  function ColorBlend(Color1, Color2: TColor; A: Byte): TColor;
-  function GetMaxFontSize(Canvas: TCanvas; Text: string; MaxWidth, MaxHeight: Integer): integer;
-  procedure PrepareCustomTitleBar(var TitleBar: TForm; const Background: TColor; Foreground: TColor);
+  GENERIC_DARK_FONT_COLOR = 15987699;
+  GENERIC_LIGHT_FONT_COLOR = 2105376;
 
-  const
-    DEFAULT_ACCENT_COLOR = 13924352;
+  GRAYSCALE_DIV_CONST = 3;
 
-    DEFAULT_DARK_BACKGROUND_COLOR = 2105376;
-    DEFAULT_DARK_BACKGROUNDCONTROL_COLOR = 2829099;
-    DEFAULT_DARK_GRAY_CONTROL_COLOR = 10657693;
-    DEFAULT_DARK_GRAY_CONTROL_HOVER_COLOR = 12039603;
-    DEFAULT_DARK_GRAY_CONTROL_PRESS_COLOR = 9275783;
-    DEFAULT_DARK_GRAY_CONTROL_FONT_COLOR = 16777215;
-    DEFAULT_DARK_GRAY_CONTROL_HOVER_FONT_COLOR = 16777215;
-    DEFAULT_DARK_GRAY_CONTROL_PRESS_FONT_COLOR = 13553358;
-    DEFAULT_DARK_FOREGROUND_COLOR = 16777215;
+type
+  ColorRepository = record
+    const
+    AccentDefault = DEFAULT_ACCENT_COLOR;
 
-    DEFAULT_LIGHT_BACKGROUND_COLOR = 15987699;
-    DEFAULT_LIGHT_BACKGROUNDCONTROL_COLOR = 16514043;
-    DEFAULT_LIGHT_GRAY_CONTROL_COLOR = 9145227;
-    DEFAULT_LIGHT_GRAY_CONTROL_HOVER_COLOR = 10461087;
-    DEFAULT_LIGHT_GRAY_CONTROL_PRESS_COLOR = 7697781;
-    DEFAULT_LIGHT_GRAY_CONTROL_FONT_COLOR = 1776411;
-    DEFAULT_LIGHT_GRAY_CONTROL_HOVER_FONT_COLOR = 1776411;
-    DEFAULT_LIGHT_GRAY_CONTROL_PRESS_FONT_COLOR = 8882055;
-    DEFAULT_LIGHT_FOREGROUND_COLOR = 1776410;
+    DarkBackground = DEFAULT_DARK_BACKGROUND_COLOR;
+    DarkBackgroundControl = DEFAULT_DARK_BACKGROUNDCONTROL_COLOR;
+    DarkFontColor = GENERIC_DARK_FONT_COLOR;
+    DarkPausedColor = $0000E1FC;
+    DarkErrorColor = $00A499FF;
 
-    GENERIC_DARK_FONT_COLOR = 15987699;
-    GENERIC_LIGHT_FONT_COLOR = 2105376;
-
-    GRAYSCALE_DIV_CONST = 3;
-
-  type
-    ColorRepository = record
-      const
-      AccentDefault = DEFAULT_ACCENT_COLOR;
-
-      DarkBackground = DEFAULT_DARK_BACKGROUND_COLOR;
-      DarkBackgroundControl = DEFAULT_DARK_BACKGROUNDCONTROL_COLOR;
-      DarkFontColor = GENERIC_DARK_FONT_COLOR;
-      DarkPausedColor = $0000E1FC;
-      DarkErrorColor = $00A499FF;
-
-      LightBackground = DEFAULT_LIGHT_BACKGROUND_COLOR;
-      LightBackgroundControl = DEFAULT_LIGHT_BACKGROUNDCONTROL_COLOR;
-      LightFontColor = GENERIC_LIGHT_FONT_COLOR;
-      LightPausedColor = $00005D9D;
-      LightErrorColor = $001C2BC4;
-    end;
+    LightBackground = DEFAULT_LIGHT_BACKGROUND_COLOR;
+    LightBackgroundControl = DEFAULT_LIGHT_BACKGROUNDCONTROL_COLOR;
+    LightFontColor = GENERIC_LIGHT_FONT_COLOR;
+    LightPausedColor = $00005D9D;
+    LightErrorColor = $001C2BC4;
+  end;
 
 implementation
 

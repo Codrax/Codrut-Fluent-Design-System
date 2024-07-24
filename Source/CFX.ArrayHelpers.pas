@@ -15,146 +15,91 @@
 unit CFX.ArrayHelpers;
 
 interface
-  uses
+uses
   System.SysUtils, System.Classes,
   System.Generics.Collections, System.Generics.Defaults;
 
-  type
-    TMultiSwitch<T> = class
-      type
-      TCase = record
-        Values: TArray<T>;
-        CallBack: TProc;
+type
+  TMultiSwitch<T> = class
+    type
+    TCase = record
+      Values: TArray<T>;
+      CallBack: TProc;
 
-        procedure Execute;
-      end;
-
-      // Make
-      class function Option(Value: T; Call: TProc): TCase; overload;
-      class function Option(Values: TArray<T>; Call: TProc): TCase; overload;
-
-      // Switch
-      class procedure Switch(Value: T; Cases: TArray<TCase>); overload;
-      class procedure Switch(Value: T; Cases: TArray<TCase>; Default: TProc); overload;
+      procedure Execute;
     end;
 
-    /// Note about internal errors
-    ///  This class uses lComparer to compare values because some value types,
-    ///  such as record cannot be directly compared and would give the
-    ///  "Invalid operand type" error, but since this class is type based,
-    ///  a internal error would appear instead.
+    // Make
+    class function Option(Value: T; Call: TProc): TCase; overload;
+    class function Option(Values: TArray<T>; Call: TProc): TCase; overload;
 
-    // TArray colection
-    TArrayUtils<T> = class
-    public
-      // Callback types
-      type
-      TArrayEachCallback = reference to procedure(var Element: T);
-      TArrayEachCallbackConst = reference to procedure(Element: T);
-      TArrayDualCallback = reference to function(A, B: T): boolean;
-      TArrayIndexCallback = reference to function(Index: integer): T;
+    // Switch
+    class procedure Switch(Value: T; Cases: TArray<TCase>); overload;
+    class procedure Switch(Value: T; Cases: TArray<TCase>; Default: TProc); overload;
+  end;
 
-      /// <summary> Verify if the array contains element x. </summary>
-      class function Build(const Length: integer; Callback: TArrayIndexCallback): TArray<T>;
+  /// Note about internal errors
+  ///  This class uses lComparer to compare values because some value types,
+  ///  such as record cannot be directly compared and would give the
+  ///  "Invalid operand type" error, but since this class is type based,
+  ///  a internal error would appear instead.
 
-      /// <summary> Verify if the array contains element x. </summary>
-      class function Contains(const x: T; const Values: TArray<T>): boolean;
-      /// <summary> Compares is two arrays are equal. </summary>
-      class function CheckEquality(const First, Second: TArray<T>) : boolean;
+  // TArray colection
+  TArrayUtils<T> = class
+  public
+    // Callback types
+    type
+    TArrayEachCallback = reference to procedure(var Element: T);
+    TArrayEachCallbackConst = reference to procedure(Element: T);
+    TArrayDualCallback = reference to function(A, B: T): boolean;
+    TArrayIndexCallback = reference to function(Index: integer): T;
 
-      /// <summary> Get the index if element x. </summary>
-      class function GetIndex(const x: T; const Values: TArray<T>): integer;
-      /// <summary> Go trough all elements of an array and get their value. </summary>
-      class procedure ForEach(const Values: TArray<T>; Callback: TArrayEachCallbackConst); overload;
-      /// <summary> Go trough all elements of an array and modify their value. </summary>
-      class procedure ForEach(var Values: TArray<T>; Callback: TArrayEachCallback); overload;
-      /// <summary> Sort the elements of an array using the provided callback for comparison. </summary>
-      class procedure Sort(var Values: TArray<T>; Callback: TArrayDualCallback); overload;
+    /// <summary> Verify if the array contains element x. </summary>
+    class function Build(const Length: integer; Callback: TArrayIndexCallback): TArray<T>;
 
-      /// <summary> Move one item from It's index to another item's index and moving that one uppwards. </summary>
-      class procedure Move(var Values: TArray<T>; const Source, Destination: integer); overload;
-      /// <summary> Switch places for two items. </summary>
-      class procedure Switch(var Values: TArray<T>; const Source, Destination: integer); overload;
+    /// <summary> Verify if the array contains element x. </summary>
+    class function Contains(const x: T; const Values: TArray<T>): boolean;
+    /// <summary> Compares is two arrays are equal. </summary>
+    class function CheckEquality(const First, Second: TArray<T>) : boolean;
 
-      /// <summary> Add blank value to the end of the array. </summary>
-      class function AddValue(var Values: TArray<T>) : integer; overload;
-      /// <summary> Add value to the end of the array. </summary>
-      class function AddValue(const x: T; var Values: TArray<T>) : integer; overload;
-      /// <summary> Add value to the end of the array. </summary>
-      class procedure AddValues(const Values: TArray<T>; var Destination: TArray<T>);
-      /// <summary> Concat secondary array to primary array </summary>
-      class function Concat(const Primary, Secondary: TArray<T>) : TArray<T>;
-      /// <summary> Insert empty value at the specified index into the array. </summary>
-      class procedure Insert(const Index: integer; var Values: TArray<T>); overload;
-      /// <summary> Insert value at the specified index into the array. </summary>
-      class procedure Insert(const Index: integer; const x: T; var Values: TArray<T>); overload;
+    /// <summary> Get the index if element x. </summary>
+    class function GetIndex(const x: T; const Values: TArray<T>): integer;
+    /// <summary> Go trough all elements of an array and get their value. </summary>
+    class procedure ForEach(const Values: TArray<T>; Callback: TArrayEachCallbackConst); overload;
+    /// <summary> Go trough all elements of an array and modify their value. </summary>
+    class procedure ForEach(var Values: TArray<T>; Callback: TArrayEachCallback); overload;
+    /// <summary> Sort the elements of an array using the provided callback for comparison. </summary>
+    class procedure Sort(var Values: TArray<T>; Callback: TArrayDualCallback); overload;
 
-      /// <summary> Delete element by index from array. </summary>
-      class procedure Delete(const Index: integer; var Values: TArray<T>);
-      /// <summary> Delete element by type T from array. </summary>
-      class procedure DeleteElement(const Element: T; var Values: TArray<T>);
-      /// <summary> Set length to specifieed value. </summary>
-      ///
-      class procedure SetLength(const Length: integer; var Values: TArray<T>);
-      /// <summary> Get array length. </summary>
-      class function Count(const Values: TArray<T>) : integer;
-    end;
+    /// <summary> Move one item from It's index to another item's index and moving that one uppwards. </summary>
+    class procedure Move(var Values: TArray<T>; const Source, Destination: integer); overload;
+    /// <summary> Switch places for two items. </summary>
+    class procedure Switch(var Values: TArray<T>; const Source, Destination: integer); overload;
 
-    // Generic type helpers
-    TStringArray = TArray<string>;
-    TStringArrayHelper = record helper for TStringArray
-    public
-      function AddValue(Value: string): integer;
-      procedure Insert(Index: integer; Value: string);
-      procedure Delete(Index: integer);
-      function Count: integer; overload; inline;
-      function Find(Value: string): integer;
-      procedure SetToLength(ALength: integer);
-    end;
+    /// <summary> Add blank value to the end of the array. </summary>
+    class function AddValue(var Values: TArray<T>) : integer; overload;
+    /// <summary> Add value to the end of the array. </summary>
+    class function AddValue(const x: T; var Values: TArray<T>) : integer; overload;
+    /// <summary> Add value to the end of the array. </summary>
+    class procedure AddValues(const Values: TArray<T>; var Destination: TArray<T>);
+    /// <summary> Concat secondary array to primary array </summary>
+    class function Concat(const Primary, Secondary: TArray<T>) : TArray<T>;
+    /// <summary> Insert empty value at the specified index into the array. </summary>
+    class procedure Insert(const Index: integer; var Values: TArray<T>); overload;
+    /// <summary> Insert value at the specified index into the array. </summary>
+    class procedure Insert(const Index: integer; const x: T; var Values: TArray<T>); overload;
 
-    TIntArray = TArray<integer>;
-    TIntegerArrayHelper = record helper for TIntArray
-    public
-      function AddValue(Value: integer): integer;
-      procedure Insert(Index: integer; Value: integer);
-      procedure Delete(Index: integer);
-      function Count: integer; overload; inline;
-      function Find(Value: integer): integer;
-      procedure SetToLength(ALength: integer);
-    end;
+    /// <summary> Delete element by index from array. </summary>
+    class procedure Delete(const Index: integer; var Values: TArray<T>);
+    /// <summary> Delete element by type T from array. </summary>
+    class procedure DeleteElement(const Element: T; var Values: TArray<T>);
+    /// <summary> Set length to specifieed value. </summary>
+    ///
+    class procedure SetLength(const Length: integer; var Values: TArray<T>);
+    /// <summary> Get array length. </summary>
+    class function Count(const Values: TArray<T>) : integer;
+  end;
 
-    TRealArray = TArray<real>;
-    TRealArrayHelper = record helper for TRealArray
-    public
-      function AddValue(Value: real): integer;
-      procedure Insert(Index: integer; Value: real);
-      procedure Delete(Index: integer);
-      function Count: integer; overload; inline;
-      function Find(Value: real): integer;
-      procedure SetToLength(ALength: integer);
-    end;
-
-    TCharArray = TArray<char>;
-    TCharArrayHelper = record helper for TCharArray
-    public
-      function AddValue(Value: char): integer;
-      procedure Insert(Index: integer; Value: char);
-      procedure Delete(Index: integer);
-      function Count: integer; overload; inline;
-      function Find(Value: char): integer;
-      procedure SetToLength(ALength: integer);
-    end;
-
-    TBoolArray = TArray<boolean>;
-    TBoolArrayHelper = record helper for TBoolArray
-    public
-      function AddValue(Value: boolean): integer;
-      procedure Insert(Index: integer; Value: boolean);
-      procedure Delete(Index: integer);
-      function Count: integer; overload; inline;
-      function Find(Value: boolean): integer;  // pretty useless, but can find if a value exists
-      procedure SetToLength(ALength: integer);
-    end;
 
 implementation
 
@@ -407,291 +352,6 @@ begin
   const OriginalItem = Values[Source];
   Values[Source] := Values[Destination];
   Values[Destination] := OriginalItem;
-end;
-
-// TArray Generic Helpers
-function TStringArrayHelper.Count: integer;
-begin
-  Result := length(Self);
-end;
-
-function TIntegerArrayHelper.Count: integer;
-begin
-  Result := length(Self);
-end;
-
-function TRealArrayHelper.Count: integer;
-begin
-  Result := length(Self);
-end;
-
-procedure TStringArrayHelper.SetToLength(ALength: integer);
-begin
-  SetLength(Self, ALength);
-end;
-
-procedure TIntegerArrayHelper.SetToLength(ALength: integer);
-begin
-  SetLength(Self, ALength);
-end;
-
-procedure TRealArrayHelper.SetToLength(ALength: integer);
-begin
-  SetLength(Self, ALength);
-end;
-
-function TStringArrayHelper.AddValue(Value: string): integer;
-var
-  AIndex: integer;
-begin
-  AIndex := Length(Self);
-  SetLength(Self, AIndex + 1);
-  Self[AIndex] := Value;
-  Result := AIndex;
-end;
-
-function TIntegerArrayHelper.AddValue(Value: integer): integer;
-var
-  AIndex: integer;
-begin
-  AIndex := Length(Self);
-  SetLength(Self, AIndex + 1);
-  Self[AIndex] := Value;
-  Result := AIndex;
-end;
-
-function TRealArrayHelper.AddValue(Value: real): integer;
-var
-  AIndex: integer;
-begin
-  AIndex := Length(Self);
-  SetLength(Self, AIndex + 1);
-  Self[AIndex] := Value;
-  Result := AIndex;
-end;
-
-procedure TStringArrayHelper.Insert(Index: integer; Value: string);
-var
-  Size: integer;
-  I: Integer;
-begin
-  Size := Length(Self);
-  SetLength(Self, Size+1);
-
-  for I := Size downto Index+1 do
-    Self[I] := Self[I-1];
-  Self[Index] := Value;
-end;
-
-procedure TIntegerArrayHelper.Insert(Index: integer; Value: integer);
-var
-  Size: integer;
-  I: Integer;
-begin
-  Size := Length(Self);
-  SetLength(Self, Size+1);
-
-  for I := Size downto Index+1 do
-    Self[I] := Self[I-1];
-  Self[Index] := Value;
-end;
-
-procedure TRealArrayHelper.Insert(Index: integer; Value: real);
-var
-  Size: integer;
-  I: Integer;
-begin
-  Size := Length(Self);
-  SetLength(Self, Size+1);
-
-  for I := Size downto Index+1 do
-    Self[I] := Self[I-1];
-  Self[Index] := Value;
-end;
-
-procedure TStringArrayHelper.Delete(Index: integer);
-var
-  I: Integer;
-begin
-  if Index <> -1 then
-    begin
-      for I := Index to High(Self)-1 do
-        Self[I] := Self[I+1];
-
-      SetToLength(Length(Self)-1);
-    end;
-end;
-
-procedure TIntegerArrayHelper.Delete(Index: integer);
-var
-  I: Integer;
-begin
-  if Index <> -1 then
-    begin
-      for I := Index to High(Self)-1 do
-        Self[I] := Self[I+1];
-
-      SetToLength(Length(Self)-1);
-    end;
-end;
-
-procedure TRealArrayHelper.Delete(Index: integer);
-var
-  I: Integer;
-begin
-  if Index <> -1 then
-    begin
-      for I := Index to High(Self)-1 do
-        Self[I] := Self[I+1];
-
-      SetToLength(Length(Self)-1);
-    end;
-end;
-
-function TStringArrayHelper.Find(Value: string): integer;
-var
-  I: integer;
-begin
-  Result := -1;
-  for I := Low(Self) to High(Self) do
-    if Self[I] = Value then
-      Exit(I);
-end;
-
-function TIntegerArrayHelper.Find(Value: integer): integer;
-var
-  I: integer;
-begin
-  Result := -1;
-  for I := Low(Self) to High(Self) do
-    if Self[I] = Value then
-      Exit(I);
-end;
-
-function TRealArrayHelper.Find(Value: real): integer;
-var
-  I: integer;
-begin
-  Result := -1;
-  for I := Low(Self) to High(Self) do
-    if Self[I] = Value then
-      Exit(I);
-end;
-
-{ TBoolArrayHelper }
-
-function TBoolArrayHelper.AddValue(Value: boolean): integer;
-var
-  AIndex: integer;
-begin
-  AIndex := Length(Self);
-  SetLength(Self, AIndex + 1);
-  Self[AIndex] := Value;
-  Result := AIndex;
-end;
-
-function TBoolArrayHelper.Count: integer;
-begin
-  Result := length(Self);
-end;
-
-procedure TBoolArrayHelper.Delete(Index: integer);
-var
-  I: Integer;
-begin
-  if Index <> -1 then
-    begin
-      for I := Index to High(Self)-1 do
-        Self[I] := Self[I+1];
-
-      SetToLength(Length(Self)-1);
-    end;
-end;
-
-function TBoolArrayHelper.Find(Value: boolean): integer;
-var
-  I: integer;
-begin
-  Result := -1;
-  for I := Low(Self) to High(Self) do
-    if Self[I] = Value then
-      Exit(I);
-end;
-
-procedure TBoolArrayHelper.Insert(Index: integer; Value: boolean);
-var
-  Size: integer;
-  I: Integer;
-begin
-  Size := Length(Self);
-  SetLength(Self, Size+1);
-
-  for I := Size downto Index+1 do
-    Self[I] := Self[I-1];
-  Self[Index] := Value;
-end;
-
-procedure TBoolArrayHelper.SetToLength(ALength: integer);
-begin
-  SetLength(Self, ALength);
-end;
-
-{ TCharArrayHelper }
-
-function TCharArrayHelper.AddValue(Value: char): integer;
-var
-  AIndex: integer;
-begin
-  AIndex := Length(Self);
-  SetLength(Self, AIndex + 1);
-  Self[AIndex] := Value;
-  Result := AIndex;
-end;
-
-function TCharArrayHelper.Count: integer;
-begin
-  Result := length(Self);
-end;
-
-procedure TCharArrayHelper.Delete(Index: integer);
-var
-  I: Integer;
-begin
-  if Index <> -1 then
-    begin
-      for I := Index to High(Self)-1 do
-        Self[I] := Self[I+1];
-
-      SetToLength(Length(Self)-1);
-    end;
-end;
-
-function TCharArrayHelper.Find(Value: char): integer;
-var
-  I: integer;
-begin
-  Result := -1;
-  for I := Low(Self) to High(Self) do
-    if Self[I] = Value then
-      Exit(I);
-end;
-
-procedure TCharArrayHelper.Insert(Index: integer; Value: char);
-var
-  Size: integer;
-  I: Integer;
-begin
-  Size := Length(Self);
-  SetLength(Self, Size+1);
-
-  for I := Size downto Index+1 do
-    Self[I] := Self[I-1];
-  Self[Index] := Value;
-end;
-
-procedure TCharArrayHelper.SetToLength(ALength: integer);
-begin
-  SetLength(Self, ALength);
 end;
 
 { TMultiSwitch<T> }

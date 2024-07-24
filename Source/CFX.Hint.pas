@@ -6,47 +6,47 @@ uses
   SysUtils, CFX.ThemeManager, CFX.Colors, CFX.Graphics, CFX.ToolTip,
   Vcl.ExtCtrls;
 
-  type
-    FXHintPopup = class
-    private
-      FHintClass: FXCustomTooltip;
-      FAutoHideTimer: TTimer;
+type
+  FXHintPopup = class
+  private
+    FHintClass: FXCustomTooltip;
+    FAutoHideTimer: TTimer;
 
-      FIsVisible: boolean;
-      FCenterToPosition: boolean;
+    FIsVisible: boolean;
+    FCenterToPosition: boolean;
 
-      FText: string;
-      FPosition: TPoint;
-      FDuration: integer;
-      FAutoHide: boolean;
-      FMaxWidth: integer;
+    FText: string;
+    FPosition: TPoint;
+    FDuration: integer;
+    FAutoHide: boolean;
+    FMaxWidth: integer;
 
-      procedure HideProc(Sender: TObject);
-      procedure ApplyColor;
-      function MakeHintRect: TRect;
-      procedure SetAutoHide(const Value: boolean);
-      function GetFont: TFont;
+    procedure HideProc(Sender: TObject);
+    procedure ApplyColor;
+    function MakeHintRect: TRect;
+    procedure SetAutoHide(const Value: boolean);
+    function GetFont: TFont;
 
-    public
-      constructor Create;
-      destructor Destroy; override;
+  public
+    constructor Create;
+    destructor Destroy; override;
 
-      property Font: TFont read GetFont;
+    property Font: TFont read GetFont;
 
-      property Text: string read FText write FText;
-      property Duration: integer read FDuration write FDuration;
-      property Position: TPoint read FPosition write FPosition;
-      property AutoHide: boolean read FAutoHide write SetAutoHide;
-      property MaxWidth: integer read FMaxWidth write FMaxWidth default 200;
-      property CenterToPosition: boolean read FCenterToPosition write FCenterToPosition;
+    property Text: string read FText write FText;
+    property Duration: integer read FDuration write FDuration;
+    property Position: TPoint read FPosition write FPosition;
+    property AutoHide: boolean read FAutoHide write SetAutoHide;
+    property MaxWidth: integer read FMaxWidth write FMaxWidth default 200;
+    property CenterToPosition: boolean read FCenterToPosition write FCenterToPosition;
 
-      property IsVisible: boolean read FIsVisible;
+    property IsVisible: boolean read FIsVisible;
 
-      procedure Hide;
+    procedure Hide;
 
-      procedure Show;
-      procedure ShowAtPoint(APoint: TPoint);
-    end;
+    procedure Show;
+    procedure ShowAtPoint(APoint: TPoint);
+  end;
 
 implementation
 

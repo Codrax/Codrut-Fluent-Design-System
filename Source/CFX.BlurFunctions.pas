@@ -1,35 +1,35 @@
 unit CFX.BlurFunctions;
 
 interface
-  uses
-    UITypes, Types, CFX.UIConsts, VCl.GraphUtil, Winapi.Windows,
-    Classes, Vcl.Themes, Vcl.Controls, Vcl.Graphics,
-    SysUtils, CFX.VarHelpers;
+uses
+  UITypes, Types, CFX.UIConsts, VCl.GraphUtil, Winapi.Windows,
+  Classes, Vcl.Themes, Vcl.Controls, Vcl.Graphics,
+  SysUtils, CFX.VarHelpers;
 
-  type
-    // Blur Function Dependencies
-    TKernelSize = 1..50;
-    TKernel = record
-      Size: TKernelSize;
-      Weights: array[-50..50] of Single;
-    end;
-    TRGBTriple = packed record
-      b: Byte; {easier to type than rgbtBlue}
-      g: Byte;
-      r: Byte;
-    end;
-    PRow = ^TRow;
-    TRow = array[Word] of TRGBTriple;
-    PPRows = ^TPRows;
-    TPRows = array[Word] of PRow;
+type
+  // Blur Function Dependencies
+  TKernelSize = 1..50;
+  TKernel = record
+    Size: TKernelSize;
+    Weights: array[-50..50] of Single;
+  end;
+  TRGBTriple = packed record
+    b: Byte; {easier to type than rgbtBlue}
+    g: Byte;
+    r: Byte;
+  end;
+  PRow = ^TRow;
+  TRow = array[Word] of TRGBTriple;
+  PPRows = ^TPRows;
+  TPRows = array[Word] of PRow;
 
 
-  // Declarations
-  procedure MakeGaussianKernel(var K: TKernel; radius: Real; MaxData, DataGranularity: Real);
-  procedure BlurRow(var theRow: array of TRGBTriple; K: TKernel; P: PRow);
+// Declarations
+procedure MakeGaussianKernel(var K: TKernel; radius: Real; MaxData, DataGranularity: Real);
+procedure BlurRow(var theRow: array of TRGBTriple; K: TKernel; P: PRow);
 
-  procedure GaussianBlur(Bitmap: TBitmap; Radius: Real);
-  procedure FastBlur(Bitmap: TBitmap; Radius: Real; BlurScale: Integer; HighQuality: Boolean = True);
+procedure GaussianBlur(Bitmap: TBitmap; Radius: Real);
+procedure FastBlur(Bitmap: TBitmap; Radius: Real; BlurScale: Integer; HighQuality: Boolean = True);
 
 implementation
 

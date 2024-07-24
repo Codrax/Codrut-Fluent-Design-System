@@ -1,192 +1,192 @@
 unit CFX.Classes;
 
 interface
-  uses
-    Vcl.Graphics, Classes, Types, CFX.Types, CFX.UIConsts, SysUtils,
-    CFX.Graphics, CFX.VarHelpers, CFX.ThemeManager, Vcl.Controls,
-    TypInfo, CFX.Linker, CFX.Colors;
+uses
+  Vcl.Graphics, Classes, Types, CFX.Types, CFX.UIConsts, SysUtils,
+  CFX.Graphics, CFX.VarHelpers, CFX.ThemeManager, Vcl.Controls,
+  TypInfo, CFX.Linker, CFX.Colors;
 
-  type
-    // Base Clases
-    FXComponent = class(TComponent)
+type
+  // Base Clases
+  FXComponent = class(TComponent)
 
-    end;
+  end;
 
-    // Persistent
-    FXPersistent = class(TPersistent)
-      Owner : TPersistent;
-      constructor Create(AOwner : TPersistent); overload; virtual;
-    end;
+  // Persistent
+  FXPersistent = class(TPersistent)
+    Owner : TPersistent;
+    constructor Create(AOwner : TPersistent); overload; virtual;
+  end;
 
-    FXAssignPersistent = class(FXPersistent)
-    public
-      procedure Assign(Source: TPersistent); override;
-    end;
+  FXAssignPersistent = class(FXPersistent)
+  public
+    procedure Assign(Source: TPersistent); override;
+  end;
 
-    // Side values
-    FXSideValues = class(FXPersistent)
-    private
-      FLeft,
-      FTop,
-      FRight,
-      FBottom,
-      FAround,
-      FHorizontal,
-      FVertical: integer;
+  // Side values
+  FXSideValues = class(FXPersistent)
+  private
+    FLeft,
+    FTop,
+    FRight,
+    FBottom,
+    FAround,
+    FHorizontal,
+    FVertical: integer;
 
-      FOnChange: TNotifyEvent;
+    FOnChange: TNotifyEvent;
 
-      // Setters
-      procedure SetLeft(const Value: integer);
-      procedure SetBottom(const Value: integer);
-      procedure SetRight(const Value: integer);
-      procedure SetTop(const Value: integer);
-      procedure SetAround(const Value: integer);
-      procedure SetHorizontal(const Value: integer);
-      procedure SetVertical(const Value: integer);
+    // Setters
+    procedure SetLeft(const Value: integer);
+    procedure SetBottom(const Value: integer);
+    procedure SetRight(const Value: integer);
+    procedure SetTop(const Value: integer);
+    procedure SetAround(const Value: integer);
+    procedure SetHorizontal(const Value: integer);
+    procedure SetVertical(const Value: integer);
 
-    protected
-      procedure Updated; virtual;
+  protected
+    procedure Updated; virtual;
 
-    published
-      property Left: integer read FLeft write SetLeft default 0;
-      property Top: integer read FTop write SetTop default 0;
-      property Right: integer read FRight write SetRight default 0;
-      property Bottom: integer read FBottom write SetBottom default 0;
+  published
+    property Left: integer read FLeft write SetLeft default 0;
+    property Top: integer read FTop write SetTop default 0;
+    property Right: integer read FRight write SetRight default 0;
+    property Bottom: integer read FBottom write SetBottom default 0;
 
-      property Around: integer read FAround write SetAround default 0;
-      property Horizontal: integer read FHorizontal write SetHorizontal default 0;
-      property Vertical: integer read FVertical write SetVertical default 0;
+    property Around: integer read FAround write SetAround default 0;
+    property Horizontal: integer read FHorizontal write SetHorizontal default 0;
+    property Vertical: integer read FVertical write SetVertical default 0;
 
-      // Events
-      property OnChange: TNotifyEvent read FOnChange write FOnChange;
-      procedure ScaleChanged(Scaling: single);
+    // Events
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    procedure ScaleChanged(Scaling: single);
 
-    public
-      constructor Create(AOwner : TPersistent); override;
+  public
+    constructor Create(AOwner : TPersistent); override;
 
-      // Assignment
-      procedure AssignTo(Dest: TPersistent); override;
+    // Assignment
+    procedure AssignTo(Dest: TPersistent); override;
 
-      // Data
-      function AbsoluteLeft: integer;
-      function AbsoluteRight: integer;
-      function AbsoluteHorizontal: integer;
-      function AbsoluteTop: integer;
-      function AbsoluteBottom: integer;
-      function AbsoluteVertical: integer;
+    // Data
+    function AbsoluteLeft: integer;
+    function AbsoluteRight: integer;
+    function AbsoluteHorizontal: integer;
+    function AbsoluteTop: integer;
+    function AbsoluteBottom: integer;
+    function AbsoluteVertical: integer;
 
-      // Utils
-      function RectangleExpand(ARect: TRect): TRect;
-      function RectangleInflate(ARect: TRect): TRect;
-    end;
+    // Utils
+    function RectangleExpand(ARect: TRect): TRect;
+    function RectangleInflate(ARect: TRect): TRect;
+  end;
 
-    // Margins and paddings
-    FXControlSideValues = class(FXSideValues)
-    protected
-      procedure Updated; override;
-    end;
+  // Margins and paddings
+  FXControlSideValues = class(FXSideValues)
+  protected
+    procedure Updated; override;
+  end;
 
-    FXPadding = FXControlSideValues;
-    FXMargins = FXControlSideValues;
+  FXPadding = FXSideValues;
+  FXMargins = FXSideValues;
 
-    // Size class
-    FXPointGeneric = class(FXAssignPersistent)
-    private
-      function GetPoint: TPoint; virtual;
-      procedure SetPoint(const Value: TPoint); virtual;
+  // Size class
+  FXPointGeneric = class(FXAssignPersistent)
+  private
+    function GetPoint: TPoint; virtual;
+    procedure SetPoint(const Value: TPoint); virtual;
 
-    protected
-      // Getters
-      function GetX: integer; virtual; abstract;
-      function GetY: integer; virtual; abstract;
+  protected
+    // Getters
+    function GetX: integer; virtual; abstract;
+    function GetY: integer; virtual; abstract;
 
-      // Setters
-      procedure SetX(const Value: integer); virtual; abstract;
-      procedure SetY(const Value: integer); virtual; abstract;
+    // Setters
+    procedure SetX(const Value: integer); virtual; abstract;
+    procedure SetY(const Value: integer); virtual; abstract;
 
-      // Prop types
-      property X: integer read GetX write SetX;
-      property Y: integer read GetY write SetY;
-      property Width: integer read GetX write SetX;
-      property Height: integer read GetY write SetY;
+    // Prop types
+    property X: integer read GetX write SetX;
+    property Y: integer read GetY write SetY;
+    property Width: integer read GetX write SetX;
+    property Height: integer read GetY write SetY;
 
-      property Point: TPoint read GetPoint write SetPoint;
-    end;
+    property Point: TPoint read GetPoint write SetPoint;
+  end;
 
-    // Blur Settings
-    FXBlurSettings = class(FXPersistent)
-    private
-      FEnabled: boolean;
+  // Blur Settings
+  FXBlurSettings = class(FXPersistent)
+  private
+    FEnabled: boolean;
 
-      FBlurVersion: FXBlurVersion;
+    FBlurVersion: FXBlurVersion;
 
-      FTint: boolean;
-      FTintLightOpacity: byte;
-      FTintDarkOpacity: byte;
-      FTintColors: FXColorSets;
+    FTint: boolean;
+    FTintLightOpacity: byte;
+    FTintDarkOpacity: byte;
+    FTintColors: FXColorSets;
 
-      // Update
-      procedure UpdateParent;
+    // Update
+    procedure UpdateParent;
 
-      // Setters
-      procedure SetTintOpacity(const Index: Integer; const Value: byte);
-      procedure SetTint(const Value: boolean);
+    // Setters
+    procedure SetTintOpacity(const Index: Integer; const Value: byte);
+    procedure SetTint(const Value: boolean);
 
-    published
-      property Enabled: boolean read FEnabled write FEnabled;
+  published
+    property Enabled: boolean read FEnabled write FEnabled;
 
-      property BlurVersion: FXBlurVersion read FBlurVersion write FBlurVersion;
+    property BlurVersion: FXBlurVersion read FBlurVersion write FBlurVersion;
 
-      property Tint: boolean read FTint write SetTint;
-      property TintLightOpacity: byte index 0 read FTintLightOpacity write SetTintOpacity;
-      property TintDarkOpacity: byte index 1 read FTintDarkOpacity write SetTintOpacity;
-      property TintColors: FXColorSets read FTintColors write FTintColors;
+    property Tint: boolean read FTint write SetTint;
+    property TintLightOpacity: byte index 0 read FTintLightOpacity write SetTintOpacity;
+    property TintDarkOpacity: byte index 1 read FTintDarkOpacity write SetTintOpacity;
+    property TintColors: FXColorSets read FTintColors write FTintColors;
 
-    public
-      constructor Create(AOwner : TPersistent); override;
-      destructor Destroy; override;
-    end;
+  public
+    constructor Create(AOwner : TPersistent); override;
+    destructor Destroy; override;
+  end;
 
-    // Icon
-    FXIconSelect = class(FXPersistent)
-    private
-      FEnabled: boolean;
+  // Icon
+  FXIconSelect = class(FXPersistent)
+  private
+    FEnabled: boolean;
 
-      FType: FXIconType;
-      FPicture: TPicture;
-      FBitMap: TBitMap;
-      FSegoeText: string;
-      FImageIndex: integer;
+    FType: FXIconType;
+    FPicture: TPicture;
+    FBitMap: TBitMap;
+    FSegoeText: string;
+    FImageIndex: integer;
 
-      // Settters
-      procedure SetBitMap(const Value: TBitMap);
-      procedure SetPicture(const Value: TPicture);
-      procedure SetImageIndex(const Value: integer);
-      procedure SetSegoe(const Value: string);
+    // Settters
+    procedure SetBitMap(const Value: TBitMap);
+    procedure SetPicture(const Value: TPicture);
+    procedure SetImageIndex(const Value: integer);
+    procedure SetSegoe(const Value: string);
 
-      // Update
-      procedure UpdateParent;
+    // Update
+    procedure UpdateParent;
 
-    published
-      property Enabled: boolean read FEnabled write FEnabled default False;
-      property IconType: FXIconType read FType write FType default FXIconType.SegoeIcon;
+  published
+    property Enabled: boolean read FEnabled write FEnabled default False;
+    property IconType: FXIconType read FType write FType default FXIconType.SegoeIcon;
 
-      property SelectPicture: TPicture read FPicture write SetPicture;
-      property SelectBitmap: TBitMap read FBitMap write SetBitMap;
-      property SelectSegoe: string read FSegoeText write SetSegoe;
-      property SelectImageIndex: integer read FImageIndex write SetImageIndex default -1;
+    property SelectPicture: TPicture read FPicture write SetPicture;
+    property SelectBitmap: TBitMap read FBitMap write SetBitMap;
+    property SelectSegoe: string read FSegoeText write SetSegoe;
+    property SelectImageIndex: integer read FImageIndex write SetImageIndex default -1;
 
-    public
-      constructor Create(AOwner : TPersistent); override;
-      destructor Destroy; override;
+  public
+    constructor Create(AOwner : TPersistent); override;
+    destructor Destroy; override;
 
-      procedure Assign(Source: TPersistent); override;
+    procedure Assign(Source: TPersistent); override;
 
-      procedure DrawIcon(Canvas: TCanvas; ARectangle: TRect);
+    procedure DrawIcon(Canvas: TCanvas; ARectangle: TRect);
 
-      procedure FreeUnusedAssets;
-    end;
+    procedure FreeUnusedAssets;
+  end;
 
 implementation
 
@@ -421,7 +421,7 @@ end;
 
 constructor FXSideValues.Create(AOwner: TPersistent);
 begin
-  inherited;
+  inherited Create(AOwner);
   FLeft := 0;
   FTop := 0;
   FRight := 0;
@@ -439,9 +439,9 @@ begin
   FRight := trunc(FRight * Scaling);
   FBottom := trunc(FBottom * Scaling);
 
-  FAround := trunc(FBottom * Scaling);
-  FHorizontal := trunc(FBottom * Scaling);
-  FVertical := trunc(FBottom * Scaling);
+  FAround := trunc(FAround * Scaling);
+  FHorizontal := trunc(FHorizontal * Scaling);
+  FVertical := trunc(FVertical * Scaling);
 end;
 
 procedure FXSideValues.SetAround(const Value: integer);

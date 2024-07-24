@@ -3,212 +3,212 @@ unit CFX.AppManager;
 {$TYPEINFO ON}
 
 interface
-  uses
-    Winapi.Windows,
-    Winapi.Messages,
-    Classes,
-    Vcl.Forms,
-    CFX.Instances,
-    System.SysUtils,
-    System.UITypes,
-    Types,
-    Math,
-    DateUtils,
-    Vcl.Graphics,
-    CFX.ThemeManager,
-    CFX.Colors,
-    CFX.Files,
-    CFX.Version,
-    CFX.StringUtils,
-    CFX.Registry,
-    ShellAPI,
-    CFX.QuickDialogs,
-    CFX.Utilities,
-    CFX.UIConsts,
-    CFX.Types,
-    Vcl.Controls,
-    IniFiles,
-    CFX.AppIntegration,
-    IOUTils;
+uses
+  Winapi.Windows,
+  Winapi.Messages,
+  Classes,
+  Vcl.Forms,
+  CFX.Instances,
+  System.SysUtils,
+  System.UITypes,
+  Types,
+  Math,
+  DateUtils,
+  Vcl.Graphics,
+  CFX.ThemeManager,
+  CFX.Colors,
+  CFX.Files,
+  CFX.Version,
+  CFX.StringUtils,
+  CFX.Registry,
+  ShellAPI,
+  CFX.QuickDialogs,
+  CFX.Utilities,
+  CFX.UIConsts,
+  CFX.Types,
+  Vcl.Controls,
+  IniFiles,
+  CFX.AppIntegration,
+  IOUTils;
 
-  type
-    { Background App Manager Class }
-    FXAppManagerClass = class(TObject)
-    private
-      // Constant Folders
-      FAppDataPath,
-      FAppPackagesPath: string;
+type
+  { Background App Manager Class }
+  FXAppManagerClass = class(TObject)
+  private
+    // Constant Folders
+    FAppDataPath,
+    FAppPackagesPath: string;
 
-      // Dynamic data
-      FAppSelfFolder: string;
-      FAppConfig: string;
-      FAppWindows: string;
+    // Dynamic data
+    FAppSelfFolder: string;
+    FAppConfig: string;
+    FAppWindows: string;
 
-      // Variabiles
-      FAppIdentifier: string;
-      FApplicationName: string;
-      FAppVersion: FXVersion;
-      FServerVersion: FXVersion;
-      FAPIName,
-      FAPiEndpoint: string;
+    // Variabiles
+    FAppIdentifier: string;
+    FApplicationName: string;
+    FAppVersion: FXVersion;
+    FServerVersion: FXVersion;
+    FAPIName,
+    FAPiEndpoint: string;
 
-      FUpdateResult: TValueRelationship;
-      FUpdateCheckSuccess: boolean;
-      FCheckingUpdates: boolean;
-      FLastUpdateCheck: TDate;
+    FUpdateResult: TValueRelationship;
+    FUpdateCheckSuccess: boolean;
+    FCheckingUpdates: boolean;
+    FLastUpdateCheck: TDate;
 
-      // Procs
-      function GetConfig: TIniFile;
-      function GetWindow: TIniFile;
+    // Procs
+    function GetConfig: TIniFile;
+    function GetWindow: TIniFile;
 
-      procedure UpdateFolders;
-      procedure VerifyFolders;
+    procedure UpdateFolders;
+    procedure VerifyFolders;
 
-      // Setters
-      procedure SetIdentifier(const Value: string);
+    // Setters
+    procedure SetIdentifier(const Value: string);
 
-    public
-      // Procedures
-      procedure CheckForUpdates;
+  public
+    // Procedures
+    procedure CheckForUpdates;
 
-      // Settings
-      procedure SaveSettings;
-      procedure LoadSettings;
+    // Settings
+    procedure SaveSettings;
+    procedure LoadSettings;
 
-      // Form settings
-      procedure SaveFormData(Form: TForm; Closing: boolean = false);
-      procedure LoadFormData(Form: TForm);
+    // Form settings
+    procedure SaveFormData(Form: TForm; Closing: boolean = false);
+    procedure LoadFormData(Form: TForm);
 
-      // Properties
-      property CheckingForUpdates: boolean read FCheckingUpdates;
-      property LastUpdateCheck: TDate read FLastUpdateCheck;
-      property AppIdentifier: string read FAppIdentifier write SetIdentifier;
-      property ApplicationName: string read FApplicationName write FApplicationName;
-      property AppData: string read FAppDataPath;
-      property AppPackages: string read FAppPackagesPath;
-      property AppVersion: FXVersion read FAppVersion write FAppVersion;
-      property UpdateCheckSuccess: boolean read FUpdateCheckSuccess;
-      property UpdateCheckResult: TValueRelationship read FUpdateResult;
-      property ServerVersion: FXVersion read FServerVersion write FServerVersion;
-      property APIName: string read FAPIName write FAPIName;
-      property APiEndpoint: string read FAPiEndpoint write FAPiEndpoint;
+    // Properties
+    property CheckingForUpdates: boolean read FCheckingUpdates;
+    property LastUpdateCheck: TDate read FLastUpdateCheck;
+    property AppIdentifier: string read FAppIdentifier write SetIdentifier;
+    property ApplicationName: string read FApplicationName write FApplicationName;
+    property AppData: string read FAppDataPath;
+    property AppPackages: string read FAppPackagesPath;
+    property AppVersion: FXVersion read FAppVersion write FAppVersion;
+    property UpdateCheckSuccess: boolean read FUpdateCheckSuccess;
+    property UpdateCheckResult: TValueRelationship read FUpdateResult;
+    property ServerVersion: FXVersion read FServerVersion write FServerVersion;
+    property APIName: string read FAPIName write FAPIName;
+    property APiEndpoint: string read FAPiEndpoint write FAPiEndpoint;
 
-      function NewVersion: boolean;
+    function NewVersion: boolean;
 
-      // Constructors
-      constructor Create;
-      destructor Destroy; override;
-    end;
+    // Constructors
+    constructor Create;
+    destructor Destroy; override;
+  end;
 
-    { App Manager Component - Use on Main Form }
-    FXAppManager = class(TComponent)
-    private
-      const
-        DEFAULT_TASKS = [FXAppTask.WindowLoadForm, FXAppTask.WindowSaveForm];
-        DEFAULT_USER_UPDATE_DELAY = 2000;
-      var
-      MainForm: TForm;
+  { App Manager Component - Use on Main Form }
+  FXAppManager = class(TComponent)
+  private
+    const
+      DEFAULT_TASKS = [FXAppTask.WindowLoadForm, FXAppTask.WindowSaveForm];
+      DEFAULT_USER_UPDATE_DELAY = 2000;
+    var
+    MainForm: TForm;
 
-      // Main form prompts
-      FormPrompt: TForm;
+    // Main form prompts
+    FormPrompt: TForm;
 
-      // Props
-      FApplicationIdentifier: string;
-      FUpdateCheckInterval: integer;
-      FAppVersion: FXVersion;
-      FAPIName: string;
-      FAPIEndpoint: string;
-      FHasAppData: boolean;
-      FSingleInstance: boolean;
-      FTasks: FXAppTasks;
-      FAppDataStructure: TStringList;
+    // Props
+    FApplicationIdentifier: string;
+    FUpdateCheckInterval: integer;
+    FAppVersion: FXVersion;
+    FAPIName: string;
+    FAPIEndpoint: string;
+    FHasAppData: boolean;
+    FSingleInstance: boolean;
+    FTasks: FXAppTasks;
+    FAppDataStructure: TStringList;
 
-      FUpdateCheckUserInitiated: boolean;
-      FOnUpdateChecked: TNotifyEvent;
-      FOnUpdateStartCheck: TNotifyEvent;
-      FOnApplicationLoaded: TNotifyEvent;
-      FOnOtherInstance: FXOnOtherInstance;
-      FUserUpdateWaitDelay: cardinal;
+    FUpdateCheckUserInitiated: boolean;
+    FOnUpdateChecked: TNotifyEvent;
+    FOnUpdateStartCheck: TNotifyEvent;
+    FOnApplicationLoaded: TNotifyEvent;
+    FOnOtherInstance: FXOnOtherInstance;
+    FUserUpdateWaitDelay: cardinal;
 
-      FApplicationName: string;
-      FAppDataCompany: TCaption;
+    FApplicationName: string;
+    FAppDataCompany: TCaption;
 
-      // Background
-      procedure AppCheckUpdates;
+    // Background
+    procedure AppCheckUpdates;
 
-      // Stored
-      function IsAppDataStored: Boolean;
-      function IsEndpointStored: Boolean;
+    // Stored
+    function IsAppDataStored: Boolean;
+    function IsEndpointStored: Boolean;
 
-      // Getters
-      function GetAppData: string;
-      function GetVersion: string;
+    // Getters
+    function GetAppData: string;
+    function GetVersion: string;
 
-      // Setters
-      procedure SetApplicationIdentifier(Value: string);
-      procedure SetAPIEndpoint(const Value: string);
-      procedure SetVersion(const Value: string);
-      procedure SetHasAppData(const Value: boolean);
-      procedure SetApplicationName(const Value: string);
-      procedure SetDataStructure(const Value: TStringList);
+    // Setters
+    procedure SetApplicationIdentifier(Value: string);
+    procedure SetAPIEndpoint(const Value: string);
+    procedure SetVersion(const Value: string);
+    procedure SetHasAppData(const Value: boolean);
+    procedure SetApplicationName(const Value: string);
+    procedure SetDataStructure(const Value: TStringList);
 
-    protected
-      // Loaded
-      procedure Loaded; override;
-      procedure ApplySettings;
+  protected
+    // Loaded
+    procedure Loaded; override;
+    procedure ApplySettings;
 
-    published
-      property ApplicationIdentifier: string read FApplicationIdentifier write SetApplicationIdentifier;
-      // The update checking interval (days)
-      property UpdateCheckInterval: integer read FUpdateCheckInterval write FUpdateCheckInterval default -1;
-      property AppVersion: string read GetVersion write SetVersion;
-      property APIName: string read FAPIName write FAPIName;
-      property APIEndpoint: string read FAPIEndpoint write SetAPIEndpoint stored IsEndpointStored;
+  published
+    property ApplicationIdentifier: string read FApplicationIdentifier write SetApplicationIdentifier;
+    // The update checking interval (days)
+    property UpdateCheckInterval: integer read FUpdateCheckInterval write FUpdateCheckInterval default -1;
+    property AppVersion: string read GetVersion write SetVersion;
+    property APIName: string read FAPIName write FAPIName;
+    property APIEndpoint: string read FAPIEndpoint write SetAPIEndpoint stored IsEndpointStored;
 
-      property SingleInstance: boolean read FSingleInstance write FSingleInstance default false;
+    property SingleInstance: boolean read FSingleInstance write FSingleInstance default false;
 
-      property ApplicationName: string read FApplicationName write SetApplicationName;
-      property HasAppData: boolean read FHasAppData write SetHasAppData default false;
-      property AppDataCompany: TCaption read FAppDataCompany write FAppDataCompany stored IsAppDataStored;
+    property ApplicationName: string read FApplicationName write SetApplicationName;
+    property HasAppData: boolean read FHasAppData write SetHasAppData default false;
+    property AppDataCompany: TCaption read FAppDataCompany write FAppDataCompany stored IsAppDataStored;
 
-      property UpdateCheckUserInitiated: boolean read FUpdateCheckUserInitiated;
-      property OnUpdateChecked: TNotifyEvent read FOnUpdateChecked write FOnUpdateChecked;
-      property OnUpdateStartCheck: TNotifyEvent read FOnUpdateStartCheck write FOnUpdateStartCheck;
-      property OnApplicationLoaded: TNotifyEvent read FOnApplicationLoaded write FOnApplicationLoaded;
-      property OnOtherInstance: FXOnOtherInstance read FOnOtherInstance write FOnOtherInstance;
+    property UpdateCheckUserInitiated: boolean read FUpdateCheckUserInitiated;
+    property OnUpdateChecked: TNotifyEvent read FOnUpdateChecked write FOnUpdateChecked;
+    property OnUpdateStartCheck: TNotifyEvent read FOnUpdateStartCheck write FOnUpdateStartCheck;
+    property OnApplicationLoaded: TNotifyEvent read FOnApplicationLoaded write FOnApplicationLoaded;
+    property OnOtherInstance: FXOnOtherInstance read FOnOtherInstance write FOnOtherInstance;
 
-      property AutomaticTasks: FXAppTasks read FTasks write FTasks default DEFAULT_TASKS;
-      property AppDataStructure: TStringList read FAppDataStructure write SetDataStructure;
+    property AutomaticTasks: FXAppTasks read FTasks write FTasks default DEFAULT_TASKS;
+    property AppDataStructure: TStringList read FAppDataStructure write SetDataStructure;
 
-      property AppData: string read GetAppData;
+    property AppData: string read GetAppData;
 
-      property UserUpdateWaitDelay: cardinal read FUserUpdateWaitDelay write FUserUpdateWaitDelay;
-      function LastUpdateCheck: string;
+    property UserUpdateWaitDelay: cardinal read FUserUpdateWaitDelay write FUserUpdateWaitDelay;
+    function LastUpdateCheck: string;
 
-    public
-      // Application
-      procedure ApplicationOpen;
-      procedure ApplicationClose;
+  public
+    // Application
+    procedure ApplicationOpen;
+    procedure ApplicationClose;
 
-      // Executed for Main Form
-      procedure FormClosing;
-      procedure FormOpening;
+    // Executed for Main Form
+    procedure FormClosing;
+    procedure FormOpening;
 
-      // Utils
-      procedure InitiateUserUpdateCheck;
+    // Utils
+    procedure InitiateUserUpdateCheck;
 
-      // Constructors
-      constructor Create(AOwner: TComponent); override;
-      destructor Destroy; override;
-    end;
+    // Constructors
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+  end;
 
-  var
-    // App manager instances
-    AppManager: FXAppManagerClass;
-    AppMgrCount: integer;
+var
+  // App manager instances
+  AppManager: FXAppManagerClass;
+  AppMgrCount: integer;
 
-    // App manager placed on form
-    AppManagerInstance: FXAppManager;
+  // App manager placed on form
+  AppManagerInstance: FXAppManager;
 
 implementation
 

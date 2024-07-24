@@ -16,7 +16,7 @@
 unit CFX.Files;
 
 interface
-  uses
+uses
   Winapi.Windows,
   Winapi.Messages,
   System.SysUtils,
@@ -32,67 +32,67 @@ interface
   Registry,
   CFX.Types;
 
-  type
-    TFileIOFlag = (fioConfirmMouse, fioSilent, fioNoConfirmation, fioAllowUndo,
-                   fioFilesOnly, fioSimpleProgress, fioNoConfirMakeDir, fioNoErrorUI,
-                   fioNoSecurityAttrib, fioNoRecursion, fioWantNukeWarning, fioNoUI);
-    TFileIOFlags = set of TFileIOFlag;
+type
+  TFileIOFlag = (fioConfirmMouse, fioSilent, fioNoConfirmation, fioAllowUndo,
+                 fioFilesOnly, fioSimpleProgress, fioNoConfirMakeDir, fioNoErrorUI,
+                 fioNoSecurityAttrib, fioNoRecursion, fioWantNukeWarning, fioNoUI);
+  TFileIOFlags = set of TFileIOFlag;
 
-  // File Folder IO
-  function FileIoFlags(Flags: TFileIOFlags): FILEOP_FLAGS;
+// File Folder IO
+function FileIoFlags(Flags: TFileIOFlags): FILEOP_FLAGS;
 
-  (* Path *)
-  function ReplaceWinPath(SrcString: string): string;
+(* Path *)
+function ReplaceWinPath(SrcString: string): string;
 
-  function ReplaceEnviromentVariabiles(SrcString: string): string;
-  function ReplaceShellLocations(SrcString: string): string;
+function ReplaceEnviromentVariabiles(SrcString: string): string;
+function ReplaceShellLocations(SrcString: string): string;
 
-  function GetSystemDrive: string;
-  function GetSystemRoot: string;
+function GetSystemDrive: string;
+function GetSystemRoot: string;
 
-  function GetPathDepth(Path: string): integer;
+function GetPathDepth(Path: string): integer;
 
-  function GetUserShellLocation(ShellLocation: FXUserShell): string;
+function GetUserShellLocation(ShellLocation: FXUserShell): string;
 
-  function FileExtension(FileName: string; includeperiod: boolean = true): string;
-  function ValidateFileName(AString: string): string;
+function FileExtension(FileName: string; includeperiod: boolean = true): string;
+function ValidateFileName(AString: string): string;
 
-  (* Redeclared *)
-  procedure RecycleFile(Path: string; Flags: TFileIOFlags = [fioAllowUndo]);
-  procedure RecycleFolder(Path: string; Flags: TFileIOFlags = [fioAllowUndo]);
+(* Redeclared *)
+procedure RecycleFile(Path: string; Flags: TFileIOFlags = [fioAllowUndo]);
+procedure RecycleFolder(Path: string; Flags: TFileIOFlags = [fioAllowUndo]);
 
-  (* Disk IO *)
-  procedure DeleteFromDisk(Path: string; Flags: TFileIOFlags = [fioAllowUndo]);
-  procedure RenameDiskItem(Source: string; NewName: string; Flags: TFileIOFlags);
-  procedure MoveDiskItem(Source: string; Destination: string; Flags: TFileIOFlags = [fioAllowUndo]);
-  procedure CopyDiskItem(Source: string; Destination: string; Flags: TFileIOFlags = [fioAllowUndo, fioNoConfirMakeDir]);
+(* Disk IO *)
+procedure DeleteFromDisk(Path: string; Flags: TFileIOFlags = [fioAllowUndo]);
+procedure RenameDiskItem(Source: string; NewName: string; Flags: TFileIOFlags);
+procedure MoveDiskItem(Source: string; Destination: string; Flags: TFileIOFlags = [fioAllowUndo]);
+procedure CopyDiskItem(Source: string; Destination: string; Flags: TFileIOFlags = [fioAllowUndo, fioNoConfirMakeDir]);
 
-  (* Volumes *)
-  procedure GetDiskSpace(const Disk: string; var FreeBytes, TotalBytes, TotalFreeBytes: int64);
+(* Volumes *)
+procedure GetDiskSpace(const Disk: string; var FreeBytes, TotalBytes, TotalFreeBytes: int64);
 
-  (* File Information *)
-  function IsFileInUse(const FileName: string): Boolean;
-  function GetFileDate(const FileName: string; AType: FXFileDateType): TDateTime;
-  procedure SetFileDate(const FileName: string; AType: FXFileDateType; NewDate: TDateTime);
+(* File Information *)
+function IsFileInUse(const FileName: string): Boolean;
+function GetFileDate(const FileName: string; AType: FXFileDateType): TDateTime;
+procedure SetFileDate(const FileName: string; AType: FXFileDateType; NewDate: TDateTime);
 
-  (* Size *)
-  function SizeInString(Size: int64; MaxDecimals: cardinal = 2): string;
+(* Size *)
+function SizeInString(Size: int64; MaxDecimals: cardinal = 2): string;
 
-  function GetFolderSize(Path: string): int64;
-  function GetFolderSizeInStr(path: string): string;
+function GetFolderSize(Path: string): int64;
+function GetFolderSizeInStr(path: string): string;
 
-  function GetFileSize(FileName: WideString): Int64;
-  function GetFileSizeInStr(FileName: WideString): string;
+function GetFileSize(FileName: WideString): Int64;
+function GetFileSizeInStr(FileName: WideString): string;
 
-  (* NTFT Compression *)
-  function CompressItem(const Path:string;Compress:Boolean; FolderRecursive: boolean = true):integer;
-  function CompressFile(const FileName:string;Compress:Boolean):integer;
-  function CompressFolder(const FolderName:string;Recursive, Compress:Boolean): integer;
+(* NTFT Compression *)
+function CompressItem(const Path:string;Compress:Boolean; FolderRecursive: boolean = true):integer;
+function CompressFile(const FileName:string;Compress:Boolean):integer;
+function CompressFolder(const FolderName:string;Recursive, Compress:Boolean): integer;
 
-  // Utilities
-  function GetNTVersion: single;
-  function GetUserNameString: string;
-  function GetComputerNameString: string;
+// Utilities
+function GetNTVersion: single;
+function GetUserNameString: string;
+function GetComputerNameString: string;
 
 implementation
 

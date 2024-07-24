@@ -16,11 +16,11 @@
 unit CFX.DesignEditors;
 
 interface
-  uses
+uses
   System.Types, System.SysUtils, System.Classes, Winapi.ActiveX, System.TypInfo, System.Variants, DesignIntf, DesignMenus,
   ToolsAPI, DesignEditors;
 
-  type
+type
   FXPropertyEditor = class(TBasePropertyEditor, IProperty, IPropertyKind,
     IProperty70, IProperty80)
   private

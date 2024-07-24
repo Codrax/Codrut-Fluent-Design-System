@@ -4,136 +4,133 @@ unit CFX.Dialogs;
 
 interface
 
-  uses
-    Windows, Vcl.Dialogs, CFX.Button, Types, Classes, Variants,
-    Vcl.Forms, Vcl.Themes, Vcl.Styles, Vcl.Graphics, CFX.Types,
-    Vcl.Controls, CFX.Colors, SysUtils, Vcl.ExtCtrls, Vcl.ComCtrls,
-    Vcl.TitleBarCtrls, Math, CFX.Math, Vcl.StdCtrls, CFX.Forms,
-    UITypes, CFX.Edit, CFX.TextBox, CFX.Panels;
+uses
+  Windows, Vcl.Dialogs, CFX.Button, Types, Classes, Variants,
+  Vcl.Forms, Vcl.Themes, Vcl.Styles, Vcl.Graphics, CFX.Types,
+  Vcl.Controls, CFX.Colors, SysUtils, Vcl.ExtCtrls, Vcl.ComCtrls,
+  Vcl.TitleBarCtrls, Math, CFX.Math, Vcl.StdCtrls, CFX.Forms,
+  UITypes, CFX.Edit, CFX.TextBox, CFX.Panels;
 
-  type
-    FXMessageType = (Information, Error, Question, Sucess, Warning, Star);
-    FXInputBoxResult = (Cancel, Ok);
+type
+  FXMessageType = (Information, Error, Question, Sucess, Warning, Star);
+  FXInputBoxResult = (Cancel, Ok);
 
-    TButtonLabelsArray = array[TMsgDlgBtn] of string;
+  TButtonLabelsArray = array[TMsgDlgBtn] of string;
 
-    FXButtonDesignHelper = class helper for FXButton
-      procedure ApplyButtonSettings(LoadFromButton: FXButton);
-    end;
+  FXButtonDesignHelper = class helper for FXButton
+    procedure ApplyButtonSettings(LoadFromButton: FXButton);
+  end;
 
-    FXDialogBox = class
-      private
-        FTitle: string;
-        FText: string;
-        FTitleFont,
-        FTextFont: TFont;
-        FButtonDesign: FXButton;
-        FFormColor: TColor;
-        FButtonLabels: TButtonLabelsArray;
+  FXDialogBox = class
+    private
+      FTitle: string;
+      FText: string;
+      FTitleFont,
+      FTextFont: TFont;
+      FButtonDesign: FXButton;
+      FFormColor: TColor;
+      FButtonLabels: TButtonLabelsArray;
 
-        FParent: TForm;
+      FParent: TForm;
 
-        FTitlebarHeight: integer;
-        FButtonOffset: integer;
-        FButtonHeight: integer;
+      FTitlebarHeight: integer;
+      FButtonOffset: integer;
+      FButtonHeight: integer;
 
-        // Settings
-        PromptCreation: boolean;
-        DialogUnits: TPoint;
-        HasButtons: boolean;
-        FScreenCenter: boolean;
+      // Settings
+      PromptCreation: boolean;
+      DialogUnits: TPoint;
+      HasButtons: boolean;
+      FScreenCenter: boolean;
 
-        // Inherited Creation
-        Form: FXForm;
-        MainPrompt,
-        Prompt: FXTextBox;
-        ButtonFooter: FXPanel;
+      // Inherited Creation
+      Form: FXForm;
+      MainPrompt,
+      Prompt: FXTextBox;
+      ButtonFooter: FXPanel;
 
-        // Utils
-        function GetTextWidth(Text: string; Font: TFont): integer;
-        function GetButonWidth(Text: string; Font: TFont): integer;
-        function CalculateButtonHeight: integer;
+      // Utils
+      function GetTextWidth(Text: string; Font: TFont): integer;
+      function GetButonWidth(Text: string; Font: TFont): integer;
+      function CalculateButtonHeight: integer;
 
-        function ButtonTypeToModal(AType: TMsgDlgBtn): integer;
+      function ButtonTypeToModal(AType: TMsgDlgBtn): integer;
 
-        procedure ResizeForm(NewWidth: integer = -1; NewHeight: integer = -1);
+      procedure ResizeForm(NewWidth: integer = -1; NewHeight: integer = -1);
 
-        procedure CreateButtons(Buttons: TMsgDlgButtons);
-        function FindButton(ModalResult: integer): FXButton;
+      procedure CreateButtons(Buttons: TMsgDlgButtons);
+      function FindButton(ModalResult: integer): FXButton;
 
-        function GetCharSize(Canvas: TCanvas): TPoint;
+      function GetCharSize(Canvas: TCanvas): TPoint;
 
-      public
-        // Public Settings
-        constructor Create; overload; virtual;
-        constructor Create(Owner: TForm); overload; virtual;
+    public
+      // Public Settings
+      constructor Create; overload; virtual;
+      constructor Create(Owner: TForm); overload; virtual;
 
-        // Settings
-        procedure HighlightDefaultButton;
+      // Settings
+      procedure HighlightDefaultButton;
 
-        property ParentForm: TForm read FParent write FParent;
-        property ScreenCenter: boolean read FScreenCenter write FScreenCenter;
+      property ParentForm: TForm read FParent write FParent;
+      property ScreenCenter: boolean read FScreenCenter write FScreenCenter;
 
-        // Execute
-        procedure ExecuteInherited; virtual;
-        function ModalExecution(FreeForm: boolean): integer;
+      // Execute
+      procedure ExecuteInherited; virtual;
+      function ModalExecution(FreeForm: boolean): integer;
 
-        property Title: string read FTitle write FTitle;
-        property Text: string read FText write FText;
-        property ButtonDesign: FXButton read FButtonDesign write FButtonDesign;
-        property ButtonLabels: TButtonLabelsArray read FButtonLabels write FButtonLabels;
-    end;
+      property Title: string read FTitle write FTitle;
+      property Text: string read FText write FText;
+      property ButtonDesign: FXButton read FButtonDesign write FButtonDesign;
+      property ButtonLabels: TButtonLabelsArray read FButtonLabels write FButtonLabels;
+  end;
 
-    FXMessageBox = class(FXDialogBox)
-      private
+  FXMessageBox = class(FXDialogBox)
+    public
+      constructor Create; override;
+      destructor Destroy; override;
 
+      procedure Execute; overload;
+  end;
 
-      public
-        constructor Create; override;
-        destructor Destroy; override;
+  FXDialog = class(FXDialogBox)
+    private
+      FKind: FXMessageType;
+      FButtons: TMsgDlgButtons;
 
-        procedure Execute; overload;
-    end;
+    public
+      constructor Create; override;
+      destructor Destroy; override;
 
-    FXDialog = class(FXDialogBox)
-      private
-        FKind: FXMessageType;
-        FButtons: TMsgDlgButtons;
+      function Execute: TModalResult; overload;
 
-      public
-        constructor Create; override;
-        destructor Destroy; override;
+      property Kind: FXMessageType read FKind write FKind;
+      property Buttons: TMsgDlgButtons read FButtons write FButtons;
+  end;
 
-        function Execute: TModalResult; overload;
+  FXInputBox = class(FXDialogBox)
+    private
+      FValue: string;
+      FTextHint: string;
+      FSelectAll: boolean;
+      FCanCancel: boolean;
+      FNumbersOnly: boolean;
+      FPasswordChar: char;
 
-        property Kind: FXMessageType read FKind write FKind;
-        property Buttons: TMsgDlgButtons read FButtons write FButtons;
-    end;
+    public
+      DialogResult: FXInputBoxResult;
 
-    FXInputBox = class(FXDialogBox)
-      private
-        FValue: string;
-        FTextHint: string;
-        FSelectAll: boolean;
-        FCanCancel: boolean;
-        FNumbersOnly: boolean;
-        FPasswordChar: char;
+      constructor Create; override;
+      destructor Destroy; override;
 
-      public
-        DialogResult: FXInputBoxResult;
+      function Execute: string; overload;
 
-        constructor Create; override;
-        destructor Destroy; override;
-
-        function Execute: string; overload;
-
-        property Value: string read FValue write FValue;
-        property TextHint: string read FTextHint write FTextHint;
-        property SelectAll: boolean read FSelectAll write FSelectAll;
-        property CanCancel: boolean read FCanCancel write FCanCancel;
-        property PasswordChar: char read FPasswordChar write FPasswordChar;
-        property NumbersOnly: boolean read FNumbersOnly write FNumbersOnly;
-    end;
+      property Value: string read FValue write FValue;
+      property TextHint: string read FTextHint write FTextHint;
+      property SelectAll: boolean read FSelectAll write FSelectAll;
+      property CanCancel: boolean read FCanCancel write FCanCancel;
+      property PasswordChar: char read FPasswordChar write FPasswordChar;
+      property NumbersOnly: boolean read FNumbersOnly write FNumbersOnly;
+  end;
 
 var
   GlobalButtonLabels: TButtonLabelsArray =

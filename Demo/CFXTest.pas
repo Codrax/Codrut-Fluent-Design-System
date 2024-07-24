@@ -16,12 +16,12 @@ uses
   CFX.PopupConnector, Vcl.Buttons, CFX.IconView, CFX.ScrollText, CFX.FormClasses,
   CFX.Messages, CFX.VarHelpers, CFX.Graphics, CFX.RatingControl, CFX.Effects,
   CFX.Progress, CFX.GDI, CFX.Utilities, CFX.QuickDialogs, CFX.Instances,
-  CFX.PaintBox, CFX.Lists, CFX.TabStrip, CFX.AppManager,
+  CFX.PaintBox, CFX.Lists, CFX.TabStrip, CFX.AppManager, CFX.Shapes,
 
   // VCL COMPONENTS
-  Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage,
+  Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage, Vcl.ControlList,
   Vcl.ExtDlgs, System.ImageList, UITypes, Vcl.ComCtrls, Vcl.Mask,
-  UxTheme, Vcl.Themes, System.Generics.Collections, CFX.Shapes;
+  UxTheme, Vcl.Themes, System.Generics.Collections;
 
 type
   TForm1 = class(FXForm)
@@ -81,7 +81,7 @@ type
     FXTextBox1: FXTextBox;
     FXAppManager1: FXAppManager;
     FXTabStrip1: FXTabStrip;
-    FXShapeSquare1: FXShapeSquare;
+    FXButton17: FXButton;
     procedure FXButton4Click(Sender: TObject);
     procedure FXButtonDesign3Click(Sender: TObject);
     procedure FXButton5Click(Sender: TObject);
@@ -97,6 +97,9 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FXAppManager1UpdateChecked(Sender: TObject);
     procedure FXPaintBox1Draw(Sender: TObject);
+    procedure FXButton17Click(Sender: TObject);
+    procedure FXLinearControlList1BeforeDrawItem(Sender: TObject;
+      AIndex: Integer; ARect: TRect; Canvas: TCanvas);
   private
     { Private declarations }
     procedure FormMove(Sender: TObject);
@@ -212,6 +215,21 @@ begin
     finally
       //Free;
     end;
+end;
+
+procedure TForm1.FXButton17Click(Sender: TObject);
+begin
+  with FXButton(Sender) do begin
+    FXLinearControlList1.AddControlToItem(FXButton(Sender));
+    FXLinearControlList1.AddControlToItem(FXAnimatedTextBox1);
+    FXAnimatedTextBox1.Left := 0;
+    FXAnimatedTextBox1.Top := 0;
+
+    Align := alLeft;
+
+    Top := 30;
+    Left := 10;
+  end;
 end;
 
 procedure TForm1.FXButton4Click(Sender: TObject);
@@ -514,6 +532,12 @@ begin
     finally
       Free;
     end;
+end;
+
+procedure TForm1.FXLinearControlList1BeforeDrawItem(Sender: TObject;
+  AIndex: Integer; ARect: TRect; Canvas: TCanvas);
+begin
+  FXButton18.Text := 'Button number '+AIndex.ToString
 end;
 
 procedure TForm1.FXPaintBox1Draw(Sender: TObject);

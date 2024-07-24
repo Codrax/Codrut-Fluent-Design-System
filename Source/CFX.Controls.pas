@@ -1,362 +1,362 @@
 unit CFX.Controls;
 
 interface
-  uses
-    Winapi.Windows, Vcl.Graphics, Classes, Types, Winapi.Messages, CFX.Types,
-    CFX.UIConsts, SysUtils, CFX.Graphics, CFX.VarHelpers, CFX.ThemeManager,
-    Vcl.Controls, CFX.PopupMenu, CFX.Linker, Vcl.Forms, CFX.Forms,
-    Vcl.Dialogs, CFX.Classes, Math;
-
-  type
-    // Canvas-Based Control
-    FXCustomControl = class(TCustomControl)
-    protected
-      property Canvas;
-    end;
-
-    // Custom classes
-    FXControlSize = class(FXPointGeneric)
-    private
-      FParent: TControl;
-
-    protected
-      // Getters
-      function GetX: integer; override;
-      function GetY: integer; override;
-
-      // Setters
-      procedure SetX(const Value: integer); override;
-      procedure SetY(const Value: integer); override;
-
-    published
-      property X;
-      property Y;
-
-      constructor Create(Control: TControl);
-    end;
-
-    FXControlPosition = class(FXPointGeneric)
-    private
-      FParent: TControl;
-
-    protected
-      // Getters
-      function GetX: integer; override;
-      function GetY: integer; override;
-
-      // Setters
-      procedure SetX(const Value: integer); override;
-      procedure SetY(const Value: integer); override;
-
-    published
-      property X;
-      property Y;
-
-      property Point;
-
-      constructor Create(Control: TControl);
-    end;
-
-    // Control
-    FXWindowsControl = class(FXCustomControl)
-    private
-      FPopupMenu: FXPopupMenu;
-      FBuffer: TBitMap;
-      FBufferedComponent: boolean;
-      FFocusRect: TRect;
-      FAutoFocusLine: boolean;
-      FHasEnteredTab: boolean;
-      FInteraction: FXControlState;
-      FPreviousInteraction: FXControlState;
-      FCreated: boolean;
-      FTransparent: boolean;
-      FOpacity: byte;
-      FBackground: TBitMap;
-      FOnPaint: FXControlOnPaint;
-      FOnPaintBuffer: FXControlOnPaint;
-      FTextFont: TFont;
-      FFocusFlags: FXFocusFlags;
-      FHitTest: boolean;
-
-      FPadding: FXPadding;
-      FMargins: FXMargins;
-
-      FSize: FXControlSize;
-      FPosition: FXControlPosition;
-
-      // Events
-      procedure WMNCHitTest(var Message: TWMNCHitTest); message WM_NCHITTEST;
-
-      // Data
-      procedure ResizeBuffer;
-      function GetBuffer: TCanvas;
-      function CanDrawFocusLine: boolean;
-
-      // Draw
-      procedure SolidifyBuffer;
-
-      // Object Notify Events
-      procedure FontNotifyUpdate(Sender: TObject);
-
-      // Set
-      procedure SetState(const Value: FXControlState);
-      procedure SetTransparent(const Value: boolean);
-      procedure SetOpacity(const Value: byte);
-      procedure SetPosition(const Value: FXControlPosition);
-      procedure SetSize(const Value: FXControlSize);
-      procedure SetMargins(const Value: FXMargins);
-      procedure SetPadding(const Value: FXPadding);
 
-    protected
-      // Paint
-      procedure WMSize(var Message: TWMSize); message WM_SIZE;
+uses
+  Winapi.Windows, Vcl.Graphics, Classes, Types, Winapi.Messages, CFX.Types,
+  CFX.UIConsts, SysUtils, CFX.Graphics, CFX.VarHelpers, CFX.ThemeManager,
+  Vcl.Controls, CFX.PopupMenu, CFX.Linker, Vcl.Forms, CFX.Forms,
+  Vcl.Dialogs, CFX.Classes, Math;
+
+type
+  // Canvas-Based Control
+  FXCustomControl = class(TCustomControl)
+  protected
+    property Canvas;
+  end;
+
+  // Custom classes
+  FXControlSize = class(FXPointGeneric)
+  private
+    FParent: TControl;
+
+  protected
+    // Getters
+    function GetX: integer; override;
+    function GetY: integer; override;
+
+    // Setters
+    procedure SetX(const Value: integer); override;
+    procedure SetY(const Value: integer); override;
+
+  published
+    property X;
+    property Y;
+
+    constructor Create(Control: TControl);
+  end;
+
+  FXControlPosition = class(FXPointGeneric)
+  private
+    FParent: TControl;
+
+  protected
+    // Getters
+    function GetX: integer; override;
+    function GetY: integer; override;
+
+    // Setters
+    procedure SetX(const Value: integer); override;
+    procedure SetY(const Value: integer); override;
+
+  published
+    property X;
+    property Y;
+
+    property Point;
+
+    constructor Create(Control: TControl);
+  end;
+
+  // Control
+  FXWindowsControl = class(FXCustomControl)
+  private
+    FPopupMenu: FXPopupMenu;
+    FBuffer: TBitMap;
+    FBufferedComponent: boolean;
+    FFocusRect: TRect;
+    FAutoFocusLine: boolean;
+    FHasEnteredTab: boolean;
+    FInteraction: FXControlState;
+    FPreviousInteraction: FXControlState;
+    FCreated: boolean;
+    FTransparent: boolean;
+    FOpacity: byte;
+    FBackground: TBitMap;
+    FOnPaint: FXControlOnPaint;
+    FOnPaintBuffer: FXControlOnPaint;
+    FTextFont: TFont;
+    FFocusFlags: FXFocusFlags;
+    FHitTest: boolean;
+
+    FPadding: FXPadding;
+    FMargins: FXMargins;
+
+    FSize: FXControlSize;
+    FPosition: FXControlPosition;
+
+    // Events
+    procedure WMNCHitTest(var Message: TWMNCHitTest); message WM_NCHITTEST;
+
+    // Data
+    procedure ResizeBuffer;
+    function GetBuffer: TCanvas;
+    function CanDrawFocusLine: boolean;
 
-      procedure Resize; override;
+    // Draw
+    procedure SolidifyBuffer;
 
-      procedure Paint; override;
-      procedure PaintBuffer; virtual;
+    // Object Notify Events
+    procedure FontNotifyUpdate(Sender: TObject);
 
-      property HitTest: boolean read FHitTest write FHitTest default true;
+    // Set
+    procedure SetState(const Value: FXControlState);
+    procedure SetTransparent(const Value: boolean);
+    procedure SetOpacity(const Value: byte);
+    procedure SetPosition(const Value: FXControlPosition);
+    procedure SetSize(const Value: FXControlSize);
 
-      property BufferedComponent: boolean read FBufferedComponent write FBufferedComponent;
+  protected
+    // Paint
+    procedure WMSize(var Message: TWMSize); message WM_SIZE;
 
-      property OnPaint: FXControlOnPaint read FOnPaint write FOnPaint;
-      property OnPaintBuffer: FXControlOnPaint read FOnPaintBuffer write FOnPaintBuffer;
+    procedure Resize; override;
 
-      // Background
-      procedure DrawBackground(var Background: TBitMap); virtual;
-      procedure PaintBackground;
-      function GetBackground: TCanvas;
+    procedure Paint; override;
+    procedure PaintBuffer; virtual;
 
-      // Virtual Events
-      procedure ComponentCreated; virtual;
-      procedure UpdateFocusRect; virtual;
-      procedure FontUpdate; virtual;
-      procedure OpenPopupMenu(X, Y: integer); virtual;
-      procedure ScaleChanged(Scaler: single); virtual;
-      procedure HandleKeyDown(var CanHandle: boolean; Key: integer; ShiftState: TShiftState); virtual;
+    property HitTest: boolean read FHitTest write FHitTest default true;
 
-      // Focus Line and Events
-      procedure DoEnter; override;
-      procedure DoExit; override;
+    property BufferedComponent: boolean read FBufferedComponent write FBufferedComponent;
 
-      // Size
-      function GetClientRect: TRect; override;
+    property OnPaint: FXControlOnPaint read FOnPaint write FOnPaint;
+    property OnPaintBuffer: FXControlOnPaint read FOnPaintBuffer write FOnPaintBuffer;
 
-      // Created
-      procedure CreateWnd; override;
+    // Background
+    procedure DrawBackground(var Background: TBitMap); virtual;
+    procedure PaintBackground;
+    function GetBackground: TCanvas;
 
-      // Visible Change
-      procedure OnVisibleChange(var Message : TMessage); message CM_VISIBLECHANGED;
+    // Virtual Events
+    procedure ComponentCreated; virtual;
+    procedure UpdateFocusRect; virtual;
+    procedure FontUpdate; virtual;
+    procedure OpenPopupMenu(X, Y: integer); virtual;
+    procedure ScaleChanged(Scaler: single); virtual;
+    procedure HandleKeyDown(var CanHandle: boolean; Key: integer; ShiftState: TShiftState); virtual;
 
-      // Events
-      procedure CMMouseEnter(var Message : TMessage); message CM_MOUSEENTER;
-      procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
-      procedure CNKeyDown(var Message: TWMKeyDown); message CN_KEYDOWN;
+    // Focus Line and Events
+    procedure DoEnter; override;
+    procedure DoExit; override;
 
-      procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
-      procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+    // Size
+    function GetClientRect: TRect; override;
 
-      procedure MarginsUpdated(Sender: TObject);
+    // Created
+    procedure CreateWnd; override;
 
-      // Interaction
-      procedure InteractionStateChanged(AState: FXControlState); virtual;
-      procedure SetNewInteractionState(AState: FXControlState; ForceUpdate: boolean = false; UpdatePrevious: boolean = true);
+    // Visible Change
+    procedure OnVisibleChange(var Message : TMessage); message CM_VISIBLECHANGED;
 
-      // Utilities
-      function IsReading: boolean;
-      function IsDesigning: boolean;
-      function IsDestroying: boolean;
-      function Creating: boolean;
+    // Events
+    procedure CMMouseEnter(var Message : TMessage); message CM_MOUSEENTER;
+    procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
+    procedure CNKeyDown(var Message: TWMKeyDown); message CN_KEYDOWN;
 
-      function Destroyed: boolean;
+    procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+    procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
 
-      // Padding
-      property PaddingFill: FXPadding read FPadding write SetPadding;
+    procedure MarginsUpdated(Sender: TObject);
 
-      // Catch Events
-      procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
+    // Interaction
+    procedure InteractionStateChanged(AState: FXControlState); virtual;
+    procedure SetNewInteractionState(AState: FXControlState; ForceUpdate: boolean = false; UpdatePrevious: boolean = true);
 
-      // Scaling
-      procedure ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF}); override;
+    // Utilities
+    function IsReading: boolean;
+    function IsDesigning: boolean;
+    function IsDestroying: boolean;
+    function Creating: boolean;
 
-      // Properties
-      property Color;
+    function Destroyed: boolean;
 
-      property FocusRect: TRect read FFocusRect write FFocusRect;
-      property AutoFocusLine: boolean read FAutoFocusLine write FAutoFocusLine;
+    // Padding
+    property PaddingFill: FXPadding read FPadding write FPadding;
 
-      property FocusFlags: FXFocusFlags read FFocusFlags write FFocusFlags default [];
+    // Catch Events
+    procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
 
-      property PreviousInteractionState: FXControlState read FPreviousInteraction write FPreviousInteraction;
+    // Scaling
+    procedure ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF}); override;
 
-      property Font: TFont read FTextFont write FTextFont;
+    // Properties
+    property Color;
 
-      property Transparent: boolean read FTransparent write SetTransparent default true;
-      property Opacity: byte read FOpacity write SetOpacity default 255;
+    property FocusRect: TRect read FFocusRect write FFocusRect;
+    property AutoFocusLine: boolean read FAutoFocusLine write FAutoFocusLine;
 
-    published
-      // Popup Menu
-      property PopupMenu: FXPopupMenu read FPopupMenu write FPopupMenu;
+    property FocusFlags: FXFocusFlags read FFocusFlags write FFocusFlags default [];
 
-      // Client
-      property MarginsFill: FXMargins read FMargins write SetMargins;
+    property PreviousInteractionState: FXControlState read FPreviousInteraction write FPreviousInteraction;
 
-      // Defaults
-      property Hint;
+    property Font: TFont read FTextFont write FTextFont;
 
-      property TabStop default true;
+    property Transparent: boolean read FTransparent write SetTransparent default true;
 
-      property Size: FXControlSize read FSize write SetSize;
-      property Position: FXControlPosition read FPosition write SetPosition;
+  published
+    property Opacity: byte read FOpacity write SetOpacity default 255;
 
-      property Enabled;
-      property Visible;
-      property Tag;
+    // Popup Menu
+    property PopupMenu: FXPopupMenu read FPopupMenu write FPopupMenu;
 
-    public
-      constructor Create(AOwner: TComponent); override;
-      destructor Destroy; override;
+    // Client
+    property MarginsFill: FXMargins read FMargins write FMargins;
 
-      // State
-      property InteractionState: FXControlState read FInteraction write SetState;
+    // Defaults
+    property Hint;
 
-      // Buffer
-      property Buffer: TCanvas read GetBuffer;
+    property TabStop default true;
 
-      // Parent Utilities
-      function GetParentBackgroundColor(Default: TColor): TColor;
+    property Size: FXControlSize read FSize write SetSize;
+    property Position: FXControlPosition read FPosition write SetPosition;
 
-      // Invalidate
-      procedure Invalidate; override;
-      procedure InvalidateControlsAbove;
-    end;
+    property Enabled;
+    property Visible;
+    property Tag;
 
-    FXBufferGraphicControl = class(TGraphicControl)
-    private
-      FPopupMenu: FXPopupMenu;
-      FInteraction: FXControlState;
-      FPreviousInteraction: FXControlState;
-      FBuffer: TBitMap;
-      FOnPaint: FXControlOnPaint;
-      FOnPaintBuffer: FXControlOnPaint;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
 
-      procedure SetState(const Value: FXControlState);
-      function GetBuffer: TCanvas;
+    // State
+    property InteractionState: FXControlState read FInteraction write SetState;
 
-    protected
-      // Mouse Events
-      procedure CMMouseEnter(var Message : TMessage); message CM_MOUSEENTER;
-      procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
+    // Buffer
+    property Buffer: TCanvas read GetBuffer;
 
-      procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
-      procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+    // Parent Utilities
+    function GetParentBackgroundColor(Default: TColor): TColor;
 
-      // Detect creation
-      procedure Loaded; override;
+    // Invalidate
+    procedure Invalidate; override;
+    procedure InvalidateControlsAbove;
+  end;
 
-      // Paint
-      procedure Paint; override;
-      procedure PaintBuffer; virtual;
+  FXBufferGraphicControl = class(TGraphicControl)
+  private
+    FPopupMenu: FXPopupMenu;
+    FInteraction: FXControlState;
+    FPreviousInteraction: FXControlState;
+    FBuffer: TBitMap;
+    FOnPaint: FXControlOnPaint;
+    FOnPaintBuffer: FXControlOnPaint;
 
-      property OnPaint: FXControlOnPaint read FOnPaint write FOnPaint;
-      property OnPaintBuffer: FXControlOnPaint read FOnPaintBuffer write FOnPaintBuffer;
+    procedure SetState(const Value: FXControlState);
+    function GetBuffer: TCanvas;
 
-      // Buffer
-      procedure ResizeBuffer;
-      procedure Resize; override;
+  protected
+    // Mouse Events
+    procedure CMMouseEnter(var Message : TMessage); message CM_MOUSEENTER;
+    procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
 
-      // Created
-      procedure ComponentCreated; virtual;
+    procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+    procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
 
-      // Visible Change
-      procedure OnVisibleChange(var Message : TMessage); message CM_VISIBLECHANGED;
+    // Detect creation
+    procedure Loaded; override;
 
-      // Interaction
-      procedure InteractionStateChanged(AState: FXControlState); virtual;
+    // Paint
+    procedure Paint; override;
+    procedure PaintBuffer; virtual;
 
-      // Utilities
-      function IsReading: boolean;
+    property OnPaint: FXControlOnPaint read FOnPaint write FOnPaint;
+    property OnPaintBuffer: FXControlOnPaint read FOnPaintBuffer write FOnPaintBuffer;
 
-    published
-      // Interact State
-      property InteractionState: FXControlState read FInteraction;
+    // Buffer
+    procedure ResizeBuffer;
+    procedure Resize; override;
 
-      // Draw Buffer
-      property Buffer: TCanvas read GetBuffer;
+    // Created
+    procedure ComponentCreated; virtual;
 
-      // Popup Menu
-      property PopupMenu: FXPopupMenu read FPopupMenu write FPopupMenu;
+    // Visible Change
+    procedure OnVisibleChange(var Message : TMessage); message CM_VISIBLECHANGED;
 
-      // Canvas
-      function GetCanvas: TCanvas;
+    // Interaction
+    procedure InteractionStateChanged(AState: FXControlState); virtual;
 
-    public
-      // Constructors
-      constructor Create(AOwner: TComponent); override;
-      destructor Destroy; override;
+    // Utilities
+    function IsReading: boolean;
 
-      // Parent Utilities
-      function GetParentBackgroundColor(Default: TColor): TColor;
+  published
+    // Interact State
+    property InteractionState: FXControlState read FInteraction;
 
-      // Invalidate
-      procedure Invalidate; override;
-      procedure InvalidateControlsAbove;
-    end;
+    // Draw Buffer
+    property Buffer: TCanvas read GetBuffer;
 
-    FXGraphicControl = class(TGraphicControl)
-    private
-      FPopupMenu: FXPopupMenu;
-      FInteraction: FXControlState;
-      FPreviousInteraction: FXControlState;
-      FTransparent: boolean;
+    // Popup Menu
+    property PopupMenu: FXPopupMenu read FPopupMenu write FPopupMenu;
 
-      procedure SetState(const Value: FXControlState);
-      procedure SetTransparent(const Value: boolean);
+    // Canvas
+    function GetCanvas: TCanvas;
 
-    protected
-      // Mouse Events
-      procedure CMMouseEnter(var Message : TMessage); message CM_MOUSEENTER;
-      procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
+  public
+    // Constructors
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
 
-      procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
-      procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+    // Parent Utilities
+    function GetParentBackgroundColor(Default: TColor): TColor;
 
-      // Detect creation
-      procedure Loaded; override;
+    // Invalidate
+    procedure Invalidate; override;
+    procedure InvalidateControlsAbove;
+  end;
 
-      // Paint
-      procedure Paint; override;
+  FXGraphicControl = class(TGraphicControl)
+  private
+    FPopupMenu: FXPopupMenu;
+    FInteraction: FXControlState;
+    FPreviousInteraction: FXControlState;
+    FTransparent: boolean;
 
-      // Created
-      procedure ComponentCreated; virtual;
+    procedure SetState(const Value: FXControlState);
+    procedure SetTransparent(const Value: boolean);
 
-      // Interaction
-      procedure InteractionStateChanged(AState: FXControlState); virtual;
+  protected
+    // Mouse Events
+    procedure CMMouseEnter(var Message : TMessage); message CM_MOUSEENTER;
+    procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
 
-      // Utilities
-      function IsReading: boolean;
+    procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+    procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
 
-      // Interact State
-      property InteractionState: FXControlState read FInteraction write SetState;
+    // Detect creation
+    procedure Loaded; override;
 
-      // Transparent
-      property Transparent: boolean read FTransparent write SetTransparent default true;
+    // Paint
+    procedure Paint; override;
 
-    published
-      // Popup Menu
-      property PopupMenu: FXPopupMenu read FPopupMenu write FPopupMenu;
+    // Created
+    procedure ComponentCreated; virtual;
 
-    public
-      constructor Create(AOwner: TComponent); override;
-      destructor Destroy; override;
+    // Interaction
+    procedure InteractionStateChanged(AState: FXControlState); virtual;
 
-      // Parent Utilities
-      function GetParentBackgroundColor(Default: TColor): TColor;
-    end;
+    // Utilities
+    function IsReading: boolean;
 
-  // Utilities
-  function GetParentBackgroundColorEx(Control: TControl; Default: TColor): TColor;
+    // Interact State
+    property InteractionState: FXControlState read FInteraction write SetState;
+
+    // Transparent
+    property Transparent: boolean read FTransparent write SetTransparent default true;
+
+  published
+    // Popup Menu
+    property PopupMenu: FXPopupMenu read FPopupMenu write FPopupMenu;
+
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+
+    // Parent Utilities
+    function GetParentBackgroundColor(Default: TColor): TColor;
+  end;
+
+// Utilities
+function GetParentBackgroundColorEx(Control: TControl; Default: TColor): TColor;
 
 implementation
 
@@ -437,6 +437,12 @@ begin
   FOpacity := 255;
   FHitTest := true;
 
+  AlignWithMargins := true;
+  Margins.Left := 0;
+  Margins.Top := 0;
+  Margins.Right := 0;
+  Margins.Bottom := 0;
+
   FPadding := FXPadding.Create(Self);
   FMargins := FXMargins.Create(Self);
   FMargins.OnChange := MarginsUpdated;
@@ -481,7 +487,13 @@ end;
 destructor FXWindowsControl.Destroy;
 begin
   FreeAndNil(FTextFont);
+
   FreeAndNil(FPadding);
+  FreeAndNil(FMargins);
+
+  FreeAndNil(FSize);
+  FreeAndNil(FPosition);
+
   FreeAndNil(FBuffer);
   FreeAndNil(FBackground);
   inherited;
@@ -657,7 +669,7 @@ end;
 
 procedure FXWindowsControl.Invalidate;
 begin
-  if BufferedComponent and (Parent <> nil) then
+  if BufferedComponent and (Parent <> nil) and not IsReading then
     with Buffer do
       begin
         ResizeBuffer;
@@ -844,11 +856,6 @@ begin
   FMargins.ScaleChanged(Scaler);
 end;
 
-procedure FXWindowsControl.SetMargins(const Value: FXMargins);
-begin
-  FMargins.Assign( Value );
-end;
-
 procedure FXWindowsControl.SetNewInteractionState(AState: FXControlState;
   ForceUpdate, UpdatePrevious: boolean);
 begin
@@ -871,11 +878,6 @@ begin
       // Draw
       Invalidate;
     end;
-end;
-
-procedure FXWindowsControl.SetPadding(const Value: FXPadding);
-begin
-  FPadding.Assign( Value );
 end;
 
 procedure FXWindowsControl.SetPosition(const Value: FXControlPosition);

@@ -20,57 +20,57 @@ uses
   CFX.StringUtils,
   CFX.ArrayHelpers;
 
-  type
-    TPent = array[0..4] of TPoint;
+type
+  TPent = array[0..4] of TPoint;
 
-  // Graphic Utilities
-  procedure GetCenterPos(Width, Height: Integer; Rect: TRect; out X, Y: Integer);
-  function CreateSolidBrushWithAlpha(Color: TColor; Alpha: Byte = $FF): HBRUSH;
+// Graphic Utilities
+procedure GetCenterPos(Width, Height: Integer; Rect: TRect; out X, Y: Integer);
+function CreateSolidBrushWithAlpha(Color: TColor; Alpha: Byte = $FF): HBRUSH;
 
-  // Text Drawing Utils
-  procedure DrawTextRect(Canvas: TCanvas; ARect: TRect; Text: string;
-    Flags: FXTextFlags; AMargin: integer = 0);
-  function GetTextRect(Canvas: TCanvas; ARect: TRect; Text: string;
-    Flags: FXTextFlags; AMargin: integer = 0): TRect;
-  function GetWordWrapLines(Canvas: TCanvas; Text: string;
-    ARect: TRect): TArray<string>;
-  function WordWrapGetLineHeight(Canvas: TCanvas; Text: string): integer;
+// Text Drawing Utils
+procedure DrawTextRect(Canvas: TCanvas; ARect: TRect; Text: string;
+  Flags: FXTextFlags; AMargin: integer = 0);
+function GetTextRect(Canvas: TCanvas; ARect: TRect; Text: string;
+  Flags: FXTextFlags; AMargin: integer = 0): TRect;
+function GetWordWrapLines(Canvas: TCanvas; Text: string;
+  ARect: TRect): TArray<string>;
+function WordWrapGetLineHeight(Canvas: TCanvas; Text: string): integer;
 
-  // Font Size
-  function GetMaxFontHeight(Canvas: TCanvas; Text: string; MaxWidth, MaxHeight: Integer): integer;
+// Font Size
+function GetMaxFontHeight(Canvas: TCanvas; Text: string; MaxWidth, MaxHeight: Integer): integer;
 
-  // Drawing Functions
-  procedure DrawBorder(const Canvas: TCanvas; R: TRect; Color: TColor;
-                       Thickness: Byte; Roundness: integer = 10);
-  procedure CopyRoundRect(FromCanvas: TCanvas; FromRect: TRoundRect;
-                          DestCanvas: TCanvas; DestRect: TRect;
-                          shrinkborder: integer = 0);
+// Drawing Functions
+procedure DrawBorder(const Canvas: TCanvas; R: TRect; Color: TColor;
+                     Thickness: Byte; Roundness: integer = 10);
+procedure CopyRoundRect(FromCanvas: TCanvas; FromRect: TRoundRect;
+                        DestCanvas: TCanvas; DestRect: TRect;
+                        shrinkborder: integer = 0);
 
-  procedure CopyRectWithOpacity(Dest: TCanvas; DestRect: TRect; Source: TCanvas; SourceRect: TRect; Opacity: Byte);
+procedure CopyRectWithOpacity(Dest: TCanvas; DestRect: TRect; Source: TCanvas; SourceRect: TRect; Opacity: Byte);
 
-  procedure DrawCheckedboard(Canvas: TCanvas; ARect: TRect; Width, Height: Integer; Color1, Color2: TColor);
+procedure DrawCheckedboard(Canvas: TCanvas; ARect: TRect; Width, Height: Integer; Color1, Color2: TColor);
 
-  // Color Inversion
-  procedure StretchInvertedMask(Source: TBitMap; Destination: TCanvas; DestRect: TRect); overload;
-  procedure StretchInvertedMask(Source: TCanvas; Destination: TCanvas; DestRect: TRect); overload;
+// Color Inversion
+procedure StretchInvertedMask(Source: TBitMap; Destination: TCanvas; DestRect: TRect); overload;
+procedure StretchInvertedMask(Source: TCanvas; Destination: TCanvas; DestRect: TRect); overload;
 
-  function Desaturate(Color: TColor): TColor; overload;
-  procedure Desaturate(Bitmap: TBitmap); overload;
+function Desaturate(Color: TColor): TColor; overload;
+procedure Desaturate(Bitmap: TBitmap); overload;
 
-  // Draw Rectangles
-  function GetDrawModeRects(Rect: TRect; Image: TGraphic; DrawMode: FXDrawMode; ImageMargin:
-                            integer = 0): TArray<TRect>;
-  function GetDrawModeRect(Rect: TRect; Image: TGraphic; DrawMode: FXDrawMode;
-                            ImageMargin: integer = 0): TRect;
-  procedure DrawImageInRect(Canvas: TCanvas; Rect: TRect; Image: TGraphic;
-                            DrawMode: FXDrawMode; ImageMargin: integer = 0);
+// Draw Rectangles
+function GetDrawModeRects(Rect: TRect; Image: TGraphic; DrawMode: FXDrawMode; ImageMargin:
+                          integer = 0): TArray<TRect>;
+function GetDrawModeRect(Rect: TRect; Image: TGraphic; DrawMode: FXDrawMode;
+                          ImageMargin: integer = 0): TRect;
+procedure DrawImageInRect(Canvas: TCanvas; Rect: TRect; Image: TGraphic;
+                          DrawMode: FXDrawMode; ImageMargin: integer = 0);
 
-  // Gradient
-  procedure GradHorizontal(Canvas:TCanvas; Rect:TRect; FromColor, ToColor:TColor);
-  procedure GradVertical(Canvas:TCanvas; Rect:TRect; FromColor, ToColor:TColor);
+// Gradient
+procedure GradHorizontal(Canvas:TCanvas; Rect:TRect; FromColor, ToColor:TColor);
+procedure GradVertical(Canvas:TCanvas; Rect:TRect; FromColor, ToColor:TColor);
 
-  // Bitmap Manipulation
-  procedure FastBlur(Bitmap: TBitmap; Radius: Real; BlurScale: Integer; HighQuality: Boolean = True);
+// Bitmap Manipulation
+procedure FastBlur(Bitmap: TBitmap; Radius: Real; BlurScale: Integer; HighQuality: Boolean = True);
 
 const
   HAlignments: Array[TAlignment] of Longint = (DT_LEFT, DT_RIGHT, DT_CENTER);
@@ -585,7 +585,7 @@ begin
             Index := 1;
 
           Temp := Words[I].Remove(0, Index);
-          Words.Insert(I+1, Temp);
+          TArrayUtils<string>.Insert(I+1, Temp, Words);
 
           Words[I] := Words[I].Remove(Index, Words[I].Length-Index);
         end;

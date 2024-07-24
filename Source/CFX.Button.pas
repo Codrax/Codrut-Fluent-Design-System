@@ -31,202 +31,202 @@ type
   FXBeforeModalResult = procedure(Sender: TObject; var SendModal: boolean) of object;
 
   FXButton = class(FXWindowsControl, FXControl)
-    private
-      const
-        KEY_PRESS_KEYS = [13, 32];
+  private
+    const
+      KEY_PRESS_KEYS = [13, 32];
 
-      var DrawRect, CaptionRect, IndicatorRect, ImageRect, TheTextRect: TRect;
-      FCustomColors: FXCompleteColorSets;
-      FCustomButtonColors: FXColorStateSets;
-      FDrawColors: FXCompleteColorSet;
-      FButtonColors: FXColorStateSet;
-      FText: string;
-      FChecked: boolean;
-      FWordWrap: boolean;
-      FImage: FXIconSelect;
-      FImageScale: real;
-      FImageLayout: FXDrawLayout;
-      FVertLayout: FXLayout;
-      FHorizLayout: FXLayout;
-      FAutomaticMouseCursor: boolean;
-      FCancel: boolean;
-      FDefault: boolean;
-      FButtonKind: FXButtonKind;
-      FTextDrawFlags: FXTextFlags;
-      FRoundNess: integer;
-      FBorderWidth: real;
-      FHyperLinkURL: string;
-      FDropDown: FXPopupMenu;
-      FMargin: integer;
-      FStateText: string;
-      FStateImage: FXIconSelect;
-      FStateEnabled: boolean;
-      FStateDuration: integer;
-      FAutoStopState: TTimer;
-      FAutoStateToggle: boolean;
-      FOnCheck: TNotifyEvent;
-      FOnOpenLink: TNotifyEvent;
-      FOnDropDown: TNotifyEvent;
-      FAnimationRunning: boolean;
-      FAnimPos: integer;
-      FAutoRepeat: TTimer;
-      FRepeatWhenPressed: boolean;
-      FModalResult: TModalResult;
-      FBeforeModal: FXBeforeModalResult;
-      FAnimation: boolean;
-      FLineWidth: real;
-      FDetail: FXDetailType;
-      FShowText: boolean;
-      FArrowOffset: integer;
+    var DrawRect, CaptionRect, IndicatorRect, ImageRect, TheTextRect: TRect;
+    FCustomColors: FXCompleteColorSets;
+    FCustomButtonColors: FXColorStateSets;
+    FDrawColors: FXCompleteColorSet;
+    FButtonColors: FXColorStateSet;
+    FText: string;
+    FChecked: boolean;
+    FWordWrap: boolean;
+    FImage: FXIconSelect;
+    FImageScale: real;
+    FImageLayout: FXDrawLayout;
+    FVertLayout: FXLayout;
+    FHorizLayout: FXLayout;
+    FAutomaticMouseCursor: boolean;
+    FCancel: boolean;
+    FDefault: boolean;
+    FButtonKind: FXButtonKind;
+    FTextDrawFlags: FXTextFlags;
+    FRoundNess: integer;
+    FBorderWidth: real;
+    FHyperLinkURL: string;
+    FDropDown: FXPopupMenu;
+    FMargin: integer;
+    FStateText: string;
+    FStateImage: FXIconSelect;
+    FStateEnabled: boolean;
+    FStateDuration: integer;
+    FAutoStopState: TTimer;
+    FAutoStateToggle: boolean;
+    FOnCheck: TNotifyEvent;
+    FOnOpenLink: TNotifyEvent;
+    FOnDropDown: TNotifyEvent;
+    FAnimationRunning: boolean;
+    FAnimPos: integer;
+    FAutoRepeat: TTimer;
+    FRepeatWhenPressed: boolean;
+    FModalResult: TModalResult;
+    FBeforeModal: FXBeforeModalResult;
+    FAnimation: boolean;
+    FLineWidth: real;
+    FDetail: FXDetailType;
+    FShowText: boolean;
+    FArrowOffset: integer;
 
-      //  Internal
-      procedure UpdateColors;
-      procedure UpdateRects;
+    //  Internal
+    procedure UpdateColors;
+    procedure UpdateRects;
 
-      // Set properties
-      procedure SetText(const Value: string);
-      procedure SetWordWrap(const Value: boolean);
-      procedure SetChecked(const Value: Boolean);
-      procedure SetImage(const Value: FXIconSelect);
-      procedure SetCancel(const Value: boolean);
-      procedure SetDefault(const Value: boolean);
-      procedure SetImageScale(const Value: real);
-      procedure SetHorizLayout(const Value: FXLayout);
-      procedure SetImageLayout(const Value: FXDrawLayout);
-      procedure SetStateEnabled(const Value: boolean);
-      procedure SetStateImage(const Value: FXIconSelect);
-      procedure SetStateText(const Value: string);
-      procedure SetStateDuration(const Value: integer);
-      procedure SetVertLayout(const Value: FXLayout);
-      procedure SetDetail(const Value: FXDetailType);
-      procedure SetButtonKind(const Value: FXButtonKind);
-      procedure SetRoundness(const Value: integer);
-      procedure SetMargin(const Value: integer);
-      procedure SetLineWidth(const Value: real);
-      procedure SetShowText(const Value: boolean);
+    // Set properties
+    procedure SetText(const Value: string);
+    procedure SetWordWrap(const Value: boolean);
+    procedure SetChecked(const Value: Boolean);
+    procedure SetImage(const Value: FXIconSelect);
+    procedure SetCancel(const Value: boolean);
+    procedure SetDefault(const Value: boolean);
+    procedure SetImageScale(const Value: real);
+    procedure SetHorizLayout(const Value: FXLayout);
+    procedure SetImageLayout(const Value: FXDrawLayout);
+    procedure SetStateEnabled(const Value: boolean);
+    procedure SetStateImage(const Value: FXIconSelect);
+    procedure SetStateText(const Value: string);
+    procedure SetStateDuration(const Value: integer);
+    procedure SetVertLayout(const Value: FXLayout);
+    procedure SetDetail(const Value: FXDetailType);
+    procedure SetButtonKind(const Value: FXButtonKind);
+    procedure SetRoundness(const Value: integer);
+    procedure SetMargin(const Value: integer);
+    procedure SetLineWidth(const Value: real);
+    procedure SetShowText(const Value: boolean);
 
-      // Draw
-      function GetTextH: integer;
-      function GetTextW: integer;
+    // Draw
+    function GetTextH: integer;
+    function GetTextW: integer;
 
-      // State
-      function GetText: string;
-      function GetImage: FXIconSelect;
+    // State
+    function GetText: string;
+    function GetImage: FXIconSelect;
 
-      // Timers
-      procedure TimerRepeat(Sender: TObject);
-      procedure StateStop(Sender: TObject);
+    // Timers
+    procedure TimerRepeat(Sender: TObject);
+    procedure StateStop(Sender: TObject);
 
-      // Get properties
-      function GetChecked: Boolean;
+    // Get properties
+    function GetChecked: Boolean;
 
-      // Handle Messages
-      procedure WMSize(var Message: TWMSize); message WM_SIZE;
+    // Handle Messages
+    procedure WMSize(var Message: TWMSize); message WM_SIZE;
 
-    protected
-      procedure PaintBuffer; override;
-      procedure Resize; override;
-      // Scale
-      procedure ScaleChanged(Scaler: single); override;
+  protected
+    procedure PaintBuffer; override;
+    procedure Resize; override;
+    // Scale
+    procedure ScaleChanged(Scaler: single); override;
 
-      // State
-      procedure InteractionStateChanged(AState: FXControlState); override;
+    // State
+    procedure InteractionStateChanged(AState: FXControlState); override;
 
-      // Key Presses
-      procedure KeyDown(var Key: Word; Shift: TShiftState); override;
-      procedure KeyUp(var Key: Word; Shift: TShiftState); override;
-      procedure KeyPress(var Key: Char); override;
+    // Key Presses
+    procedure KeyDown(var Key: Word; Shift: TShiftState); override;
+    procedure KeyUp(var Key: Word; Shift: TShiftState); override;
+    procedure KeyPress(var Key: Char); override;
 
-      // Mouse
-      procedure Click; override;
-      procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
-      procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
-      procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+    // Mouse
+    procedure Click; override;
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+    procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
 
-    published
-      property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
-      property CustomButtonColors: FXColorStateSets read FCustomButtonColors write FCustomButtonColors stored true;
-      property Checked: Boolean read GetChecked write SetChecked default false;
+  published
+    property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
+    property CustomButtonColors: FXColorStateSets read FCustomButtonColors write FCustomButtonColors stored true;
+    property Checked: Boolean read GetChecked write SetChecked default false;
 
-      property ShowText: boolean read FShowText write SetShowText default true;
-      property Text: string read FText write SetText;
-      property WordWrap: boolean read FWordWrap write SetWordWrap default true;
-      property Image: FXIconSelect read FImage write SetImage;
-      property ImageScale: real read FImageScale write SetImageScale;
-      property ImageLayout: FXDrawLayout read FImageLayout write SetImageLayout default FXDrawLayout.Left;
-      property LayoutHorizontal: FXLayout read FHorizLayout write SetHorizLayout default FXLayout.Center;
-      property LayoutVertical: FXLayout read FVertLayout write SetVertLayout default FXLayout.Center;
-      property ButtonKind: FXButtonKind read FButtonKind write SetButtonKind default FXButtonKind.Normal;
-      property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default true;
-      property Roundness: integer read FRoundness write SetRoundness default BUTTON_ROUNDNESS;
-      property HyperLinkURL: string read FHyperLinkURL write FHyperLinkURL;
-      property DropDown: FXPopupMenu read FDropDown write FDropDown;
-      property Margin: integer read FMargin write SetMargin default 0;
-      property RepeatWhenPressed: boolean read FRepeatWhenPressed write FRepeatWhenPressed default false;
-      property Animation: boolean read FAnimation write FAnimation default true;
-      property Detail: FXDetailType read FDetail write SetDetail default FXDetailType.None;
-      property LineWidth: real read FLineWidth write SetLineWidth;
+    property ShowText: boolean read FShowText write SetShowText default true;
+    property Text: string read FText write SetText;
+    property WordWrap: boolean read FWordWrap write SetWordWrap default true;
+    property Image: FXIconSelect read FImage write SetImage;
+    property ImageScale: real read FImageScale write SetImageScale;
+    property ImageLayout: FXDrawLayout read FImageLayout write SetImageLayout default FXDrawLayout.Left;
+    property LayoutHorizontal: FXLayout read FHorizLayout write SetHorizLayout default FXLayout.Center;
+    property LayoutVertical: FXLayout read FVertLayout write SetVertLayout default FXLayout.Center;
+    property ButtonKind: FXButtonKind read FButtonKind write SetButtonKind default FXButtonKind.Normal;
+    property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default true;
+    property Roundness: integer read FRoundness write SetRoundness default BUTTON_ROUNDNESS;
+    property HyperLinkURL: string read FHyperLinkURL write FHyperLinkURL;
+    property DropDown: FXPopupMenu read FDropDown write FDropDown;
+    property Margin: integer read FMargin write SetMargin default 0;
+    property RepeatWhenPressed: boolean read FRepeatWhenPressed write FRepeatWhenPressed default false;
+    property Animation: boolean read FAnimation write FAnimation default true;
+    property Detail: FXDetailType read FDetail write SetDetail default FXDetailType.None;
+    property LineWidth: real read FLineWidth write SetLineWidth;
 
-      property StateText: string read FStateText write SetStateText;
-      property StateImage: FXIconSelect read FStateImage write SetStateImage;
-      property StateEnabled: boolean read FStateEnabled write SetStateEnabled default false;
-      property StateDuration: integer read FStateDuration write SetStateDuration default BUTTON_STATE_DURATION;
-      property AutoStateToggle: boolean read FAutoStateToggle write FAutoStateToggle default false;
+    property StateText: string read FStateText write SetStateText;
+    property StateImage: FXIconSelect read FStateImage write SetStateImage;
+    property StateEnabled: boolean read FStateEnabled write SetStateEnabled default false;
+    property StateDuration: integer read FStateDuration write SetStateDuration default BUTTON_STATE_DURATION;
+    property AutoStateToggle: boolean read FAutoStateToggle write FAutoStateToggle default false;
 
-      property OnCheck: TNotifyEvent read FOnCheck write FOnCheck;
-      property OnOpenLink: TNotifyEvent read FOnOpenLink write FOnOpenLink;
-      property OnDropDown: TNotifyEvent read FOnDropDown write FOnDropDown;
-      property OnBeforeModalResult: FXBeforeModalResult read FBeforeModal write FBeforeModal;
+    property OnCheck: TNotifyEvent read FOnCheck write FOnCheck;
+    property OnOpenLink: TNotifyEvent read FOnOpenLink write FOnOpenLink;
+    property OnDropDown: TNotifyEvent read FOnDropDown write FOnDropDown;
+    property OnBeforeModalResult: FXBeforeModalResult read FBeforeModal write FBeforeModal;
 
-      // Button
-      property Default: boolean read FDefault write SetDefault default false;
-      property Cancel: boolean read FCancel write SetCancel default false;
-      property ModalResult: TModalResult read FModalResult write FModalResult default mrNone;
+    // Button
+    property Default: boolean read FDefault write SetDefault default false;
+    property Cancel: boolean read FCancel write SetCancel default false;
+    property ModalResult: TModalResult read FModalResult write FModalResult default mrNone;
 
-      // Properties
-      property Align;
-      property Font;
-      property Transparent;
-      property Opacity;
-      property PaddingFill;
-      property Constraints;
-      property Anchors;
-      property Hint;
-      property ShowHint;
-      property ParentShowHint;
-      property TabStop;
-      property TabOrder;
-      property FocusFlags;
-      property DragKind;
-      property DragCursor;
-      property DragMode;
-      property OnDragDrop;
-      property OnDragOver;
-      property OnEndDrag;
-      property OnStartDrag;
-      property OnEnter;
-      property OnExit;
-      property OnClick;
-      property OnKeyDown;
-      property OnKeyUp;
-      property OnKeyPress;
-      property OnMouseUp;
-      property OnMouseDown;
-      property OnMouseEnter;
-      property OnMouseLeave;
+    // Properties
+    property Align;
+    property Font;
+    property Transparent;
+    property Opacity;
+    property PaddingFill;
+    property Constraints;
+    property Anchors;
+    property Hint;
+    property ShowHint;
+    property ParentShowHint;
+    property TabStop;
+    property TabOrder;
+    property FocusFlags;
+    property DragKind;
+    property DragCursor;
+    property DragMode;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDrag;
+    property OnStartDrag;
+    property OnEnter;
+    property OnExit;
+    property OnClick;
+    property OnKeyDown;
+    property OnKeyUp;
+    property OnKeyPress;
+    property OnMouseUp;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
 
-      // Checked Tag
-      function GetCheckedTag: integer;
+    // Checked Tag
+    function GetCheckedTag: integer;
 
-    public
-      constructor Create(aOwner: TComponent); override;
-      destructor Destroy; override;
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
 
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChildren: Boolean);
+    // Interface
+    function IsContainer: Boolean;
+    procedure UpdateTheme(const UpdateChildren: Boolean);
 
-      function Background: TColor;
+    function Background: TColor;
   end;
 
 implementation

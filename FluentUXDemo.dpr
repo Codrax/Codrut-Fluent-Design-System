@@ -7,7 +7,6 @@ uses
   CFX.Template in 'Source\CFX.Template.pas';
 
 {$R *.res}
-
 begin
   Application.Initialize;
 

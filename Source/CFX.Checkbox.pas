@@ -23,134 +23,134 @@ uses
 
 type
   FXCheckBox = class(FXWindowsControl, FXControl)
-    private
-      var DrawRect, IconRect, TextRect, ImageRect: TRect;
-      FIconFont: TFont;
-      FAllowGrayed: Boolean;
-      FState: FXCheckBoxState;
-      FTextSpacing: Integer;
-      FOnChange: TNotifyEvent;
-      FOnChangeValue: TNotifyEvent;
-      FCustomColors: FXColorSets;
-      FIconAccentColors: FXSingleColorStateSet;
-      FText: string;
-      FAutomaticMouseCursor: boolean;
-      FDrawColors: FXCompleteColorSet;
-      FWordWrap: boolean;
-      FAnimationEnabled: boolean;
-      FAnimationStatus: integer;
-      FAnimateTimer: TTimer;
-      FImage: FXIconSelect;
-      FImageScale: single;
-      FLayout: FXDrawLayout;
-      FTextLayout: FXLayout;
+  private
+    var DrawRect, IconRect, TextRect, ImageRect: TRect;
+    FIconFont: TFont;
+    FAllowGrayed: Boolean;
+    FState: FXCheckBoxState;
+    FTextSpacing: Integer;
+    FOnChange: TNotifyEvent;
+    FOnChangeValue: TNotifyEvent;
+    FCustomColors: FXColorSets;
+    FIconAccentColors: FXSingleColorStateSet;
+    FText: string;
+    FAutomaticMouseCursor: boolean;
+    FDrawColors: FXCompleteColorSet;
+    FWordWrap: boolean;
+    FAnimationEnabled: boolean;
+    FAnimationStatus: integer;
+    FAnimateTimer: TTimer;
+    FImage: FXIconSelect;
+    FImageScale: single;
+    FLayout: FXDrawLayout;
+    FTextLayout: FXLayout;
 
-      //  Internal
-      procedure UpdateColors;
-      procedure UpdateRects;
+    //  Internal
+    procedure UpdateColors;
+    procedure UpdateRects;
 
-      // Set properties
-      procedure SetText(const Value: string);
-      procedure SetWordWrap(const Value: boolean);
-      procedure SetAllowGrayed(const Value: Boolean);
-      procedure SetState(const Value: FXCheckBoxState);
-      procedure SetTextSpacing(const Value: Integer);
-      procedure SetChecked(const Value: Boolean);
-      procedure SetImage(const Value: FXIconSelect);
-      procedure SetLayout(const Value: FXDrawLayout);
-      procedure SetImageScale(const Value: single);
+    // Set properties
+    procedure SetText(const Value: string);
+    procedure SetWordWrap(const Value: boolean);
+    procedure SetAllowGrayed(const Value: Boolean);
+    procedure SetState(const Value: FXCheckBoxState);
+    procedure SetTextSpacing(const Value: Integer);
+    procedure SetChecked(const Value: Boolean);
+    procedure SetImage(const Value: FXIconSelect);
+    procedure SetLayout(const Value: FXDrawLayout);
+    procedure SetImageScale(const Value: single);
 
-      // State
-      procedure ProgressState;
+    // State
+    procedure ProgressState;
 
-      // Draw functions
-      function GetTextHeight: integer;
+    // Draw functions
+    function GetTextHeight: integer;
 
-      // Get properties
-      function GetChecked: Boolean;
+    // Get properties
+    function GetChecked: Boolean;
 
-      // Handle Messages
-      procedure WM_LButtonUp(var Msg: TWMLButtonUp); message WM_LBUTTONUP;
-      procedure WMSize(var Message: TWMSize); message WM_SIZE;
+    // Handle Messages
+    procedure WM_LButtonUp(var Msg: TWMLButtonUp); message WM_LBUTTONUP;
+    procedure WMSize(var Message: TWMSize); message WM_SIZE;
 
-      // Animation
-      procedure AnimationProgress(Sender: TObject);
+    // Animation
+    procedure AnimationProgress(Sender: TObject);
 
-    protected
-      procedure PaintBuffer; override;
-      procedure Resize; override;
+  protected
+    procedure PaintBuffer; override;
+    procedure Resize; override;
 
-      // Scaler
-      procedure ScaleChanged(Scaler: single); override;
+    // Scaler
+    procedure ScaleChanged(Scaler: single); override;
 
-      // State
-      procedure InteractionStateChanged(AState: FXControlState); override;
+    // State
+    procedure InteractionStateChanged(AState: FXControlState); override;
 
-      // Key Presses
-      procedure KeyPress(var Key: Char); override;
+    // Key Presses
+    procedure KeyPress(var Key: Char); override;
 
-      // Inherited Mouse Detection
-      procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    // Inherited Mouse Detection
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
 
-    published
-      property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
-      property IconFont: TFont read FIconFont write FIconFont;
-      property AllowGrayed: Boolean read FAllowGrayed write SetAllowGrayed default false;
-      property State: FXCheckBoxState read FState write SetState default FXCheckBoxState.Unchecked;
-      property TextSpacing: Integer read FTextSpacing write SetTextSpacing default CHECKBOX_TEXT_SPACE;
-      property Checked: Boolean read GetChecked write SetChecked default false;
-      property OnChange: TNotifyEvent read FOnChange write FOnChange;
-      property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
-      property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default true;
+  published
+    property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
+    property IconFont: TFont read FIconFont write FIconFont;
+    property AllowGrayed: Boolean read FAllowGrayed write SetAllowGrayed default false;
+    property State: FXCheckBoxState read FState write SetState default FXCheckBoxState.Unchecked;
+    property TextSpacing: Integer read FTextSpacing write SetTextSpacing default CHECKBOX_TEXT_SPACE;
+    property Checked: Boolean read GetChecked write SetChecked default false;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
+    property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default true;
 
-      property Text: string read FText write SetText;
-      property WordWrap: boolean read FWordWrap write SetWordWrap default true;
-      property Image: FXIconSelect read FImage write SetImage;
-      property ImageScale: single read FImageScale write SetImageScale;
-      property Layout: FXDrawLayout read FLayout write SetLayout default FXDrawLayout.Left;
+    property Text: string read FText write SetText;
+    property WordWrap: boolean read FWordWrap write SetWordWrap default true;
+    property Image: FXIconSelect read FImage write SetImage;
+    property ImageScale: single read FImageScale write SetImageScale;
+    property Layout: FXDrawLayout read FLayout write SetLayout default FXDrawLayout.Left;
 
-      property AnimationEnabled: boolean read FAnimationEnabled write FAnimationEnabled default true;
+    property AnimationEnabled: boolean read FAnimationEnabled write FAnimationEnabled default true;
 
-      property Align;
-      property Font;
-      property Transparent;
-      property Opacity;
-      property PaddingFill;
-      property Constraints;
-      property Anchors;
-      property Hint;
-      property ShowHint;
-      property ParentShowHint;
-      property TabStop;
-      property TabOrder;
-      property FocusFlags;
-      property DragKind;
-      property DragCursor;
-      property DragMode;
-      property OnDragDrop;
-      property OnDragOver;
-      property OnEndDrag;
-      property OnStartDrag;
-      property OnEnter;
-      property OnExit;
-      property OnClick;
-      property OnKeyDown;
-      property OnKeyUp;
-      property OnKeyPress;
-      property OnMouseUp;
-      property OnMouseDown;
-      property OnMouseEnter;
-      property OnMouseLeave;
+    property Align;
+    property Font;
+    property Transparent;
+    property Opacity;
+    property PaddingFill;
+    property Constraints;
+    property Anchors;
+    property Hint;
+    property ShowHint;
+    property ParentShowHint;
+    property TabStop;
+    property TabOrder;
+    property FocusFlags;
+    property DragKind;
+    property DragCursor;
+    property DragMode;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDrag;
+    property OnStartDrag;
+    property OnEnter;
+    property OnExit;
+    property OnClick;
+    property OnKeyDown;
+    property OnKeyUp;
+    property OnKeyPress;
+    property OnMouseUp;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
 
-    public
-      constructor Create(aOwner: TComponent); override;
-      destructor Destroy; override;
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
 
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChildren: Boolean);
+    // Interface
+    function IsContainer: Boolean;
+    procedure UpdateTheme(const UpdateChildren: Boolean);
 
-      function Background: TColor;
+    function Background: TColor;
   end;
 
 implementation

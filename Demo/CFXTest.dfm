@@ -154,10 +154,15 @@ object Form1: TForm1
     end
   end
   object FXEdit1: FXEdit
+    AlignWithMargins = True
     Left = 519
     Top = 80
     Width = 125
     Height = 33
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 125
     Size.Y = 33
     Position = 0
@@ -194,10 +199,15 @@ object Form1: TForm1
     TextMarginY = 5
   end
   object FXEdit2: FXEdit
+    AlignWithMargins = True
     Left = 519
     Top = 167
     Width = 125
     Height = 33
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 125
     Size.Y = 33
     Position = 0
@@ -234,10 +244,15 @@ object Form1: TForm1
     TextMarginY = 5
   end
   object FXButton1: FXButton
+    AlignWithMargins = True
     Left = 519
     Top = 208
     Width = 125
     Height = 76
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 125
     Size.Y = 76
     Position.X = 519
@@ -333,10 +348,15 @@ object Form1: TForm1
     Image.SelectSegoe = #59718
     Image.SelectImageIndex = 0
     object FXButton2: FXButton
+      AlignWithMargins = True
       Left = 14
       Top = 165
       Width = 130
       Height = 35
+      Margins.Left = 0
+      Margins.Top = 0
+      Margins.Right = 0
+      Margins.Bottom = 0
       Size.X = 130
       Size.Y = 35
       Position.X = 14
@@ -381,10 +401,15 @@ object Form1: TForm1
       TabOrder = 0
     end
     object FXButton6: FXButton
+      AlignWithMargins = True
       Left = 150
       Top = 165
       Width = 130
       Height = 35
+      Margins.Left = 0
+      Margins.Top = 0
+      Margins.Right = 0
+      Margins.Bottom = 0
       Size.X = 130
       Size.Y = 35
       Position.X = 150
@@ -428,10 +453,15 @@ object Form1: TForm1
       TabOrder = 1
     end
     object FXTextBox7: FXTextBox
+      AlignWithMargins = True
       Left = 30
       Top = 81
       Width = 237
       Height = 60
+      Margins.Left = 0
+      Margins.Top = 0
+      Margins.Right = 0
+      Margins.Bottom = 0
       Size.X = 237
       Size.Y = 60
       Position.X = 30
@@ -456,10 +486,15 @@ object Form1: TForm1
     end
   end
   object FXButtonDesign3: FXButtonDesign
+    AlignWithMargins = True
     Left = 1030
     Top = 419
     Width = 140
     Height = 40
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 140
     Size.Y = 40
     Position.X = 1030
@@ -533,11 +568,16 @@ object Form1: TForm1
     Animations.FASpeed = 10
   end
   object FXButtonDesign1: FXButtonDesign
+    AlignWithMargins = True
     Left = 878
     Top = 419
     Width = 140
     Height = 40
     Hint = 'Hello World!'
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 140
     Size.Y = 40
     Position.X = 878
@@ -610,10 +650,15 @@ object Form1: TForm1
     Animations.FASpeed = 10
   end
   object FXButton3: FXButton
+    AlignWithMargins = True
     Left = 884
     Top = 280
     Width = 140
     Height = 35
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 140
     Size.Y = 35
     Position.X = 884
@@ -657,10 +702,15 @@ object Form1: TForm1
     TabOrder = 7
   end
   object FXButton7: FXButton
+    AlignWithMargins = True
     Left = 1030
     Top = 280
     Width = 140
     Height = 35
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 140
     Size.Y = 35
     Position.X = 1030
@@ -706,11 +756,16 @@ object Form1: TForm1
     TabOrder = 8
   end
   object FXButton8: FXButton
+    AlignWithMargins = True
     Left = 875
     Top = 321
     Width = 142
     Height = 35
     Cursor = crHandPoint
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 142
     Size.Y = 35
     Position.X = 875
@@ -755,10 +810,15 @@ object Form1: TForm1
     TabOrder = 9
   end
   object FXButton9: FXButton
+    AlignWithMargins = True
     Left = 1030
     Top = 321
     Width = 140
     Height = 35
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 140
     Size.Y = 35
     Position.X = 1030
@@ -803,10 +863,15 @@ object Form1: TForm1
     TabOrder = 10
   end
   object FXButtonDesign2: FXButtonDesign
+    AlignWithMargins = True
     Left = 1030
     Top = 466
     Width = 140
     Height = 75
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 140
     Size.Y = 75
     Position.X = 1030
@@ -883,11 +948,16 @@ object Form1: TForm1
     Animations.FASpeed = 10
   end
   object FXButtonDesign4: FXButtonDesign
+    AlignWithMargins = True
     Left = 877
     Top = 465
     Width = 147
     Height = 75
     Hint = 'Hello World!'
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 147
     Size.Y = 75
     Position.X = 877
@@ -962,10 +1032,15 @@ object Form1: TForm1
     Animations.FASpeed = 10
   end
   object FXButton11: FXButton
+    AlignWithMargins = True
     Left = 1030
     Top = 362
     Width = 140
     Height = 35
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 140
     Size.Y = 35
     Position.X = 1030
@@ -1011,10 +1086,15 @@ object Form1: TForm1
     OnClick = FXButton11Click
   end
   object FXButton12: FXButton
+    AlignWithMargins = True
     Left = 877
     Top = 362
     Width = 140
     Height = 35
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 140
     Size.Y = 35
     Position.X = 877
@@ -1060,10 +1140,15 @@ object Form1: TForm1
     OnClick = FXButton12Click
   end
   object FXScrollText1: FXScrollText
+    AlignWithMargins = True
     Left = 519
     Top = 290
     Width = 125
     Height = 68
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     TabStop = False
     Size.X = 125
     Size.Y = 68
@@ -1093,10 +1178,15 @@ object Form1: TForm1
     TabOrder = 15
   end
   object FXScrollText2: FXScrollText
+    AlignWithMargins = True
     Left = 15
     Top = 598
     Width = 186
     Height = 50
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     TabStop = False
     Size.X = 186
     Size.Y = 50
@@ -1125,10 +1215,15 @@ object Form1: TForm1
     TabOrder = 16
   end
   object FXSlider1: FXSlider
+    AlignWithMargins = True
     Left = 237
     Top = 203
     Width = 234
     Height = 49
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 234
     Size.Y = 49
     Position = 12
@@ -1148,10 +1243,15 @@ object Form1: TForm1
     TabOrder = 17
   end
   object FXCheckBox1: FXCheckBox
+    AlignWithMargins = True
     Left = 232
     Top = 167
     Width = 180
     Height = 30
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 180
     Size.Y = 30
     Position.X = 232
@@ -1184,10 +1284,15 @@ object Form1: TForm1
     TabOrder = 18
   end
   object FXScrollbar1: FXScrollbar
+    AlignWithMargins = True
     Left = 231
     Top = 271
     Width = 233
     Height = 13
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 233
     Size.Y = 13
     Position = 0
@@ -1206,10 +1311,15 @@ object Form1: TForm1
     TabOrder = 19
   end
   object FXRadioButton1: FXRadioButton
+    AlignWithMargins = True
     Left = 232
     Top = 374
     Width = 180
     Height = 30
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 180
     Size.Y = 30
     Position.X = 232
@@ -1239,10 +1349,15 @@ object Form1: TForm1
     TabOrder = 21
   end
   object FXRadioButton2: FXRadioButton
+    AlignWithMargins = True
     Left = 231
     Top = 410
     Width = 180
     Height = 30
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 180
     Size.Y = 30
     Position.X = 231
@@ -1271,10 +1386,15 @@ object Form1: TForm1
     TabOrder = 22
   end
   object FXButton4: FXButton
+    AlignWithMargins = True
     Left = 232
     Top = 80
     Width = 130
     Height = 35
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     PopupMenu = FXPopupMenu1
     Size.X = 130
     Size.Y = 35
@@ -1320,10 +1440,15 @@ object Form1: TForm1
     OnClick = FXButton4Click
   end
   object FXButton5: FXButton
+    AlignWithMargins = True
     Left = 368
     Top = 80
     Width = 130
     Height = 35
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 130
     Size.Y = 35
     Position.X = 368
@@ -1367,10 +1492,15 @@ object Form1: TForm1
     OnClick = FXButton5Click
   end
   object FXEdit3: FXEdit
+    AlignWithMargins = True
     Left = 232
     Top = 490
     Width = 180
     Height = 33
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 180
     Size.Y = 33
     Position = 0
@@ -1409,10 +1539,15 @@ object Form1: TForm1
     Detail = Outline
   end
   object FXButton10: FXButton
+    AlignWithMargins = True
     Left = 418
     Top = 486
     Width = 35
     Height = 35
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 35
     Size.Y = 35
     Position.X = 418
@@ -1461,10 +1596,15 @@ object Form1: TForm1
     TabOrder = 26
   end
   object FXButton13: FXButton
+    AlignWithMargins = True
     Left = 232
     Top = 126
     Width = 266
     Height = 35
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 266
     Size.Y = 35
     Position.X = 232
@@ -1509,10 +1649,15 @@ object Form1: TForm1
     OnClick = FXButton13Click
   end
   object FXTextBox2: FXTextBox
+    AlignWithMargins = True
     Left = 519
     Top = 140
     Width = 67
     Height = 21
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     TabStop = True
     Size.X = 67
     Size.Y = 21
@@ -1536,10 +1681,15 @@ object Form1: TForm1
     InnerMargin = 0
   end
   object FXTextBox3: FXTextBox
+    AlignWithMargins = True
     Left = 519
     Top = 53
     Width = 71
     Height = 21
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     TabStop = True
     Size.X = 71
     Size.Y = 21
@@ -1563,10 +1713,15 @@ object Form1: TForm1
     InnerMargin = 0
   end
   object FXTextBox4: FXTextBox
+    AlignWithMargins = True
     Left = 237
     Top = 44
     Width = 52
     Height = 42
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     TabStop = True
     Size.X = 52
     Size.Y = 42
@@ -1590,10 +1745,15 @@ object Form1: TForm1
     InnerMargin = 0
   end
   object FXTextBox5: FXTextBox
+    AlignWithMargins = True
     Left = 21
     Top = 30
     Width = 151
     Height = 37
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     TabStop = True
     Size.X = 151
     Size.Y = 37
@@ -1617,10 +1777,15 @@ object Form1: TForm1
     InnerMargin = 0
   end
   object FXButton14: FXButton
+    AlignWithMargins = True
     Left = 878
     Top = 546
     Width = 146
     Height = 35
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 146
     Size.Y = 35
     Position.X = 878
@@ -1665,10 +1830,15 @@ object Form1: TForm1
     OnClick = FXButton14Click
   end
   object FXTextBox6: FXTextBox
+    AlignWithMargins = True
     Left = 233
     Top = 529
     Width = 129
     Height = 21
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 129
     Size.Y = 21
     Position.X = 233
@@ -1691,10 +1861,15 @@ object Form1: TForm1
     InnerMargin = 0
   end
   object FXButton15: FXButton
+    AlignWithMargins = True
     Left = 237
     Top = 588
     Width = 140
     Height = 35
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 140
     Size.Y = 35
     Position.X = 237
@@ -1739,10 +1914,15 @@ object Form1: TForm1
     OnClick = FXButton15Click
   end
   object FXAnimatedTextBox1: FXAnimatedTextBox
+    AlignWithMargins = True
     Left = 231
     Top = 632
     Width = 66
     Height = 21
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 66
     Size.Y = 21
     Position.X = 231
@@ -1770,10 +1950,15 @@ object Form1: TForm1
     AdderText = #10024
   end
   object FXButton16: FXButton
+    AlignWithMargins = True
     Left = 1030
     Top = 547
     Width = 140
     Height = 35
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 140
     Size.Y = 35
     Position.X = 1030
@@ -1818,10 +2003,15 @@ object Form1: TForm1
     OnClick = FXButton16Click
   end
   object FXProgress1: FXProgress
+    AlignWithMargins = True
     Left = 232
     Top = 556
     Width = 156
     Height = 25
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     TabStop = True
     Size.X = 156
     Size.Y = 25
@@ -1851,10 +2041,15 @@ object Form1: TForm1
     TabOrder = 37
   end
   object FXTextBox8: FXTextBox
+    AlignWithMargins = True
     Left = 668
     Top = 45
     Width = 138
     Height = 70
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     TabStop = True
     Size.X = 138
     Size.Y = 70
@@ -1879,10 +2074,15 @@ object Form1: TForm1
     InnerMargin = 0
   end
   object FXIconView1: FXIconView
+    AlignWithMargins = True
     Left = 49
     Top = 201
     Width = 116
     Height = 60
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 116
     Size.Y = 60
     Position.X = 49
@@ -1905,10 +2105,15 @@ object Form1: TForm1
     TabOrder = 39
   end
   object FXTextBox1: FXTextBox
+    AlignWithMargins = True
     Left = 231
     Top = 463
     Width = 129
     Height = 21
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 129
     Size.Y = 21
     Position.X = 231
@@ -1931,10 +2136,15 @@ object Form1: TForm1
     InnerMargin = 0
   end
   object FXSelector1: FXSelector
+    AlignWithMargins = True
     Left = 232
     Top = 305
     Width = 232
     Height = 30
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 232
     Size.Y = 30
     Position.X = 232
@@ -1960,14 +2170,19 @@ object Form1: TForm1
     TabOrder = 20
   end
   object FXTabStrip1: FXTabStrip
-    Left = 400
-    Top = 598
+    AlignWithMargins = True
+    Left = 383
+    Top = 613
     Width = 300
     Height = 40
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
     Size.X = 300
     Size.Y = 40
-    Position.X = 400
-    Position.Y = 598
+    Position.X = 383
+    Position.Y = 613
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1976,32 +2191,57 @@ object Form1: TForm1
     CustomColors.DarkForeGround = clWhite
     TabOrder = 41
   end
-  object FXShapeSquare1: FXShapeSquare
-    Left = 600
-    Top = 407
-    Width = 116
-    Height = 116
+  object FXButton17: FXButton
+    AlignWithMargins = True
+    Left = 690
+    Top = 280
+    Width = 129
+    Height = 57
     Margins.Left = 0
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Size.X = 116
-    Size.Y = 116
-    Position.X = 600
-    Position.Y = 407
+    Opacity = 100
+    Size.X = 129
+    Size.Y = 57
+    Position.X = 690
+    Position.Y = 280
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
     CustomColors.LightForeGround = 1776410
     CustomColors.DarkBackGround = 2105376
     CustomColors.DarkForeGround = clWhite
-    Drawing.DrawPen = True
-    Drawing.DrawBrush = True
-    Drawing.ColorPen = -65536
-    Drawing.ColorBrush = -256
-    Drawing.PenSize = 4.000000000000000000
-    Proportional = True
+    CustomColors.LightBackGroundInterior = 16514043
+    CustomColors.DarkBackGroundInterior = 2829099
+    CustomButtonColors.Enabled = False
+    CustomButtonColors.Accent = clBlack
+    CustomButtonColors.LightBackgroundNone = clBlack
+    CustomButtonColors.LightBackgroundHover = clBlack
+    CustomButtonColors.LightBackgroundPress = clBlack
+    CustomButtonColors.LightForeGroundNone = clBlack
+    CustomButtonColors.LightForeGroundHover = clBlack
+    CustomButtonColors.LightForeGroundPress = clBlack
+    CustomButtonColors.DarkBackGroundNone = clBlack
+    CustomButtonColors.DarkBackGroundHover = clBlack
+    CustomButtonColors.DarkBackGroundPress = clBlack
+    CustomButtonColors.DarkForeGroundNone = clBlack
+    CustomButtonColors.DarkForeGroundHover = clBlack
+    CustomButtonColors.DarkForeGroundPress = clBlack
+    Text = 'Button'
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    LineWidth = 3.000000000000000000
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 22
+    Font.Name = 'Segoe UI'
+    Font.Style = []
     TabOrder = 42
+    OnClick = FXButton17Click
   end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False
@@ -2049,7 +2289,7 @@ object Form1: TForm1
       'cache'
       'config')
     UserUpdateWaitDelay = 0
-    Left = 456
-    Top = 373
+    Left = 824
+    Top = 133
   end
 end

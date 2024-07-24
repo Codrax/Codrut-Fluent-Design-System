@@ -18,6 +18,7 @@ uses
   CFX.Classes,
   CFX.Types,
   CFX.VarHelpers,
+  CFX.ArrayHelpers,
   CFX.Linker,
   CFX.GDI,
   Winapi.GDIPAPI,
@@ -40,6 +41,8 @@ type
     FBrush: TGDIBrush;
     FPen: TGDIPen;
 
+    FOnChanged: TNotifyEvent;
+
     procedure Updated;
 
     // Setters
@@ -50,13 +53,15 @@ type
     procedure SetPenSize(const Value: single);
 
   published
-    property DrawPen: boolean read FDrawPen write SetDrawPen;
-    property DrawBrush: boolean read FDrawBrush write SetDrawBrush;
+    property DrawPen: boolean read FDrawPen write SetDrawPen default true;
+    property DrawBrush: boolean read FDrawBrush write SetDrawBrush default true;
 
     property ColorPen: FXColor read FColorPen write SetColorPen;
     property ColorBrush: FXColor read FColorBrush write SetColorBrush;
 
     property PenSize: single read FPenSize write SetPenSize;
+
+    property OnChanged: TNotifyEvent read FOnChanged write FOnChanged;
 
   public
     property Brush: TGDIBrush read FBrush;
@@ -77,6 +82,9 @@ type
 
     FSettings: FXShapeDrawingSettings;
 
+    FControlPen,
+    FControlRotation: boolean;
+
     // GDI
     FPath: TGPGraphicsPath;
 
@@ -85,6 +93,11 @@ type
     // Setters
     procedure SetProportional(const Value: boolean);
     procedure SetRotation(const Value: FXAngle);
+    procedure SetControlPen(const Value: boolean);
+    procedure SetControlRotation(const Value: boolean);
+
+    // Internal
+    procedure DrawSettingChanged(Sender: TObject);
 
   protected
     var DrawRect: TRect;
@@ -117,6 +130,9 @@ type
     // Props
     property Proportional: boolean read FProportional write SetProportional default false;
     property Rotation: FXAngle read FRotation write SetRotation;
+
+    property ControlPen: boolean read FControlPen write SetControlPen default true;
+    property ControlRotation: boolean read FControlRotation write SetControlRotation default false;
 
     // Default props
     property Align;
@@ -160,11 +176,15 @@ type
     function Background: TColor;
   end;
 
-  FXShapeSquare = class(FXShape)
+  FXShapeLines = class(FXShape)
+  protected
+    procedure CreatePath; override;
+  end;
+
+  FXShapeSquare = class(FXShapeLines)
   protected
     // Shape building
     procedure BuildPoints; override;
-    procedure CreatePath; override;
   end;
 
   FXShapeCircle = class(FXShape)
@@ -172,9 +192,16 @@ type
 
   end;
 
-  FXShapeTriangle = class(FXShape)
+  FXShapeTriangle = class(FXShapeLines)
   protected
+    // Shape building
+    procedure BuildPoints; override;
+  end;
 
+  FXShapeTriangleCorner = class(FXShapeLines)
+  protected
+    // Shape building
+    procedure BuildPoints; override;
   end;
 
 
@@ -199,10 +226,14 @@ begin
   FDrawColors := FXCompleteColorSet.Create;
 
   FSettings := FXShapeDrawingSettings.Create( Self );
+  FSettings.OnChanged := DrawSettingChanged;
 
   // Prop
   FProportional := false;
   FRotation := 0;
+
+  FControlPen:= true;
+  FControlRotation := false;
 
   // Sizing
   Height := 100;
@@ -228,6 +259,12 @@ begin
   FreeAndNil( FSettings );
   FreeAndNil( FPath );
   inherited;
+end;
+
+procedure FXShape.DrawSettingChanged(Sender: TObject);
+begin
+  UpdateRects;
+  Invalidate;
 end;
 
 procedure FXShape.InteractionStateChanged(AState: FXControlState);
@@ -306,12 +343,58 @@ begin
 end;
 
 procedure FXShape.UpdateRects;
+var
+  PenSize: integer;
 begin
   // Rect
   DrawRect := GetClientRect;
+  DrawRect.NormalizeRect;
+
+  // Get values
+  PenSize := 0;
+  if FSettings.FDrawPen then
+    PenSize := round(FSettings.PenSize);
+
+  // Size by pen
+  if FControlPen then begin
+    DrawRect.Inflate( -PenSize, -PenSize, -PenSize, -PenSize );
+  end;
 
   // Build points
   BuildPoints;
+
+  // Automatic size control
+  if ControlRotation then begin
+    var TopLeft, BottomRight: TPoint; // extremeties
+    TopLeft.SetLocation(0, 0);
+    BottomRight.SetLocation(0, 0);
+
+    for var I := 0 to High(Points) do begin
+      const S = Point(Points[I].X-DrawRect.Left, Points[I].Y-DrawRect.Top);
+      const E = Point(S.X-DrawRect.Width, S.Y-DrawRect.Height);
+
+      if S.X < TopLeft.X then
+        TopLeft.X := S.X;
+      if S.Y < TopLeft.Y then
+        TopLeft.Y := S.Y;
+
+      if E.X > BottomRight.X then
+        BottomRight.X := E.X;
+      if E.Y > BottomRight.Y then
+        BottomRight.Y := E.Y;
+    end;
+
+    TopLeft.X := Abs(TopLeft.X);
+    TopLeft.X := Abs(TopLeft.Y);
+
+    // Inflate
+    if not (TopLeft.IsZero and BottomRight.IsZero) then begin
+      DrawRect.Inflate(-TopLeft.X, -TopLeft.Y, -BottomRight.X, -BottomRight.Y);
+
+      // Re-build points
+      BuildPoints;
+    end;
+  end;
 
   // Rotation
   RotatePoints;
@@ -346,6 +429,26 @@ begin
   inherited;
 end;
 
+procedure FXShape.SetControlPen(const Value: boolean);
+begin
+  if FControlPen = Value then
+    Exit;
+
+  FControlPen := Value;
+  UpdateRects;
+  Invalidate;
+end;
+
+procedure FXShape.SetControlRotation(const Value: boolean);
+begin
+  if FControlRotation = Value then
+    Exit;
+
+  FControlRotation := Value;
+  UpdateRects;
+  Invalidate;
+end;
+
 procedure FXShape.SetProportional(const Value: boolean);
 begin
   if FProportional = Value then
@@ -374,6 +477,9 @@ end;
 constructor FXShapeDrawingSettings.Create(Control: FXWindowsControl);
 begin
   FControl := Control;
+
+  FDrawPen := true;
+  FDrawBrush := true;
 
   // Default
   FPenSize := 1;
@@ -438,7 +544,8 @@ end;
 
 procedure FXShapeDrawingSettings.Updated;
 begin
-  FControl.Invalidate;
+  if Assigned(FOnChanged) then
+    FOnChanged(Self);
 end;
 
 { FXShapeSquare }
@@ -453,14 +560,43 @@ begin
     DrawRect.BottomRight,
     Point(DrawRect.Bottom, DrawRect.Left)
   ];
+  TArrayUtils<TPoint>.AddValues([Points[0], Points[1]], Points);
 end;
 
-procedure FXShapeSquare.CreatePath;
+{ FXShapeTriangle }
+
+procedure FXShapeTriangle.BuildPoints;
+begin
+  inherited;
+  Points := [
+    Point(DrawRect.Right, DrawRect.Bottom-1),
+    Point(DrawRect.Left, DrawRect.Bottom-1),
+    Point(DrawRect.CenterPoint.X, DrawRect.Top)
+  ];
+  TArrayUtils<TPoint>.AddValues([Points[0], Points[1]], Points);
+end;
+
+{ FXShapeLines }
+
+procedure FXShapeLines.CreatePath;
 begin
   inherited;
 
   for var I := 0 to High(Points)-1 do
     FPath.AddLine( Points[I].X, Points[I].Y, Points[I+1].X, Points[I+1].Y );
+end;
+
+{ FXShapeTriangleCorner }
+
+procedure FXShapeTriangleCorner.BuildPoints;
+begin
+  inherited;
+  Points := [
+    DrawRect.TopLeft,
+    Point(DrawRect.Right, DrawRect.Top),
+    Point(DrawRect.Left, DrawRect.Bottom)
+  ];
+  TArrayUtils<TPoint>.AddValues([Points[0], Points[1]], Points);
 end;
 
 end.

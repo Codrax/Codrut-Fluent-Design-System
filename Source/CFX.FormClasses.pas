@@ -1,278 +1,278 @@
 ﻿unit CFX.FormClasses;
 
 interface
-  uses
-    Windows,
-    Vcl.Graphics,
-    Classes,
-    Types,
-    Vcl.Clipbrd,
-    CFX.Types,
-    CFX.UIConsts,
-    SysUtils,
-    CFX.Colors,
-    Vcl.Forms,
-    CFX.Graphics,
-    CFX.VarHelpers,
-    CFX.ThemeManager,
-    Vcl.Controls,
-    CFX.Files,
-    Messages,
-    TypInfo,
-    CFX.Linker,
-    CFX.Classes,
-    CFX.Forms,
-    CFX.ToolTip,
-    CFX.TextBox,
-    CFX.Panels,
-    Vcl.StdCtrls,
-    Vcl.ExtCtrls,
-    Vcl.Imaging.pngimage,
-    CFX.Imported,
-    CFX.Button,
-    CFX.Progress,
-    CFX.StandardIcons,
-    CFX.Utilities,
-    CFX.StringUtils,
-    CFX.ScrollBox,
-    CFX.Internet;
-
-  type
-    FXFillForm = class(TForm, FXControl)
-      private
-        FCustomColors: FXColorSets;
-        FDrawColors: FXColorSet;
-        FThemeChange: FXThemeChange;
-        FParentForm: TForm;
-        FFillMode: FXFormFill;
-        FCloseAction: FXFormCloseAction;
-        FTitlebarHeight: integer;
-
-        // Setters
-        procedure SetParentForm(const Value: TForm);
-        procedure SetFillMode(const Value: FXFormFill);
-
-      protected
-        var Margin: integer;
-        var Container: FXPanel;
-
-        procedure InitializeNewForm; override;
-
-        procedure BuildControls; virtual;
-        procedure Resize; override;
-
-        procedure DoClose(var Action: TCloseAction); override;
-
-        procedure ApplyFillMode;
-        procedure ApplyMargins;
-
-        // Mouse
-        procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
-
-      published
-        property CustomColors: FXColorSets read FCustomColors write FCustomColors;
-
-        // Parent
-        property ParentForm: TForm read FParentForm write SetParentForm;
-
-        // Fill Form
-        property FillMode: FXFormFill read FFillMode write SetFillMode;
-        property CloseAction: FXFormCloseAction read FCloseAction write FCloseAction;
-
-        // Theming Engine
-        property OnThemeChange: FXThemeChange read FThemeChange write FThemeChange;
-
-      public
-        { Create a FXFillForm based on a FXForm that exists in the project,
-          loading It's settings and controls. }
-        constructor Create(aOwner: TComponent); override;
-
-        { Create a FXFillForm based on a custom class. Freed on close }
-        constructor CreateNew(aOwner: TComponent; Dummy: Integer = 0); override;
-        destructor Destroy; override;
-
-        procedure InitForm;
-
-        // Procedures
-        procedure SetBoundsRect(Bounds: TRect);
-
-        // Interface
-        function IsContainer: Boolean;
-        procedure UpdateTheme(const UpdateChildren: Boolean);
-
-        function Background: TColor;
-    end;
+uses
+  Windows,
+  Vcl.Graphics,
+  Classes,
+  Types,
+  Vcl.Clipbrd,
+  CFX.Types,
+  CFX.UIConsts,
+  SysUtils,
+  CFX.Colors,
+  Vcl.Forms,
+  CFX.Graphics,
+  CFX.VarHelpers,
+  CFX.ThemeManager,
+  Vcl.Controls,
+  CFX.Files,
+  Messages,
+  TypInfo,
+  CFX.Linker,
+  CFX.Classes,
+  CFX.Forms,
+  CFX.ToolTip,
+  CFX.TextBox,
+  CFX.Panels,
+  Vcl.StdCtrls,
+  Vcl.ExtCtrls,
+  Vcl.Imaging.pngimage,
+  CFX.Imported,
+  CFX.Button,
+  CFX.Progress,
+  CFX.StandardIcons,
+  CFX.Utilities,
+  CFX.StringUtils,
+  CFX.ScrollBox,
+  CFX.Internet;
+
+type
+  FXFillForm = class(TForm, FXControl)
+  private
+    FCustomColors: FXColorSets;
+    FDrawColors: FXColorSet;
+    FThemeChange: FXThemeChange;
+    FParentForm: TForm;
+    FFillMode: FXFormFill;
+    FCloseAction: FXFormCloseAction;
+    FTitlebarHeight: integer;
+
+    // Setters
+    procedure SetParentForm(const Value: TForm);
+    procedure SetFillMode(const Value: FXFormFill);
+
+  protected
+    var Margin: integer;
+    var Container: FXPanel;
+
+    procedure InitializeNewForm; override;
+
+    procedure BuildControls; virtual;
+    procedure Resize; override;
+
+    procedure DoClose(var Action: TCloseAction); override;
+
+    procedure ApplyFillMode;
+    procedure ApplyMargins;
+
+    // Mouse
+    procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+
+  published
+    property CustomColors: FXColorSets read FCustomColors write FCustomColors;
+
+    // Parent
+    property ParentForm: TForm read FParentForm write SetParentForm;
+
+    // Fill Form
+    property FillMode: FXFormFill read FFillMode write SetFillMode;
+    property CloseAction: FXFormCloseAction read FCloseAction write FCloseAction;
+
+    // Theming Engine
+    property OnThemeChange: FXThemeChange read FThemeChange write FThemeChange;
+
+  public
+    { Create a FXFillForm based on a FXForm that exists in the project,
+      loading It's settings and controls. }
+    constructor Create(aOwner: TComponent); override;
+
+    { Create a FXFillForm based on a custom class. Freed on close }
+    constructor CreateNew(aOwner: TComponent; Dummy: Integer = 0); override;
+    destructor Destroy; override;
+
+    procedure InitForm;
+
+    // Procedures
+    procedure SetBoundsRect(Bounds: TRect);
+
+    // Interface
+    function IsContainer: Boolean;
+    procedure UpdateTheme(const UpdateChildren: Boolean);
+
+    function Background: TColor;
+  end;
 
-    FXFormUpdateTemplate = class(FXFillForm)
-      private
-        const
-        BUTTON_HEIGHT = 50;
-        BUTTON_WIDTH = 200;
+  FXFormUpdateTemplate = class(FXFillForm)
+  private
+    const
+    BUTTON_HEIGHT = 50;
+    BUTTON_WIDTH = 200;
 
-        var
-        FAppName: string;
-        FAllowSnooze: boolean;
+    var
+    FAppName: string;
+    FAllowSnooze: boolean;
 
-        Title_Box: FXTextBox;
+    Title_Box: FXTextBox;
 
-        LastErrorText: string;
+    LastErrorText: string;
 
-        Main_Contain: FXScrollBox;
+    Main_Contain: FXScrollBox;
 
-        Button_Contain,
-        Download_Progress,
-        Error_Contain,
-        Error_Buttons: FXPanel;
+    Button_Contain,
+    Download_Progress,
+    Error_Contain,
+    Error_Buttons: FXPanel;
 
-        Animated_Box: FXAnimatedTextBox;
-        Progress: FXProgress;
+    Animated_Box: FXAnimatedTextBox;
+    Progress: FXProgress;
 
-        FDownloadURL,
-        FParams: string;
+    FDownloadURL,
+    FParams: string;
 
-        FInstallThread: TThread;
+    FInstallThread: TThread;
 
-        Button_Cancel: FXButton;
+    Button_Cancel: FXButton;
 
-        // On Click
-        procedure ButtonClick(Sender: TObject);
+    // On Click
+    procedure ButtonClick(Sender: TObject);
 
-        // Data
-        procedure UpdateTitle;
+    // Data
+    procedure UpdateTitle;
 
-        // Install
-        procedure ThreadedInstall;
+    // Install
+    procedure ThreadedInstall;
 
-        // UI
-        procedure ShowError(Title, Text: string);
+    // UI
+    procedure ShowError(Title, Text: string);
 
-        // Setters
-        procedure SetAllowSnooze(const Value: boolean);
-        procedure SetAppName(const Value: string);
+    // Setters
+    procedure SetAllowSnooze(const Value: boolean);
+    procedure SetAppName(const Value: string);
 
-      protected
-        // Update download
-        function DoDownload(var From: string; ToFile: string): boolean; virtual;
-        procedure DoInstall(FromTempFile: string; Params: string); virtual;
-        function BuildTempFile: string; virtual;
+  protected
+    // Update download
+    function DoDownload(var From: string; ToFile: string): boolean; virtual;
+    procedure DoInstall(FromTempFile: string; Params: string); virtual;
+    function BuildTempFile: string; virtual;
 
-        // Build
-        procedure BuildControls; override;
+    // Build
+    procedure BuildControls; override;
 
-        // Init
-        procedure InitializeNewForm; override;
+    // Init
+    procedure InitializeNewForm; override;
 
-      published
-        property AppName: string read FAppName write SetAppName;
-        property AllowSnooze: boolean read FAllowSnooze write SetAllowSnooze;
+  published
+    property AppName: string read FAppName write SetAppName;
+    property AllowSnooze: boolean read FAllowSnooze write SetAllowSnooze;
 
-        property DownloadURL: string read FDownloadURL write FDownloadURL;
-        property InstallParameters: string read FParams write FParams;
-    end;
+    property DownloadURL: string read FDownloadURL write FDownloadURL;
+    property InstallParameters: string read FParams write FParams;
+  end;
 
-    FXTaskExecutingTemplate = class(FXFillForm)
-      private
-        const
-        BUTTON_HEIGHT = 50;
-        BUTTON_WIDTH = 200;
+  FXTaskExecutingTemplate = class(FXFillForm)
+  private
+    const
+    BUTTON_HEIGHT = 50;
+    BUTTON_WIDTH = 200;
 
-        var
-        FTitle, FText, FProgressText: string;
-        FSelectedIcon: FXStandardIconType;
-        FShowCancel: boolean;
-        FCanceled: boolean;
-        FOnCancel: TNotifyEvent;
+    var
+    FTitle, FText, FProgressText: string;
+    FSelectedIcon: FXStandardIconType;
+    FShowCancel: boolean;
+    FCanceled: boolean;
+    FOnCancel: TNotifyEvent;
 
-        Title_Box,
-        Text_Box: FXTextBox;
-        Main_Contain: FXScrollBox;
-        Dialog_Icon: FXStandardIcon;
+    Title_Box,
+    Text_Box: FXTextBox;
+    Main_Contain: FXScrollBox;
+    Dialog_Icon: FXStandardIcon;
 
-        Button_Contain,
-        Download_Progress: FXPanel;
+    Button_Contain,
+    Download_Progress: FXPanel;
 
-        Animated_Box: FXAnimatedTextBox;
-        Progress: FXProgress;
+    Animated_Box: FXAnimatedTextBox;
+    Progress: FXProgress;
 
-        Button_Cancel: FXButton;
+    Button_Cancel: FXButton;
 
-        // On Click
-        procedure ButtonClick(Sender: TObject);
+    // On Click
+    procedure ButtonClick(Sender: TObject);
 
-        // Setters
-        procedure SetProgressText(const Value: string);
-        procedure SetText(const Value: string);
-        procedure SetTitle(const Value: string);
-        procedure SetSelectedIcon(const Value: FXStandardIconType);
-        procedure SetShowCancel(const Value: boolean);
+    // Setters
+    procedure SetProgressText(const Value: string);
+    procedure SetText(const Value: string);
+    procedure SetTitle(const Value: string);
+    procedure SetSelectedIcon(const Value: FXStandardIconType);
+    procedure SetShowCancel(const Value: boolean);
 
-      protected
-        // Build
-        procedure BuildControls; override;
+  protected
+    // Build
+    procedure BuildControls; override;
 
-        // UI
-        procedure AlignLayout;
+    // UI
+    procedure AlignLayout;
 
-        // Init
-        procedure InitializeNewForm; override;
+    // Init
+    procedure InitializeNewForm; override;
 
-      published
-        property Canceled: boolean read FCanceled;
-        property OnCancel: TNotifyEvent read FOnCancel write FOnCancel;
+  published
+    property Canceled: boolean read FCanceled;
+    property OnCancel: TNotifyEvent read FOnCancel write FOnCancel;
 
-        property Title: string read FTitle write SetTitle;
-        property Text: string read FText write SetText;
-        property ProgressText: string read FProgressText write SetProgressText;
-        property SelectedIcon: FXStandardIconType read FSelectedIcon write SetSelectedIcon;
-        property ShowCancel: boolean read FShowCancel write SetShowCancel;
-    end;
+    property Title: string read FTitle write SetTitle;
+    property Text: string read FText write SetText;
+    property ProgressText: string read FProgressText write SetProgressText;
+    property SelectedIcon: FXStandardIconType read FSelectedIcon write SetSelectedIcon;
+    property ShowCancel: boolean read FShowCancel write SetShowCancel;
+  end;
 
-    FXFormMessageTemplate = class(FXFillForm)
-      private
-        const
-        BUTTON_HEIGHT = 50;
-        BUTTON_WIDTH = 200;
-        procedure OkClick(Sender: TObject);
+  FXFormMessageTemplate = class(FXFillForm)
+  private
+    const
+    BUTTON_HEIGHT = 50;
+    BUTTON_WIDTH = 200;
+    procedure OkClick(Sender: TObject);
 
-        var
-        FTitle,
-        FText: string;
+    var
+    FTitle,
+    FText: string;
 
-        Box_Title,
-        Box_Text: FXTextBox;
+    Box_Title,
+    Box_Text: FXTextBox;
 
-        FIconKind: FXStandardIconType;
-        FShowCancel: boolean;
+    FIconKind: FXStandardIconType;
+    FShowCancel: boolean;
 
-        Button_Contain: FXPanel;
+    Button_Contain: FXPanel;
 
-        Button_OK,
-        Button_Cancel: FXButton;
+    Button_OK,
+    Button_Cancel: FXButton;
 
-        Icon_Box: FXStandardIcon;
+    Icon_Box: FXStandardIcon;
 
-        procedure CancelClick(Sender: TObject);
+    procedure CancelClick(Sender: TObject);
 
-        // Setters
-        procedure SetShowCancel(const Value: boolean);
-        procedure SetTitle(const Value: string);
-        procedure SetText(const Value: string);
-        procedure SetIcon(const Value: FXStandardIconType);
+    // Setters
+    procedure SetShowCancel(const Value: boolean);
+    procedure SetTitle(const Value: string);
+    procedure SetText(const Value: string);
+    procedure SetIcon(const Value: FXStandardIconType);
 
-      protected
-        // Build
-        procedure BuildControls; override;
+  protected
+    // Build
+    procedure BuildControls; override;
 
-        // Init
-        procedure InitializeNewForm; override;
+    // Init
+    procedure InitializeNewForm; override;
 
-      published
-        property Title: string read FTitle write SetTitle;
-        property Text: string read FText write SetText;
+  published
+    property Title: string read FTitle write SetTitle;
+    property Text: string read FText write SetText;
 
-        property IconKind: FXStandardIconType read FIconKind write SetIcon;
-        property ShowCancel: boolean read FShowCancel write SetShowCancel;
-    end;
+    property IconKind: FXStandardIconType read FIconKind write SetIcon;
+    property ShowCancel: boolean read FShowCancel write SetShowCancel;
+  end;
 
 implementation
 

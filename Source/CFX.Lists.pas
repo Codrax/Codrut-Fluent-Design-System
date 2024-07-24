@@ -12,6 +12,8 @@ uses
   UITypes,
   Types,
   Vcl.Forms,
+  Vcl.Dialogs,
+  CFX.Panels,
   Math,
   CFX.Colors,
   CFX.ArrayHelpers,
@@ -71,7 +73,8 @@ type
     FOpacityHover,
     FOpacitySelected: byte;
 
-    FOnDrawItem: FXDrawListOnDraw;
+    FOnDrawItem,
+    FOnBeforeDrawItem: FXDrawListOnDraw;
     FDefaultDraw: boolean;
 
     FExtendX, FExtendY: integer;
@@ -144,6 +147,7 @@ type
 
     // Props
     property OnDrawItem: FXDrawListOnDraw read FOnDrawItem write FOnDrawItem;
+    property OnBeforeDrawItem: FXDrawListOnDraw read FOnBeforeDrawItem write FOnBeforeDrawItem;
 
   published
     // Custom Colors
@@ -234,10 +238,9 @@ type
     FSpacingColumn: integer;
     FJustifyContent: FXContentJustify;
     FFullLine: boolean;
+    FActualSize: TPoint;
 
     //  Internal
-    procedure UpdateRects; override;
-
     procedure RecalculateRects;
 
     // Setters
@@ -250,9 +253,14 @@ type
     procedure SetJustifyContent(const Value: FXContentJustify);
     procedure SetFullLine(const Value: boolean);
 
+  protected
+    // Internal
+    procedure UpdateRects; override;
+
   published
     // Props
     property OnDrawItem;
+    property OnBeforeDrawItem;
 
     property Orientation: FXOrientation read FOrientation write SetOrientation default FXOrientation.Vertical;
     property JustifyContent: FXContentJustify read FJustifyContent write SetJustifyContent default FXContentJustify.Start;
@@ -266,9 +274,71 @@ type
     property SpacingRow: integer read FSpacingRow write SetSpacingRow;
     property SpacingColumn: integer read FSpacingColumn write SetSpacingColumn;
 
+    property ActualSize: TPoint read FActualSize;
+
   public
     // Constructors
     constructor Create(aOwner: TComponent); override;
+  end;
+
+  // Container
+  FXControlContainer = class(FXWindowsControl, FXControl)
+  private
+    FList: FXDrawList;
+    FBackgroundColor: TColor;
+
+  protected
+    // Draw
+    procedure PaintBuffer; override;
+
+    procedure CMControlListChange(var Msg: TCMControlListChange); message CM_CONTROLLISTCHANGE;
+
+  public
+    constructor CreateInList(AList: FXDrawList);
+    destructor Destroy; override;
+
+    // Interface
+    function IsContainer: Boolean;
+    procedure UpdateTheme(const UpdateChildren: Boolean);
+
+    function Background: TColor;
+  end;
+
+  FXLinearControlList = class(FXLinearDrawList)
+  private
+    FContainer: FXControlContainer;
+
+    // Padding basically
+    function GetItemPaddding: FXMargins;
+    procedure SetItemPaddding(const Value: FXMargins);
+
+  protected
+    // Draw
+    procedure PaintBuffer; override;
+
+    // Control adder
+    procedure CMControlListChange(var Msg: TCMControlListChange); message CM_CONTROLLISTCHANGE;
+
+    // Internal
+    procedure UpdateRects; override;
+
+    procedure DrawItem(Index: integer; ARect: TRect; Canvas: TCanvas); override;
+
+    function GetChildParent: TComponent; override; // set the loaded children parent
+
+  published
+    property Container: FXControlContainer read FContainer write FContainer stored true;
+
+    property ItemPaddding: FXMargins read GetItemPaddding write SetItemPaddding;
+
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
+
+    procedure GetChildren(Proc: TGetChildProc; Root: TComponent); override;  // iterate all children
+
+    // Control manage
+    procedure AddControlToItem(AControl: TControl);
   end;
 
 implementation
@@ -469,6 +539,9 @@ end;
 
 procedure FXDrawList.DrawItem(Index: integer; ARect: TRect; Canvas: TCanvas);
 begin
+  if Assigned(OnBeforeDrawItem) then
+    OnBeforeDrawItem(Self, Index, ARect, Canvas);
+
   if FDefaultDraw then
     with Canvas do begin
       Brush.Color := FDrawColors.BackGroundInterior;
@@ -935,11 +1008,19 @@ begin
       OffsetSpacing := (LeftoverSpace-2*OffsetStart) div (ItemsFit-1);
     end;
     FXContentJustify.SpaceEvenly: begin
-      OffsetStart := LeftoverSpace div (ItemsFit+2);
+      OffsetStart := LeftoverSpace div (ItemsFit+1);
       OffsetSpacing := OffsetStart;
     end;
     FXContentJustify.Ending: OffsetStart := LeftoverSpace;
     FXContentJustify.Stretch: OffsetSize := LeftoverSpace div ItemsFit;
+  end;
+
+  // Size changed
+  if OffsetSize <> 0 then begin
+    case Orientation of
+      FXOrientation.Horizontal: Inc(FActualSize.Y, OffsetSize);
+      FXOrientation.Vertical: Inc(FActualSize.X, OffsetSize);
+    end;
   end;
 
   // Start
@@ -1062,12 +1143,212 @@ end;
 
 procedure FXLinearDrawList.UpdateRects;
 begin
+  FActualSize := Point(FItemWidth, FItemHeight);
+
   RecalculateRects; // calc rects
 
   FHorzScroll.SmallChange := ItemWidth + SpacingRow;
   FVertScroll.SmallChange := ItemHeight + SpacingColumn;
 
   inherited;
+end;
+
+{ FXLinearControlList }
+
+procedure FXLinearControlList.AddControlToItem(AControl: TControl);
+begin
+  AControl.Parent := FContainer;
+
+  // Draw
+  Invalidate;
+end;
+
+procedure FXLinearControlList.CMControlListChange(
+  var Msg: TCMControlListChange);
+begin
+  if Msg.Inserting and (Msg.Control is FXWindowsControl)
+    and not Creating then begin
+
+    if Msg.Control.Parent <> FContainer then
+      Msg.Control.Parent := FContainer;
+  end;
+end;
+
+constructor FXLinearControlList.Create(aOwner: TComponent);
+begin
+  inherited;
+  ControlStyle := ControlStyle + [csCaptureMouse, csOpaque, csDoubleClicks,
+    csNeedsBorderPaint, csPannable, csGestures];
+
+  FContainer := FXControlContainer.CreateInList(Self);
+  FContainer.Visible := IsDesigning;
+end;
+
+destructor FXLinearControlList.Destroy;
+begin
+  //FreeAndNil( FContainer );
+  inherited;
+end;
+
+procedure FXLinearControlList.DrawItem(Index: integer; ARect: TRect;
+  Canvas: TCanvas);
+var
+  Local, Global: TRect;
+begin
+  // Default draw
+  inherited;
+
+  // Quit
+  if IsDesigning then begin
+    if (Index > 0) then
+      Exit;
+  end;
+
+  // Overlay
+  if IsDesigning then
+    with Canvas do begin
+      Brush.Color := FDrawColors.BackGroundInterior;
+      Brush.Color := ColorBlend(Brush.Color, FDrawColors.Accent, 100);
+
+      Fillrect(ARect);
+
+      FContainer.Top := ARect.Top;
+      FContainer.Left := ARect.Left;
+    end;
+
+  // Initialize Container
+  FContainer.FBackgroundColor := Buffer.Brush.Color; // Set container color (extract from last used brush)
+  FContainer.Width := ARect.Width;
+  FContainer.Height := ARect.Height;
+
+  // Draw controls
+  const BaseRect = FContainer.Buffer.ClipRect;
+
+  with Buffer do begin
+    //Buffer.CopyRect(ARect, FContainer.Buffer, BaseRect);
+
+    // Controls
+    for var I := 0 to FContainer.ControlCount-1 do begin
+      const Control = FContainer.Controls[I];
+
+      Local := Control.BoundsRect;
+
+      // Precheck
+      if (Control is FXWindowsControl) or not Control.Visible or
+        not Local.IntersectsWith(BaseRect) then
+
+      // Draw
+      if Supports(Control, FXControl) then begin
+        (Control as FXControl).UpdateTheme(true);
+        Control.Invalidate;
+      end;
+
+      // Global
+      Global := Local;
+      Global.Offset(ARect.left, ARect.Top);
+
+      // Draw
+      CopyRectWithOpacity(Buffer, Global, (Control as FXWindowsControl).Buffer,
+        Control.ClientRect, (Control as FXWindowsControl).Opacity);
+    end;
+  end;
+end;
+
+function FXLinearControlList.GetChildParent: TComponent;
+begin
+  Result := FContainer;
+end;
+
+procedure FXLinearControlList.GetChildren(Proc: TGetChildProc;
+  Root: TComponent);
+begin
+  FContainer.GetChildren(Proc, Root);
+end;
+
+function FXLinearControlList.GetItemPaddding: FXMargins;
+begin
+  Result := FContainer.PaddingFill;
+end;
+
+procedure FXLinearControlList.PaintBuffer;
+begin
+  inherited;
+
+  if IsDesigning and (ItemCount = 0) then begin
+    FContainer.FBackgroundColor := ColorBlend(FDrawColors.BackGroundInterior, FDrawColors.Accent, 100);
+
+    FContainer.Width := FItemWidth;
+    FContainer.Height := FItemHeight;
+  end;
+end;
+
+procedure FXLinearControlList.SetItemPaddding(const Value: FXMargins);
+begin
+  FContainer.PaddingFill.Assign(Value);
+end;
+
+procedure FXLinearControlList.UpdateRects;
+begin
+  inherited;
+
+  if FContainer = nil then
+    Exit;
+
+  FContainer.Width := FActualSize.X;
+  FContainer.Height := FActualSize.Y;
+end;
+
+{ FXControlContainer }
+
+function FXControlContainer.Background: TColor;
+begin
+  Result := FBackgroundColor;
+end;
+
+procedure FXControlContainer.CMControlListChange(var Msg: TCMControlListChange);
+begin
+  if Msg.Inserting and not (Msg.Control is FXWindowsControl) then begin
+    raise Exception.Create('Only CFX Base control are accepted!');
+
+    Msg.Control.Parent := Self;
+  end;
+end;
+
+constructor FXControlContainer.CreateInList(AList: FXDrawList);
+begin
+  inherited Create(AList);
+
+  FList := AList;
+
+  ControlStyle := [csAcceptsControls, csCaptureMouse, csClickEvents,
+    csDoubleClicks, csOpaque, csReplicatable, csGestures];
+
+  Parent := AList;
+end;
+
+destructor FXControlContainer.Destroy;
+begin
+
+  inherited;
+end;
+
+function FXControlContainer.IsContainer: Boolean;
+begin
+  Result := true;
+end;
+
+procedure FXControlContainer.PaintBuffer;
+begin
+  inherited;
+  with Buffer do begin
+    Brush.Color := FBackgroundColor;
+    FillRect( ClipRect );
+  end;
+end;
+
+procedure FXControlContainer.UpdateTheme(const UpdateChildren: Boolean);
+begin
+
 end;
 
 end.

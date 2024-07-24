@@ -3,35 +3,35 @@ unit CFX.AppIntegration;
 {$TYPEINFO ON}
 
 interface
-  uses
-    Winapi.Windows,
-    Winapi.Messages,
-    Classes,
-    Vcl.Forms,
-    CFX.Instances,
-    System.SysUtils,
-    System.UITypes,
-    Types,
-    Math,
-    DateUtils,
-    CFX.Types,
-    Vcl.Graphics,
-    CFX.ThemeManager,
-    CFX.Colors,
-    CFX.Files,
-    CFX.Version,
-    CFX.StringUtils,
-    CFX.Registry,
-    CFX.FormClasses,
-    ShellAPI,
-    CFX.QuickDialogs,
-    CFX.Utilities;
+uses
+  Winapi.Windows,
+  Winapi.Messages,
+  Classes,
+  Vcl.Forms,
+  CFX.Instances,
+  System.SysUtils,
+  System.UITypes,
+  Types,
+  Math,
+  DateUtils,
+  CFX.Types,
+  Vcl.Graphics,
+  CFX.ThemeManager,
+  CFX.Colors,
+  CFX.Files,
+  CFX.Version,
+  CFX.StringUtils,
+  CFX.Registry,
+  CFX.FormClasses,
+  ShellAPI,
+  CFX.QuickDialogs,
+  CFX.Utilities;
 
 
-    // UI Utilities
-    procedure PromptUpdateUser(MainForm: TForm; var Form: TForm);
-    procedure PromptUpdateUserClose(var Form: TForm);
-    procedure PromptUpdate(MainForm: TForm; Required: boolean = false);
+  // UI Utilities
+  procedure PromptUpdateUser(MainForm: TForm; var Form: TForm);
+  procedure PromptUpdateUserClose(var Form: TForm);
+  procedure PromptUpdate(MainForm: TForm; Required: boolean = false);
 
 implementation
 

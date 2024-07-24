@@ -26,65 +26,65 @@ uses
 
 type
   FXEffect = class(FXWindowsControl, FXControl)
-    private
-      var DrawRect: TRect;
-      FDrawColors: FXCompleteColorSet;
-      FCustomColors: FXColorSets;
-      FHitTest: boolean;
+  private
+    var DrawRect: TRect;
+    FDrawColors: FXCompleteColorSet;
+    FCustomColors: FXColorSets;
+    FHitTest: boolean;
 
-      //  Internal
-      procedure UpdateColors;
-      procedure UpdateRects;
+    //  Internal
+    procedure UpdateColors;
+    procedure UpdateRects;
 
-    protected
-      procedure PaintBuffer; override;
-      procedure Resize; override;
+  protected
+    procedure PaintBuffer; override;
+    procedure Resize; override;
 
-      procedure DrawBackground(var Background: TBitMap); override;
+    procedure DrawBackground(var Background: TBitMap); override;
 
-      procedure ApplyEffect(Background: TBitMap); virtual;
+    procedure ApplyEffect(Background: TBitMap); virtual;
 
-      procedure CreateParams(var Params: TCreateParams); override;
-      procedure WMNCHitTest(var Message: TWMNCHitTest); message WM_NCHITTEST;
+    procedure CreateParams(var Params: TCreateParams); override;
+    procedure WMNCHitTest(var Message: TWMNCHitTest); message WM_NCHITTEST;
 
-      // Scaler
-      procedure ScaleChanged(Scaler: single); override;
+    // Scaler
+    procedure ScaleChanged(Scaler: single); override;
 
-      // State
-      procedure InteractionStateChanged(AState: FXControlState); override;
+    // State
+    procedure InteractionStateChanged(AState: FXControlState); override;
 
-    published
-      // Custom Colors
-      property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
+  published
+    // Custom Colors
+    property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
 
-      // Props
-      property HitTest: boolean read FHitTest write FHitTest;
+    // Props
+    property HitTest: boolean read FHitTest write FHitTest;
 
-      // Events
-      property OnPaintBuffer;
+    // Events
+    property OnPaintBuffer;
 
-      // Default props
-      property Align;
-      property PaddingFill;
-      property Constraints;
-      property Anchors;
-      property OnEnter;
-      property OnExit;
-      property OnClick;
-      property OnMouseUp;
-      property OnMouseDown;
-      property OnMouseEnter;
-      property OnMouseLeave;
+    // Default props
+    property Align;
+    property PaddingFill;
+    property Constraints;
+    property Anchors;
+    property OnEnter;
+    property OnExit;
+    property OnClick;
+    property OnMouseUp;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
 
-    public
-      constructor Create(aOwner: TComponent); override;
-      destructor Destroy; override;
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
 
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChildren: Boolean);
+    // Interface
+    function IsContainer: Boolean;
+    procedure UpdateTheme(const UpdateChildren: Boolean);
 
-      function Background: TColor;
+    function Background: TColor;
   end;
 
   { Blur background }
