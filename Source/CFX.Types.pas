@@ -728,6 +728,7 @@ interface
   function RotatePointAroundPoint(APoint: TPoint; ACenter: TPoint; ARotateDegree: real; ACustomRadius: real = -1): TPoint;
 
   { Rectangles }
+  function TranslateRect(const Rect, Client, Dest: TRect): TRect;
   function GetValidRect(Point1, Point2: TPoint): TRect; overload;
   function GetValidRect(Points: TArray<TPoint>): TRect; overload;
   function GetValidRect(Rect: TRect): TRect; overload;
@@ -867,6 +868,21 @@ begin
       Result.X := round( ACenter.X + r * ncos );
       Result.Y := round( ACenter.Y + r * nsin );
     end;
+end;
+
+function TranslateRect(const Rect, Client, Dest: TRect): TRect;
+var
+  OffsetX, OffsetY: Integer;
+begin
+  // Calculate the offset between the top-left corners of Client and Dest
+  OffsetX := Dest.Left - Client.Left;
+  OffsetY := Dest.Top - Client.Top;
+
+  // Apply the offset to the coordinates of Rect
+  Result.Left := Rect.Left + OffsetX;
+  Result.Top := Rect.Top + OffsetY;
+  Result.Right := Rect.Right + OffsetX;
+  Result.Bottom := Rect.Bottom + OffsetY;
 end;
 
 function GetValidRect(Point1, Point2: TPoint): TRect;

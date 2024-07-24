@@ -1224,34 +1224,7 @@ begin
   // Draw controls
   const BaseRect = FContainer.Buffer.ClipRect;
 
-  with Buffer do begin
-    //Buffer.CopyRect(ARect, FContainer.Buffer, BaseRect);
-
-    // Controls
-    for var I := 0 to FContainer.ControlCount-1 do begin
-      const Control = FContainer.Controls[I];
-
-      Local := Control.BoundsRect;
-
-      // Precheck
-      if (Control is FXWindowsControl) or not Control.Visible or
-        not Local.IntersectsWith(BaseRect) then
-
-      // Draw
-      if Supports(Control, FXControl) then begin
-        (Control as FXControl).UpdateTheme(true);
-        Control.Invalidate;
-      end;
-
-      // Global
-      Global := Local;
-      Global.Offset(ARect.left, ARect.Top);
-
-      // Draw
-      CopyRectWithOpacity(Buffer, Global, (Control as FXWindowsControl).Buffer,
-        Control.ClientRect, (Control as FXWindowsControl).Opacity);
-    end;
-  end;
+  FContainer.DrawTo(Buffer, ARect);
 end;
 
 function FXLinearControlList.GetChildParent: TComponent;
@@ -1319,7 +1292,7 @@ end;
 procedure FXControlContainer.CMControlListChange(var Msg: TCMControlListChange);
 begin
   if Msg.Inserting and not (Msg.Control is FXWindowsControl) then begin
-    raise Exception.Create('Only CFX Base control are accepted!');
+    raise Exception.Create('Only CFX Base control are accepted');
 
     Msg.Control.Parent := Self;
   end;

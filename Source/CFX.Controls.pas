@@ -156,6 +156,7 @@ type
     procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
     procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
 
+    procedure PaddingUpdated(Sender: TObject);
     procedure MarginsUpdated(Sender: TObject);
 
     // Interaction
@@ -217,6 +218,10 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+
+    // Drawing
+    procedure DrawTo(ACanvas: TCanvas; Destination: TRect); overload;
+    procedure DrawTo(Client: TRect; ACanvas: TCanvas; Destination: TRect); overload;
 
     // State
     property InteractionState: FXControlState read FInteraction write SetState;
@@ -444,6 +449,7 @@ begin
   Margins.Bottom := 0;
 
   FPadding := FXPadding.Create(Self);
+  FPadding.OnChange := PaddingUpdated;
   FMargins := FXMargins.Create(Self);
   FMargins.OnChange := MarginsUpdated;
 
@@ -577,7 +583,7 @@ begin
                   Host.Offset(-HostBounds.Left, -HostBounds.Top);
 
                   // Copy colliding
-                  CopyRect(Local, FWinControl.Buffer, Host);
+                  FWinControl.DrawTo(Host, Background.Canvas, Local);
                 end;
             end
           else
@@ -609,6 +615,63 @@ begin
       if Opacity <> 255 then
         Self.Canvas.Draw(0, 0, FBuffer, 255);
     end;
+end;
+
+procedure FXWindowsControl.DrawTo(Client: TRect; ACanvas: TCanvas;
+  Destination: TRect);
+var
+  FControl: FXWindowsControl;
+
+  Local: TRect;
+  TranslateDest: TRect;
+begin
+  const SelfClient = ClientRect;
+
+  // Draw Self
+  ACanvas.CopyRect(Destination, FBuffer.Canvas, Client);
+
+  // Draw children
+  for var I := 0 to ControlCount-1 do begin
+    if not (Controls[I] is FXWindowsControl) then
+      continue;
+
+    // Get
+    FControl := Controls[I] as FXWindowsControl;
+    Local := FControl.BoundsRect;
+
+    // Hidden
+    if not FControl.Visible then
+      continue;
+
+    // Out of bounds
+    if not Local.IntersectsWith(Client) then
+      Continue;
+
+    // Intersect
+    //Local.Intersect(Client);
+    if Local.Left < SelfClient.Left then
+      Local.Left := SelfClient.Left;
+    if Local.Top < SelfClient.Top then
+      Local.Top := SelfClient.Top;
+    if Local.Right > SelfClient.Right then
+      Local.Right := SelfClient.Right;
+    if Local.Bottom > SelfClient.Bottom then
+      Local.Bottom := SelfClient.Bottom;
+
+    // Translate dest
+    TranslateDest := TranslateRect(Local, Client, Destination);
+
+    // Translate local
+    Local.Offset(-Local.Left, -Local.Top);
+
+    // Draw
+    FControl.DrawTo( Local, ACanvas, TranslateDest );
+  end;
+end;
+
+procedure FXWindowsControl.DrawTo(ACanvas: TCanvas; Destination: TRect);
+begin
+  DrawTo(ClientRect, ACanvas, Destination);
 end;
 
 procedure FXWindowsControl.FontNotifyUpdate(Sender: TObject);
@@ -684,6 +747,10 @@ var
   I: Integer;
   FControl: FXWindowsControl;
 begin
+  if Parent = nil then
+    Exit;
+
+  // Notify neighbours
   for I := 0 to Parent.ControlCount-1 do
     if Parent.Controls[I] is TWinControl then
       if Parent.Controls[I] <> Self then
@@ -691,9 +758,20 @@ begin
           FControl := FXWindowsControl(Parent.Controls[I]);
 
           if (FControl.ComponentIndex > ComponentIndex) and FControl.Transparent then
-            if FControl.BoundsRect.IntersectsWith(BoundsRect) and FControl.Transparent then
+            if FControl.BoundsRect.IntersectsWith(BoundsRect) and FControl.Transparent then begin
               FControl.Invalidate;
+              FControl.InvalidateControlsAbove;
+            end;
         end;
+
+  // Notify above
+  if Parent is TWinControl then
+    if Parent <> Self then begin
+      FControl := FXWindowsControl(Parent);
+
+      //FControl.Invalidate;
+      FControl.InvalidateControlsAbove;
+    end;
 end;
 
 function FXWindowsControl.IsDesigning: boolean;
@@ -759,6 +837,11 @@ procedure FXWindowsControl.OpenPopupMenu(X, Y: integer);
 begin
   if Assigned(PopupMenu) then
     FPopupMenu.PopupAtPoint( ClientToScreen(Point(X,Y)) );
+end;
+
+procedure FXWindowsControl.PaddingUpdated(Sender: TObject);
+begin
+  Realign;
 end;
 
 procedure FXWindowsControl.Paint;

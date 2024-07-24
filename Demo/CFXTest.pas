@@ -21,7 +21,7 @@ uses
   // VCL COMPONENTS
   Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage, Vcl.ControlList,
   Vcl.ExtDlgs, System.ImageList, UITypes, Vcl.ComCtrls, Vcl.Mask,
-  Vcl.Themes, System.Generics.Collections;
+  Vcl.Themes, System.Generics.Collections, CFX.Layouts;
 
 type
   TForm1 = class(FXForm)

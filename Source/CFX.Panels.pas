@@ -76,117 +76,117 @@ type
   end;
 
   FXMinimisePanel = class(FXPanelBase, FXControl)
-    private
-      var
-      FCustomColors: FXCompleteColorSets;
-      FCustomHandleColor: FXColorStateSets;
+  private
+    var
+    FCustomColors: FXCompleteColorSets;
+    FCustomHandleColor: FXColorStateSets;
 
-      FHandleColor: FXColorStateSet;
-      FDrawColors: FXCompleteColorSet;
+    FHandleColor: FXColorStateSet;
+    FDrawColors: FXCompleteColorSet;
 
-      FHandleSize: integer;
-      FHandleRound: integer;
+    FHandleSize: integer;
+    FHandleRound: integer;
 
-      FText: string;
-      FSkipRedrawFill: boolean;
+    FText: string;
+    FSkipRedrawFill: boolean;
 
-      FContentFill: boolean;
+    FContentFill: boolean;
 
-      FMinimised: boolean;
-      FAnimation: boolean;
-      FControlState: FXControlState;
-      FMouseInHandle: boolean;
+    FMinimised: boolean;
+    FAnimation: boolean;
+    FControlState: FXControlState;
+    FMouseInHandle: boolean;
 
-      FImage: FXIconSelect;
+    FImage: FXIconSelect;
 
-      FAutoCursor: boolean;
+    FAutoCursor: boolean;
 
-      FAnim: TIntAni;
-      FAnGoTo, FAnStart: integer;
+    FAnim: TIntAni;
+    FAnGoTo, FAnStart: integer;
 
-      FDefaultHeight: integer;
+    FDefaultHeight: integer;
 
-      // UI
-      function TrimEdges: boolean;
-      procedure AnimateTranzition;
+    // UI
+    function TrimEdges: boolean;
+    procedure AnimateTranzition;
 
-      // Set
-      procedure SetState(AState: FXControlState);
-      procedure SetHandleSize(const Value: integer);
-      procedure SetHandleRound(const Value: integer);
-      procedure StartToggle;
-      procedure SetMinimiseState(statemin: boolean; instant: boolean = false);
-      procedure SetMinimised(const Value: boolean);
-      procedure SetText(const Value: string);
-      procedure SetContentFill(const Value: boolean);
-      procedure SetImage(const Value: FXIconSelect);
+    // Set
+    procedure SetState(AState: FXControlState);
+    procedure SetHandleSize(const Value: integer);
+    procedure SetHandleRound(const Value: integer);
+    procedure StartToggle;
+    procedure SetMinimiseState(statemin: boolean; instant: boolean = false);
+    procedure SetMinimised(const Value: boolean);
+    procedure SetText(const Value: string);
+    procedure SetContentFill(const Value: boolean);
+    procedure SetImage(const Value: FXIconSelect);
 
-      // Theme
-      procedure UpdateColors;
+    // Theme
+    procedure UpdateColors;
 
-    protected
-      procedure Paint; override;
+  protected
+    procedure Paint; override;
 
-      // Paint
-      procedure PaintHandle;
+    // Paint
+    procedure PaintHandle;
 
-      // Inherit align rect calculation
-      procedure AdjustClientRect(var Rect: TRect); override;
+    // Inherit align rect calculation
+    procedure AdjustClientRect(var Rect: TRect); override;
 
-      // Override
-      procedure Resize; override;
+    // Override
+    procedure Resize; override;
 
-      procedure ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF}); override;
+    procedure ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF}); override;
 
-      procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
-      procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
-      procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+    procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
 
-    published
-      property OnMouseEnter;
-      property OnMouseLeave;
-      property OnMouseDown;
-      property OnMouseUp;
-      property OnMouseMove;
-      property OnClick;
+  published
+    property OnMouseEnter;
+    property OnMouseLeave;
+    property OnMouseDown;
+    property OnMouseUp;
+    property OnMouseMove;
+    property OnClick;
 
-      property Align;
-      property Anchors;
-      property Cursor;
-      property Visible;
-      property Enabled;
-      property Constraints;
-      property DoubleBuffered;
+    property Align;
+    property Anchors;
+    property Cursor;
+    property Visible;
+    property Enabled;
+    property Constraints;
+    property DoubleBuffered;
 
-      property DefaultHeight: integer read FDefaultHeight write FDefaultHeight;
-      property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors;
-      property HandleCustomColors: FXColorStateSets read FCustomHandleColor write FCustomHandleColor;
+    property DefaultHeight: integer read FDefaultHeight write FDefaultHeight;
+    property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors;
+    property HandleCustomColors: FXColorStateSets read FCustomHandleColor write FCustomHandleColor;
 
-      property HandleText: string read FText write SetText;
-      property HandleSize: integer read FHandleSize write SetHandleSize default 60;
-      property HandleRoundness: integer read FHandleRound write SetHandleRound default 15;
+    property HandleText: string read FText write SetText;
+    property HandleSize: integer read FHandleSize write SetHandleSize default 60;
+    property HandleRoundness: integer read FHandleRound write SetHandleRound default 15;
 
-      property IsMinimised: boolean read FMinimised write SetMinimised;
+    property IsMinimised: boolean read FMinimised write SetMinimised;
 
-      property Animation: boolean read FAnimation write FAnimation default false;
-      property Image: FXIconSelect read FImage write SetImage;
+    property Animation: boolean read FAnimation write FAnimation default false;
+    property Image: FXIconSelect read FImage write SetImage;
 
-      property ContentFill: boolean read FContentFill write SetContentFill default true;
-      property DynamicCursor: boolean read FAutoCursor write FAutoCursor default true;
+    property ContentFill: boolean read FContentFill write SetContentFill default true;
+    property DynamicCursor: boolean read FAutoCursor write FAutoCursor default true;
 
-    public
-      constructor Create(AOwner : TComponent); override;
-      destructor Destroy; override;
+  public
+    constructor Create(AOwner : TComponent); override;
+    destructor Destroy; override;
 
-      // State
-      procedure ToggleMinimised;
-      procedure ChangeMinimised(Minimised: boolean);
+    // State
+    procedure ToggleMinimised;
+    procedure ChangeMinimised(Minimised: boolean);
 
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChildren: Boolean);
+    // Interface
+    function IsContainer: Boolean;
+    procedure UpdateTheme(const UpdateChildren: Boolean);
 
-      function Background: TColor;
+    function Background: TColor;
   end;
 
 implementation

@@ -797,7 +797,7 @@ object Form1: TForm1
     Image.SelectImageIndex = 0
     ImageScale = 1.250000000000000000
     ButtonKind = Link
-    HyperLinkURL = 'www.codrutsoftware.cf'
+    HyperLinkURL = 'www.codrutsoft.com'
     LineWidth = 3.000000000000000000
     StateText = 'Success'
     StateImage.SelectSegoe = #59188
@@ -2171,8 +2171,8 @@ object Form1: TForm1
   end
   object FXTabStrip1: FXTabStrip
     AlignWithMargins = True
-    Left = 447
-    Top = 565
+    Left = 391
+    Top = 588
     Width = 300
     Height = 40
     Margins.Left = 0
@@ -2181,8 +2181,8 @@ object Form1: TForm1
     Margins.Bottom = 0
     Size.X = 300
     Size.Y = 40
-    Position.X = 447
-    Position.Y = 565
+    Position.X = 391
+    Position.Y = 588
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
