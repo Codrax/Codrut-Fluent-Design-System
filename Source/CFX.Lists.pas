@@ -1277,8 +1277,19 @@ begin
   if IsDesigning and (ItemCount = 0) then begin
     FContainer.FBackgroundColor := ColorBlend(FDrawColors.BackGroundInterior, FDrawColors.Accent, 100);
 
-    FContainer.Width := FItemWidth;
-    FContainer.Height := FItemHeight;
+    FActualSize.X := FItemWidth;
+    FActualSize.Y := FItemHeight;
+
+    case Orientation of
+      FXOrientation.Horizontal: if FullLine then
+        FActualSize.Y := GetClientRect.Height;
+      FXOrientation.Vertical: if FullLine then
+        FActualSize.X := GetClientRect.Width;
+    end;
+
+    // Set
+    FContainer.Width := FActualSize.X;
+    FContainer.Height := FActualSize.Y;
   end;
 end;
 
