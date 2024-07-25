@@ -229,6 +229,7 @@
         <DCCReference Include="Source\CFX.PaintBox.pas"/>
         <DCCReference Include="Source\CFX.TabStrip.pas"/>
         <DCCReference Include="Source\CFX.UXTheme.pas"/>
+        <DCCReference Include="Source\CFX.TitlebarPanel.pas"/>
         <DCCReference Include="Source\CFX.Animation.Component.pas"/>
         <DCCReference Include="Source\CFX.Animation.Main.pas"/>
         <DCCReference Include="Source\CFX.Animation.Utils.pas"/>

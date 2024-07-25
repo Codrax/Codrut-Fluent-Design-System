@@ -126,7 +126,7 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Demo\CFXTest.pas">
+        <DCCReference Include="Demo\CFXDemo.pas">
             <Form>Form1</Form>
         </DCCReference>
         <DCCReference Include="Source\CFX.Template.pas"/>

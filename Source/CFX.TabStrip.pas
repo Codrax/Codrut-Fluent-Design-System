@@ -125,7 +125,7 @@ end;
 procedure FXTabStrip.InteractionStateChanged(AState: FXControlState);
 begin
   inherited;
-  Invalidate;
+  Redraw;
 end;
 
 function FXTabStrip.IsContainer: Boolean;
@@ -155,27 +155,20 @@ procedure FXTabStrip.UpdateTheme(const UpdateChildren: Boolean);
 begin
   UpdateColors;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXTabStrip.UpdateColors;
 begin
+  // Access theme manager
   FDrawColors.Assign( ThemeManager.SystemColor );
-
-  if not Enabled then
-    begin
-      FDrawColors.Foreground := $808080;
-    end
+  if not Enabled then begin
+    FDrawColors.Foreground := $808080;
+  end
   else
-    begin
-      // Access theme manager
-      if FCustomColors.Enabled then
-        // Load custom
-        FDrawColors.LoadFrom( FCustomColors, ThemeManager.DarkTheme )
-      else
-        // Build color palette
-        FDrawColors.LoadFrom( ThemeManager.SystemColorSet, ThemeManager.DarkTheme );
-    end;
+    if FCustomColors.Enabled then
+      // Custom Colors
+      FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme);
 end;
 
 procedure FXTabStrip.UpdateRects;

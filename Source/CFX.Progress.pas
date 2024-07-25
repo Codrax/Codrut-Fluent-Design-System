@@ -178,7 +178,7 @@ begin
         TThread.Synchronize(nil, procedure
           begin
             UpdateRects;
-            Invalidate;
+            Redraw;
           end);
 
         // Inc
@@ -206,7 +206,7 @@ begin
       TThread.Synchronize(nil, procedure
         begin
           UpdateRects;
-          Invalidate;
+          Redraw;
         end);
     end);
   with FProgressThread do
@@ -296,7 +296,7 @@ end;
 procedure FXProgress.InteractionStateChanged(AState: FXControlState);
 begin
   inherited;
-  Invalidate;
+  Redraw;
 end;
 
 function FXProgress.IsContainer: Boolean;
@@ -350,7 +350,7 @@ begin
   FInterSize := 0;
 
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXProgress.Resize;
@@ -363,20 +363,19 @@ procedure FXProgress.UpdateTheme(const UpdateChildren: Boolean);
 begin
   UpdateColors;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXProgress.UpdateColors;
 begin
+  // Access theme manager
   FDrawColors.Assign( ThemeManager.SystemColor );
-
   if not Enabled then
     begin
-      FDrawColors.Foreground := $808080;
+      FDrawColors.Accent := GetColorGrayScale(FDrawColors.Accent);
     end
   else
     begin
-      // Access theme manager
       if FCustomColors.Enabled then
         // Load custom
         FDrawColors.LoadFrom( FCustomColors, ThemeManager.DarkTheme )
@@ -389,9 +388,6 @@ begin
             FDrawColors.BackGroundInterior := ColorRepository.LightBackgroundControl
           else
             FDrawColors.BackGroundInterior := ColorRepository.DarkBackgroundControl;
-
-          // Background
-          FDrawColors.BackGround := GetParentBackgroundColor(FDrawColors.BackGround);
         end;
 
       if FCustomOtherColors.Enabled then
@@ -510,7 +506,7 @@ begin
                     Exit;
 
                   UpdateRects;
-                  Invalidate;
+                  Redraw;
                 end);
 
               // Sleep
@@ -551,7 +547,7 @@ begin
       FProgressHeight := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -564,7 +560,7 @@ begin
       SetAnimationThread(Value = FXProgressKind.Intermediate);
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -575,7 +571,7 @@ begin
       FProgressLineHeight := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -590,7 +586,7 @@ begin
         AnimateValue(Previous);
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 

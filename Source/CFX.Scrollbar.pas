@@ -189,7 +189,7 @@ begin
 
   // Redraw
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXScrollbar.InteractSetPosition(Value: integer);
@@ -281,29 +281,22 @@ procedure FXScrollbar.UpdateTheme(const UpdateChildren: Boolean);
 begin
   UpdateColors;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXScrollbar.UpdateColors;
 begin
+  // Access theme manager
+  FDrawColors.Assign( ThemeManager.SystemColor );
   if FCustomColors.Enabled then
-    begin
-      FDrawColors.BackGround := ExtractColor(FCustomColors, FXColorType.Background);
-      FDrawColors.BackgroundInterior := ExtractColor(FCustomColors, FXColorType.Content);
-
-      FDrawColors.Accent := ExtractColor(FCustomColors, FXColorType.Accent);
-    end
-      else
-    begin
-      FDrawColors.Assign( ThemeManager.SystemColor );
-
-      if ThemeManager.DarkTheme then
-        FDrawColors.ForeGround := ChangeColorLight(FDrawColors.BackGroundInterior, 75)
-      else
-        FDrawColors.ForeGround := ChangeColorLight(FDrawColors.BackGroundInterior, -75);
-
-      FDrawColors.BackGround := GetParentBackgroundColor(FDrawColors.BackGround);
-    end;
+    FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme)
+    else
+  begin
+    if ThemeManager.DarkTheme then
+      FDrawColors.ForeGround := ChangeColorLight(FDrawColors.BackGroundInterior, 75)
+    else
+      FDrawColors.ForeGround := ChangeColorLight(FDrawColors.BackGroundInterior, -75);
+  end;
 
   // Reset colors
   SetMinimisedState(FMinimised);
@@ -643,7 +636,7 @@ begin
   if FEnableButtons <> Value then
     begin
       FEnableButtons := Value;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -663,7 +656,7 @@ begin
         end;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -683,7 +676,7 @@ begin
         end;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -718,19 +711,20 @@ procedure FXScrollbar.SetOrientation(const Value: FXOrientation);
 var
   AWidth: integer;
 begin
-  if (FOrientation <> Value) then
+  if (FOrientation = Value) then
+    Exit;
+
+
+  FOrientation := Value;
+
+  if not IsReading then
     begin
-      FOrientation := Value;
+      AWidth := Width;
+      Width := Height;
+      Height := AWidth;
 
-      if not IsReading then
-        begin
-          AWidth := Width;
-          Width := Height;
-          Height := AWidth;
-
-          UpdateRects;
-          Invalidate;;
-        end;
+      UpdateRects;
+      Redraw;
     end;
 end;
 
@@ -741,7 +735,7 @@ begin
       FPageSize := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -764,7 +758,7 @@ begin
         end;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -781,7 +775,7 @@ begin
       FCustomScrollBarHeight := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -796,7 +790,7 @@ procedure FXScrollbar.WMSize(var Message: TWMSize);
 begin
   inherited;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXScrollbar.WM_LButtonUp(var Msg: TWMLButtonUp);
@@ -804,7 +798,7 @@ begin
   inherited;
   FPressInitiated := false;
   if EnableButtons then
-    Invalidate;
+    Redraw;
 
   FRepeater.Enabled := false;
 end;
@@ -823,7 +817,7 @@ begin
       FBackgroundColor := ColorBlend(FDrawColors.BackGround, FDrawColors.BackGroundInterior, FAnimPos);
     end;
 
-  Invalidate;
+  Redraw;
 
   // Stop
   if FAnimPos = 255 then

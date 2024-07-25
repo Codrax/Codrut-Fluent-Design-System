@@ -271,7 +271,7 @@ procedure FXCustomTextBox.UpdateTheme(const UpdateChildren: Boolean);
 begin
   UpdateColors;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXCustomTextBox.UpdateAutoSize;
@@ -307,20 +307,11 @@ end;
 
 procedure FXCustomTextBox.UpdateColors;
 begin
-  FDrawColors.Assign( ThemeManager.SystemColor );
-
   // Access theme manager
+  FDrawColors.Assign( ThemeManager.SystemColor );
   if FCustomColors.Enabled then
-    begin
-      // Custom Colors
-      FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme);
-    end
-  else
-    begin
-      // Global Colors
-      FDrawColors.LoadFrom(ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
-      FDrawColors.BackGround := GetParentBackgroundColor(FDrawColors.BackGround);
-    end;
+    // Custom Colors
+    FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme);
 end;
 
 procedure FXCustomTextBox.UpdateRects;
@@ -353,7 +344,7 @@ begin
       if FAutoSize and not IsReading then
         UpdateAutoSize
       else
-        Invalidate;
+        Redraw;
     end;
 end;
 
@@ -363,7 +354,7 @@ begin
     begin
       FElipsis := Value;
 
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -374,7 +365,7 @@ begin
       FHorzLayout := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -389,7 +380,7 @@ begin
     begin
       FShowAccelChar := Value;
 
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -402,14 +393,14 @@ begin
       UpdateRects;
 
       // Reading
-      if IsReading or Creating then
+      if IsReading then
         Exit;
 
       // Update
       if AutoSize then
         UpdateAutoSize;
 
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -420,7 +411,7 @@ begin
       FVertLayout := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -434,7 +425,7 @@ begin
         UpdateAutoSize;
       
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -487,7 +478,7 @@ begin
     UpdateAutoSize;
 
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 function FXCustomTextBox.Background: TColor;
@@ -585,7 +576,7 @@ begin
     UpdateAutoSize;
   
   // Invalidate
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXCustomTextBox.WM_LButtonUp(var Msg: TWMLButtonUp);
@@ -750,7 +741,7 @@ begin
   FValueName := 'Value';
   FValue := STRING_NONE;
 
-  UpdateText;
+  UpdateText(false);
 end;
 
 procedure FXValueTextBox.SetValue(const Value: string);

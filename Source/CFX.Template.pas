@@ -7,14 +7,14 @@ uses
   Winapi.Windows,
   System.Classes,
   System.Types,
+  System.SysUtils,
   Vcl.Controls,
   Vcl.Graphics,
   Vcl.ExtCtrls,
   CFX.Colors,
   CFX.ThemeManager,
   CFX.Graphics,
-  CFX.constants,
-  SysUtils,
+  CFX.Constants,
   CFX.Classes,
   CFX.Types,
   CFX.VarHelpers,
@@ -39,6 +39,7 @@ type
   protected
     procedure PaintBuffer; override;
     procedure Resize; override;
+    procedure ApplyPadding; override;
 
     // Scaler
     procedure ScaleChanged(Scaler: single); override;
@@ -87,11 +88,16 @@ type
     // Interface
     function IsContainer: Boolean;
     procedure UpdateTheme(const UpdateChildren: Boolean);
-
     function Background: TColor;
   end;
 
 implementation
+
+procedure FXTemplate.ApplyPadding;
+begin
+  inherited;
+  UpdateRects;
+end;
 
 function FXTemplate.Background: TColor;
 begin
@@ -103,7 +109,6 @@ begin
   inherited;
   // Custom Color
   FCustomColors := FXColorSets.Create(Self);
-
   FDrawColors := FXCompleteColorSet.Create;
 
   // Sizing
@@ -125,7 +130,6 @@ end;
 procedure FXTemplate.InteractionStateChanged(AState: FXControlState);
 begin
   inherited;
-  Invalidate;
 end;
 
 function FXTemplate.IsContainer: Boolean;
@@ -155,27 +159,20 @@ procedure FXTemplate.UpdateTheme(const UpdateChildren: Boolean);
 begin
   UpdateColors;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXTemplate.UpdateColors;
 begin
+  // Access theme manager
   FDrawColors.Assign( ThemeManager.SystemColor );
-
-  if not Enabled then
-    begin
-      FDrawColors.Foreground := $808080;
-    end
+  if not Enabled then begin
+    FDrawColors.Foreground := $808080;
+  end
   else
-    begin
-      // Access theme manager
-      if FCustomColors.Enabled then
-        // Load custom
-        FDrawColors.LoadFrom( FCustomColors, ThemeManager.DarkTheme )
-      else
-        // Build color palette
-        FDrawColors.LoadFrom( ThemeManager.SystemColorSet, ThemeManager.DarkTheme );
-    end;
+    if FCustomColors.Enabled then
+      // Custom Colors
+      FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme);
 end;
 
 procedure FXTemplate.UpdateRects;

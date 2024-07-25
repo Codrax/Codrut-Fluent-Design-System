@@ -17,7 +17,7 @@ uses
   CFX.Linker;
 
 type
-  FXPaintBox = class(FXBufferGraphicControl, FXControl)
+  FXPaintBox = class(FXWindowsControl, FXControl)
   private
     FDarkTintOpacity,
     FWhiteTintOpacity: integer;
@@ -41,6 +41,7 @@ type
 
   published
     property Align;
+    property PaddingFill;
     property Anchors;
     property AutoSize;
     property Constraints;
@@ -130,16 +131,11 @@ end;
 
 procedure FXPaintBox.UpdateColors;
 begin
-  if CustomColors.Enabled then
-    begin
-      FDrawColors := FXColorSet.Create(CustomColors, ThemeManager.DarkTheme);
-    end
-  else
-    begin
-      FDrawColors.Assign( ThemeManager.SystemColor );
-
-      FDrawColors.BackGround := GetParentBackgroundColor(FDrawColors.BackGround);
-    end;
+  // Access theme manager
+  FDrawColors.Assign( ThemeManager.SystemColor );
+  if FCustomColors.Enabled then
+    // Custom Colors
+    FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme);
 end;
 
 destructor FXPaintBox.Destroy;
@@ -175,6 +171,7 @@ var
 begin
   // Background
   Color := FDrawColors.BackGround;
+  PaintBackground;
 
   // Draw
   if csDesigning in ComponentState then

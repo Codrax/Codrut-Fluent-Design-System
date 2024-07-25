@@ -1,4 +1,4 @@
-﻿unit CFXTest;
+﻿unit CFXDemo;
 
 interface
 
@@ -21,7 +21,7 @@ uses
   // VCL COMPONENTS
   Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage, Vcl.ControlList,
   Vcl.ExtDlgs, System.ImageList, UITypes, Vcl.ComCtrls, Vcl.Mask,
-  Vcl.Themes, System.Generics.Collections, CFX.Layouts;
+  Vcl.Themes, System.Generics.Collections, CFX.Layouts, CFX.TitlebarPanel;
 
 type
   TForm1 = class(FXForm)
@@ -31,8 +31,6 @@ type
     FXStandardIcon4: FXStandardIcon;
     FXStandardIcon5: FXStandardIcon;
     FXStandardIcon6: FXStandardIcon;
-    TitleBarPanel1: TTitleBarPanel;
-    FXBlurMaterial2: FXBlurMaterial;
     FXEdit1: FXEdit;
     FXEdit2: FXEdit;
     FXButton1: FXButton;
@@ -49,7 +47,6 @@ type
     FXButtonDesign4: FXButtonDesign;
     FXButton11: FXButton;
     FXButton12: FXButton;
-    FXScrollText1: FXScrollText;
     FXScrollText2: FXScrollText;
     FXSlider1: FXSlider;
     FXCheckBox1: FXCheckBox;
@@ -81,6 +78,9 @@ type
     FXTextBox1: FXTextBox;
     FXAppManager1: FXAppManager;
     FXTabStrip1: FXTabStrip;
+    FXScrollText1: FXScrollText;
+    FXTitleBarPanel1: FXTitleBarPanel;
+    FXBlurMaterial2: FXBlurMaterial;
     procedure FXButton4Click(Sender: TObject);
     procedure FXButtonDesign3Click(Sender: TObject);
     procedure FXButton5Click(Sender: TObject);
@@ -98,7 +98,6 @@ type
     procedure FXPaintBox1Draw(Sender: TObject);
   private
     { Private declarations }
-    procedure FormMove(Sender: TObject);
   public
     { Public declarations }
   end;
@@ -114,14 +113,7 @@ implementation
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  OnMove := FormMove;
-
   FXPopupMenu1.Items[1].Text := '-';
-end;
-
-procedure TForm1.FormMove(Sender: TObject);
-begin
-  FXBlurMaterial2.FormMoveSync;
 end;
 
 procedure TForm1.FXAppManager1UpdateChecked(Sender: TObject);
@@ -172,7 +164,6 @@ begin
   with A do
     try
       FillMode := FXFormFill.TitleBar;
-      FXBlurMaterial2.Hide;
       Self.Width := Self.Width - 1;
 
       AppName := 'Cool Application';
@@ -199,7 +190,6 @@ begin
   with A do
     try
       FillMode := FXFormFill.TitleBar;
-      FXBlurMaterial2.Hide;
       Self.Width := Self.Width - 1;
 
       IconKind := FXStandardIconType.Warning;
@@ -520,7 +510,7 @@ begin
   with FXPaintBox(Sender).Buffer do
     begin
       Brush.Color := clRed;
-      Rectangle(100, 100, 200, 200);
+      Rectangle( ClipRect );
     end;
 end;
 

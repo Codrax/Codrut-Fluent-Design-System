@@ -141,7 +141,7 @@ begin
   case AState of
     FXControlState.None: FHoverOver := -1;
   end;
-  Invalidate;
+  Redraw;
 end;
 
 function FXSelector.IsContainer: Boolean;
@@ -182,7 +182,7 @@ begin
 
   // Changed
   if AItem <> FHoverOver then
-    Invalidate;
+    Redraw;
 
 end;
 
@@ -190,15 +190,12 @@ procedure FXSelector.UpdateTheme(const UpdateChildren: Boolean);
 begin
   UpdateColors;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXSelector.UpdateColors;
-var
-  AccentColor: TColor;
 begin
   FDrawColors.Assign( ThemeManager.SystemColor );
-
   if not Enabled then
     begin
       FItemAccentColors := FXSingleColorStateSet.Create($808080,
@@ -209,30 +206,18 @@ begin
     begin
       // Access theme manager
       if FCustomColors.Enabled then
-        begin
-          // Custom Colors
-          AccentColor := FCustomColors.Accent;
-          FDrawColors.Foreground := ExtractColor(FCustomColors, FXColorType.Foreground);
-          FDrawColors.BackGround := ExtractColor(FCustomColors, FXColorType.BackGround);
-          FDrawColors.BackGroundInterior := ExtractColor(FCustomColors, FXColorType.Content);
-        end
+        FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme)
       else
         begin
-          // Global Colors
-          AccentColor := ThemeManager.AccentColor;
-          FDrawColors.ForeGround := ThemeManager.SystemColor.ForeGround;
-
-          FDrawColors.BackGround := GetParentBackgroundColor(FDrawColors.BackGround);
-
           if ThemeManager.DarkTheme then
             FDrawColors.BackGroundInterior := ChangeColorLight(ThemeManager.SystemColor.BackGroundInterior, 20)
           else
             FDrawColors.BackGroundInterior := ChangeColorLight(ThemeManager.SystemColor.BackGroundInterior, -20);
         end;
 
-      FItemAccentColors := FXSingleColorStateSet.Create(AccentColor,
-                              ChangeColorLight(AccentColor, ACCENT_DIFFERENTIATE_CONST),
-                              ChangeColorLight(AccentColor, -ACCENT_DIFFERENTIATE_CONST));
+      FItemAccentColors := FXSingleColorStateSet.Create(FDrawColors.Accent,
+                              ChangeColorLight(FDrawColors.Accent, ACCENT_DIFFERENTIATE_CONST),
+                              ChangeColorLight(FDrawColors.Accent, -ACCENT_DIFFERENTIATE_CONST));
     end;
 end;
 
@@ -357,7 +342,7 @@ begin
   FAnim.OnSync := procedure(Value: integer)
   begin
     FDrawPosition := Value;
-    Invalidate;
+    Redraw;
   end;
 
   FAnim.Start;
@@ -468,7 +453,7 @@ end;
 procedure FXSelector.SelectorItemsChange(Sender: TObject);
 begin
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXSelector.SetItems(const Value: TStringList);
@@ -476,7 +461,7 @@ begin
   FItems.Assign(Value);
 
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXSelector.SetSelectedItem(const Value: integer);
@@ -496,14 +481,14 @@ begin
           FOnChangeValue(Self);
 
       // Draw
-      Invalidate;
+      Redraw;
     end;
 end;
 
 procedure FXSelector.WMSize(var Message: TWMSize);
 begin
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXSelector.WM_LButtonUp(var Msg: TWMLButtonUp);
@@ -516,7 +501,7 @@ begin
       if Assigned(FOnChange) then
         FOnChange(Self);
 
-      Invalidate;
+      Redraw;
     end;
   inherited;
 end;

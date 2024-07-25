@@ -6,8 +6,8 @@
         <Projects Include="CodFluentUX.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="FluentUXDemo.dproj">
-            <Dependencies>CodFluentUX.dproj</Dependencies>
+        <Projects Include="Test\FluentUXTest.dproj">
+            <Dependencies/>
         </Projects>
     </ItemGroup>
     <ProjectExtensions>
@@ -26,23 +26,23 @@
     <Target Name="CodFluentUX:Make">
         <MSBuild Projects="CodFluentUX.dproj" Targets="Make"/>
     </Target>
-    <Target Name="FluentUXDemo" DependsOnTargets="CodFluentUX">
-        <MSBuild Projects="FluentUXDemo.dproj"/>
+    <Target Name="FluentUXTest">
+        <MSBuild Projects="Test\FluentUXTest.dproj"/>
     </Target>
-    <Target Name="FluentUXDemo:Clean" DependsOnTargets="CodFluentUX:Clean">
-        <MSBuild Projects="FluentUXDemo.dproj" Targets="Clean"/>
+    <Target Name="FluentUXTest:Clean">
+        <MSBuild Projects="Test\FluentUXTest.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="FluentUXDemo:Make" DependsOnTargets="CodFluentUX:Make">
-        <MSBuild Projects="FluentUXDemo.dproj" Targets="Make"/>
+    <Target Name="FluentUXTest:Make">
+        <MSBuild Projects="Test\FluentUXTest.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="CodFluentUX;FluentUXDemo"/>
+        <CallTarget Targets="CodFluentUX;FluentUXTest"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="CodFluentUX:Clean;FluentUXDemo:Clean"/>
+        <CallTarget Targets="CodFluentUX:Clean;FluentUXTest:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="CodFluentUX:Make;FluentUXDemo:Make"/>
+        <CallTarget Targets="CodFluentUX:Make;FluentUXTest:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

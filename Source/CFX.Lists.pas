@@ -54,32 +54,35 @@ type
     FDrawColors: FXCompleteColorSet;
     FCustomColors: FXColorSets;
     FNoOutOfBoundsDraw: boolean;
-    FShowScrollbars: boolean;
-    FHandleScrolling: boolean;
     FVisibleList: TArray<TRectSet>;
 
     FItemIndex,
     FItemIndexHover: integer;
 
     FMultiSelect: boolean;
+    FDefaultDraw: boolean;
 
+    // Scroll
     FVertScroll,
     FHorzScroll: FXDrawListScrollBar;
+    FShowScrollbars: boolean;
+    FHandleScrolling: boolean;
 
+    FExtendX, FExtendY: integer;
+    FAnimX, FAnimY: FXIntAnim;
+
+    // Items
     FItemRects: TArray<TRect>;
     FItemSelected: TArray<boolean>;
     FItemHoverLocalPosition: TPoint;
 
+    // Data
     FOpacityHover,
     FOpacitySelected: byte;
 
+    // Notifiers
     FOnDrawItem,
     FOnBeforeDrawItem: FXDrawListOnDraw;
-    FDefaultDraw: boolean;
-
-    FExtendX, FExtendY: integer;
-
-    FAnimX, FAnimY: FXIntAnim;
 
     FOnItemClick,
     FOnItemDoubleClick,
@@ -94,6 +97,8 @@ type
 
     procedure UpdateScrollbars; // update actual position & size of scroll bars!
     procedure RecalculateScroll; // update scroll bar values
+
+    procedure StopScrollAnimations;
 
     // Scroll notifiers
     procedure ScrollChanged(Sender: TObject); // user
@@ -130,7 +135,7 @@ type
     procedure Click; override;
     procedure DblClick; override;
 
-    // padding
+    // Inner client
     function GetClientRect: TRect; override;
 
     // Getters
@@ -291,6 +296,7 @@ type
     // Draw
     procedure PaintBuffer; override;
 
+    // When a new control is added
     procedure CMControlListChange(var Msg: TCMControlListChange); message CM_CONTROLLISTCHANGE;
 
   public
@@ -345,6 +351,9 @@ implementation
 
 procedure FXDrawList.AnimationStep(Sender: TObject; Step, TotalSteps: integer);
 begin
+  if Destroyed then
+    Exit;
+
   if Sender = FAnimX then begin
     // Horizontal
     FHorzScroll.Position := FXIntAnim(Sender).CurrentValue;
@@ -363,7 +372,7 @@ procedure FXDrawList.ClearSelected;
 begin
   ClearSelectedInternal;
 
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXDrawList.ClearSelectedInternal;
@@ -421,10 +430,7 @@ begin
       Tag := 0;
       OnChange := ScrollChanged;
       OnChangeValue := ScrollChangedValue;
-
-      Max := 0;
     end;
-
   with FHorzScroll do
     begin
       Parent := Self;
@@ -434,9 +440,10 @@ begin
       Tag := 1;
       OnChange := ScrollChanged;
       OnChangeValue := ScrollChangedValue;
-
-      Max := 0;
     end;
+
+  FVertScroll.Max := 0;
+  FVertScroll.Max := 0;
 
   // Anim
   FAnimX := FXIntAnim.Create(nil);
@@ -606,7 +613,7 @@ end;
 procedure FXDrawList.InteractionStateChanged(AState: FXControlState);
 begin
   inherited;
-  Invalidate;
+  Redraw;
 end;
 
 function FXDrawList.IsContainer: Boolean;
@@ -701,12 +708,13 @@ begin
   end;
 
   // Set maxes
-  FHorzScroll.Max := Max(0, MaxX-Client.Width);
-  if FHorzScroll.Max > 0 then
-    FHorzScroll.Max := FHorzScroll.Max + FExtendX;
-  FVertScroll.Max := Max(0, MaxY-Client.Height);
-  if FVertScroll.Max > 0 then
-    FVertScroll.Max := FVertScroll.Max + FExtendY;
+  MaxX := Max(0, MaxX-Client.Width);
+  if (MaxX > 0) or (FHorzScroll.Position > 0) then
+    FHorzScroll.Max := MaxX + FExtendX;
+
+  MaxY := Max(0, MaxY-Client.Height);
+  if (MaxY > 0) or (FVertScroll.Position > 0) then
+    FVertScroll.Max := MaxY + FExtendY;
 end;
 
 procedure FXDrawList.Resize;
@@ -719,40 +727,32 @@ procedure FXDrawList.UpdateTheme(const UpdateChildren: Boolean);
 begin
   UpdateColors;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXDrawList.ScrollChanged(Sender: TObject);
 begin
   // STOP scroll animations
-  FAnimX.Stop;
-  FAnimY.Stop;
+  StopScrollAnimations;
 end;
 
 procedure FXDrawList.ScrollChangedValue(Sender: TObject);
 begin
   // Draw
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXDrawList.UpdateColors;
 begin
+  // Access theme manager
   FDrawColors.Assign( ThemeManager.SystemColor );
-
-  if not Enabled then
-    begin
-      FDrawColors.Foreground := $808080;
-    end
+  if not Enabled then begin
+    FDrawColors.Foreground := $808080;
+  end
   else
-    begin
-      // Access theme manager
-      if FCustomColors.Enabled then
-        // Load custom
-        FDrawColors.LoadFrom( FCustomColors, ThemeManager.DarkTheme )
-      else
-        // Build color palette
-        FDrawColors.LoadFrom( ThemeManager.SystemColorSet, ThemeManager.DarkTheme );
-    end;
+    if FCustomColors.Enabled then
+      // Custom Colors
+      FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme);
 end;
 
 procedure FXDrawList.UpdateRects;
@@ -767,6 +767,8 @@ end;
 
 procedure FXDrawList.UpdateScrollbars;
 begin
+  if IsReading then
+    Exit;
   // Update Scrollbars
   with FVertScroll do
     begin
@@ -816,7 +818,7 @@ begin
     Exit;
 
   FDefaultDraw := Value;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXDrawList.SetExtX(const Value: integer);
@@ -848,7 +850,7 @@ begin
   SetLength(FItemRects, Value);
   SetLength(FItemSelected, Value);
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXDrawList.SetItemIndex(const Value: integer);
@@ -862,7 +864,7 @@ begin
 
   // Set
   FItemIndex := Value;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXDrawList.SetItemIndexHover(const Value: integer);
@@ -871,14 +873,14 @@ begin
     Exit;
 
   FItemIndexHover := Value;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXDrawList.SetItemSelected(Index: integer; const Value: boolean);
 begin
   FItemSelected[Index] := Value;
 
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXDrawList.SetNoOutOfBoundsDraw(const Value: boolean);
@@ -887,7 +889,7 @@ begin
     Exit;
 
   FNoOutOfBoundsDraw := Value;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXDrawList.SetOpacityHover(const Value: byte);
@@ -896,7 +898,7 @@ begin
     Exit;
 
   FOpacityHover := Value;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXDrawList.SetOpacitySelected(const Value: byte);
@@ -905,7 +907,7 @@ begin
     Exit;
 
   FOpacitySelected := Value;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXDrawList.SetOrientation(const Value: FXOrientation);
@@ -921,6 +923,12 @@ begin
   FShowScrollbars := Value;
   UpdateScrollbars;
   UpdateRects;
+end;
+
+procedure FXDrawList.StopScrollAnimations;
+begin
+  FAnimX.Stop;
+  FAnimY.Stop;
 end;
 
 { FXDrawListScrollBar }
@@ -1067,7 +1075,7 @@ begin
 
   FFullLine := Value;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXLinearDrawList.SetItemHeight(const Value: integer);
@@ -1078,7 +1086,7 @@ begin
   FVertScroll.SmallChange := Value;
   FItemHeight := Value;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXLinearDrawList.SetItemWidth(const Value: integer);
@@ -1088,7 +1096,7 @@ begin
 
   FItemWidth := Value;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXLinearDrawList.SetJustifyContent(const Value: FXContentJustify);
@@ -1098,7 +1106,7 @@ begin
 
   FJustifyContent := Value;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXLinearDrawList.SetOrientation(const Value: FXOrientation);
@@ -1108,7 +1116,7 @@ begin
 
   FOrientation := Value;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXLinearDrawList.SetSpacingColumn(const Value: integer);
@@ -1118,7 +1126,7 @@ begin
 
   FSpacingColumn := Value;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXLinearDrawList.SetSpacingRow(const Value: integer);
@@ -1128,7 +1136,7 @@ begin
 
   FSpacingRow := Value;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXLinearDrawList.SetWrap(const Value: boolean);
@@ -1138,7 +1146,7 @@ begin
 
   FWrap := Value;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXLinearDrawList.UpdateRects;
@@ -1160,14 +1168,14 @@ begin
   AControl.Parent := FContainer;
 
   // Draw
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXLinearControlList.CMControlListChange(
   var Msg: TCMControlListChange);
 begin
   if Msg.Inserting and (Msg.Control is FXWindowsControl)
-    and not Creating then begin
+    and not IsReading then begin
 
     if Msg.Control.Parent <> FContainer then
       Msg.Control.Parent := FContainer;
@@ -1192,8 +1200,6 @@ end;
 
 procedure FXLinearControlList.DrawItem(Index: integer; ARect: TRect;
   Canvas: TCanvas);
-var
-  Local, Global: TRect;
 begin
   // Default draw
   inherited;
@@ -1222,8 +1228,7 @@ begin
   FContainer.Height := ARect.Height;
 
   // Draw controls
-  const BaseRect = FContainer.Buffer.ClipRect;
-
+  FContainer.Redraw;
   FContainer.DrawTo(Buffer, ARect);
 end;
 

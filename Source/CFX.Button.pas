@@ -238,10 +238,10 @@ var
   FAnim: TIntAni;
 begin
   inherited;
-  Invalidate;
+  Redraw;
 
   // Animation
-  if FAnimation and not Creating and not Destroyed and not FAnimationRunning then
+  if FAnimation and not IsReading and not Destroyed and not FAnimationRunning then
     begin
       FAnim := TIntAni.Create;
 
@@ -272,7 +272,7 @@ begin
             FAnim.Terminate;
           end
         else
-          Invalidate;
+          Redraw;;
       end;
 
       FAnim.OnDone := procedure
@@ -343,7 +343,7 @@ procedure FXButton.UpdateTheme(const UpdateChildren: Boolean);
 begin
   UpdateColors;
   UpdateRects;
-  Invalidate;
+  Redraw;;
 end;
 
 procedure FXButton.UpdateColors;
@@ -351,22 +351,11 @@ var
   LoadPreset: FXButtonKind;
   AOffset, ASmallOffset: integer;
 begin
-  FDrawColors.Assign( ThemeManager.SystemColor );
-
   // Access theme manager
+  FDrawColors.Assign( ThemeManager.SystemColor );
   if FCustomColors.Enabled then
-    begin
-      // Custom Colors
-      FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme);
-      FDrawColors.BackGround := GetParentBackgroundColor(FDrawColors.BackGround);
-    end
-  else
-    begin
-      // Global Colors
-      FDrawColors.Assign( ThemeManager.SystemColor );
-
-      FDrawColors.BackGround := GetParentBackgroundColor(FDrawColors.BackGround);
-    end;
+    // Custom Colors
+    FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme);
 
   // Button Colors
   if FCustomButtonColors.Enabled then
@@ -679,7 +668,7 @@ begin
       FText := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;;
     end;
 end;
 
@@ -690,7 +679,7 @@ begin
       FVertLayout := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;;
     end;
 end;
 
@@ -701,7 +690,7 @@ begin
       FWordWrap := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;;
     end;
 end;
 
@@ -719,7 +708,7 @@ begin
   if not RepeatWhenPressed or (InteractionState <> FXControlState.Press) then
     FAutoRepeat.Enabled := false;
 
-  Invalidate;
+  Redraw;;
 end;
 
 procedure FXButton.ScaleChanged(Scaler: single);
@@ -741,7 +730,7 @@ begin
 
       UpdateColors;
       UpdateRects;
-      Invalidate;
+      Redraw;;
     end;
 end;
 
@@ -757,7 +746,7 @@ begin
       FChecked := Value;
 
       UpdateColors;
-      Invalidate;
+      Redraw;;
     end;
 end;
 
@@ -772,7 +761,7 @@ begin
     begin
       FDetail := Value;
 
-      Invalidate;
+      Redraw;;
     end;
 end;
 
@@ -783,7 +772,7 @@ begin
       FHorizLayout := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;;
     end;
 end;
 
@@ -794,7 +783,7 @@ begin
       FImage := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;;
     end;
 end;
 
@@ -805,7 +794,7 @@ begin
       FImageLayout := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;;
     end;
 end;
 
@@ -816,7 +805,7 @@ begin
       FImageScale := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;;
     end;
 end;
 
@@ -827,7 +816,7 @@ begin
       FLineWidth := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;;
     end;
 end;
 
@@ -838,7 +827,7 @@ begin
       FMargin := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;;
     end;
 end;
 
@@ -848,7 +837,7 @@ begin
     begin
       FRoundness := Value;
 
-      Invalidate;
+      Redraw;;
     end;
 end;
 
@@ -859,7 +848,7 @@ begin
       FShowText := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;;
     end;
 end;
 
@@ -884,7 +873,7 @@ begin
         FAutoStopState.Enabled := true;
 
       UpdateRects;
-      Invalidate;
+      Redraw;;
     end
   else
     if Value and FAutoStopState.Enabled then
@@ -902,7 +891,7 @@ begin
       if StateEnabled then
         begin
           UpdateRects;
-          Invalidate;
+          Redraw;;
         end;
     end;
 end;
@@ -916,7 +905,7 @@ begin
       if FStateEnabled then
         begin
           UpdateRects;
-          Invalidate;
+          Redraw;;
         end;
     end;
 end;
@@ -1079,7 +1068,7 @@ begin
           Checked := not Checked;
 
         UpdateColors;
-        Invalidate;
+        Redraw;;
 
         if Assigned(OnCheck) then
           OnCheck(Self);
@@ -1236,7 +1225,7 @@ end;
 procedure FXButton.WMSize(var Message: TWMSize);
 begin
   UpdateRects;
-  Invalidate;
+  Redraw;;
 end;
 
 end.

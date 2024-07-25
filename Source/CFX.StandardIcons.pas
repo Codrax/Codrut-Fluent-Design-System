@@ -9,6 +9,7 @@ uses
   Vcl.Graphics,
   Messaging,
   Types,
+  Math,
   Vcl.Styles,
   Vcl.Themes,
   CFX.Types,
@@ -23,38 +24,42 @@ uses
   Windows;
 
 type
-  FXStandardIcon = class(FXGraphicControl, FXControl)
+  FXStandardIcon = class(FXWindowsControl, FXControl)
     private
+      var DrawRect: TRect;
       FIcon : FXStandardIconType;
-      FProport: boolean;
-      FWidth: integer;
+      FPenWidth: integer;
       FDrawColors: FXColorSet;
       FCustomColors: FXColorSets;
-      FLastSize: TRect;
+      FProportional: boolean;
+      FUseAccentColor: boolean;
 
-      procedure SetIcon(const Value: FXStandardIconType);
-      procedure SetProport(const Value: boolean);
-      procedure SetWid(const Value: integer);
-
-      procedure ApplyProportion;
-
+      // Star drawing
       class procedure DrawPentacle(Canvas : TCanvas; Pent : TPent);
       class function MakePent(X, Y, L : integer) : TPent;
       class procedure MakeStar(Canvas : TCanvas; cX, cY, size : integer; Colour :TColor; bordersize: integer; bordercolor: TColor);
 
       // Update
       procedure UpdateColors;
+      procedure UpdateRects;
+
+      // Setters
+      procedure SetIcon(const Value: FXStandardIconType);
+      procedure SetWid(const Value: integer);
+      procedure SetProportional(const Value: boolean);
+      procedure SetUseAccentColor(const Value: boolean);
 
     protected
-      procedure Paint; override;
+      procedure PaintBuffer; override;
 
-      // Size
+      // Events
       procedure Resize; override;
 
     published
       property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
 
       property Transparent;
+      property PaddingFill;
       property OnMouseEnter;
       property OnMouseLeave;
       property OnMouseDown;
@@ -74,15 +79,17 @@ type
       property Visible;
       property Enabled;
 
-      property Proportional : boolean read FProport write SetProport;
+      property Proportional: boolean read FProportional write SetProportional default true;
+      property UseAccentColor: boolean read FUseAccentColor write SetUseAccentColor default false;
       property SelectedIcon : FXStandardIconType read FIcon write SetIcon;
-      property PenWidth : integer read FWidth write SetWid;
+      property PenWidth : integer read FPenWidth write SetWid;
 
     public
       constructor Create(AOwner : TComponent); override;
       destructor Destroy; override;
 
-      procedure Invalidate; override;
+      // Override
+      procedure SetBounds(ALeft, ATop, AWidth, AHeight: Integer); override;
 
       // Interface
       function IsContainer: Boolean;
@@ -93,33 +100,7 @@ type
 
 implementation
 
-{ CProgress }
-
-procedure FXStandardIcon.ApplyProportion;
-begin
-  // Set proportion
-  if FProport then begin
-    case Align of
-      // Defaultt
-      alNone: begin
-        if width < height then
-          height := width
-        else
-          width := height;
-      end;
-
-      alTop, alBottom: begin
-        if width <> height then
-          width := height;
-      end;
-
-      alLeft, alRight: begin
-        if width <> height then
-          height := width;
-      end;
-    end;
-  end;
-end;
+{ FXStandardIcon }
 
 function FXStandardIcon.Background: TColor;
 begin
@@ -129,9 +110,10 @@ end;
 constructor FXStandardIcon.Create(AOwner: TComponent);
 begin
   inherited;
-  FProport := true;
+  FProportional := true;
   FIcon := FXStandardIconType.Checkmark;
-  FWidth := 10;
+  FPenWidth := 10;
+  FUseAccentColor := false;
 
   FCustomColors := FXColorSets.Create(Self);
   FDrawColors := FXColorSet.Create;
@@ -139,6 +121,7 @@ begin
   Width := 60;
   Height := 60;
 
+  UpdateRects;
   UpdateColors;
 end;
 
@@ -146,11 +129,6 @@ destructor FXStandardIcon.Destroy;
 begin
   FDrawColors.Free;
   FCustomColors.Free;
-  inherited;
-end;
-
-procedure FXStandardIcon.Invalidate;
-begin
   inherited;
 end;
 
@@ -216,193 +194,182 @@ begin
   end;
 end;
 
-procedure FXStandardIcon.Paint;
-var
-  s: integer;
+procedure FXStandardIcon.PaintBuffer;
+procedure Move(X, Y: real); overload;
 begin
-  inherited;
+  Buffer.MoveTo( trunc(DrawRect.Left+X), trunc(DrawRect.Top+Y) );
+end;
+procedure Line(X, Y: real); overload;
+begin
+  Buffer.LineTo( trunc(DrawRect.Left+X), trunc(DrawRect.Top+Y) );
+end;
+procedure Text(AStr: string);
+begin
+  with Buffer do
+    TextOut( DrawRect.Width div 2-TextWidth('i') div 2 ,
+      DrawRect.Height div 2-TextHeight('i') div 2 ,
+      'i');
+end;
+var
+  AWidth, AHeight: integer;
+begin
   // Background
-  if not Transparent then
-    with Canvas do
-      begin
-        Brush.Color := FDrawColors.BackGround;
-        FillRect(ClipRect);
-      end;
+  Color := FDrawColors.BackGround;
+  PaintBackground;
 
   // Draw
-  with canvas do begin
-    // Color
-    case FIcon of
-      FXStandardIconType.Checkmark: Brush.Color := ICON_GREEN;
-      FXStandardIconType.Error: Brush.Color := ICON_ROSE;
-      FXStandardIconType.Question: Brush.Color := ICON_ICEBLUE;
-      FXStandardIconType.Information: Brush.Color := ICON_ICEBLUE;
-      FXStandardIconType.Warning: Brush.Color := ICON_YELLOW;
-      FXStandardIconType.Star: Brush.Color := ICON_YELLOW;
-      FXStandardIconType.None: Exit;
-    end;
+  with Buffer do begin
+    // Circle color
+    if UseAccentColor then
+      Brush.Color := FDrawColors.Accent
+    else
+      case FIcon of
+        FXStandardIconType.Checkmark: Brush.Color := ICON_GREEN;
+        FXStandardIconType.Error: Brush.Color := ICON_ROSE;
+        FXStandardIconType.Question: Brush.Color := ICON_ICEBLUE;
+        FXStandardIconType.Information: Brush.Color := ICON_ICEBLUE;
+        FXStandardIconType.Warning: Brush.Color := ICON_YELLOW;
+        FXStandardIconType.Star: Brush.Color := ICON_YELLOW;
+        FXStandardIconType.None: Exit;
+      end;
 
     // Circle
     Pen.Style := psClear;
     GDICircle(ClientRect, GetRGB(Brush.Color).MakeGDIBrush, nil);
 
+    // Data
+    AWidth := DrawRect.Width;
+    AHeight := DrawRect.Height;
+
+    // Brush
+    Brush.Style := bsClear;
+
     // Pen
     Pen.Style := psSolid;
-    pen.Color := FDrawColors.ForeGround;
+    Pen.Color := FDrawColors.ForeGround;
+    Pen.Width := (FPenWidth * AWidth) div 100;
+
+    // Font
+    Font.Style := [fsBold];
+    Font.Name := 'Calibri';
+    Font.Color := FDrawColors.ForeGround;
+    Font.Size := trunc(Min(AWidth, AHeight) / 1.8);
 
     // Icons
     case FIcon of
       // Checkmark
       FXStandardIconType.Checkmark: begin
-        pen.Width := 10;
-
-        pen.Width := (FWidth * width) div 100;
-
-        moveto( trunc(clientwidth / 4.9), trunc(clientheight / 1.9) );
-        lineto( trunc(clientwidth / 2.5), trunc(clientheight / 1.4) );
-        lineto( trunc(clientwidth / 1.35), trunc(clientheight / 3.6) );
+        Move( AWidth / 4.9, DrawRect.Height / 1.9 );
+        Line( AWidth / 2.5, DrawRect.Height / 1.4 );
+        Line( AWidth / 1.35, DrawRect.Height / 3.6 );
       end;
 
       // Error
       FXStandardIconType.Error: begin
-        pen.Width := (FWidth * width) div 100;
+        Move( AWidth / 3, AHeight / 3 );
+        Line( AWidth - AWidth / 3, AHeight - AHeight / 3 );
 
-        moveto( trunc(clientwidth / 3), trunc(clientheight / 3) );
-        lineto( clientwidth - trunc(clientwidth / 3), clientheight - trunc(clientheight / 3) );
-
-        moveto( clientwidth - trunc(clientwidth / 3), trunc(clientheight / 3) );
-        lineto( trunc(clientwidth / 3), clientheight - trunc(clientheight / 3) );
+        Move( AWidth - AWidth / 3, AHeight / 3 );
+        Line( AWidth / 3, AHeight - AHeight / 3 );
       end;
 
       // Info
-      FXStandardIconType.Information: begin
-        pen.Width := 10;
-
-        font.Style := [fsBold];
-        font.Name := 'Calibri';
-        font.Color := FDrawColors.ForeGround;
-        if clientwidth < clientheight then
-          s := clientwidth
-        else
-          s := clientheight;
-        Font.Size := trunc(s / 1.8);
-
-        Brush.Style := bsClear;
-        TextOut( (Width div 2) - ( TextWidth('i') div 2 ) , (Height div 2) - ( TextHeight('i') div 2 ) , 'i');
-      end;
+      FXStandardIconType.Information: Text('i');
 
       // Question
-      FXStandardIconType.Question: begin
-        pen.Width := 10;
-        pen.Color := clWhite;
-
-        font.Style := [fsBold];
-        font.Name := 'Calibri';
-        font.Color := FDrawColors.ForeGround;
-        if clientwidth < clientheight then
-          s := clientwidth
-        else
-          s := clientheight;
-        Font.Size := trunc(s / 1.8);
-
-        Brush.Style := bsClear;
-        TextOut( (Width div 2) - ( TextWidth('?') div 2 ) , (Height div 2) - ( TextHeight('?') div 2 ) , '?');
-      end;
+      FXStandardIconType.Question: Text('?');
 
       // Warning
-      FXStandardIconType.Warning: begin
-        pen.Width := 10;
-        pen.Color := Self.Color;
-
-        font.Style := [fsBold];
-        font.Name := 'Calibri';
-        font.Color := FDrawColors.ForeGround;
-        if clientwidth < clientheight then
-          s := clientwidth
-        else
-          s := clientheight;
-        Font.Size := trunc(s / 1.8);
-
-        Brush.Style := bsClear;
-        TextOut( (Width div 2) - ( TextWidth('!') div 2 ) , (Height div 2) - ( TextHeight('!') div 2 ) , '!');
-      end;
+      FXStandardIconType.Warning: Text('!');
 
       // Star
-      FXStandardIconType.Star: begin
-        font.Color := FDrawColors.ForeGround;
-
-        MakeStar(Canvas, width div 2, round(height / 7.5), trunc(width / 2.25), font.Color, 0, $0001BAF8);
-      end;
+      FXStandardIconType.Star:
+        MakeStar(Buffer, AWidth div 2, round(AHeight / 7.5),
+          trunc(AWidth / 2.25), font.Color, 0, $0001BAF8);
     end;
   end;
+
+  inherited;
 end;
 
 procedure FXStandardIcon.Resize;
 begin
+  UpdateRects;
   inherited;
-  if FProport and not IsReading then
-    begin
-      if Width <> FLastSize.Width then
-        Height := Width
-      else
-        Width := Height;
-    end;
+end;
 
-  FLastSize := ClientRect;
+procedure FXStandardIcon.SetBounds(ALeft, ATop, AWidth, AHeight: Integer);
+begin
+  if FProportional then begin
+    const ChangeW = AWidth <> Width;
+    const ChangeH = AHeight <> Height;
+
+    if ChangeW and ChangeH then
+      AHeight := AWidth
+    else
+    if ChangeW then
+      AHeight := AWidth
+    else
+    if ChangeH then
+      AWidth := AHeight;
+  end;
+
+  inherited;
 end;
 
 procedure FXStandardIcon.SetIcon(const Value: FXStandardIconType);
 begin
-  if FIcon <> Value then
-    begin
-      FIcon := Value;
+  if FIcon = Value then
+    Exit;
 
-      if not IsReading then
-        begin
-          if Value = FXStandardIconType.None then
-            RePaint
-          else
-            Paint;
-        end;
-    end;
+
+  FIcon := Value;
+  Redraw;
 end;
 
-procedure FXStandardIcon.SetProport(const Value: boolean);
+procedure FXStandardIcon.SetProportional(const Value: boolean);
 begin
-  if FProport <> Value then
-    begin
-      FProport := Value;
+  if FProportional = Value then
+    Exit;
 
-      if not IsReading then
-        begin
-          // Apply
-          ApplyProportion;
-        end;
-    end;
+  if Value and (Height <> Width) then
+    inherited Height := Width;
+
+  FProportional := Value;
+  UpdateRects;
+  Redraw;
+end;
+
+procedure FXStandardIcon.SetUseAccentColor(const Value: boolean);
+begin
+  if FUseAccentColor = Value then
+    Exit;
+
+  FUseAccentColor := Value;
+  Redraw;
 end;
 
 procedure FXStandardIcon.SetWid(const Value: integer);
 begin
-  if FWidth <> Value then
-    begin
-      FWidth := Value;
+  if FPenWidth = Value then
+    Exit;
 
-      if not IsReading then
-        Paint;
-    end;
+  FPenWidth := Value;
+  Redraw;
 end;
 
 procedure FXStandardIcon.UpdateColors;
 begin
+  // Access theme mangager
+  FDrawColors.Assign(ThemeManager.SystemColor);
   if FCustomColors.Enabled then
-    begin
-      FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme)
-    end
-  else
-    begin
-      FDrawColors.BackGround := GetParentBackgroundColor(ThemeManager.SystemColor.BackGround);
-      FDrawColors.Foreground := FDrawColors.BackGround;
-    end;
+    // Custom colors
+    FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme)
+end;
+
+procedure FXStandardIcon.UpdateRects;
+begin
+  DrawRect := ClientRect;
 end;
 
 procedure FXStandardIcon.UpdateTheme(const UpdateChidlren: Boolean);

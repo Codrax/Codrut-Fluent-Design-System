@@ -8,7 +8,7 @@ interface
        CFX.ScrollBox, CFX.Selector, CFX.Edit, CFX.PopupConnector,
        CFX.IconView, CFX.ScrollText, CFX.Progress, CFX.RatingControl,
        CFX.Effects, CFX.AppManager, CFX.PaintBox, CFX.TabStrip, CFX.Lists,
-       CFX.Animation.Component, CFX.Layouts, CFX.Shapes;
+       CFX.Animation.Component, CFX.Layouts, CFX.Shapes, CFX.TitlebarPanel;
 
 procedure Register;
 
@@ -20,7 +20,6 @@ begin
   RegisterComponents(REGISTER_CLASS_NAME,
     [
     FXMinimisePanel,
-    FXPanel,
 
     FXButton,
     FXButtonDesign,
@@ -31,9 +30,6 @@ begin
     FXTabStrip,
     FXBlurMaterial,
 
-    FXLinearDrawList,
-    FXLinearControlList,
-
     FXTextBox,
     FXValueTextBox,
     FXAnimatedTextBox,
@@ -41,7 +37,6 @@ begin
 
     FXRadioButton,
     FXScrollbar,
-    FXScrollBox,
     FXSelector,
     FXEdit,
     FXIconView,
@@ -53,7 +48,11 @@ begin
   // Layouts
   RegisterComponents(REGISTER_CLASS_LAYOUTS,
     [
-    FXLayout
+    FXLayout,
+    FXScrollLayout,
+
+    FXLinearDrawList,
+    FXLinearControlList
     ]
   );
 
@@ -99,9 +98,17 @@ begin
   // Utils
   RegisterComponents(REGISTER_CLASS_UTILS_NAME,
     [
-    FXPopupConnector, FXAppManager
+    FXPopupConnector, FXAppManager, FXTitleBarPanel
     ]
   );
+
+  // Legacy
+  RegisterComponents(REGISTER_CLASS_LEGACY,
+    [
+    FXPanel,
+    FXScrollBox
+    ]
+    );
 end;
 
 end.

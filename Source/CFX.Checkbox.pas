@@ -158,7 +158,7 @@ implementation
 procedure FXCheckBox.InteractionStateChanged(AState: FXControlState);
 begin
   inherited;
-  Invalidate;
+  Redraw;
 end;
 
 function FXCheckBox.IsContainer: Boolean;
@@ -187,15 +187,13 @@ procedure FXCheckBox.UpdateTheme(const UpdateChildren: Boolean);
 begin
   UpdateColors;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXCheckBox.UpdateColors;
-var
-  AccentColor: TColor;
 begin
+  // Access theme manager
   FDrawColors.Assign( ThemeManager.SystemColor );
-
   if not Enabled then
     begin
       FIconAccentColors := FXSingleColorStateSet.Create($808080,
@@ -205,26 +203,13 @@ begin
     end
   else
     begin
-      // Access theme manager
       if FCustomColors.Enabled then
-        begin
-          // Custom Colors
-          AccentColor := FCustomColors.Accent;
-          FDrawColors.Foreground := ExtractColor(FCustomColors, FXColorType.Foreground);
-          FDrawColors.BackGround := ExtractColor(FCustomColors, FXColorType.BackGround);
-        end
-      else
-        begin
-          // Global Colors
-          AccentColor := ThemeManager.AccentColor;
-          FDrawColors.ForeGround := ThemeManager.SystemColor.ForeGround;
+        // Custom Colors
+        FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme);
 
-          FDrawColors.BackGround := GetParentBackgroundColor(FDrawColors.BackGround);
-        end;
-
-      FIconAccentColors := FXSingleColorStateSet.Create(AccentColor,
-                              ChangeColorLight(AccentColor, ACCENT_DIFFERENTIATE_CONST),
-                              ChangeColorLight(AccentColor, -ACCENT_DIFFERENTIATE_CONST));
+      FIconAccentColors := FXSingleColorStateSet.Create(FDrawColors.Accent,
+                              ChangeColorLight(FDrawColors.Accent, ACCENT_DIFFERENTIATE_CONST),
+                              ChangeColorLight(FDrawColors.Accent, -ACCENT_DIFFERENTIATE_CONST));
     end;
 end;
 
@@ -325,7 +310,7 @@ begin
       if (not Value) and (FState = FXCheckBoxState.Grayed) then
         begin
           FState := FXCheckBoxState.Unchecked;
-          Invalidate;
+          Redraw;
         end;
     end;
 end;
@@ -349,7 +334,7 @@ begin
       FState := Value;
       if Assigned(OnChangeValue) then
         OnChangeValue(Self);
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -359,7 +344,7 @@ begin
     begin
       FText := Value;
 
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -369,7 +354,7 @@ begin
     begin
       FTextSpacing := Value;
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -379,7 +364,7 @@ begin
     begin
       FWordWrap := Value;
 
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -398,7 +383,7 @@ begin
       FImage := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -409,7 +394,7 @@ begin
       FImageScale := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -420,7 +405,7 @@ begin
       FLayout := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -499,7 +484,7 @@ begin
   // Self
   Inc(FAnimationStatus, 5);
 
-  Invalidate;
+  Redraw;
 
   if FAnimationStatus >= 100 then
     begin
@@ -669,7 +654,7 @@ end;
 procedure FXCheckBox.WMSize(var Message: TWMSize);
 begin
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXCheckBox.WM_LButtonUp(var Msg: TWMLButtonUp);

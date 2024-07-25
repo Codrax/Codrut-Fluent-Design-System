@@ -15,10 +15,12 @@ uses
   CFX.ThemeManager,
   CFX.Colors,
   CFX.Constants,
+  CFX.Animation.Main,
   Vcl.TitleBarCtrls,
   CFX.Animations,
   CFX.Utilities,
   Vcl.ExtCtrls,
+  CFX.TitlebarPanel,
   CFX.Classes,
   CFX.Types,
   CFX.Messages,
@@ -58,7 +60,7 @@ type
     // Titlebar
     FTitlebarInitialized: boolean;
     FEnableTitlebar: boolean;
-    TTlCtrl: TTitleBarpanel;
+    TTlCtrl: TCustomTitleBarpanel;
     FDisableTitlebarAlign: boolean;
 
     // Smoke
@@ -155,7 +157,7 @@ end;
 
 function FXForm.Background: TColor;
 begin
-  Result := FDrawColors.Background;
+  Result := Color;
 end;
 
 function FXForm.CanAutoSize(var NewWidth, NewHeight: Integer): Boolean;
@@ -245,7 +247,7 @@ begin
   // Effects
   MicaEffect := true;
   CreateSmokeSettings;
-  FAllowThemeChangeAnim := true;
+  FAllowThemeChangeAnim := false;
 
   // TitleBar
   FTitlebarInitialized := false;
@@ -258,16 +260,16 @@ begin
 
   (* Scan for existing *)
   for I := 0 to ControlCount - 1 do
-    if Controls[I] is TTitleBarPanel then
+    if Controls[I] is TCustomTitleBarPanel then
       begin
-        TTlCtrl := TTitleBarPanel(Controls[I]);
+        TTlCtrl := TCustomTitleBarPanel(Controls[I]);
         Break;
       end;
 
   (*Create New*)
   if TTlCtrl = nil then
     begin
-      TTlCtrl := TTitlebarPanel.Create(Self);
+      TTlCtrl := FXTitleBarPanel.Create(Self);
       TTlCtrl.Parent := Self;
     end;
 
@@ -317,8 +319,8 @@ var
 begin
   Result := 0;
   for I := 0 to ControlCount - 1 do
-    if Controls[I] is TTitlebarPanel then
-      Result := TTitlebarPanel(Controls[I]).Height;
+    if Controls[I] is TCustomTitleBarPanel then
+      Result := TCustomTitleBarPanel(Controls[I]).Height;
 end;
 
 function FXForm.HasActiveCustomTitleBar: boolean;
@@ -451,12 +453,9 @@ end;
 
 procedure FXForm.UpdateTheme(const UpdateChildren: Boolean);
 var
-  i: Integer;
   PrevColor: TColor;
-  a: TIntAni;
   ThemeReason: FXThemeType;
 begin
-  // Lock
   LockWindowUpdate(Handle);
 
   // Update Colors
@@ -480,71 +479,81 @@ begin
   else
     ThemeReason := FXThemeType.Redraw;
 
-  // Start Transition
-  FDestColor := FDrawColors.Background;
-  if Self.Visible and FAllowThemeChangeAnim then
-    begin
-      a := TIntAni.Create(true, TAniKind.akIn, TAniFunctionKind.afkLinear, 25, 100,
-      procedure (Value: integer)
-      begin
-        // Lock
-        LockWindowUpdate(Handle);
-
-        // Step
-        Self.Color := ColorBlend(PrevColor, FDestColor, Value);
-
-        if FEnableTitlebar then
-          PrepareCustomTitleBar( TForm( Self ), Self.Color, FDrawColors.Foreground );
-
-        // Unlock
-        Invalidate;
-        LockWindowUpdate(0);
-      end,
-      procedure
-      begin
-        Self.Color := FDestColor;
-        if FEnableTitlebar then
-          PrepareCustomTitleBar( TForm( Self ), FDestColor, FDrawColors.Foreground );
-      end);
-
-      a.Duration := 200;
-      a.Step := 6;
-
-
-      a.Start;
-    end
-      else
-        // No animation
-        begin
-          Color := FDestColor;
-          if FEnableTitlebar then
-            PrepareCustomTitleBar( TForm( Self ), FDestColor, FDrawColors.Foreground );
-        end;
-
   //  Update tooltip style
   if ThemeManager.DarkTheme then
     HintWindowClass := FXDarkTooltip
   else
     HintWindowClass := FXLightTooltip;
 
+  // Procedure
+  const DoUpdateChildren = procedure begin
+    //  Update children
+    if IsContainer and UpdateChildren then
+      begin
+        for var I := 0 to ComponentCount -1 do
+          if Supports(Components[I], FXControl) then
+            (Components[I] as FXControl).UpdateTheme(UpdateChildren);
+      end;
+  end;
+
+  // Start Transition
+  FDestColor := FDrawColors.Background;
+  if Self.Visible and FAllowThemeChangeAnim then
+    with FXAsyncIntAnim.Create do begin
+      Duration := 0.2;
+      Kind := FXAnimationKind.Exponential;
+      Steps := 8;
+
+      StartValue := 0;
+      EndValue := 255;
+
+      var NewColor: TColor;
+      OnValue := procedure(Value: integer) begin
+        NewColor := ColorBlend(PrevColor, FDestColor, Value);
+        if NewColor = Self.Color then
+          Exit;
+
+        LockWindowUpdate(Handle);
+
+        // Step
+        Self.Color := NewColor;
+
+        if FEnableTitlebar then
+          PrepareCustomTitleBar( TForm( Self ), Self.Color, FDrawColors.Foreground );
+
+        // Update chidren
+        DoUpdateChildren();
+
+        // Unlock
+        Invalidate;
+
+        LockWindowUpdate(0);
+        Application.ProcessMessages;
+      end;
+
+      FreeOnFinish := true;
+      Start;
+    end
+  else
+    // No animation
+    begin
+      Color := FDestColor;
+      Invalidate;
+      if FEnableTitlebar then
+        PrepareCustomTitleBar( TForm( Self ), FDestColor, FDrawColors.Foreground );
+    end;
+
   // Font Color
   Font.Color := FDrawColors.Foreground;
+
+  // Children
+  DoUpdateChildren();
 
   // Notify Theme Change
   if Assigned(FThemeChange) then
     FThemeChange(Self, ThemeReason, ThemeManager.DarkTheme, ThemeManager.AccentColor);
 
-  //  Update children
-  if IsContainer and UpdateChildren then
-    begin
-      for i := 0 to ComponentCount -1 do
-        if Supports(Components[i], FXControl) then
-          (Components[i] as FXControl).UpdateTheme(UpdateChildren);
-    end;
-
-  // Unlock
-  if not AllowThemeChangeAnimation then
-    LockWindowUpdate(0);
+  LockWindowUpdate(0);
 end;
 
 procedure FXForm.WM_Activate(var Msg: TWMActivate);

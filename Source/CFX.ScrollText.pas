@@ -180,25 +180,16 @@ procedure FXScrollText.UpdateTheme(const UpdateChildren: Boolean);
 begin
   UpdateColors;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXScrollText.UpdateColors;
 begin
-  FDrawColors.Assign( ThemeManager.SystemColor );
-
   // Access theme manager
+  FDrawColors.Assign( ThemeManager.SystemColor );
   if FCustomColors.Enabled then
-    begin
-      // Custom Colors
-      FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme);
-    end
-  else
-    begin
-      // Global Colors
-      FDrawColors.LoadFrom(ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
-      FDrawColors.BackGround := GetParentBackgroundColor(FDrawColors.BackGround);
-    end;
+    // Custom Colors
+    FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme);
 end;
 
 procedure FXScrollText.UpdateRects;
@@ -298,7 +289,7 @@ begin
     begin
       FFadeSize := Value;
 
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -309,7 +300,7 @@ begin
       FHorzLayout := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -320,7 +311,7 @@ begin
       FImage := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -331,7 +322,7 @@ begin
       FImageScale := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -343,7 +334,7 @@ begin
 
       UpdateRects;
       ResetAnimation;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -355,7 +346,7 @@ begin
 
       ResetAnimation;
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -366,7 +357,7 @@ begin
       FVertLayout := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -433,14 +424,14 @@ begin
 
       FFadeLeft := FOffsetEnd > FFadeSize;
 
-      Invalidate;
+      Redraw;
     end;
 
   // Done
   if FAnimateValue >= FAnimateMax then
     begin
       ResetAnimation;
-      Invalidate;
+      Redraw;
     end;
 
   // Increase
@@ -569,7 +560,7 @@ end;
 procedure FXScrollText.WMSize(var Message: TWMSize);
 begin
   UpdateRects;
-  Invalidate;
+  Redraw;
   ResetAnimation;
 end;
 

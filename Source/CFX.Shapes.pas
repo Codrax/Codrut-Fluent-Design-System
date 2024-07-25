@@ -136,6 +136,7 @@ type
 
     // Default props
     property Align;
+    property Transparent;
     property PaddingFill;
     property Constraints;
     property Anchors;
@@ -264,13 +265,13 @@ end;
 procedure FXShape.DrawSettingChanged(Sender: TObject);
 begin
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXShape.InteractionStateChanged(AState: FXControlState);
 begin
   inherited;
-  Invalidate;
+  Redraw;
 end;
 
 function FXShape.IsContainer: Boolean;
@@ -319,27 +320,16 @@ procedure FXShape.UpdateTheme(const UpdateChildren: Boolean);
 begin
   UpdateColors;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXShape.UpdateColors;
 begin
+  // Access theme manager
   FDrawColors.Assign( ThemeManager.SystemColor );
-
-  if not Enabled then
-    begin
-      FDrawColors.Foreground := $808080;
-    end
-  else
-    begin
-      // Access theme manager
-      if FCustomColors.Enabled then
-        // Load custom
-        FDrawColors.LoadFrom( FCustomColors, ThemeManager.DarkTheme )
-      else
-        // Build color palette
-        FDrawColors.LoadFrom( ThemeManager.SystemColorSet, ThemeManager.DarkTheme );
-    end;
+  if FCustomColors.Enabled then
+    // Custom Colors
+    FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme);
 end;
 
 procedure FXShape.UpdateRects;
@@ -425,7 +415,6 @@ begin
       AWidth := AHeight;
   end;
 
-
   inherited;
 end;
 
@@ -436,7 +425,7 @@ begin
 
   FControlPen := Value;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXShape.SetControlRotation(const Value: boolean);
@@ -446,7 +435,7 @@ begin
 
   FControlRotation := Value;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXShape.SetProportional(const Value: boolean);
@@ -459,7 +448,7 @@ begin
 
   FProportional := Value;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXShape.SetRotation(const Value: FXAngle);
@@ -469,7 +458,7 @@ begin
 
   FRotation := Value;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 { FXShapeDrawingSettings }

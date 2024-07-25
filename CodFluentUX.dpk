@@ -122,6 +122,7 @@ contains
   CFX.PaintBox in 'Source\CFX.PaintBox.pas',
   CFX.TabStrip in 'Source\CFX.TabStrip.pas',
   CFX.UXTheme in 'Source\CFX.UXTheme.pas',
+  CFX.TitlebarPanel in 'Source\CFX.TitlebarPanel.pas',
   CFX.Animation.Component in 'Source\CFX.Animation.Component.pas',
   CFX.Animation.Main in 'Source\CFX.Animation.Main.pas',
   CFX.Animation.Utils in 'Source\CFX.Animation.Utils.pas',

@@ -5,7 +5,7 @@ unit CFX.Types;
 interface
   uses
     UITypes, Types, CFX.Constants, VCl.GraphUtil, Winapi.Windows,
-    Classes, Vcl.Themes, Vcl.Controls, Vcl.Graphics,
+    Classes, Vcl.Themes, Vcl.Controls, Vcl.Graphics, Math,
     SysUtils, Winapi.GDIPAPI, Winapi.GDIPOBJ;
 
   type
@@ -159,6 +159,9 @@ interface
 
         function OfNumberInt(Value: int64): int64; overload;
         function OfNumberInt(Value: real): int64; overload;
+
+        function ToByte: byte;
+        function ToString(Decimals: integer=2): string;
     end;
 
     TLine = record
@@ -1130,6 +1133,16 @@ end;
 function FXPercentHelper.Percentage: real;
 begin
   Result := Self / 100;
+end;
+
+function FXPercentHelper.ToByte: byte;
+begin
+  Result := round(EnsureRange(Percentage, 0, 1)*255);
+end;
+
+function FXPercentHelper.ToString(Decimals: integer): string;
+begin
+  Result := Format('%.'+Decimals.ToString+'f', [Self]);
 end;
 
 { FXColor }

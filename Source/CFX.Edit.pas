@@ -290,7 +290,7 @@ implementation
 procedure FXCustomEdit.InteractionStateChanged(AState: FXControlState);
 begin
   inherited;
-  Invalidate;
+  Redraw;
 end;
 
 function FXCustomEdit.IsContainer: Boolean;
@@ -329,7 +329,7 @@ end;
 procedure FXCustomEdit.Loaded;
 begin
   inherited;
-  Invalidate;
+  Redraw;
 end;
 
 function FXCustomEdit.TextLength: integer;
@@ -366,7 +366,7 @@ begin
               ScrollForCursor( TextW(Copy(FText, 1, Value))-FCutPosition );
 
               // Invalidate
-              Invalidate;
+              Redraw;
             end;
         end;
     end;
@@ -384,7 +384,7 @@ procedure FXCustomEdit.UpdateTheme(const UpdateChildren: Boolean);
 begin
   UpdateColors;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 function FXCustomEdit.GetValue: int64;
@@ -414,7 +414,7 @@ begin
 
       // Update
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -438,31 +438,19 @@ end;
 
 procedure FXCustomEdit.UpdateColors;
 begin
-  FDrawColors.Assign( ThemeManager.SystemColor );
-
   // Access theme manager
+  FDrawColors.Assign( ThemeManager.SystemColor );
   if FCustomColors.Enabled then
-    begin
-      // Custom Colors
-      FDrawColors.Accent := FCustomColors.Accent;
-      FDrawColors.Foreground := ExtractColor(FCustomColors, FXColorType.Foreground);
-      FDrawColors.BackGround := ExtractColor(FCustomColors, FXColorType.BackGround);
-      FDrawColors.BackGroundInterior := ExtractColor(FCustomColors, FXColorType.Content);
-    end
-  else
-    begin
-      // Global Colors
-      FDrawColors.Accent := ThemeManager.AccentColor;
-      FDrawColors.ForeGround := ThemeManager.SystemColor.ForeGround;
+    // Custom Colors
+    FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme)
+  else begin
+    if ThemeManager.DarkTheme then
+      FDrawColors.BackGroundInterior := ChangeColorLight(ThemeManager.SystemColor.BackGroundInterior, EDIT_COLOR_CHANGE * 4)
+    else
+      FDrawColors.BackGroundInterior := ChangeColorLight(ThemeManager.SystemColor.BackGroundInterior, -EDIT_COLOR_CHANGE * 4);
+  end;
 
-      FDrawColors.BackGround := GetParentBackgroundColor(ThemeManager.SystemColor.Background);
-
-      if ThemeManager.DarkTheme then
-        FDrawColors.BackGroundInterior := ChangeColorLight(ThemeManager.SystemColor.BackGroundInterior, EDIT_COLOR_CHANGE * 4)
-      else
-        FDrawColors.BackGroundInterior := ChangeColorLight(ThemeManager.SystemColor.BackGroundInterior, -EDIT_COLOR_CHANGE * 4);
-    end;
-
+  // Edit colors
   if FCustomEditColors.Enabled then
     begin
       FEditColors.LoadColors(FCustomEditColors, ThemeManager.DarkTheme);
@@ -493,7 +481,7 @@ begin
     FLineColor := FDrawColors.Accent
   else
     FLineColor := FDrawColors.BackGroundInterior;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXCustomEdit.UpdateRects;
@@ -598,7 +586,7 @@ end;
 procedure FXCustomEdit.ComponentCreated;
 begin
   inherited;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXCustomEdit.CopyToClipBoard;
@@ -633,7 +621,7 @@ begin
 
       FSelLength := 0;
 
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -732,7 +720,7 @@ end;
 
 procedure FXCustomEdit.FontUpdate;
 begin
-  Invalidate;
+  Redraw;
 
   UpdateAutoSize;
 end;
@@ -743,7 +731,7 @@ procedure IncPosition(By: integer);
 begin
   FPosition := FPosition + By;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 var
   NewPos: integer;
@@ -856,7 +844,7 @@ begin
                 DeleteChar(Position);
                 IncPosition(-1);
 
-                Invalidate;
+                Redraw;
                 CanHandle := false;
               end;
           end;
@@ -870,7 +858,7 @@ begin
         begin
           DeleteChar(Position+1);
 
-          Invalidate;
+          Redraw;
           CanHandle := false;
         end;
     end;
@@ -941,7 +929,7 @@ begin
 
   // Update
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXCustomEdit.Clear;
@@ -968,9 +956,6 @@ var
 
   X, Y: integer;
 begin
-  if Creating then
-    Exit;
-
   // Background
   Color := FDrawColors.BackGround;
   PaintBackground;
@@ -1296,7 +1281,7 @@ begin
 
   // Update
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXCustomEdit.SetAutoSizing(const Value: boolean);
@@ -1309,7 +1294,7 @@ begin
       UpdateAutoSize;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -1332,7 +1317,7 @@ begin
 
       ApplyCharCase;
 
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -1342,7 +1327,7 @@ begin
     begin
       FDetail := Value;
 
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -1364,7 +1349,7 @@ begin
       FLayout := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -1375,7 +1360,7 @@ begin
       FLayoutHoriz := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -1386,7 +1371,7 @@ begin
       FLineSize := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -1402,7 +1387,7 @@ begin
         FText := '0';
       end;
 
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -1413,7 +1398,7 @@ begin
       FPassChar := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -1428,7 +1413,7 @@ begin
           ClearSelection;
           UpdateRects;
 
-          Invalidate;  
+          Redraw;
         end;
     end;
 end;
@@ -1439,7 +1424,7 @@ begin
     begin
       FRoundness := Value;
 
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -1462,7 +1447,7 @@ begin
 
       // Update
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -1479,7 +1464,7 @@ begin
 
   // Update
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXCustomEdit.SetTextHint(const Value: string);
@@ -1488,7 +1473,7 @@ begin
     begin
       FTextHint := Value;
 
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -1499,7 +1484,7 @@ begin
       FTextMarginX := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -1510,7 +1495,7 @@ begin
       FTextMarginY := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -1543,7 +1528,7 @@ end;
 procedure FXCustomEdit.WMSize(var Message: TWMSize);
 begin
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXCustomEdit.WM_LButtonDown(var Msg: TWMMouse);

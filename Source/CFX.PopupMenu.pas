@@ -169,7 +169,7 @@ uses
 
       // Form & Controls
       FForm: TForm;
-      FGlassBlur: TGraphicControl;
+      FGlassBlur: TControl;
 
       // Colors
       FCustomColors: FXColorSets;

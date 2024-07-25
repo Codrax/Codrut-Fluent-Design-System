@@ -10,6 +10,7 @@ const
   REGISTER_CLASS_SHAPES = 'CFX Shapes';
   REGISTER_CLASS_EFFECTS_NAME = 'CFX Effects';
   REGISTER_CLASS_ANIM_NAME = 'CFX Animations';
+  REGISTER_CLASS_LEGACY = 'CFX Legacy';
 
   // Strings
   STRING_NONE = 'none';

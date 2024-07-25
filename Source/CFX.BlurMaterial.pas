@@ -35,7 +35,7 @@ uses
   Vcl.Imaging.jpeg;
 
 type
-  FXBlurMaterial = class(FXBufferGraphicControl, FXControl)
+  FXBlurMaterial = class(FXWindowsControl, FXControl)
   private
     FRefreshMode: FXGlassRefreshMode;
     Tick: TTimer;
@@ -64,18 +64,16 @@ type
     procedure CustomColorGet;
 
   protected
-    function DestRect: TRect;
     procedure PaintBuffer; override;
 
     procedure InteractionStateChanged(AState: FXControlState); override;
-
-    procedure OnVisibleChange(var Message : TMessage); message CM_VISIBLECHANGED;
 
     // Handle messages
     procedure WndProc(var Message: TMessage); override;
 
   published
     property Align;
+    property PaddingFill;
     property Anchors;
     property AutoSize;
     property Constraints;
@@ -123,11 +121,8 @@ type
 
     procedure Inflate(up,right,down,lft: integer);
 
-    procedure FormMoveSync;
-
     procedure SyncroniseImage;
     procedure RebuildImage;
-    procedure ReDraw;
 
     // Interface
     function IsContainer: Boolean;
@@ -408,11 +403,6 @@ begin
     end;
 end;
 
-function FXBlurMaterial.DestRect: TRect;
-begin
-  Result := Rect(0, 0, Width, Height);
-end;
-
 destructor FXBlurMaterial.Destroy;
 begin
   Tick.Enabled := false;
@@ -420,11 +410,6 @@ begin
   FreeAndNil(FDrawColors);
   FreeAndNil(FCustomColors);
   inherited;
-end;
-
-procedure FXBlurMaterial.FormMoveSync;
-begin
-  SyncroniseImage;
 end;
 
 function FXBlurMaterial.ImageTypeExists(ImgType: FXBlurVersion): boolean;
@@ -461,17 +446,15 @@ begin
   Result := false;
 end;
 
-procedure FXBlurMaterial.OnVisibleChange(var Message: TMessage);
-begin
-  if Self.Visible then
-    SyncroniseImage;
-end;
-
 procedure FXBlurMaterial.PaintBuffer;
 var
   Pict: TBitMap;
   DrawRect, ImageRect: Trect;
 begin
+  // Background
+  Color := FDrawColors.BackGround;
+  PaintBackground;
+
   // Disable Timer After Successfull Draw
   if (not ImageTypeExists(Version)) and (not (csDesigning in ComponentState)) then
     Tick.Enabled := RefreshMode = FXGlassRefreshMode.Timer;
@@ -503,9 +486,9 @@ begin
             Exit;
           end;
 
-        DrawRect := Rect(0, 0, Width, Height);
+        DrawRect := ClientRect;
 
-        ImageRect := ClientToScreen( ClientRect );
+        ImageRect := ClientToScreen( DrawRect );
         ImageRect.Offset(Screen.DesktopRect.Left * -1, Screen.DesktopRect.Top * -1);
 
         // Create Picture
@@ -519,12 +502,11 @@ begin
         end;
 
         // Draw
-        DrawHighQuality(DestRect, Pict, 255, false);
+        DrawHighQuality(ClipRect, Pict, 255, false);
 
         // Tint Item
         if EnableTinting then
           begin
-            DrawRect := ClipRect;
             DrawRect.Inflate(1, 1);
 
             if ThemeManager.DarkTheme then
@@ -546,11 +528,6 @@ begin
     FXBlurVersion.WallpaperBlurred, FXBlurVersion.Wallpaper: GetWallpaper;
     FXBlurVersion.Screenshot: GetBlurredScreen( ThemeManager.DarkTheme );
   end;
-end;
-
-procedure FXBlurMaterial.ReDraw;
-begin
-  Invalidate;
 end;
 
 procedure FXBlurMaterial.SetCustomColor(const Value: FXColorSets);
@@ -586,7 +563,7 @@ procedure FXBlurMaterial.SetVersion(const Value: FXBlurVersion);
 begin
   FVersion := Value;
 
-  Paint;
+  SyncroniseImage;
 end;
 
 procedure FXBlurMaterial.SetWhiteTint(const Value: integer);
@@ -601,7 +578,7 @@ begin
   // Paint
   ReDraw;
 
-  // Check for different wallpaper
+  // Check for updated wallpaper
   case Version of
     FXBlurVersion.WallpaperBlurred, FXBlurVersion.Wallpaper: if (GetWallpaperSize <> LastDetectedFileSize) then
       RebuildImage;
@@ -611,7 +588,7 @@ begin
 
   // Full Redraw
   if FInvalidateAbove then
-    Invalidate;
+    Redraw;
 end;
 
 procedure FXBlurMaterial.TimerExecute(Sender: TObject);
@@ -624,8 +601,10 @@ procedure FXBlurMaterial.UpdateTheme(const UpdateChildren: Boolean);
 begin
   CustomColorGet;
 
-  if not (csReadingState in ControlState) then
+  if IsReading then
     RebuildImage;
+
+  Redraw;
 end;
 
 procedure FXBlurMaterial.WndProc(var Message: TMessage);

@@ -40,7 +40,7 @@ type
     procedure PaintBuffer; override;
     procedure Resize; override;
 
-    procedure DrawBackground(var Background: TBitMap); override;
+    procedure DrawBackground(var Background: TBitMap; OnlyFill: boolean); override;
 
     procedure ApplyEffect(Background: TBitMap); virtual;
 
@@ -218,7 +218,7 @@ begin
   inherited;
 end;
 
-procedure FXEffect.DrawBackground(var Background: TBitMap);
+procedure FXEffect.DrawBackground(var Background: TBitMap; OnlyFill: boolean);
 begin
   inherited;
   if Enabled then
@@ -255,7 +255,7 @@ procedure FXEffect.UpdateTheme(const UpdateChildren: Boolean);
 begin
   UpdateColors;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXEffect.WMNCHitTest(var Message: TWMNCHitTest);
@@ -318,7 +318,7 @@ begin
     Exit;
 
   FBlurRadius := Value;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXBlurEffect.SetScale(const Value: integer);
@@ -327,7 +327,7 @@ begin
     Exit;
 
   FBlurScale := Value;
-  Invalidate;
+  Redraw;
 end;
 
 { FXColorEffect }
@@ -352,7 +352,7 @@ begin
     Exit;
 
   FColor := Value;
-  Invalidate;
+  Redraw;
 end;
 
 { FXZoomEffect }
@@ -390,7 +390,7 @@ begin
     Exit;
 
   FZoom := Value;
-  Invalidate;
+  Redraw;
 end;
 
 { FXGrayscaleEffect }

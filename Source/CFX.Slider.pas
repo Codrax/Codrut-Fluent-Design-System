@@ -67,7 +67,7 @@ type
       procedure SetMax(const Value: int64);
       procedure SetMin(const Value: int64);
       procedure SetPosition(const Value: int64);
-      procedure SetPositionEx(const Value: int64; Redraw: boolean; UserExecuted: boolean = true);
+      procedure SetPositionEx(const Value: int64; ARedraw: boolean; UserExecuted: boolean = true);
       procedure SetSliderHeight(const Value: integer);
       procedure SetIconSize(const Value: integer);
 
@@ -177,7 +177,7 @@ begin
   inherited;
   UpdateRects;
   AnimateToFill;
-  Invalidate;
+  Redraw;
 
   if AState <> FXControlState.Press then
     if FEnablePositionHint then
@@ -214,7 +214,7 @@ begin
   MouseMove([], X, Y);
 
   // Paint
-  Paint;
+  Redraw;
 end;
 
 procedure FXSlider.MouseMove(Shift: TShiftState; X, Y: Integer);
@@ -279,7 +279,7 @@ begin
 
       // Update
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -291,14 +291,14 @@ begin
   UpdateSliderPosition;
   UpdateRects;
   ShowPositionHint;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXSlider.UpdateTheme(const UpdateChildren: Boolean);
 begin
   UpdateColors;
   UpdateRects;
-  Invalidate;
+  Redraw;
 end;
 
 procedure FXSlider.UpdateColors;
@@ -438,7 +438,7 @@ begin
   FFillTick := TTimer.Create(nil);
   with FFillTick do
     begin
-      Enabled := true;
+      Enabled := false;
       Interval := 1;
       OnTimer := FillTickChange;
     end;
@@ -480,7 +480,7 @@ begin
         else
           FFillTick.Enabled := false;
 
-  Invalidate;
+  Redraw;
 end;
 
 function FXSlider.GetPercentage: real;
@@ -665,7 +665,7 @@ end;
 procedure FXSlider.Resize;
 begin
   UpdateRects;
-  Invalidate;
+  Redraw;
   inherited;
 end;
 
@@ -676,6 +676,7 @@ begin
   FIconSize := round(FIconSize * Scaler);
 
   UpdateRects;
+  Redraw;
 end;
 
 procedure FXSlider.SetIconSize(const Value: integer);
@@ -685,7 +686,7 @@ begin
       FIconSize := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -706,7 +707,7 @@ begin
 
       UpdateSliderPosition;
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -727,7 +728,7 @@ begin
 
       UpdateSliderPosition;
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -746,7 +747,7 @@ begin
           Height := AWidth;
 
           UpdateRects;
-          Invalidate;
+          Redraw;
         end;
     end;
 end;
@@ -756,7 +757,7 @@ begin
   SetPositionEx(Value, true, false);
 end;
 
-procedure FXSlider.SetPositionEx(const Value: int64; Redraw: boolean;
+procedure FXSlider.SetPositionEx(const Value: int64; ARedraw: boolean;
   UserExecuted: boolean);
 begin
   if FPosition <> Value then
@@ -779,12 +780,12 @@ begin
             OnChangeValue(Self);
         end;
 
-      if Redraw then
+      if ARedraw then
         begin
           UpdateSliderPosition;
 
           UpdateRects;
-          Invalidate;
+          Redraw;
         end;
     end;
 end;
@@ -796,7 +797,7 @@ begin
       FSliderHeight := Value;
 
       UpdateRects;
-      Invalidate;
+      Redraw;
     end;
 end;
 
@@ -814,7 +815,7 @@ begin
       begin
         FTotalTicks := Value;
 
-        Invalidate;
+        Redraw;
       end;
 end;
 

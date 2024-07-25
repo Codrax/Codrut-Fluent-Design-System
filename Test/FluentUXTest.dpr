@@ -1,10 +1,10 @@
-program FluentUXDemo;
+program FluentUXTest;
 
 uses
   Vcl.Forms,
   CFX.ThemeManager,
-  CFXDemo in 'Demo\CFXDemo.pas' {Form1},
-  CFX.Template in 'Source\CFX.Template.pas';
+  CFXTest in 'CFXTest.pas' {Form1},
+  CFX.Template in '..\Source\CFX.Template.pas';
 
 {$R *.res}
 begin
