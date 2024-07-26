@@ -76,7 +76,6 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FXAppManager1UpdateChecked(Sender: TObject);
     procedure FXPaintBox1Draw(Sender: TObject);
-    procedure FXButton2Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -173,11 +172,6 @@ begin
     finally
       //Free;
     end;
-end;
-
-procedure TForm1.FXButton2Click(Sender: TObject);
-begin
-  FXShapeTriangle1.Top := FXShapeTriangle1.Top+FXShapeTriangle1.Height;
 end;
 
 procedure TForm1.FXButton5Click(Sender: TObject);

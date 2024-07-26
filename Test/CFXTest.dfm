@@ -1643,8 +1643,8 @@ object Form1: TForm1
     ValueFormat = '%S: %S'
   end
   object FXButton2: FXButton
-    Left = 760
-    Top = 386
+    Left = 895
+    Top = 461
     Width = 140
     Height = 35
     Margins.Left = 0
@@ -1654,8 +1654,8 @@ object Form1: TForm1
     Opacity = 100.000000000000000000
     Size.X = 140
     Size.Y = 35
-    Position.X = 760
-    Position.Y = 386
+    Position.X = 895
+    Position.Y = 461
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1691,7 +1691,6 @@ object Form1: TForm1
     Font.Name = 'Segoe UI'
     Font.Style = []
     TabOrder = 34
-    OnClick = FXButton2Click
   end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False

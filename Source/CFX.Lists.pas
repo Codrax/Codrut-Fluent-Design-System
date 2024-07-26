@@ -96,7 +96,7 @@ type
     procedure ClearSelectedInternal;
 
     procedure UpdateScrollbars; // update actual position & size of scroll bars!
-    procedure RecalculateScroll; // update scroll bar values
+    procedure CalculateScroll; // update scroll bar values
 
     procedure StopScrollAnimations;
 
@@ -422,15 +422,6 @@ begin
   FVertScroll := FXDrawListScrollBar.Create(Self);
   FHorzScroll := FXDrawListScrollBar.Create(Self);
 
-  with FVertScroll do
-    begin
-      Parent := Self;
-
-      Orientation := FXOrientation.Vertical;
-      Tag := 0;
-      OnChange := ScrollChanged;
-      OnChangeValue := ScrollChangedValue;
-    end;
   with FHorzScroll do
     begin
       Parent := Self;
@@ -441,8 +432,17 @@ begin
       OnChange := ScrollChanged;
       OnChangeValue := ScrollChangedValue;
     end;
+  with FVertScroll do
+    begin
+      Parent := Self;
 
-  FVertScroll.Max := 0;
+      Orientation := FXOrientation.Vertical;
+      Tag := 0;
+      OnChange := ScrollChanged;
+      OnChangeValue := ScrollChangedValue;
+    end;
+
+  FHorzScroll.Max := 0;
   FVertScroll.Max := 0;
 
   // Anim
@@ -693,12 +693,12 @@ begin
   inherited;
 end;
 
-procedure FXDrawList.RecalculateScroll;
+procedure FXDrawList.CalculateScroll;
 var
   MaxX, MaxY: integer;
   Client: TRect;
 begin
-  Client := GetClientRect;
+  Client := inherited GetClientRect; // inherited to not include scrollbar width
   MaxX := 0;
   MaxY := 0;
 
@@ -761,7 +761,7 @@ begin
   DrawRect := GetClientRect;
 
   // Scroll;
-  RecalculateScroll;
+  CalculateScroll;
   UpdateScrollbars;
 end;
 
