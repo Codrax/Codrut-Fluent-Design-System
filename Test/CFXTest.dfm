@@ -1569,7 +1569,7 @@ object Form1: TForm1
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 32
+    TabOrder = 31
   end
   object FXScrollText1: FXScrollText
     Left = 237
@@ -1607,7 +1607,7 @@ object Form1: TForm1
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 33
+    TabOrder = 32
   end
   object FXValueTextBox1: FXValueTextBox
     Left = 568
@@ -1634,7 +1634,7 @@ object Form1: TForm1
     Font.Height = 22
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 34
+    TabOrder = 33
     AutoSize = True
     Elipsis = False
     InnerMargin = 0
@@ -1643,8 +1643,8 @@ object Form1: TForm1
     ValueFormat = '%S: %S'
   end
   object FXButton2: FXButton
-    Left = 840
-    Top = 354
+    Left = 760
+    Top = 386
     Width = 140
     Height = 35
     Margins.Left = 0
@@ -1654,8 +1654,8 @@ object Form1: TForm1
     Opacity = 100.000000000000000000
     Size.X = 140
     Size.Y = 35
-    Position.X = 840
-    Position.Y = 354
+    Position.X = 760
+    Position.Y = 386
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1690,7 +1690,7 @@ object Form1: TForm1
     Font.Height = 22
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 35
+    TabOrder = 34
     OnClick = FXButton2Click
   end
   object FXPopupMenu1: FXPopupMenu

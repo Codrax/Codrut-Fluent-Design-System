@@ -177,9 +177,7 @@ end;
 
 procedure TForm1.FXButton2Click(Sender: TObject);
 begin
-  with FXLinearControlList.Create(Self) do begin
-    Parent := Self;
-  end;
+  FXShapeTriangle1.Top := FXShapeTriangle1.Top+FXShapeTriangle1.Height;
 end;
 
 procedure TForm1.FXButton5Click(Sender: TObject);

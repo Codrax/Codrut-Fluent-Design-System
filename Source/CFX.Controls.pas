@@ -193,7 +193,9 @@ type
     //function Creating: boolean;
     function Destroyed: boolean;
 
-    procedure RedrawAboveControls(AControls: TArray<TControl>);
+    // Component redraw utilities
+    procedure RedrawAndSortControls(AControls: TArray<TControl>);
+    procedure SortControlsByIndex(var AControls: TArray<TControl>);
 
     // Padding
     property PaddingFill: FXPadding read FPadding write FPadding;
@@ -263,10 +265,12 @@ type
     procedure Invalidate; override;
 
     // Controls
+    /// <summary> Return all controls with the same parent above this one. </summary>
     function GetControlsAbove: TArray<TControl>;
+    function GetChildControls: TArray<TControl>;
 
     // Redraw
-    procedure Redraw;
+    procedure Redraw(RedrawAbove: boolean=true);
     procedure RedrawChildren;
     procedure RedrawControlsAbove;
   end;
@@ -674,6 +678,13 @@ begin
     Result := FBuffer2;
 end;
 
+function FXWindowsControl.GetChildControls: TArray<TControl>;
+begin
+  SetLength(Result, ControlCount);
+  for var I := 0 to ControlCount-1 do
+    Result[I] := Controls[I];
+end;
+
 function FXWindowsControl.GetClientRect: TRect;
 begin
   // Apply padding
@@ -869,7 +880,7 @@ begin
   Broadcast(AMsg);
 end;
 
-procedure FXWindowsControl.Redraw;
+procedure FXWindowsControl.Redraw(RedrawAbove: boolean);
 begin
   if BufferedComponent and (Parent <> nil) and not IsReading and FCreated then begin
     // Draw
@@ -883,48 +894,48 @@ begin
     // Draw new buffer
     DoPaint;
 
-    // Draw children
+    // Draw children (always need to be redraw)
     RedrawChildren;
 
     // Draw controls above
-    RedrawControlsAbove;
+    if RedrawAbove then
+      RedrawControlsAbove;
 
     LastDraw := Now;
   end;
 end;
 
-procedure FXWindowsControl.RedrawAboveControls(AControls: TArray<TControl>);
+procedure FXWindowsControl.RedrawAndSortControls(AControls: TArray<TControl>);
 var
   I: integer;
 begin
+  // Sort by index, so all control are updated by Z-Index
+  SortControlsByIndex(AControls);
+
+  // Redraw all
   for I := 0 to High(AControls) do
     if (AControls[I] is FXWindowsControl) then
       with AControls[I] as FXWindowsControl do
         if Transparent and (Visible or IsDesigning) then
-          Redraw;
+          Redraw(false); // do not start another redrawing session
+          ///  Why is another redrawing session started even if
+          ///  control bounds can affect out of region controls?
+          ///
+          ///  While that is true, currently NO controls except maybe the FXEffect
+          ///  control does that, and the performance benefits exceed the
+          ///  utility for such a rare use case. In the future, a flag to test
+          ///  this may be added.
 end;
 
 procedure FXWindowsControl.RedrawChildren;
-var
-  I: integer;
-  FControl: FXWindowsControl;
 begin
-  // Notify children
-  for I := 0 to ControlCount-1 do
-    if Controls[I] is FXWindowsControl then begin
-      FControl := FXWindowsControl(Controls[I]);
-
-      if FControl.Visible or IsDesigning then
-        FControl.Redraw;
-    end;
+  RedrawAndSortControls( GetChildControls );
 end;
 
 procedure FXWindowsControl.RedrawControlsAbove;
 begin
-  const AControls = GetControlsAbove;
-
   // Notify neighbours
-  RedrawAboveControls(AControls);
+  RedrawAndSortControls( GetControlsAbove );
 end;
 
 procedure FXWindowsControl.Resize;
@@ -958,12 +969,14 @@ end;
 procedure FXWindowsControl.SetBounds(ALeft, ATop, AWidth, AHeight: Integer);
 begin
   if not IsReading then begin
+    // Get controls before bounds change
     const AControls = GetControlsAbove;
 
+    // Execute bounds change
     inherited;
 
     // Notify previous neighbours
-    RedrawAboveControls(AControls);
+    RedrawAndSortControls(AControls);
   end else
     inherited;
 end;
@@ -1026,6 +1039,15 @@ begin
       // Clear
       FillRect(ClipRect);
     end;
+end;
+
+procedure FXWindowsControl.SortControlsByIndex(var AControls: TArray<TControl>);
+begin
+  // Sort
+  TArrayUtils<TControl>.Sort(AControls, function(A, B: TControl): boolean
+    begin
+      Result := A.ComponentIndex > B.ComponentIndex;
+    end);
 end;
 
 procedure FXWindowsControl.SwitchBuffer;
