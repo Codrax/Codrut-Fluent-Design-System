@@ -433,7 +433,7 @@ begin
       if Steps > 0 then
         begin
           FTotalStep := Max(Steps-1, 1); // Step 0 is considered
-          FSleepStep := Max(trunc(Duration / FTotalStep), 1);
+          FSleepStep := Max(trunc(Duration*1000 / FTotalStep), 1);
         end
       else
         begin

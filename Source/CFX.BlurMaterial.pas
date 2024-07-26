@@ -575,9 +575,6 @@ end;
 
 procedure FXBlurMaterial.SyncroniseImage;
 begin
-  // Paint
-  ReDraw;
-
   // Check for updated wallpaper
   case Version of
     FXBlurVersion.WallpaperBlurred, FXBlurVersion.Wallpaper: if (GetWallpaperSize <> LastDetectedFileSize) then
@@ -587,8 +584,7 @@ begin
   end;
 
   // Full Redraw
-  if FInvalidateAbove then
-    Redraw;
+  Redraw;
 end;
 
 procedure FXBlurMaterial.TimerExecute(Sender: TObject);
