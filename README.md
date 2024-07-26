@@ -29,6 +29,8 @@ The component package is not at a state where it can be considered finished with
 - Linear Draw List, a list with a number of elements that are all drawn in a Notify Event given, the layouts are calculated automatically and you can provide a custom Content Justification and orientation.
 - Linear Control List, a linear draw list that accepts CFX controls, similar to a TControlList but more customizable in terms of layout and custom drawing.
 - Effects, you can overlay effects onto controls. Effects can be Blur, Monocrome, Invert, Deepfry, Color, Zoom and more!
+- Layout, which is a component container for storing other controls inside
+- Scrollable Layout, is another layout-based control but with two scrollbars for scrolling the control.
 
 ## Apps made with CodrutFluentDesignSystem
  - Codrut Printing - https://github.com/Codrax/Codrut-Printing
