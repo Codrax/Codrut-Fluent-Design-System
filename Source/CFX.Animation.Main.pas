@@ -15,7 +15,7 @@ unit CFX.Animation.Main;
 interface
 
 uses
-    Windows, Messages, SysUtils, Variants, Classes, Math, CFX.Types;
+    Windows, Messages, SysUtils, Variants, Classes, Math, CFX.Types, DateUtils;
 
   type
     // Async animations
@@ -24,17 +24,23 @@ uses
       FFreeOnFinish: boolean;
 
       // Data
-      FDelay: single;
-      FDuration: Single;
-
-      // Properties
-      FSteps: integer;
-      FStatus: FXTaskStatus;
-
       FKind: FXAnimationKind;
-
+      FDelay: single;
+      { The maximum exponent of 10 to use as a sleep interval, eg: 1 = 10ms }
+      FDelayMaxSegment: integer;
+      FDuration: Single;
       FInverse: boolean;
 
+      // Runtime
+      FSteps: integer;
+      FStatus: FXTaskStatus;
+      FCanceled: boolean;
+
+      // Latency
+      FLatencyAdjust: boolean;
+      FLatencyCanSkipSteps: boolean;
+
+      // Notify events
       FOnStart,
       FOnStep,
       FOnFinish: TProc;
@@ -44,7 +50,11 @@ uses
       FTotalStep: integer;
       FSleepStep: integer;
 
-      FCanceled: boolean;
+      // System
+      procedure WaitDelay;
+      procedure ExecuteAnimation; virtual;
+      procedure DoStepValue; virtual;
+      function CalculatePercent: single;
 
       // Getters
       function GetPaused: boolean;
@@ -55,11 +65,7 @@ uses
       procedure SetSteps(const Value: integer);
       procedure SetRunning(const Value: boolean);
       procedure SetPaused(const Value: boolean);
-
-      procedure WaitDelay;
-      procedure ExecuteAnimation; virtual;
-      procedure DoStepValue; virtual;
-      function CalculatePercent: single;
+      procedure SetDelayMaxSegment(const Value: integer);
 
     public
       // Start
@@ -71,12 +77,18 @@ uses
       // Properties
       property FreeOnFinish: boolean read FFreeOnFinish write FFreeOnFinish;
       property Delay: single read FDelay write FDelay;
+      property DelayMaxSegment: integer read FDelayMaxSegment write SetDelayMaxSegment default 2;
       property Duration: single read FDuration write SetDuration;
 
       property Kind: FXAnimationKind read FKind write FKind;
       property Inverse: boolean read FInverse write FInverse default false;
 
       property Steps: integer read FSteps write SetSteps;
+
+      { compensate for the time needed to execute the code }
+      property LatencyAdjustments: boolean read FLatencyAdjust write FLatencyAdjust default false;
+      { determine wheather in order to compensate, skipping steps is permitted }
+      property LatencyCanSkipSteps: boolean read FLatencyCanSkipSteps write FLatencyCanSkipSteps default true;
 
       // Status
       property Percent: single read CalculatePercent;
@@ -158,13 +170,13 @@ implementation
 function CalculateAnimationValue(Kind: FXAnimationKind; Step, StepCount: integer; Delta: real): real;
 begin
   case Kind of
-    FXAnimationKind.Linear: Result := Step / StepCount * Delta;
-    FXAnimationKind.Exponential: Result := sign(Delta) * (Power(abs(Delta)+1, Step / StepCount)-1);
-    FXAnimationKind.ReverseExpo: Result := Delta - sign(Delta) * (Power(abs(Delta)+1, 1-Step / StepCount)-1);
-    FXAnimationKind.Random: Result := RandomRange(0, StepCount+1) / StepCount * Delta;
+    FXAnimationKind.Linear: Result := Step / (StepCount-1) * Delta;
+    FXAnimationKind.Exponential: Result := sign(Delta) * (Power(abs(Delta)+1, Step / (StepCount-1))-1);
+    FXAnimationKind.ReverseExpo: Result := Delta - sign(Delta) * (Power(abs(Delta)+1, 1-Step / (StepCount-1))-1);
+    FXAnimationKind.Random: Result := RandomRange(0, StepCount) / StepCount * Delta;
     FXAnimationKind.Spring: begin
       const ASign = Sign(Delta);
-      const X = StepCount / 5;
+      const X = (StepCount-1) / 5;
       const D = Delta / 5;
       const T = (D+Delta)*ASign;
 
@@ -173,18 +185,18 @@ begin
       else
         Result := -D + ASign *  Power(abs(D), 1-Step / X);
     end;
-    FXAnimationKind.Sinus: Result := sin(((Step / StepCount)/2)*pi) * Delta;
+    FXAnimationKind.Sinus: Result := sin(((Step / (StepCount-1))/2)*pi) * Delta;
     FXAnimationKind.SinusArc: begin
-      const X = Step / StepCount;
+      const X = Step / (StepCount-1);
       if X <= 0.5 then
         Result := sin(X*pi)/2 * Delta
       else
         Result := (sin((X+1)*pi)/2+1) * Delta;
     end;
-    FXAnimationKind.Wobbly: Result := sin(((Step / StepCount)*2)*pi) * Delta;
+    FXAnimationKind.Wobbly: Result := sin(((Step / (StepCount-1))*2)*pi) * Delta;
 
     // Non END value animations
-    FXAnimationKind.Pulse: Result := sin((Step / StepCount)*pi) * Delta;
+    FXAnimationKind.Pulse: Result := sin((Step / (StepCount-1))*pi) * Delta;
 
     else Result := 0;
   end;
@@ -205,14 +217,17 @@ begin
   // Defaults
   FFreeOnFinish := false;
 
-  FInverse := false;
   FStatus := FXTaskStatus.Stopped;
+
   FKind := FXAnimationKind.Linear;
-
   FSteps := 0;
-
   FDuration := 2;
   FDelay := 0;
+  FDelayMaxSegment := 2;
+  FInverse := false;
+
+  FLatencyAdjust := false;
+  FLatencyCanSkipSteps := true;
 end;
 
 destructor FXAsyncAnim.Destroy;
@@ -227,16 +242,25 @@ begin
 end;
 
 procedure FXAsyncAnim.ExecuteAnimation;
+var
+  StartTime: TDateTime;
+  SleepTime: cardinal;
 begin
   // Sleep
   WaitDelay;
+
+  // Terminate
+  if FCanceled then
+    Exit;
 
   // Notify
   if Assigned(FOnStart) then
     FOnStart();
 
   // Begin work
-  while FStepValue <= FTotalStep do
+  StartTime := 0;
+  FStepValue := 0;
+  while FStepValue < FTotalStep do
     begin
       // Terminate
       if FCanceled then
@@ -246,15 +270,38 @@ begin
       if FStatus = FXTaskStatus.Paused then
         continue;
 
-      // Draw
+      // Do step
       DoStepValue;
+
+      // Compensate
+      if FLatencyAdjust then
+        StartTime := Now;
 
       // Notify
       if Assigned(FOnStep) then
         FOnStep();
 
+      // Stopped
+      if FCanceled then
+        Exit;
+
       // Sleep
-      Sleep(FSleepStep);
+      if (FStepValue < FTotalStep-1) and (FSleepStep > 0) then begin
+        SleepTime := FSleepStep;
+        if FLatencyAdjust then begin
+          const CodeLatency = MillisecondsBetween(Now, StartTime);
+          SleepTime := Max(0, SleepTime-CodeLatency);
+
+          if FLatencyCanSkipSteps and (CodeLatency >= FSleepStep*2) then begin
+            FStepValue := FStepValue + (CodeLatency div FSleepStep - 1);
+
+            // Ensure the final step will execute
+            if FStepValue >= FTotalStep-1 then
+              FStepValue := FTotalStep-2;
+          end;
+        end;
+        Sleep(SleepTime);
+      end;
 
       // Increase
       Inc(FStepValue);
@@ -286,9 +333,15 @@ begin
   Result := FStatus = FXTaskStatus.Running;
 end;
 
+procedure FXAsyncAnim.SetDelayMaxSegment(const Value: integer);
+begin
+  if Value >= 0 then
+    FDelayMaxSegment := Value;
+end;
+
 procedure FXAsyncAnim.SetDuration(const Value: single);
 begin
-  if Value*1000 > 1 then
+  if Value >= 0 then
     FDuration := Value;
 end;
 
@@ -328,12 +381,18 @@ begin
       FStepValue := 0;
       if Steps > 0 then
         begin
-          FTotalStep := Max(Steps-1, 1); // Step 0 is considered
+          FTotalStep := Max(Steps, 2); // Step 0 is considered
           FSleepStep := Max(trunc(Duration*1000 / FTotalStep), 1);
         end
       else
+      if Duration = 0 then
         begin
-          FTotalStep := round(FDuration * 100);
+          FTotalStep := 2;
+          FSleepStep := 1;
+        end
+      else
+        begin
+          FTotalStep := Max(round(FDuration * 100), 2);
           FSleepStep := 10;
         end;
 
@@ -351,8 +410,30 @@ begin
 end;
 
 procedure FXAsyncAnim.WaitDelay;
+var
+  I: integer;
+  Time: integer;
+  Segment: integer;
+  Count: integer;
 begin
-  Sleep( trunc(FDelay * 1000) );
+  // Calculate segment
+  Time := round(Delay * 1000);
+  for I := 2 downto 0 do begin
+    Segment := trunc(Power(10, I));
+    if Time mod Segment = 0 then
+      break;
+  end;
+
+  // Calculate repeatcount
+  Count := Time div Segment;
+
+  // Sleep for interval
+  for I := 1 to Count do begin
+    Sleep(Segment);
+
+    if FCanceled then
+        Exit;
+  end;
 end;
 
 { FXAsyncIntAnim }

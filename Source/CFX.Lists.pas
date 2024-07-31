@@ -80,9 +80,12 @@ type
     FOpacityHover,
     FOpacitySelected: byte;
 
+    FKeyboardNavigation: boolean;
+
     // Notifiers
     FOnDrawItem,
-    FOnBeforeDrawItem: FXDrawListOnDraw;
+    FOnBeforeDrawItem,
+    FOnAfterDrawItem: FXDrawListOnDraw;
 
     FOnItemClick,
     FOnItemDoubleClick,
@@ -99,6 +102,7 @@ type
     procedure CalculateScroll; // update scroll bar values
 
     procedure StopScrollAnimations;
+    procedure EnsureIndexVisible;
 
     // Scroll notifiers
     procedure ScrollChanged(Sender: TObject); // user
@@ -122,6 +126,7 @@ type
     procedure PaintBuffer; override;
     procedure Resize; override;
 
+    function GetItemBackgroundColor(Index: integer): TColor; virtual;
     procedure DrawItem(Index: integer; ARect: TRect; Canvas: TCanvas); virtual;
 
     // Animation
@@ -134,6 +139,7 @@ type
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: integer); override;
     procedure Click; override;
     procedure DblClick; override;
+    procedure HandleKeyDown(var CanHandle: boolean; Key: integer; Shift: TShiftState); override;
 
     // Inner client
     function GetClientRect: TRect; override;
@@ -153,6 +159,7 @@ type
     // Props
     property OnDrawItem: FXDrawListOnDraw read FOnDrawItem write FOnDrawItem;
     property OnBeforeDrawItem: FXDrawListOnDraw read FOnBeforeDrawItem write FOnBeforeDrawItem;
+    property OnAfterDrawItem: FXDrawListOnDraw read FOnAfterDrawItem write FOnAfterDrawItem;
 
   published
     // Custom Colors
@@ -223,7 +230,7 @@ type
     property ItemRect[Index: integer]: TRect read GetItemRect;
     property ItemDisplayRect[Index: integer]: TRect read GetItemDisplayRect;
 
-    procedure ClearSelected;
+    procedure ClearSelection;
 
     // Interface
     function IsContainer: Boolean;
@@ -361,6 +368,9 @@ begin
     // Vertical
     FVertScroll.Position := FXIntAnim(Sender).CurrentValue;
   end;
+
+  // Process messages in order to detect scroll speed update / stop
+  Application.ProcessMessages;
 end;
 
 function FXDrawList.Background: TColor;
@@ -368,7 +378,7 @@ begin
   Result := FDrawColors.BackGround;
 end;
 
-procedure FXDrawList.ClearSelected;
+procedure FXDrawList.ClearSelection;
 begin
   ClearSelectedInternal;
 
@@ -399,6 +409,8 @@ begin
   FCustomColors := FXColorSets.Create(Self);
 
   FDrawColors := FXCompleteColorSet.Create;
+
+  FKeyboardNavigation := true;
 
   FShowScrollbars := true;
   FNoOutOfBoundsDraw := true;
@@ -451,6 +463,9 @@ begin
     Kind := FXAnimationKind.ReverseExpo;
     Duration := SCROLL_DURATION;
 
+    LatencyAdjustments := true;
+    LatencyCanSkipSteps := true;
+
     OnStep := AnimationStep;
   end;
 
@@ -458,6 +473,9 @@ begin
   with FAnimY do begin
     Kind := FXAnimationKind.ReverseExpo;
     Duration := SCROLL_DURATION;
+
+    LatencyAdjustments := true;
+    LatencyCanSkipSteps := true;
 
     OnStep := AnimationStep;
   end;
@@ -551,14 +569,7 @@ begin
 
   if FDefaultDraw then
     with Canvas do begin
-      Brush.Color := FDrawColors.BackGroundInterior;
-
-      if ItemSelected[Index] then
-        Brush.Color := ColorBlend(Brush.Color, FDrawColors.Accent, OpacitySelected)
-      else
-      if ItemIndexHover = Index then
-        Brush.Color := ColorBlend(Brush.Color, FDrawColors.Accent, OpacityHover);
-
+      Brush.Color := GetItemBackgroundColor(Index);
 
       Fillrect(ARect);
       //DrawTextRect(Canvas, ARect, Index.ToString, [], 10);
@@ -566,6 +577,28 @@ begin
 
   if Assigned(OnDrawItem) then
     OnDrawItem(Self, Index, ARect, Canvas);
+end;
+
+procedure FXDrawList.EnsureIndexVisible;
+begin
+  if ItemIndex = -1 then
+    Exit;
+
+  // Stop
+  StopScrollAnimations;
+
+  const Bounds = ItemDisplayRect[ItemIndex];
+  const Client = GetClientRect;
+
+  if Bounds.Top < Client.Top then
+    FVertScroll.Position := FVertScroll.Position + (Bounds.Top - Client.Top);
+  if Bounds.Left < Client.Left then
+    FVertScroll.Position := FVertScroll.Position + (Bounds.Left - Client.Left);
+
+  if Bounds.Bottom > Client.Bottom then
+    FVertScroll.Position := FVertScroll.Position + (Bounds.Bottom - Client.Bottom);
+  if Bounds.Right > Client.Right then
+    FHorzScroll.Position := FHorzScroll.Position + (Bounds.Right - Client.Right);
 end;
 
 function FXDrawList.GetClientRect: TRect;
@@ -588,6 +621,17 @@ begin
   Result := ARect.IntersectsWith( GetClientRect );
 end;
 
+function FXDrawList.GetItemBackgroundColor(Index: integer): TColor;
+begin
+  if ItemSelected[Index] then
+    Result := ColorBlend(Brush.Color, FDrawColors.Accent, OpacitySelected)
+  else
+  if ItemIndexHover = Index then
+    Result := ColorBlend(Brush.Color, FDrawColors.Accent, OpacityHover)
+  else
+    Result := FDrawColors.BackGroundInterior;
+end;
+
 function FXDrawList.GetItemCount: integer;
 begin
   Result := Length( FItemRects );
@@ -608,6 +652,55 @@ end;
 function FXDrawList.GetItemSelected(Index: integer): boolean;
 begin
   Result := FItemSelected[Index];
+end;
+
+procedure FXDrawList.HandleKeyDown(var CanHandle: boolean; Key: integer;
+  Shift: TShiftState);
+var
+  Value: integer;
+begin
+  inherited;
+  if FKeyboardNavigation then
+    case Key of
+      VK_LEFT, VK_UP: begin
+        CanHandle := false;
+
+        if ssShift in Shift then begin
+          Value := FItemIndex - 1;
+          if Value < 0 then
+            Exit;
+
+          if ItemSelected[Value] then
+            ItemSelected[FItemIndex] := false
+          else
+            ItemSelected[Value] := true;
+          FItemIndex := Value;
+
+          EnsureIndexVisible;
+        end else
+          if ItemIndex > 0 then
+            ItemIndex := ItemIndex - 1;
+      end;
+
+      VK_RIGHT, VK_DOWN: begin
+        CanHandle := false;
+
+        if ssShift in Shift then begin
+          Value := FItemIndex + 1;
+          if Value >= ItemCount then
+            Exit;
+
+          if ItemSelected[Value] then
+            ItemSelected[FItemIndex] := false
+          else
+            ItemSelected[Value] := true;
+          FItemIndex := Value;
+
+          EnsureIndexVisible;
+        end else
+          ItemIndex := ItemIndex + 1;
+      end;
+    end
 end;
 
 procedure FXDrawList.InteractionStateChanged(AState: FXControlState);
@@ -687,6 +780,9 @@ begin
 
     if (not FNoOutOfBoundsDraw or InBounds) then
       DrawItem(I, Display, Buffer);
+
+    if Assigned(OnAfterDrawItem) then
+      OnAfterDrawItem(Self, I, Display, Canvas);
   end;
 
   // Inherit
@@ -855,15 +951,20 @@ end;
 
 procedure FXDrawList.SetItemIndex(const Value: integer);
 begin
-  if FItemIndex = Value then
+  if (FItemIndex = Value) or not InRange(Value, -1, ItemCount-1) then
     Exit;
 
   // Clear selected
   ClearSelectedInternal; // does not invalidate
-  FItemSelected[Value] := true;
+  if Value <> -1 then
+    FItemSelected[Value] := true;
 
   // Set
   FItemIndex := Value;
+
+  EnsureIndexVisible;
+
+  // Draw
   Redraw;
 end;
 
@@ -1201,6 +1302,10 @@ end;
 procedure FXLinearControlList.DrawItem(Index: integer; ARect: TRect;
   Canvas: TCanvas);
 begin
+  // Set the background before drawing occurs
+  FContainer.FBackgroundColor := GetItemBackgroundColor(Index);
+  FContainer.Redraw(false); // draw background
+
   // Default draw
   inherited;
 
@@ -1223,7 +1328,6 @@ begin
     end;
 
   // Initialize Container
-  FContainer.FBackgroundColor := Buffer.Brush.Color; // Set container color (extract from last used brush)
   FContainer.Width := ARect.Width;
   FContainer.Height := ARect.Height;
 

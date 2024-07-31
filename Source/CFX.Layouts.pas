@@ -11,6 +11,7 @@ uses
   Vcl.Graphics,
   Vcl.ExtCtrls,
   Vcl.Dialogs,
+  Vcl.Forms,
   Math,
   CFX.Colors,
   CFX.Utilities,
@@ -380,6 +381,9 @@ begin
     // Vertical
     FVertScroll.Position := FXIntAnim(Sender).CurrentValue;
   end;
+
+  // Process messages in order to detect scroll speed update / stop
+  Application.ProcessMessages;
 end;
 
 constructor FXScrollLayout.Create(aOwner: TComponent);
@@ -430,6 +434,9 @@ begin
     Kind := FXAnimationKind.ReverseExpo;
     Duration := SCROLL_DURATION;
 
+    LatencyAdjustments := true;
+    LatencyCanSkipSteps := true;
+
     OnStep := AnimationStep;
   end;
 
@@ -437,6 +444,9 @@ begin
   with FAnimY do begin
     Kind := FXAnimationKind.ReverseExpo;
     Duration := SCROLL_DURATION;
+
+    LatencyAdjustments := true;
+    LatencyCanSkipSteps := true;
 
     OnStep := AnimationStep;
   end;

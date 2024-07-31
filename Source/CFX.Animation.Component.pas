@@ -15,7 +15,7 @@ unit CFX.Animation.Component;
 interface
 
 uses
-    Windows, Messages, SysUtils, System.Variants, System.Classes,
+    Windows, Messages, SysUtils, System.Variants, System.Classes, DateUtils,
     Vcl.Controls, Vcl.Dialogs, System.Math, TypInfo,
     CFX.Types, CFX.Animation.Main, CFX.Animation.Utils;
 
@@ -40,24 +40,32 @@ uses
       ValueKinds: set of TTypeKind;
 
       // Data
+      FKind: FXAnimationKind;
       FDelay: single;
+      { The maximum exponent of 10 to use as a sleep interval, eg: 1 = 10ms }
+      FDelayMaxSegment: integer;
       FDuration: Single;
       { Duration values are stored as single and are
         noted in seconds, they will be multiplied by 10^3
         to be used as miliseconds. }
+      FInverse: boolean;
 
-      // Properties
+      // Runtime
       FSteps: integer;
       FStatus: FXTaskStatus;
+      ComponentBased: boolean;
 
-      FKind: FXAnimationKind;
+      // Latency
+      FLatencyAdjust: boolean;
+      FLatencyCanSkipSteps: boolean;
 
-      FStartFromCurrent: boolean;
-      FInverse: boolean;
+      // Loop
       FLoop: boolean;
       FLoopInverse: boolean;
-      FDelayLoop: boolean;
+      FLoopDelay: boolean;
 
+      // Property
+      FStartFromCurrent: boolean;
       FPropertyName: string;
 
       // Notify Event
@@ -70,12 +78,19 @@ uses
       FThread: TAnimationThread;
       FComponent: TComponent;
 
-      ComponentBased: boolean;
-
       // Animation Tick
       FStepValue: integer;
       FTotalStep: integer;
       FSleepStep: integer;
+
+      // Thread & System
+      procedure CreateThread;
+      function PropertyValid: boolean;
+
+      procedure WaitDelay;
+      procedure ExecuteAnimation; virtual;
+      procedure DoStepValue; virtual;
+      function CalculatePercent: single;
 
       // Getters
       function GetPaused: boolean;
@@ -86,15 +101,7 @@ uses
       procedure SetSteps(const Value: integer);
       procedure SetDuration(const Value: single);
       procedure SetRunning(const Value: boolean);
-
-      // Thread & System
-      procedure CreateThread;
-      function PropertyValid: boolean;
-
-      procedure WaitDelay;
-      procedure ExecuteAnimation; virtual;
-      procedure DoStepValue; virtual;
-      function CalculatePercent: single;
+      procedure SetDelayMaxSegment(const Value: integer);
 
     published
       // Start
@@ -107,6 +114,7 @@ uses
 
       // Properties
       property Delay: single read FDelay write FDelay;
+      property DelayMaxSegment: integer read FDelayMaxSegment write SetDelayMaxSegment default 2;
       property Duration: single read FDuration write SetDuration;
 
       property Kind: FXAnimationKind read FKind write FKind;
@@ -114,10 +122,15 @@ uses
 
       property Steps: integer read FSteps write SetSteps default 0;
 
+      { compensate for the time needed to execute the code }
+      property LatencyAdjustments: boolean read FLatencyAdjust write FLatencyAdjust default false;
+      { determine wheather in order to compensate, skipping steps is permitted }
+      property LatencyCanSkipSteps: boolean read FLatencyCanSkipSteps write FLatencyCanSkipSteps default true;
+
       property StartFromCurrent: boolean read FStartFromCurrent write FStartFromCurrent default false;
       property Loop: boolean read FLoop write FLoop default false;
       property LoopInverse: boolean read FLoopInverse write FLoopInverse default false;
-      property DelayLoop: boolean read FDelayLoop write FDelayLoop default false;
+      property LoopDelay: boolean read FLoopDelay write FLoopDelay default false;
 
       property PropertyName: string read FPropertyName write FPropertyName;
 
@@ -202,7 +215,7 @@ begin
   if not Running then
     Exit(1);
 
-  Result := FStepValue / Self.FTotalStep;
+  Result := FStepValue / (FTotalStep-1);
 end;
 
 constructor FXAnimationController.Create(AOwner: TComponent);
@@ -216,15 +229,18 @@ begin
   // Defaults
   FLoop := false;
   FLoopInverse := false;
-  FInverse := false;
   FStartFromCurrent := false;
   FStatus := FXTaskStatus.Stopped;
+
   FKind := FXAnimationKind.Linear;
-
   FSteps := 0;
-
   FDuration := 2;
   FDelay := 0;
+  FDelayMaxSegment := 2;
+  FInverse := false;
+
+  FLatencyAdjust := false;
+  FLatencyCanSkipSteps := true;
 end;
 
 procedure FXAnimationController.CreateThread;
@@ -261,9 +277,16 @@ end;
 
 procedure FXAnimationController.ExecuteAnimation;
 label StartLoop;
+var
+  StartTime: TDateTime;
+  SleepTime: cardinal;
 begin
   // Sleep
   WaitDelay;
+
+  // Terminated
+  if FThread.CheckTerminated then
+    Exit;
 
   // Notify
   if Assigned(FOnStart) then
@@ -274,14 +297,20 @@ begin
 
   // Begin work
   StartLoop:
-  while FStepValue <= FTotalStep do
+  StartTime := 0;
+  FStepValue := 0;
+  while FStepValue < FTotalStep do
     begin
       // Terminate
       if FThread.CheckTerminated then
         Exit;
 
-      // Draw
+      // Do step
       DoStepValue;
+
+      // Compensate
+      if FLatencyAdjust then
+        StartTime := Now;
 
       // Notify
       if Assigned(FOnStep) then
@@ -290,8 +319,29 @@ begin
             FOnStep(Self, FStepValue, FTotalStep);
           end);
 
+      // Stopped
+      if FThread.CheckTerminated then
+        Exit;
+
       // Sleep
-      Sleep(FSleepStep);
+      if (FStepValue < FTotalStep-1) and (FSleepStep > 0) then begin
+        SleepTime := FSleepStep;
+        if FLatencyAdjust then begin
+          const CodeLatency = MillisecondsBetween(Now, StartTime);
+          SleepTime := Max(0, SleepTime-CodeLatency);
+
+          if FLatencyCanSkipSteps and (CodeLatency >= FSleepStep*2) then begin
+            FStepValue := FStepValue + (CodeLatency div FSleepStep - 1);
+
+            // Ensure the final step will execute
+            if FStepValue >= FTotalStep-1 then
+              FStepValue := FTotalStep-2;
+          end;
+        end;
+
+        // Sleep
+        Sleep(SleepTime);
+      end;
 
       // Increase
       Inc(FStepValue);
@@ -304,7 +354,7 @@ begin
   // Loop
   if Loop then
     begin
-      if DelayLoop then
+      if LoopDelay then
         WaitDelay;
 
       // Stopped
@@ -312,8 +362,6 @@ begin
         Exit;
 
       // Reset
-      FStepValue := 0;
-
       if FLoopInverse then
         Inverse := not Inverse;
 
@@ -377,9 +425,15 @@ begin
     end;
 end;
 
+procedure FXAnimationController.SetDelayMaxSegment(const Value: integer);
+begin
+  if Value >= 0 then
+    FDelayMaxSegment := Value;
+end;
+
 procedure FXAnimationController.SetDuration(const Value: single);
 begin
-  if Value*1000 > 1 then
+  if Value >= 0 then
     FDuration := Value;
 end;
 
@@ -432,12 +486,18 @@ begin
       FStepValue := 0;
       if Steps > 0 then
         begin
-          FTotalStep := Max(Steps-1, 1); // Step 0 is considered
+          FTotalStep := Max(Steps, 2); // Step 0 is considered
           FSleepStep := Max(trunc(Duration*1000 / FTotalStep), 1);
         end
       else
+      if Duration = 0 then
         begin
-          FTotalStep := round(FDuration * 100);
+          FTotalStep := 2;
+          FSleepStep := 1;
+        end
+      else
+        begin
+          FTotalStep := Max(round(FDuration * 100), 2);
           FSleepStep := 10;
         end;
 
@@ -470,8 +530,30 @@ begin
 end;
 
 procedure FXAnimationController.WaitDelay;
+var
+  I: integer;
+  Time: integer;
+  Segment: integer;
+  Count: integer;
 begin
-  Sleep( trunc(FDelay * 1000) );
+  // Calculate segment
+  Time := round(Delay * 1000);
+  for I := 2 downto 0 do begin
+    Segment := trunc(Power(10, I));
+    if Time mod Segment = 0 then
+      break;
+  end;
+
+  // Calculate repeatcount
+  Count := Time div Segment;
+
+  // Sleep for interval
+  for I := 1 to Count do begin
+    Sleep(Segment);
+
+    if FThread.CheckTerminated then
+        Exit;
+  end;
 end;
 
 { TAnimationThread }

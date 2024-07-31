@@ -222,6 +222,9 @@ var
   P: TPoint;
 begin
   inherited;
+  if Button <> TMouseButton.mbLeft then
+    Exit;
+
   // Move Detection
   MouseMove([], X, Y);
 
