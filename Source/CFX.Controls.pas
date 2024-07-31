@@ -916,7 +916,7 @@ begin
   for I := 0 to High(AControls) do
     if (AControls[I] is FXWindowsControl) then
       with AControls[I] as FXWindowsControl do
-        if Transparent and (Visible or IsDesigning) then
+        if Transparent and (Visible or IsDesigning) and (Width > 0) and (Height > 0) then
           Redraw(false); // do not start another redrawing session
           ///  Why is another redrawing session started even if
           ///  control bounds can affect out of region controls?

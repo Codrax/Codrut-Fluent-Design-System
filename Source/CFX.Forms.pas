@@ -108,13 +108,13 @@ type
     procedure InitializeNewForm; override;
 
   published
-    property MicaEffect: boolean read FMicaEffect write SetMicaEffect;
-    property SmokeEffect: boolean read FSmokeEffect write SetSmokeEffect;
+    property MicaEffect: boolean read FMicaEffect write SetMicaEffect default false;
+    property SmokeEffect: boolean read FSmokeEffect write SetSmokeEffect default false;
     property CustomColors: FXColorSets read FCustomColors write FCustomColors;
-    property AllowThemeChangeAnimation: boolean read FAllowThemeChangeAnim write FAllowThemeChangeAnim;
+    property AllowThemeChangeAnimation: boolean read FAllowThemeChangeAnim write FAllowThemeChangeAnim default false;
     property FullScreen: Boolean read FFullScreen write SetFullScreen default false;
     property WindowUpdateLocked: boolean read FWindowUpdateLock write SetWindowUpdateLock;
-    property DisableTitlebarAlign: boolean read FDisableTitlebarAlign write FDisableTitlebarAlign;
+    property DisableTitlebarAlign: boolean read FDisableTitlebarAlign write FDisableTitlebarAlign default false;
 
     // On Change...
     property OnMove: FXFormProcedure read FOnMove write FOnMove;
@@ -240,6 +240,8 @@ label
 var
   I: Integer;
 begin
+  FDisableTitlebarAlign := false;
+
   // Settings
   Font.Name := ThemeManager.FormFont;
   Font.Height := ThemeManager.FormFontHeight;

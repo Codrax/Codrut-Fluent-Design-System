@@ -719,42 +719,60 @@ begin
 end;
 
 procedure FXScrollLayout.UpdateScrollbars;
+var
+  V: integer;
+  Vis: boolean;
 begin
   // Update Scrollbars
   with FVertScroll do
     begin
-      Top := 0;
-      Left := Self.Width - Width;
+      if Top <> 0 then
+        Top := 0;
+      V := Self.Width - Width;
+      if Left <> V then
+        Left := V;
 
-      Height := Self.Height;
+      // Data
+      Vis := FShowScrollbars and FEnableVertical and (Max > 0);
+
+      // Size
+      V := Self.Height;
+      if not Vis then
+        V := 0;
+      if Height <> V then
+        Height := V;
 
       // Visible
-      Visible := FShowScrollbars and FEnableVertical and (Max > 0);
+      if Visible <> Vis then
+        Visible := Vis;
     end;
 
   with FHorzScroll do
     begin
-      Top := Self.Height - Height;
-      Left := 0;
+      V := Self.Height - Height;
+      if Top <> V then
+        Top := V;
+      if Left <> 0 then
+        Left := 0;
 
+      // Data
+      Vis := FShowScrollbars and FEnableVertical and (Max > 0);
+
+      // Size
       if FVertScroll.Visible then
-        Width := Parent.Width - FVertScroll.Width
+        V := Parent.Width - FVertScroll.Width
       else
-        Width := Parent.Width;
+        V := Parent.Width;
+      if not Vis then
+        V := 0;
+      if Width <> V then
+        Width := V;
 
       // Visible
-      Visible := FShowScrollbars and FEnableHorizontal and (Max > 0);
+      Vis := FShowScrollbars and FEnableHorizontal and (Max > 0);
+      if Visible <> Vis then
+        Visible := Vis;
     end;
-
-  // Design mode
-  if IsDesigning then begin
-    with FVertScroll do
-      if not Visible then
-        Left := -Width;
-    with FHorzScroll do
-      if not Visible then
-        Top := -Height;
-  end;
 end;
 
 procedure FXScrollLayout.WMSize(var Message: TWMSize);
