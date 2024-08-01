@@ -45,10 +45,6 @@ type
     FLayout: FXDrawLayout;
     FTextLayout: FXLayout;
 
-    //  Internal
-    procedure UpdateColors;
-    procedure UpdateRects;
-
     // Set properties
     procedure SetText(const Value: string);
     procedure SetWordWrap(const Value: boolean);
@@ -69,22 +65,21 @@ type
     // Get properties
     function GetChecked: Boolean;
 
-    // Handle Messages
-    procedure WM_LButtonUp(var Msg: TWMLButtonUp); message WM_LBUTTONUP;
-    procedure WMSize(var Message: TWMSize); message WM_SIZE;
-
     // Animation
     procedure AnimationProgress(Sender: TObject);
 
   protected
     procedure PaintBuffer; override;
-    procedure Resize; override;
+
+    //  Internal
+    procedure UpdateColors; override;
+    procedure UpdateRects; override;
 
     // Scaler
     procedure ScaleChanged(Scaler: single); override;
 
-    // State
-    procedure InteractionStateChanged(AState: FXControlState); override;
+    // Mouse
+    procedure Click; override;
 
     // Key Presses
     procedure KeyPress(var Key: Char); override;
@@ -147,24 +142,10 @@ type
     destructor Destroy; override;
 
     // Interface
-    function IsContainer: Boolean;
-    procedure UpdateTheme(const UpdateChildren: Boolean);
-
-    function Background: TColor;
+    function Background: TColor; override;
   end;
 
 implementation
-
-procedure FXCheckBox.InteractionStateChanged(AState: FXControlState);
-begin
-  inherited;
-  Redraw;
-end;
-
-function FXCheckBox.IsContainer: Boolean;
-begin
-  Result := false;
-end;
 
 procedure FXCheckBox.KeyPress(var Key: Char);
 begin
@@ -181,13 +162,6 @@ begin
       Self.Cursor := crHandPoint
     else
       Self.Cursor := crDefault;
-end;
-
-procedure FXCheckBox.UpdateTheme(const UpdateChildren: Boolean);
-begin
-  UpdateColors;
-  UpdateRects;
-  Redraw;
 end;
 
 procedure FXCheckBox.UpdateColors;
@@ -304,68 +278,67 @@ end;
 
 procedure FXCheckBox.SetAllowGrayed(const Value: Boolean);
 begin
-  if Value <> FAllowGrayed then
-    begin
-      FAllowGrayed := Value;
-      if (not Value) and (FState = FXCheckBoxState.Grayed) then
-        begin
-          FState := FXCheckBoxState.Unchecked;
-          Redraw;
-        end;
-    end;
+  if Value = FAllowGrayed then
+    Exit;
+
+  FAllowGrayed := Value;
+  if (not Value) and (FState = FXCheckBoxState.Grayed) then
+    FState := FXCheckBoxState.Unchecked;
+
+  // Draw
+  StandardUpdateLayout;
 end;
 
 procedure FXCheckBox.SetState(const Value: FXCheckBoxState);
 begin
-  if Value <> FState then
-    begin
-      // Animation
-      if FAnimationEnabled
-        and (Value = FXCheckBoxState.Checked) and (FState = FXCheckBoxState.Unchecked)
-        and not ThemeManager.Designing and not IsReading then
-          begin
-            FAnimationStatus := 0;
-            FAnimateTimer.Enabled := true;
-          end
-            else
-              FAnimationStatus := 100;
+  if Value = FState then
+    Exit;
 
-      // Set
-      FState := Value;
-      if Assigned(OnChangeValue) then
-        OnChangeValue(Self);
-      Redraw;
-    end;
+  // Animation
+  if FAnimationEnabled
+    and (Value = FXCheckBoxState.Checked) and (FState = FXCheckBoxState.Unchecked)
+    and not ThemeManager.Designing and not IsReading then
+      begin
+        FAnimationStatus := 0;
+        FAnimateTimer.Enabled := true;
+      end
+        else
+          FAnimationStatus := 100;
+
+  // Set
+  FState := Value;
+  if Assigned(OnChangeValue) then
+    OnChangeValue(Self);
+
+  // Draw
+  StandardUpdateDraw;
 end;
 
 procedure FXCheckBox.SetText(const Value: string);
 begin
-  if FText <> Value then
-    begin
-      FText := Value;
+  if FText = Value then
+    Exit;
 
-      Redraw;
-    end;
+  FText := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCheckBox.SetTextSpacing(const Value: Integer);
 begin
-  if Value <> FTextSpacing then
-    begin
-      FTextSpacing := Value;
-      UpdateRects;
-      Redraw;
-    end;
+  if Value = FTextSpacing then
+    Exit;
+
+  FTextSpacing := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCheckBox.SetWordWrap(const Value: boolean);
 begin
-  if FWordWrap <> Value then
-    begin
-      FWordWrap := Value;
+  if FWordWrap = Value then
+    Exit;
 
-      Redraw;
-    end;
+  FWordWrap := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCheckBox.SetChecked(const Value: Boolean);
@@ -378,35 +351,29 @@ end;
 
 procedure FXCheckBox.SetImage(const Value: FXIconSelect);
 begin
-  if FImage <> Value then
-    begin
-      FImage := Value;
+  if FImage = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FImage := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCheckBox.SetImageScale(const Value: single);
 begin
-  if FImageScale <> Value then
-    begin
-      FImageScale := Value;
+  if FImageScale = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FImageScale := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCheckBox.SetLayout(const Value: FXDrawLayout);
 begin
-  if FLayout <> Value then
-    begin
-      FLayout := Value;
+  if FLayout = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FLayout := Value;
+  StandardUpdateLayout;
 end;
 
 function FXCheckBox.GetChecked;
@@ -422,6 +389,15 @@ begin
 
       Result := TextHeight(TEXT_SIZE_COMPARER)
     end;
+end;
+
+procedure FXCheckBox.Click;
+begin
+  inherited;
+
+  if not Enabled then exit;
+
+  ProgressState;
 end;
 
 constructor FXCheckBox.Create(aOwner: TComponent);
@@ -463,10 +439,6 @@ begin
   // Sizing
   Height := 30;
   Width := 180;
-
-  // Update
-  UpdateRects;
-  UpdateColors;
 end;
 
 destructor FXCheckBox.Destroy;
@@ -484,7 +456,7 @@ begin
   // Self
   Inc(FAnimationStatus, 5);
 
-  Redraw;
+  StandardUpdateDraw;
 
   if FAnimationStatus >= 100 then
     begin
@@ -643,26 +615,6 @@ begin
   // Notify
   if Assigned(OnChange) then
     OnChange(Self);
-end;
-
-procedure FXCheckBox.Resize;
-begin
-  inherited;
-  UpdateRects;
-end;
-
-procedure FXCheckBox.WMSize(var Message: TWMSize);
-begin
-  UpdateRects;
-  Redraw;
-end;
-
-procedure FXCheckBox.WM_LButtonUp(var Msg: TWMLButtonUp);
-begin
-  if not Enabled then exit;
-
-  ProgressState;
-  inherited;
 end;
 
 end.

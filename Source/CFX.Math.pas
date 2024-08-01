@@ -2,16 +2,16 @@ unit CFX.Math;
 
 interface
 
-  uses
-    SysUtils;
+uses
+  SysUtils;
 
-  function PercOf(number: integer; percentage: integer): integer;
-  function PercOfR(number: Real; percentage: integer): real;
+function PercOf(number: integer; percentage: integer): integer;
+function PercOfR(number: Real; percentage: integer): real;
 
-  function EqualApprox(number1, number2: integer; span: real = 1): boolean; overload;
-  function EqualApprox(number1, number2: real; span: real = 1): boolean; overload;
+function EqualApprox(number1, number2: integer; span: real = 1): boolean; overload;
+function EqualApprox(number1, number2: real; span: real = 1): boolean; overload;
 
-  function IntToStrIncludePrefixZeros(Value: integer; NumbersCount: integer): string;
+function IntToStrIncludePrefixZeros(Value: integer; NumbersCount: integer): string;
 
 implementation
 

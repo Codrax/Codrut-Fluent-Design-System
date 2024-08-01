@@ -283,7 +283,7 @@ begin
   skip_titlebar:
 
   // Update Theme
-  UpdateTheme(true);
+  UpdateTheme(false);
 end;
 
 procedure FXForm.InitializeNewForm;

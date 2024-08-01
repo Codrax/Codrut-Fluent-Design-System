@@ -4,43 +4,43 @@ interface
   uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Math;
 
-  type
-    TStringFindFlag = (sffIgnoreCase, sffFoundOnce, sffFoundMultiple);
-    TStringFindFlags = set of TStringFindFlag;
+type
+  TStringFindFlag = (sffIgnoreCase, sffFoundOnce, sffFoundMultiple);
+  TStringFindFlags = set of TStringFindFlag;
 
-  // Upper String, Lower string
-  function SuperStr(nr: string): string;
-  function SubStr(nr: string): string;
+// Upper String, Lower string
+function SuperStr(nr: string): string;
+function SubStr(nr: string): string;
 
-  // String Func
-  function GetAllSeparatorItems(str: string; separators: TArray<string>): TArray<string>; overload;
-  function GetAllSeparatorItems(str: string; separator: string = ','): TArray<string>; overload;
-  function GenerateString(strlength: integer; letters: boolean = true;
-                          capitalization: boolean = true; numbers: boolean = true;
-                          symbols: boolean = true): string;
+// String Func
+function GetAllSeparatorItems(str: string; separators: TArray<string>): TArray<string>; overload;
+function GetAllSeparatorItems(str: string; separator: string = ','): TArray<string>; overload;
+function GenerateString(strlength: integer; letters: boolean = true;
+                        capitalization: boolean = true; numbers: boolean = true;
+                        symbols: boolean = true): string;
 
 
-  // String Alterations
-  function StrCopy(MainString: string; frompos, topos: integer; justcontent: boolean = false): string;
-  function StrRemove(MainString: string; frompos, topos: integer): string;
-  function StrReplZone(MainString: string; frompos, topos: integer; ReplaceWith: string): string;
-  function StrInsert(MainString: string; AtPos: integer; InsertText: string): string;
-  function StrFirst(MainString: string; Count: integer = 1): string;
-  function StrClearUntilDifferent(MainString: string; ReplaceChar: char): string;
-  function StringClearLineBreaks(MainString: string): string;
+// String Alterations
+function StrCopy(MainString: string; frompos, topos: integer; justcontent: boolean = false): string;
+function StrRemove(MainString: string; frompos, topos: integer): string;
+function StrReplZone(MainString: string; frompos, topos: integer; ReplaceWith: string): string;
+function StrInsert(MainString: string; AtPos: integer; InsertText: string): string;
+function StrFirst(MainString: string; Count: integer = 1): string;
+function StrClearUntilDifferent(MainString: string; ReplaceChar: char): string;
+function StringClearLineBreaks(MainString: string): string;
 
-  // String Search
-  function StrCount(SubString: string; MainString: string; Flags: TStringFindFlags = []): integer;
-  function StrPos(SubString: string; MainString: string; index: integer = 1; offset: integer = 0; Flags: TStringFindFlags = []): integer;
-  function InString(SubString, MainString: string; Flags: TStringFindFlags = []): boolean;
+// String Search
+function StrCount(SubString: string; MainString: string; Flags: TStringFindFlags = []): integer;
+function StrPos(SubString: string; MainString: string; index: integer = 1; offset: integer = 0; Flags: TStringFindFlags = []): integer;
+function InString(SubString, MainString: string; Flags: TStringFindFlags = []): boolean;
 
-  // String List
-  procedure InsertStListInStList(insertindex: integer; SubStrList: TStringList; var ParentStringList: TStringList);
-  function StringToStringList(str: string; Separator: string = #13): TStringList;
-  function StringToArray(str: string; Separator: string = #13): TArray<string>;
-  function StringListToString(stringlist: TStringList; Separator: string = #13): string;
-  procedure ArrayToStringList(AArray: TArray<string>; var StringList: TStringList);
-  function ArrayToString(AArray: TArray<string>; Separator: string = ', '): string;
+// String List
+procedure InsertStListInStList(insertindex: integer; SubStrList: TStringList; var ParentStringList: TStringList);
+function StringToStringList(str: string; Separator: string = #13): TStringList;
+function StringToArray(str: string; Separator: string = #13): TArray<string>;
+function StringListToString(stringlist: TStringList; Separator: string = #13): string;
+procedure ArrayToStringList(AArray: TArray<string>; var StringList: TStringList);
+function ArrayToString(AArray: TArray<string>; Separator: string = ', '): string;
 
 const
   allchars = ['0'..'9', 'a'..'z', 'A'..'Z', '~', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '-', '=', '+', '[', ']', '{', '}', ';', ':', '"', '\', '|', '<', '>', ',', '.', '/', '?', ' '];

@@ -3,217 +3,217 @@ unit CFX.Types;
 {$SCOPEDENUMS ON}
 
 interface
-  uses
-    UITypes, Types, CFX.Constants, VCl.GraphUtil, Winapi.Windows,
-    Classes, Vcl.Themes, Vcl.Controls, Vcl.Graphics, Math,
-    SysUtils, Winapi.GDIPAPI, Winapi.GDIPOBJ;
+uses
+  UITypes, Types, CFX.Constants, VCl.GraphUtil, Winapi.Windows,
+  Classes, Vcl.Themes, Vcl.Controls, Vcl.Graphics, Math,
+  SysUtils, Winapi.GDIPAPI, Winapi.GDIPOBJ;
 
-  type
-    // File Type
-    TFileType = (Text, BMP, PNG, JPEG, GIF, HEIC, TIFF,
-      MP3, MP4, Flac, MDI, OGG, SND, M3U8, EXE, MSI,
-      Zip, GZip, Zip7, Cabinet, TAR, RAR, LZIP, ISO,
-      PDF, HLP, CHM);
+type
+  // File Type
+  TFileType = (Text, BMP, PNG, JPEG, GIF, HEIC, TIFF,
+    MP3, MP4, Flac, MDI, OGG, SND, M3U8, EXE, MSI,
+    Zip, GZip, Zip7, Cabinet, TAR, RAR, LZIP, ISO,
+    PDF, HLP, CHM);
 
-    // Icon Type
-    FXIconType = (Image, BitMap, ImageList, SegoeIcon);
+  // Icon Type
+  FXIconType = (Image, BitMap, ImageList, SegoeIcon);
 
-    // Color
-    FXColorType = (Accent, Foreground, Background, Content, Custom);
+  // Color
+  FXColorType = (Accent, Foreground, Background, Content, Custom);
 
-    // Component
-    FXFocusFlag = (CatchTab, CatchLeft, CatchUp, CatchRight, CatchDown);
-    FXFocusFlags = set of FXFocusFlag;
+  // Component
+  FXFocusFlag = (CatchTab, CatchLeft, CatchUp, CatchRight, CatchDown);
+  FXFocusFlags = set of FXFocusFlag;
 
-    // FXForm
-    FXFormFill = (TitleBar, Complete);
-    FXFormCloseAction = (Default, Free, Hide, Minimise);
+  // FXForm
+  FXFormFill = (TitleBar, Complete);
+  FXFormCloseAction = (Default, Free, Hide, Minimise);
 
-    // Animation
-    FXTaskStatus = (Stopped, Running, Paused);
-    FXAnimationKind = (Linear, Exponential, ReverseExpo, Random, Spring, Sinus,
-      SinusArc, Wobbly, Pulse);
+  // Animation
+  FXTaskStatus = (Stopped, Running, Paused);
+  FXAnimationKind = (Linear, Exponential, ReverseExpo, Random, Spring, Sinus,
+    SinusArc, Wobbly, Pulse);
 
-    // Detail
-    FXDetailType = (None, Underline, Outline);
+  // Detail
+  FXDetailType = (None, Underline, Outline);
 
-    // FXPanel
-    FXBackgroundColor = (Background, Content);
+  // FXPanel
+  FXBackgroundColor = (Background, Content);
 
-    // FXButton
-    FXButtonKind = (Normal, Accent, Toggle, FlatToggle, Dropdown, Link, Flat);
+  // FXButton
+  FXButtonKind = (Normal, Accent, Toggle, FlatToggle, Dropdown, Link, Flat);
 
-    // FXPopupMenu
-    FXAnimateSelection = (Instant, Opacity, Linear, Square);
+  // FXPopupMenu
+  FXAnimateSelection = (Instant, Opacity, Linear, Square);
 
-    // FXProgress
-    FXProgressKind = (Normal, Intermediate, Paused, Error);
+  // FXProgress
+  FXProgressKind = (Normal, Intermediate, Paused, Error);
 
-    // FXCheckBox
-    FXCheckBoxState = (Checked, Unchecked, Grayed);
+  // FXCheckBox
+  FXCheckBoxState = (Checked, Unchecked, Grayed);
 
-    // FXAppManager
-    FXAppTask = (UpdatePrompt, UpdateForce, UpdateShowUserScreen, WindowSaveForm, WindowLoadForm);
-    FXAppTasks = set of FXAppTask;
+  // FXAppManager
+  FXAppTask = (UpdatePrompt, UpdateForce, UpdateShowUserScreen, WindowSaveForm, WindowLoadForm);
+  FXAppTasks = set of FXAppTask;
 
-    // FXBlurMaterial
-    FXGlassRefreshMode = (Automatic, Manual, Timer);
-    FXBlurVersion = (WallpaperBlurred, Wallpaper, Screenshot, None);
-    TWallpaperSetting = (Fill, Fit, Stretch, Tile, Center, Span);
+  // FXBlurMaterial
+  FXGlassRefreshMode = (Automatic, Manual, Timer);
+  FXBlurVersion = (WallpaperBlurred, Wallpaper, Screenshot, None);
+  TWallpaperSetting = (Fill, Fit, Stretch, Tile, Center, Span);
 
-    // FXStandardIcons
-    FXStandardIconType = (None, Checkmark, Error, Question, Information, Warning, Star);
+  // FXStandardIcons
+  FXStandardIconType = (None, Checkmark, Error, Question, Information, Warning, Star);
 
-    // FXSlider
-    FXOrientation = (Horizontal, Vertical);
-    FXContentJustify = (Start, Center, SpaceBetween, SpaceAround, SpaceEvenly, Ending, Stretch(*Not widely supported*));
+  // FXSlider
+  FXOrientation = (Horizontal, Vertical);
+  FXContentJustify = (Start, Center, SpaceBetween, SpaceAround, SpaceEvenly, Ending, Stretch(*Not widely supported*));
 
-    // Graphics
-    FXDrawMode = (Fill, Fit, Stretch, Center, CenterFill,
-                 Center3Fill, CenterFit, Normal, Tile);
+  // Graphics
+  FXDrawMode = (Fill, Fit, Stretch, Center, CenterFill,
+               Center3Fill, CenterFit, Normal, Tile);
 
-    FXTextFlag = (WordWrap,
-                  Top, VerticalCenter, Bottom, (* Vertical allignment *)
-                  Left, Center, Right, (* Horizontal allignment *)
-                  Auto, (* Function Ex, Depracated *)
-                  NoClip, HotkeyChars, ShowAccelChar, (* Settings *)
-                  TrimCutoff, TrimDots, (* <!!> Trim Type, requires pos *)
-                  TrimCharacter, TrimWord, (* <!!> Trim Pos, requires TrimNone or TrimDots *)
-                  TrimPath (* Trim Pos, requires TrimDots *)
-                  );
-    FXTextFlags= set of FXTextFlag;
+  FXTextFlag = (WordWrap,
+                Top, VerticalCenter, Bottom, (* Vertical allignment *)
+                Left, Center, Right, (* Horizontal allignment *)
+                Auto, (* Function Ex, Depracated *)
+                NoClip, HotkeyChars, ShowAccelChar, (* Settings *)
+                TrimCutoff, TrimDots, (* <!!> Trim Type, requires pos *)
+                TrimCharacter, TrimWord, (* <!!> Trim Pos, requires TrimNone or TrimDots *)
+                TrimPath (* Trim Pos, requires TrimDots *)
+                );
+  FXTextFlags= set of FXTextFlag;
 
-    FXDrawLayout = (Left, Top, Right, Bottom);
-    FXLayout = (Beginning, Center, Ending);
+  FXDrawLayout = (Left, Top, Right, Bottom);
+  FXLayout = (Beginning, Center, Ending);
 
-    FXCorners = (TopLeft, TopRight, BottomLeft, BottomRight);
+  FXCorners = (TopLeft, TopRight, BottomLeft, BottomRight);
 
-    // Text
-    FXCharCase = (Both, Uppercase, Lowercase);
+  // Text
+  FXCharCase = (Both, Uppercase, Lowercase);
 
-    // Theme Color
-    FXDarkSetting = (Auto, ForceDark, ForceLight);
+  // Theme Color
+  FXDarkSetting = (Auto, ForceDark, ForceLight);
 
-    // File
-    FXUserShell = (User, AppData, AppDataLocal, Documents,
-                      Pictures, Desktop, Music, Videos,
-                      Network, Recent, StartMenu, Startup,
-                      Downloads, Programs);
+  // File
+  FXUserShell = (User, AppData, AppDataLocal, Documents,
+                    Pictures, Desktop, Music, Videos,
+                    Network, Recent, StartMenu, Startup,
+                    Downloads, Programs);
 
-    FXFileDateType = (Create, Modify, Access);
+  FXFileDateType = (Create, Modify, Access);
 
-    // Other instance
-    FXOtherInstanceAction = (Nothing, Close, KillProcess);
-    FXOnOtherInstance = procedure(Sender: TObject; var Action: FXOtherInstanceAction) of object;
+  // Other instance
+  FXOtherInstanceAction = (Nothing, Close, KillProcess);
+  FXOnOtherInstance = procedure(Sender: TObject; var Action: FXOtherInstanceAction) of object;
 
-    // Theme Change Detection
-    FXThemeType = (Redraw, Colorization, AppTheme);
-    FXThemeChange = procedure(Sender: TObject; ThemeChange: FXThemeType; DarkTheme: boolean; Accent: TColor) of object;
+  // Theme Change Detection
+  FXThemeType = (Redraw, Colorization, AppTheme);
+  FXThemeChange = procedure(Sender: TObject; ThemeChange: FXThemeType; DarkTheme: boolean; Accent: TColor) of object;
 
-    // Controls
-    FXControlState = (None, Hover, Press);
-    FXControlOnPaint = procedure(Sender: TObject) of object;
+  // Controls
+  FXControlState = (None, Hover, Press);
+  FXControlOnPaint = procedure(Sender: TObject) of object;
 
-    // Color  // AA RR GG BB
-    FXColor = $00000000..$FFFFFFFF;
+  // Color  // AA RR GG BB
+  FXColor = $00000000..$FFFFFFFF;
 
-    // Thingies
-    FXPercent = type Single;
-    FXAngle = type Single; // three decimal places
+  // Thingies
+  FXPercent = type Single;
+  FXAngle = type Single; // three decimal places
 
-    // FXColor Helper
-    FXColorHelper = record helper for FXColor
-      class function Create(R, G, B: Byte; A: Byte = 255): FXColor; overload; static;
-      class function Create(AColor: TColor; A: Byte = 255): FXColor; overload; static;
-      class function Create(AString: string): FXColor; overload; static;
+  // FXColor Helper
+  FXColorHelper = record helper for FXColor
+    class function Create(R, G, B: Byte; A: Byte = 255): FXColor; overload; static;
+    class function Create(AColor: TColor; A: Byte = 255): FXColor; overload; static;
+    class function Create(AString: string): FXColor; overload; static;
 
+  public
+    // Change value
+    function GetAlpha: byte;
+    function GetR: byte;
+    function GetG: byte;
+    function GetB: byte;
+
+    procedure SetA(Value: byte);
+    procedure SetR(Value: byte);
+    procedure SetG(Value: byte);
+    procedure SetB(Value: byte);
+
+    // Byte Shift
+
+    // GDI
+    function MakeGDIBrush: TGPSolidBrush;
+    function MakeGDIPen(Width: Single = 1): TGPPen;
+
+    // Convert
+    function ToVclColor: TColor;
+    function ToString: string;
+  end;
+
+  FXPercentHelper = record helper for FXPercent
     public
-      // Change value
-      function GetAlpha: byte;
-      function GetR: byte;
-      function GetG: byte;
-      function GetB: byte;
+      function Percentage: real;
 
-      procedure SetA(Value: byte);
-      procedure SetR(Value: byte);
-      procedure SetG(Value: byte);
-      procedure SetB(Value: byte);
+      function OfNumber(Value: int64): real; overload;
+      function OfNumber(Value: real): real; overload;
 
-      // Byte Shift
+      function OfNumberInt(Value: int64): int64; overload;
+      function OfNumberInt(Value: real): int64; overload;
 
-      // GDI
-      function MakeGDIBrush: TGPSolidBrush;
-      function MakeGDIPen(Width: Single = 1): TGPPen;
+      function ToByte: byte;
+      function ToString(Decimals: integer=2): string;
+  end;
 
-      // Convert
-      function ToVclColor: TColor;
-      function ToString: string;
-    end;
+  TLine = record
+    Point1: TPoint;
+    Point2: TPoint;
 
-    FXPercentHelper = record helper for FXPercent
-      public
-        function Percentage: real;
+    procedure Create(P1, P2: TPoint);
 
-        function OfNumber(Value: int64): real; overload;
-        function OfNumber(Value: real): real; overload;
+    procedure SetPercentage(Percentage: real);
+    procedure SwapPoints;
 
-        function OfNumberInt(Value: int64): int64; overload;
-        function OfNumberInt(Value: real): int64; overload;
+    procedure OffSet(const DX, DY: Integer);
 
-        function ToByte: byte;
-        function ToString(Decimals: integer=2): string;
-    end;
+    function Rect: TRect;
+    function GetHeight: integer;
+    function GetWidth: integer;
 
-    TLine = record
-      Point1: TPoint;
-      Point2: TPoint;
+    function Center: TPoint;
+  end;
 
-      procedure Create(P1, P2: TPoint);
+  TRoundRect = record
+  public
+    Rect: TRect;
 
-      procedure SetPercentage(Percentage: real);
-      procedure SwapPoints;
+    RoundTL,
+    RoundTR,
+    RoundBL,
+    RoundBR: integer;
 
-      procedure OffSet(const DX, DY: Integer);
+    Corners: FXCorners;
 
-      function Rect: TRect;
-      function GetHeight: integer;
-      function GetWidth: integer;
+    function Left: integer;
+    function Right: integer;
+    function Top: integer;
+    function Bottom: integer;
+    function TopLeft: TPoint;
+    function BottomRight: TPoint;
+    function Height: integer;
+    function Width: integer;
 
-      function Center: TPoint;
-    end;
+    procedure Offset(const DX, DY: Integer);
 
-    TRoundRect = record
-      public
-        Rect: TRect;
+    procedure SetRoundness(Value: integer);
+    function GetRoundness: integer;
 
-        RoundTL,
-        RoundTR,
-        RoundBL,
-        RoundBR: integer;
+    function RoundX: integer;
+    function RoundY: integer;
 
-        Corners: FXCorners;
-
-        function Left: integer;
-        function Right: integer;
-        function Top: integer;
-        function Bottom: integer;
-        function TopLeft: TPoint;
-        function BottomRight: TPoint;
-        function Height: integer;
-        function Width: integer;
-
-        procedure Offset(const DX, DY: Integer);
-
-        procedure SetRoundness(Value: integer);
-        function GetRoundness: integer;
-
-        function RoundX: integer;
-        function RoundY: integer;
-
-        procedure Create(TopLeft, BottomRight: TPoint; Rnd: integer); overload;
-        procedure Create(SRect: TRect; Rnd: integer); overload;
-        procedure Create(Left, Top, Right, Bottom: integer; Rnd: integer); overload;
-    end;
+    procedure Create(TopLeft, BottomRight: TPoint; Rnd: integer); overload;
+    procedure Create(SRect: TRect; Rnd: integer); overload;
+    procedure Create(Left, Top, Right, Bottom: integer; Rnd: integer); overload;
+  end;
 
   { List of colors }
   FXColorID = (None, Red, Green, Blue, Black, White,
@@ -400,7 +400,7 @@ interface
   end;
 
   { Color searching }
-  const
+const
   TFXColorNames: array[FXColorID] of string = (
     'None',
     'Red',
@@ -708,36 +708,36 @@ interface
     FXColors.Yellowgreen
   );
 
-  (* Extract Color is in CFX.ThemeManager! *)
-  function GetColor(Color: FXColorID): FXColor;
-  function FindColor(Color: FXColor; out AColor:FXColorID ): boolean;
-  function FindColorName(Name: string; out AColor: FXColorID): boolean;
+(* Extract Color is in CFX.ThemeManager! *)
+function GetColor(Color: FXColorID): FXColor;
+function FindColor(Color: FXColor; out AColor:FXColorID ): boolean;
+function FindColorName(Name: string; out AColor: FXColorID): boolean;
 
-  { Type Functions }
-  function MakeRoundRect(SRect: TRect; Rnd: integer): TRoundRect; overload;
-  function MakeRoundRect(SRect: TRect; RndX, RndY: integer): TRoundRect; overload;
-  function MakeRoundRect(X1, Y1, X2, Y2: integer; Rnd: integer): TRoundRect; overload;
-  function Line(Point1, Point2: TPoint): TLine;
+{ Type Functions }
+function MakeRoundRect(SRect: TRect; Rnd: integer): TRoundRect; overload;
+function MakeRoundRect(SRect: TRect; RndX, RndY: integer): TRoundRect; overload;
+function MakeRoundRect(X1, Y1, X2, Y2: integer; Rnd: integer): TRoundRect; overload;
+function Line(Point1, Point2: TPoint): TLine;
 
-  { Color Conversion }
-  function GetRGB(AColor: TColor; Alpha: Byte = 255): FXColor; overload;
-  function GetRGB(R, G, B: Byte; Alpha: Byte = 255): FXColor; overload;
-  function FXColorToString(AColor: FXColor): string;
+{ Color Conversion }
+function GetRGB(AColor: TColor; Alpha: Byte = 255): FXColor; overload;
+function GetRGB(R, G, B: Byte; Alpha: Byte = 255): FXColor; overload;
+function FXColorToString(AColor: FXColor): string;
 
-  function ColorToStringN(AColor: FXColor): string;
-  function StringNToColor(AString: string): FXColor;
+function ColorToStringN(AColor: FXColor): string;
+function StringNToColor(AString: string): FXColor;
 
-  { Point }
-  function RotatePointAroundPoint(APoint: TPoint; ACenter: TPoint; ARotateDegree: real; ACustomRadius: real = -1): TPoint;
+{ Point }
+function RotatePointAroundPoint(APoint: TPoint; ACenter: TPoint; ARotateDegree: real; ACustomRadius: real = -1): TPoint;
 
-  { Rectangles }
-  function TranslateRect(const Rect, Client, Dest: TRect): TRect;
-  function GetValidRect(Point1, Point2: TPoint): TRect; overload;
-  function GetValidRect(Points: TArray<TPoint>): TRect; overload;
-  function GetValidRect(Rect: TRect): TRect; overload;
+{ Rectangles }
+function TranslateRect(const Rect, Client, Dest: TRect): TRect;
+function GetValidRect(Point1, Point2: TPoint): TRect; overload;
+function GetValidRect(Points: TArray<TPoint>): TRect; overload;
+function GetValidRect(Rect: TRect): TRect; overload;
 
-  { Conversion }
-  function DecToHex(Dec: int64): string;
+{ Conversion }
+function DecToHex(Dec: int64): string;
 
 implementation
 

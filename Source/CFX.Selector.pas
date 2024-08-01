@@ -17,120 +17,115 @@ uses
   CFX.VarHelpers,
   CFX.Types,
   CFX.Linker,
-  CFX.Animations,
+  CFX.Animation.Component,
   CFX.Controls;
 
 type
   FXSelector = class(FXWindowsControl, FXControl)
-    private
-      var DrawRect: TRect;
-      ItemRects: TArray<TRect>;
-      ItemWidth: integer;
-      FOnChange: TNotifyEvent;
-      FOnChangeValue: TNotifyEvent;
-      FCustomColors: FXCompleteColorSets;
-      FItemAccentColors: FXSingleColorStateSet;
-      FDrawColors: FXCompleteColorSet;
-      FItems: TStringList;
-      FHoverOver, FSelectedItem: integer;
-      FDrawPosition: integer;
-      FAnimation: boolean;
-      FAnim: TIntAni;
+  private
+    var DrawRect: TRect;
+    ItemRects: TArray<TRect>;
+    ItemWidth: integer;
+    FOnChange: TNotifyEvent;
+    FOnChangeValue: TNotifyEvent;
+    FCustomColors: FXCompleteColorSets;
+    FItemAccentColors: FXSingleColorStateSet;
+    FDrawColors: FXCompleteColorSet;
+    FItems: TStringList;
+    FHoverOver, FSelectedItem: integer;
+    FDrawPosition: integer;
+    FAnimation: boolean;
+    FAnim: FXIntAnim;
 
-      //  Internal
-      procedure UpdateColors;
-      procedure UpdateRects;
+    // Select
+    procedure SelectNext;
+    procedure SelectLast;
+    function MakeDrawPositionRect: TRect;
 
-      // Set properties
-      procedure SetItems(const Value: TStringList);
-      procedure SetSelectedItem(const Value: integer);
+    procedure SelectorItemsChange(Sender: TObject);
 
-      // Handle Messages
-      procedure WM_LButtonUp(var Msg: TWMLButtonUp); message WM_LBUTTONUP;
-      procedure WMSize(var Message: TWMSize); message WM_SIZE;
+    // Animation
+    procedure AnimationDoStep(Sender: TObject; Step, TotalSteps: integer);
 
-      // Select
-      procedure SelectNext;
-      procedure SelectLast;
-      function MakeDrawPositionRect: TRect;
+    // Paint
+    function GetRoundness: integer;
+    procedure AnimateToPosition;
 
-      procedure SelectorItemsChange(Sender: TObject);
+    // Setters
+    procedure SetItems(const Value: TStringList);
+    procedure SetSelectedItem(const Value: integer);
 
-      // Paint
-      function GetRoundness: integer;
-      procedure AnimateToPosition;
+  protected
+    procedure PaintBuffer; override;
 
-    protected
-      procedure PaintBuffer; override;
-      procedure Resize; override;
-      procedure ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF}); override;
+    // Internal
+    procedure UpdateColors; override;
+    procedure UpdateRects; override;
 
-      // Scale
-      procedure ScaleChanged(Scaler: single); override;
+    // Scale
+    procedure ScaleChanged(Scaler: single); override;
 
-      // State
-      procedure InteractionStateChanged(AState: FXControlState); override;
+    // State
+    procedure InteractionStateChanged(AState: FXControlState); override;
 
-      // Focus
-      procedure UpdateFocusRect; override;
+    // Focus
+    procedure UpdateFocusRect; override;
 
-      // Key Presses
-      procedure KeyPress(var Key: Char); override;
-      procedure HandleKeyDown(var CanHandle: boolean; Key: integer; ShiftState: TShiftState); override;
+    // Key Presses
+    procedure KeyPress(var Key: Char); override;
+    procedure HandleKeyDown(var CanHandle: boolean; Key: integer; ShiftState: TShiftState); override;
 
-      // Inherited Mouse Detection
-      procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    // Inherited Mouse Detection
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: integer); override;
 
-    published
-      property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
-      property OnChange: TNotifyEvent read FOnChange write FOnChange;
-      property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
+  published
+    property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
 
-      property SelectedItem: integer read FSelectedItem write SetSelectedItem;
-      property Items: TStringList read FItems write SetItems;
+    property SelectedItem: integer read FSelectedItem write SetSelectedItem;
+    property Items: TStringList read FItems write SetItems;
 
-      property Animation: boolean read FAnimation write FAnimation default true;
+    property Animation: boolean read FAnimation write FAnimation default true;
 
-      property Align;
-      property Font;
-      property Transparent;
-      property Opacity;
-      property PaddingFill;
-      property Constraints;
-      property Anchors;
-      property Hint;
-      property ShowHint;
-      property ParentShowHint;
-      property TabStop;
-      property TabOrder;
-      property FocusFlags;
-      property DragKind;
-      property DragCursor;
-      property DragMode;
-      property OnDragDrop;
-      property OnDragOver;
-      property OnEndDrag;
-      property OnStartDrag;
-      property OnEnter;
-      property OnExit;
-      property OnClick;
-      property OnKeyDown;
-      property OnKeyUp;
-      property OnKeyPress;
-      property OnMouseUp;
-      property OnMouseDown;
-      property OnMouseEnter;
-      property OnMouseLeave;
+    property Align;
+    property Font;
+    property Transparent;
+    property Opacity;
+    property PaddingFill;
+    property Constraints;
+    property Anchors;
+    property Hint;
+    property ShowHint;
+    property ParentShowHint;
+    property TabStop;
+    property TabOrder;
+    property FocusFlags;
+    property DragKind;
+    property DragCursor;
+    property DragMode;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDrag;
+    property OnStartDrag;
+    property OnEnter;
+    property OnExit;
+    property OnClick;
+    property OnKeyDown;
+    property OnKeyUp;
+    property OnKeyPress;
+    property OnMouseUp;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
 
-    public
-      constructor Create(aOwner: TComponent); override;
-      destructor Destroy; override;
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
 
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChildren: Boolean);
-
-      function Background: TColor;
+    // Interface
+    function Background: TColor; override;
   end;
 
 implementation
@@ -142,11 +137,6 @@ begin
     FXControlState.None: FHoverOver := -1;
   end;
   Redraw;
-end;
-
-function FXSelector.IsContainer: Boolean;
-begin
-  Result := false;
 end;
 
 procedure FXSelector.KeyPress(var Key: Char);
@@ -162,6 +152,22 @@ end;
 function FXSelector.MakeDrawPositionRect: TRect;
 begin
   Result := Rect(FDrawPosition, DrawRect.Top, FDrawPosition + ItemWidth, DrawRect.Bottom)
+end;
+
+procedure FXSelector.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
+  Y: integer);
+begin
+  inherited;
+  if (FHoverOver <> SelectedItem) and (FHoverOver <> -1) then
+    begin
+      SelectedItem := FHoverOver;
+
+      // Notify
+      if Assigned(FOnChange) then
+        FOnChange(Self);
+
+      Redraw;
+    end;
 end;
 
 procedure FXSelector.MouseMove(Shift: TShiftState; X, Y: Integer);
@@ -184,13 +190,6 @@ begin
   if AItem <> FHoverOver then
     Redraw;
 
-end;
-
-procedure FXSelector.UpdateTheme(const UpdateChildren: Boolean);
-begin
-  UpdateColors;
-  UpdateRects;
-  Redraw;
 end;
 
 procedure FXSelector.UpdateColors;
@@ -273,7 +272,16 @@ begin
   FSelectedItem := 0;
 
   // Anim
-  FAnim := TIntAni.Create;
+  FAnim := FXIntAnim.Create(Self);
+  with FAnim do begin
+    Duration := 0.4;
+    Kind := FXAnimationKind.ReverseExpo;
+
+    LatencyAdjustments := true;
+    LatencyCanSkipSteps := true;
+
+    OnStep := AnimationDoStep;
+  end;
 
   // Custom Color
   FCustomColors := FXCompleteColorSets.Create(Self);
@@ -284,14 +292,11 @@ begin
   // Sizing
   Height := 30;
   Width := 250;
-
-  // Update
-  UpdateRects;
-  UpdateColors;
 end;
 
 destructor FXSelector.Destroy;
 begin
+  FreeAndNil( FAnim );
   FreeAndNil( FCustomColors );
   FreeAndNil( FDrawColors );
   FreeAndNil( FItemAccentColors );
@@ -325,38 +330,26 @@ begin
 end;
 
 procedure FXSelector.AnimateToPosition;
-var
-  NewPosition: integer;
 begin
-  // Animate
-  FAnim := TIntAni.Create;
+  FAnim.Stop;
 
-  NewPosition := ItemRects[SelectedItem].Left;
-  
   FAnim.StartValue := FDrawPosition;
-  FAnim.EndValue := NewPosition;
-
-  FAnim.AniFunctionKind := afkExpo;
-  FAnim.Duration := 50;
-
-  FAnim.OnSync := procedure(Value: integer)
-  begin
-    FDrawPosition := Value;
-    Redraw;
-  end;
+  FAnim.EndValue := ItemRects[SelectedItem].Left;
 
   FAnim.Start;
+end;
+
+procedure FXSelector.AnimationDoStep(Sender: TObject; Step,
+  TotalSteps: integer);
+begin
+  FDrawPosition := FAnim.CurrentValue;
+
+  StandardUpdateDraw;
 end;
 
 function FXSelector.Background: TColor;
 begin
   Result := FDrawColors.Background;
-end;
-
-procedure FXSelector.ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF});
-begin
-  inherited;
-  UpdateRects;
 end;
 
 procedure FXSelector.PaintBuffer;
@@ -412,22 +405,15 @@ begin
 
           DrawTextRect(Buffer, ItemRects[I], FItems[I], [FXTextFlag.Center, FXTextFlag.VerticalCenter]);
         end;
-
     end;
 
   inherited;
 end;
 
-procedure FXSelector.Resize;
-begin
-  inherited;
-  UpdateRects;
-end;
-
 procedure FXSelector.ScaleChanged(Scaler: single);
 begin
-  inherited;
   ItemWidth := round(ItemWidth * Scaler);
+  inherited;
 end;
 
 procedure FXSelector.SelectLast;
@@ -466,44 +452,24 @@ end;
 
 procedure FXSelector.SetSelectedItem(const Value: integer);
 begin
-  if (FSelectedItem <> Value) and (Value >= 0) and (Value < FItems.Count) then
-    begin
-      FSelectedItem := Value;
+  if (FSelectedItem = Value) or (Value < 0) or (Value >= FItems.Count) then
+    Exit;
 
-      if Animation and not IsReading and not IsDesigning then
-        AnimateToPosition
-      else
-        FDrawPosition := ItemRects[Value].Left;
 
-      // Notify
-      if not IsReading then
-        if Assigned(FOnChangeValue) then
-          FOnChangeValue(Self);
+  FSelectedItem := Value;
 
-      // Draw
-      Redraw;
-    end;
-end;
+  if Animation and not IsReading and not IsDesigning then
+    AnimateToPosition
+  else
+    FDrawPosition := ItemRects[Value].Left;
 
-procedure FXSelector.WMSize(var Message: TWMSize);
-begin
-  UpdateRects;
-  Redraw;
-end;
+  // Notify
+  if not IsReading then
+    if Assigned(FOnChangeValue) then
+      FOnChangeValue(Self);
 
-procedure FXSelector.WM_LButtonUp(var Msg: TWMLButtonUp);
-begin
-  if (FHoverOver <> SelectedItem) and (FHoverOver <> -1) then
-    begin
-      SelectedItem := FHoverOver;
-
-      // Notify
-      if Assigned(FOnChange) then
-        FOnChange(Self);
-
-      Redraw;
-    end;
-  inherited;
+  // Draw
+  StandardUpdateDraw;
 end;
 
 end.

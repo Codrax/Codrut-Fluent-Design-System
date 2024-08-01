@@ -8,44 +8,44 @@ interface
   System.Types, IdSNTP, Registry, DateUtils, IdHTTP, Math, JSON, IdSSLOpenSSL,
   CFX.Math, CFX.Constants;
 
-  type
-    FXVersion = record
-      Major,
-      Minor,
-      Maintenance,
-      Build: cardinal;
+type
+  FXVersion = record
+    Major,
+    Minor,
+    Maintenance,
+    Build: cardinal;
 
-      APIResponse: TJsonObject;
+    APIResponse: TJsonObject;
 
-      // Main
-      constructor Create(AMajor, AMinor, AMaintenance: cardinal; ABuild: cardinal=0);
-      procedure Clear;
+    // Main
+    constructor Create(AMajor, AMinor, AMaintenance: cardinal; ABuild: cardinal=0);
+    procedure Clear;
 
-      // Load
-      procedure Parse(From: string);
-      procedure NetworkLoad(URL: string);
-      procedure HtmlLoad(URL: string);
-      procedure APILoad(AppName: string; Endpoint: string = DEFAULT_API); overload;
-      procedure APILoad(AppName: string; Current: FXVersion; Endpoint: string = DEFAULT_API); overload;
+    // Load
+    procedure Parse(From: string);
+    procedure NetworkLoad(URL: string);
+    procedure HtmlLoad(URL: string);
+    procedure APILoad(AppName: string; Endpoint: string = DEFAULT_API); overload;
+    procedure APILoad(AppName: string; Current: FXVersion; Endpoint: string = DEFAULT_API); overload;
 
-      // Comparation
-      function Empty: boolean;
-      function CompareTo(Version: FXVersion): TValueRelationship;
-      function NewerThan(Version: FXVersion): boolean;
+    // Comparation
+    function Empty: boolean;
+    function CompareTo(Version: FXVersion): TValueRelationship;
+    function NewerThan(Version: FXVersion): boolean;
 
-      // Utils
-      function GetDownloadLink(JSONValue: string = DEFAULT_UPDATE_NAME): string;
+    // Utils
+    function GetDownloadLink(JSONValue: string = DEFAULT_UPDATE_NAME): string;
 
-      // Conversion
-      function ToString: string; overload;
-      function ToString(IncludeBuild: boolean): string; overload;
-      function ToString(Separator: char; IncludeBuild: boolean = false): string; overload;
-    end;
+    // Conversion
+    function ToString: string; overload;
+    function ToString(IncludeBuild: boolean): string; overload;
+    function ToString(Separator: char; IncludeBuild: boolean = false): string; overload;
+  end;
 
-    function MakeVersion(Major, Minor, Maintenance: cardinal; Build: cardinal = 0): FXVersion;
+  function MakeVersion(Major, Minor, Maintenance: cardinal; Build: cardinal = 0): FXVersion;
 
-  const
-    VERSION_EMPTY: FXVersion = (Major:0; Minor:0; Maintenance:0; Build:0);
+const
+  VERSION_EMPTY: FXVersion = (Major:0; Minor:0; Maintenance:0; Build:0);
 
 implementation
 

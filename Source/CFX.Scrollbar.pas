@@ -18,6 +18,7 @@ uses
   Vcl.ExtCtrls,
   CFX.Classes,
   CFX.Hint,
+  CFX.Animation.Component,
   CFX.Controls,
   CFX.Linker,
   CFX.VarHelpers,
@@ -27,169 +28,157 @@ type
   FXScrollbar = class;
 
   FXScrollbar = class(FXWindowsControl, FXControl)
-    private
-      var DrawRect, SliderRect, Button1, Button2: TRect;
-      FOnChange: TNotifyEvent;
-      FOnChangeValue: TNotifyEvent;
-      FOrientation: FXOrientation;
-      FRoundness: integer;
-      FPosition, FMin, FMax: int64;
-      FSmallChange,
-      FScrollBarHeight,
-      FCustomScrollBarHeight: integer;
-      FPageSize: integer;
-      FSliderSpacing: integer;
-      FEnableButtons: boolean;
-      FRepeater: TTimer;
-      FAutoMinimise: boolean;
-      FBackgroundColor: TColor;
-      FSliderSize: integer;
-      FMinimised: boolean;
-      FPreferLeftSide: boolean;
+  private
+    var DrawRect, SliderRect, Button1, Button2: TRect;
+    FOnChange: TNotifyEvent;
+    FOnChangeValue: TNotifyEvent;
+    FOrientation: FXOrientation;
+    FRoundness: integer;
+    FPosition, FMin, FMax: int64;
+    FSmallChange,
+    FScrollBarHeight,
+    FCustomScrollBarHeight: integer;
+    FPageSize: integer;
+    FSliderSpacing: integer;
+    FEnableButtons: boolean;
+    FRepeater: TTimer;
+    FAutoMinimise: boolean;
+    FSliderSize: integer;
+    FMinimised: boolean;
+    FPreferLeftSide: boolean;
 
-      FAnimation: boolean;
-      FAnimPos: integer;
-      FAnim: TTimer;
+    FAnimation: boolean;
+    FAnim: FXIntAnim;
 
-      FPressInitiated: boolean;
+    FPressInitiated: boolean;
 
-      FCustomColors: FXCompleteColorSets;
-      FDrawColors: FXCompleteColorSet;
+    FCustomColors: FXCompleteColorSets;
+    FDrawColors: FXCompleteColorSet;
 
-      Contains1, Contains2: boolean;
+    Contains1, Contains2: boolean;
 
-      // Update
-      procedure UpdateColors;
-      procedure UpdateRects;
+    // Internal
+    procedure InteractSetPosition(Value: integer);
 
-      // Internal
-      procedure InteractSetPosition(Value: integer);
+    // Timer
+    procedure RepeaterExecute(Sender: TObject);
 
-      // Timer
-      procedure RepeaterExecute(Sender: TObject);
-      procedure AnimationExecute(Sender: TObject);
+    // Animation
+    procedure SetMinimisedState(Value: boolean);
+    function GetSliderSize(AMinimised: boolean): integer;
 
-      // Animation
-      procedure SetMinimisedState(Value: boolean);
-      function GetSliderSize(AMinimised: boolean): integer;
+    // Messages
+    procedure SetSmallChange(const Value: integer);
 
-      // Set
-      procedure SetOrientation(const Value: FXOrientation);
-      procedure SetMax(const Value: int64);
-      procedure SetMin(const Value: int64);
-      procedure SetPosition(const Value: int64);
+    // Buttons
+    function GetButtonsSize: integer;
 
-      // Messages
-      procedure WM_LButtonUp(var Msg: TWMLButtonUp); message WM_LBUTTONUP;
-      procedure SetSmallChange(const Value: integer);
+    // Store
+    function StoreMinimised: Boolean;
 
-      // Buttons
-      function GetButtonsSize: integer;
-      procedure SetEnableButtons(const Value: boolean);
-      procedure SetCustomScrollbarSize(const Value: integer);
-      procedure SetPageSize(const Value: integer);
+    // Set
+    procedure SetOrientation(const Value: FXOrientation);
+    procedure SetMax(const Value: int64);
+    procedure SetMin(const Value: int64);
+    procedure SetPosition(const Value: int64);
+    procedure SetEnableButtons(const Value: boolean);
+    procedure SetCustomScrollbarSize(const Value: integer);
+    procedure SetPageSize(const Value: integer);
 
-    protected
-      procedure PaintBuffer; override;
-      procedure WMSize(var Message: TWMSize); message WM_SIZE;
+  protected
+    procedure PaintBuffer; override;
 
-      // Scale
-      procedure ScaleChanged(Scaler: single); override;
+    // Internal
+    procedure UpdateColors; override;
+    procedure UpdateRects; override;
 
-      // State
-      procedure InteractionStateChanged(AState: FXControlState); override;
+    procedure ComponentCreated; override;
 
-      // Inherited Mouse Detection
-      procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
-      procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    // Scale
+    procedure ScaleChanged(Scaler: single); override;
 
-      procedure KeyPress(var Key: Char); override;
+    procedure AnimationStep(Sender: TObject; Step, TotalSteps: integer);
 
-    published
-      property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
-      property OnChange: TNotifyEvent read FOnChange write FOnChange;
-      property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
-      property Orientation: FXOrientation read FOrientation write SetOrientation default FXOrientation.Vertical;
-      property Position: int64 read FPosition write SetPosition;
-      property SmallChange: integer read FSmallChange write SetSmallChange default 1;
-      property Min: int64 read FMin write SetMin default 0;
-      property Max: int64 read FMax write SetMax default 100;
-      property Animation: boolean read FAnimation write FAnimation;
-      property Minimised: boolean read FMinimised write FMinimised;
+    // State
+    procedure InteractionStateChanged(AState: FXControlState); override;
 
-      property CustomScrollbarSize: integer read FCustomScrollBarHeight write SetCustomScrollbarSize;
-      property PageSize: integer read FPageSize write SetPageSize default 1;
-      property EnableButtons: boolean read FEnableButtons write SetEnableButtons default true;
-      property AutoMinimise: boolean read FAutoMinimise write FAutoMinimise default true;
-      property PreferLeftSide: boolean read FPreferLeftSide write FPreferLeftSide default false;
+    // Inherited Mouse Detection
+    procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+    procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
 
-      property Align;
-      property Transparent;
-      property Opacity;
-      property PaddingFill;
-      property Constraints;
-      property Anchors;
-      property Hint;
-      property ShowHint;
-      property ParentShowHint;
-      property TabStop;
-      property TabOrder;
-      property FocusFlags;
-      property DragKind;
-      property DragCursor;
-      property DragMode;
-      property OnDragDrop;
-      property OnDragOver;
-      property OnEndDrag;
-      property OnStartDrag;
-      property OnEnter;
-      property OnExit;
-      property OnClick;
-      property OnKeyDown;
-      property OnKeyUp;
-      property OnKeyPress;
-      property OnMouseUp;
-      property OnMouseDown;
-      property OnMouseEnter;
-      property OnMouseLeave;
+    procedure KeyPress(var Key: Char); override;
 
-    public
-      constructor Create(aOwner: TComponent); override;
-      destructor Destroy; override;
+  published
+    property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
+    property Orientation: FXOrientation read FOrientation write SetOrientation default FXOrientation.Vertical;
+    property Position: int64 read FPosition write SetPosition;
+    property SmallChange: integer read FSmallChange write SetSmallChange default 1;
+    property Min: int64 read FMin write SetMin default 0;
+    property Max: int64 read FMax write SetMax default 100;
+    property Animation: boolean read FAnimation write FAnimation;
+    property Minimised: boolean read FMinimised write SetMinimisedState stored StoreMinimised default true;
 
-      function GetPercentage: real;
-      function GetPercentageCustom(Value: int64): real;
+    property CustomScrollbarSize: integer read FCustomScrollBarHeight write SetCustomScrollbarSize;
+    property PageSize: integer read FPageSize write SetPageSize default 1;
+    property EnableButtons: boolean read FEnableButtons write SetEnableButtons default true;
+    property AutoMinimise: boolean read FAutoMinimise write FAutoMinimise default true;
+    property PreferLeftSide: boolean read FPreferLeftSide write FPreferLeftSide default false;
 
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChildren: Boolean);
+    property Align;
+    property Transparent;
+    property Opacity;
+    property PaddingFill;
+    property Constraints;
+    property Anchors;
+    property Hint;
+    property ShowHint;
+    property ParentShowHint;
+    property TabStop;
+    property TabOrder;
+    property FocusFlags;
+    property DragKind;
+    property DragCursor;
+    property DragMode;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDrag;
+    property OnStartDrag;
+    property OnEnter;
+    property OnExit;
+    property OnClick;
+    property OnKeyDown;
+    property OnKeyUp;
+    property OnKeyPress;
+    property OnMouseUp;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
 
-      function Background: TColor;
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
+
+    function GetPercentage: real;
+    function GetPercentageCustom(Value: int64): real;
+
+    // Interface
+    function Background: TColor; override;
   end;
 
 implementation
 
 procedure FXScrollbar.InteractionStateChanged(AState: FXControlState);
 begin
-  inherited;
+  if AutoMinimise then
+    SetMinimisedState( AState = FXControlState.None )
+  else
+    // Redraw
+    UpdateRects;
 
-  if not IsDesigning then
-    begin
-      if AState = FXControlState.None then
-        begin
-          if AutoMinimise and not FMinimised then
-            SetMinimisedState( true );
-        end
-      else
-        begin
-          if AutoMinimise and FMinimised then
-            SetMinimisedState( false );
-        end;
-    end;
-
-  // Redraw
-  UpdateRects;
-  Redraw;
+  inherited; // draw
 end;
 
 procedure FXScrollbar.InteractSetPosition(Value: integer);
@@ -197,11 +186,6 @@ begin
   Position := Value;
   if Assigned(OnChange) then
     OnChange(Self);
-end;
-
-function FXScrollbar.IsContainer: Boolean;
-begin
-  Result := false;
 end;
 
 procedure FXScrollbar.KeyPress(var Key: Char);
@@ -280,11 +264,15 @@ begin
     end;
 end;
 
-procedure FXScrollbar.UpdateTheme(const UpdateChildren: Boolean);
+procedure FXScrollbar.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
+  Y: integer);
 begin
-  UpdateColors;
-  UpdateRects;
-  Redraw;
+  inherited;
+  FPressInitiated := false;
+  if EnableButtons then
+    Redraw;
+
+  FRepeater.Enabled := false;
 end;
 
 procedure FXScrollbar.UpdateColors;
@@ -300,9 +288,6 @@ begin
     else
       FDrawColors.ForeGround := ChangeColorLight(FDrawColors.BackGroundInterior, -75);
   end;
-
-  // Reset colors
-  SetMinimisedState(FMinimised);
 
   // Disabled
   if not Enabled then
@@ -393,12 +378,13 @@ begin
       FRoundness := DrawRect.Width div 2;
     end;
 
-  // Re-Minimise
-  if not IsDesigning and AutoMinimise and (InteractionState = FXControlState.None) and not FMinimised then
-    FMinimised := true;
+  // Data
+  FSliderSize := GetSliderSize(FMinimised);
+end;
 
-  // Minimised State
-  SetMinimisedState(FMinimised);
+procedure FXScrollbar.ComponentCreated;
+begin
+  inherited;
 end;
 
 constructor FXScrollbar.Create(aOwner: TComponent);
@@ -409,6 +395,7 @@ begin
   FScrollBarHeight := 90;
   FEnableButtons := true;
   FPageSize := 1;
+  FMinimised := true;
   FCustomScrollBarHeight := 0;
 
   FPosition := 0;
@@ -431,12 +418,17 @@ begin
     end;
 
   // Animation
-  FAnim := TTimer.Create(nil);
+  FAnim := FXIntAnim.Create(Self);
   with FAnim do
     begin
-      Interval := 10;
-      Enabled := false;
-      OnTimer := AnimationExecute;
+      LatencyAdjustments := true;
+
+      StartValue := 0;
+      EndValue := 255;
+
+      Kind := FXAnimationKind.ReverseExpo;
+
+      OnStep := AnimationStep;
     end;
 
   // Custom Color
@@ -445,11 +437,7 @@ begin
 
   // Sizing
   Height := 225;
-  Width := 12;
-
-  // Update
-  UpdateRects;
-  UpdateColors;
+  Width := DEFAULT_SCROLLBAR_SIZE;
 end;
 
 destructor FXScrollbar.Destroy;
@@ -510,6 +498,7 @@ var
   Points: TArray<TPoint>;
   Spacing1, Spacing2, Shrinked: integer;
   ARect: TRect;
+  AColor: TColor;
 begin
   // Background
   Color := FDrawColors.BackGround;
@@ -525,7 +514,8 @@ begin
       Brush.Style := bsSolid;
 
       // Slider Background
-      GDIRoundRect(MakeRoundRect(DrawRect, FRoundness*2), GetRGB(FBackgroundColor).MakeGDIBrush, nil);
+      AColor := ColorBlend(FDrawColors.BackGround, FDrawColors.BackGroundInterior, FAnim.CurrentValue);
+      GDIRoundRect(MakeRoundRect(DrawRect, FRoundness*2), GetRGB(AColor).MakeGDIBrush, nil);
 
       // Full
       ARect := SliderRect;
@@ -636,133 +626,120 @@ end;
 
 procedure FXScrollbar.SetEnableButtons(const Value: boolean);
 begin
-  if FEnableButtons <> Value then
-    begin
-      FEnableButtons := Value;
-      Redraw;
-    end;
+  if FEnableButtons = Value then
+    Exit;
+
+  FEnableButtons := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXScrollbar.SetMax(const Value: int64);
 begin
-  if FMax <> Value then
+  if FMax = Value then
+    Exit;
+
+  FMax := Value;
+
+  if not IsReading then
     begin
-      FMax := Value;
+      if FMin > FMax then
+        FMax := FMax;
 
-      if not IsReading then
-        begin
-          if FMin > FMax then
-            FMax := FMax;
-
-          if FPosition > FMax then
-            FPosition := FMax;
-        end;
-
-      UpdateRects;
-      Redraw;
+      if FPosition > FMax then
+        FPosition := FMax;
     end;
+
+  // Draw
+  StandardUpdateLayout;
 end;
 
 procedure FXScrollbar.SetMin(const Value: int64);
 begin
-  if FMin <> Value then
+  if FMin = Value then
+    Exit;
+
+  FMin := Value;
+
+  if not IsReading then
     begin
-      FMin := Value;
+      if FPosition < FMin then
+        FPosition := FMin;
 
-      if not IsReading then
-        begin
-          if FPosition < FMin then
-            FPosition := FMin;
-
-          if FMax < FMin then
-            FMax := FMin;
-        end;
-
-      UpdateRects;
-      Redraw;
+      if FMax < FMin then
+        FMax := FMin;
     end;
+
+  StandardUpdateLayout;
 end;
 
 procedure FXScrollbar.SetMinimisedState(Value: boolean);
 begin
   // Animation
-  if (FMinimised <> Value) and FAnimation and not IsDesigning then
-    begin
-      FAnimPos:= 0;
-
-      FAnim.Enabled := true;
-    end;
+  if FMinimised = Value then
+    Exit;
 
   // Set
   FMinimised := Value;
 
-  // Data
-  FSliderSize := GetSliderSize(Value);
+  if not IsDesigning then begin
+    FAnim.Stop;
+
+    if FAnimation then
+      FAnim.Duration := 1
+    else
+      FAnim.Duration := 0;
+
+    FAnim.Inverse := FMinimised;
+    FAnim.Start;
+  end;
 
   // Update
-  if Value then
-    begin
-      FBackgroundColor := FDrawColors.BackGround;
-    end
-  else
-    begin
-      FBackgroundColor := FDrawColors.BackGroundInterior;
-    end;
+  StandardUpdateLayout;
 end;
 
 procedure FXScrollbar.SetOrientation(const Value: FXOrientation);
-var
-  AWidth: integer;
 begin
   if (FOrientation = Value) then
     Exit;
 
-
   FOrientation := Value;
 
   if not IsReading then
-    begin
-      AWidth := Width;
-      Width := Height;
-      Height := AWidth;
-
-      UpdateRects;
-      Redraw;
-    end;
+    SetBounds(Left, Top, Height, Width)
+  else
+    StandardUpdateLayout;
 end;
 
 procedure FXScrollbar.SetPageSize(const Value: integer);
 begin
-  if (FPageSize <> Value) and (Value > 0) then
-    begin
-      FPageSize := Value;
+  if (FPageSize = Value) or (Value <= 0) then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FPageSize := Value;
+
+  StandardUpdateLayout;
 end;
 
 procedure FXScrollbar.SetPosition(const Value: int64);
 begin
-  if FPosition <> Value then
+  if FPosition = Value then
+    Exit;
+
+  FPosition := Value;
+
+  if not IsReading then
     begin
-      FPosition := Value;
+      if FPosition < FMin then
+        FPosition := FMin;
 
-      if not IsReading then
-        begin
-          if FPosition < FMin then
-            FPosition := FMin;
+      if FPosition > FMax then
+        FPosition := FMax;
 
-          if FPosition > FMax then
-            FPosition := FMax;
-
-          if Assigned(OnChangeValue) then
-            OnChangeValue(Self);
-        end;
-
-      UpdateRects;
-      Redraw;
+      if Assigned(OnChangeValue) then
+        OnChangeValue(Self);
     end;
+
+  StandardUpdateLayout;
 end;
 
 procedure FXScrollbar.ScaleChanged(Scaler: single);
@@ -773,13 +750,12 @@ end;
 
 procedure FXScrollbar.SetCustomScrollbarSize(const Value: integer);
 begin
-  if (FCustomScrollBarHeight <> Value) and (Value < Height) then
-    begin
-      FCustomScrollBarHeight := Value;
+  if (FCustomScrollBarHeight = Value) or (Value >= Height) then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FCustomScrollBarHeight := Value;
+
+  StandardUpdateLayout;
 end;
 
 procedure FXScrollbar.SetSmallChange(const Value: integer);
@@ -789,44 +765,14 @@ begin
       FSmallChange := Value;
 end;
 
-procedure FXScrollbar.WMSize(var Message: TWMSize);
+function FXScrollbar.StoreMinimised: Boolean;
 begin
-  inherited;
-  UpdateRects;
-  Redraw;
+  Result := FAutoMinimise = false;
 end;
 
-procedure FXScrollbar.WM_LButtonUp(var Msg: TWMLButtonUp);
+procedure FXScrollbar.AnimationStep(Sender: TObject; Step, TotalSteps: integer);
 begin
-  inherited;
-  FPressInitiated := false;
-  if EnableButtons then
-    Redraw;
-
-  FRepeater.Enabled := false;
-end;
-
-procedure FXScrollbar.AnimationExecute(Sender: TObject);
-begin
-  Inc(FAnimPos, 15);
-
-  // Draw
-  if FMinimised then
-    begin
-      FBackgroundColor := ColorBlend(FDrawColors.BackGroundInterior, FDrawColors.BackGround, FAnimPos);
-    end
-  else
-    begin
-      FBackgroundColor := ColorBlend(FDrawColors.BackGround, FDrawColors.BackGroundInterior, FAnimPos);
-    end;
-
   Redraw;
-
-  // Stop
-  if FAnimPos = 255 then
-    begin
-      FAnim.Enabled := false;
-    end;
 end;
 
 function FXScrollbar.Background: TColor;

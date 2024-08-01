@@ -4,7 +4,7 @@ interface
   uses
     Types, Classes, SysUtils;
 
-  function UnicodeToString(Unicode: string): string;
+function UnicodeToString(Unicode: string): string;
 
 const
   // Segoe Icons

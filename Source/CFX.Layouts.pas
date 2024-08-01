@@ -34,13 +34,10 @@ type
     FDrawColors: FXCompleteColorSet;
     FCustomColors: FXColorSets;
     FKeepSolid: boolean;
-    FAutoSize: boolean;
 
     FBackground: FXBackgroundColor;
 
-    //  Internal
-    procedure UpdateColors;
-    procedure UpdateRects;
+    // Internal
     procedure SetBackground(const Value: FXBackgroundColor);
     procedure SetKeepSolid(const Value: boolean);
 
@@ -50,10 +47,10 @@ type
 
   protected
     procedure PaintBuffer; override;
-    procedure Resize; override;
 
-    // Scaler
-    procedure ScaleChanged(Scaler: single); override;
+    //  Internal
+    procedure UpdateColors; override;
+    procedure UpdateRects; override;
 
     // State
     procedure InteractionStateChanged(AState: FXControlState); override;
@@ -104,10 +101,8 @@ type
     destructor Destroy; override;
 
     // Interface
-    function IsContainer: Boolean;
-    procedure UpdateTheme(const UpdateChildren: Boolean);
-
-    function Background: TColor;
+    function IsContainer: Boolean; override;
+    function Background: TColor; override;
   end;
 
   FXLayout = class(FXCustomLayout)
@@ -116,6 +111,10 @@ type
   end;
 
   FXScrollViewScrollbar = class(FXScrollbar)
+  published
+    property Height stored false;
+    property Width stored false;
+
   public
     constructor Create(aOwner: TComponent); override;
 
@@ -169,9 +168,9 @@ type
     procedure SetPositionX(const Value: integer);
     procedure SetPositionY(const Value: integer);
 
-    procedure WMSize(var Message: TWMSize); message WM_SIZE;
-
   protected
+    procedure Sized; override;
+
     // Animation
     procedure AnimationStep(Sender: TObject; Step, TotalSteps: integer);
 
@@ -238,10 +237,6 @@ begin
   // Sizing
   Height := 200;
   Width := 250;
-
-  // Update
-  UpdateRects;
-  UpdateColors;
 end;
 
 destructor FXCustomLayout.Destroy;
@@ -269,7 +264,6 @@ begin
     FXBackgroundColor.Background: Color := FDrawColors.BackGround;
     FXBackgroundColor.Content: Color := FDrawColors.BackGroundInterior;
   end;
-
   PaintBackground(FKeepSolid);
 
   // Draw
@@ -281,25 +275,6 @@ begin
 
   // Inherit
   inherited;
-end;
-
-procedure FXCustomLayout.Resize;
-begin
-  inherited;
-  UpdateRects;
-end;
-
-procedure FXCustomLayout.UpdateTheme(const UpdateChildren: Boolean);
-begin
-  UpdateColors;
-  UpdateRects;
-  Redraw;
-
-  // Update children
-  if UpdateChildren then
-    for var I := 0 to ControlCount-1 do
-      if Supports(Controls[I], FXControl) then
-        (Controls[I] as FXControl).UpdateTheme(UpdateChildren);
 end;
 
 procedure FXCustomLayout.UpdateColors;
@@ -319,12 +294,6 @@ procedure FXCustomLayout.UpdateRects;
 begin
   // Rect
   DrawRect := GetClientRect;
-end;
-
-procedure FXCustomLayout.ScaleChanged(Scaler: single);
-begin
-  inherited;
-  // update scale
 end;
 
 procedure FXCustomLayout.SetBackground(const Value: FXBackgroundColor);
@@ -407,6 +376,7 @@ begin
   with FVertScroll do
     begin
       Parent := Self;
+      Width := DEFAULT_SCROLLBAR_SIZE;
 
       Orientation := FXOrientation.Vertical;
       Tag := 0;
@@ -418,6 +388,7 @@ begin
   with FHorzScroll do
     begin
       Parent := Self;
+      Height := DEFAULT_SCROLLBAR_SIZE;
 
       Orientation := FXOrientation.Horizontal;
 
@@ -722,8 +693,17 @@ begin
   UpdateRects;
 end;
 
+procedure FXScrollLayout.Sized;
+begin
+  inherited;
+  UpdateRange;
+end;
+
 procedure FXScrollLayout.UpdateRange;
 begin
+  if not CanUpdate then
+    Exit;
+
   CalculateRange;
   UpdateScrollbars;
 end;
@@ -738,7 +718,7 @@ begin
     begin
       if Top <> 0 then
         Top := 0;
-      V := Self.Width - Width;
+      V := Self.Width - FVertScroll.Width;
       if Left <> V then
         Left := V;
 
@@ -759,7 +739,7 @@ begin
 
   with FHorzScroll do
     begin
-      V := Self.Height - Height;
+      V := Self.Height - FHorzScroll.Height;
       if Top <> V then
         Top := V;
       if Left <> 0 then
@@ -785,12 +765,6 @@ begin
     end;
 end;
 
-procedure FXScrollLayout.WMSize(var Message: TWMSize);
-begin
-  inherited;
-  UpdateRange;
-end;
-
 { FXScrollViewScrollbar }
 
 procedure FXScrollViewScrollbar.CalcAutoRange;
@@ -805,7 +779,7 @@ procedure ProcessHorz(Control: TControl);
       case Control.Align of
         alLeft, alNone:
           if (Control.Align = alLeft) or (Control.Anchors * [akLeft, akRight] = [akLeft]) then
-            NewRange := Math.Max(NewRange, Position + Control.Left + Control.Width + FControl.ScrollExtendX);
+            NewRange := Math.Max(NewRange, Position + Control.Left + Control.Width);
         alRight: Inc(AlignMargin, Control.Width);
       end;
   end;
@@ -816,7 +790,7 @@ procedure ProcessVert(Control: TControl);
       case Control.Align of
         alTop, alNone:
           if (Control.Align = alTop) or (Control.Anchors * [akTop, akBottom] = [akTop]) then
-            NewRange := Math.Max(NewRange, Position + Control.Top + Control.Height + FControl.ScrollExtendY);
+            NewRange := Math.Max(NewRange, Position + Control.Top + Control.Height);
         alBottom: Inc(AlignMargin, Control.Height);
       end;
   end;
@@ -851,9 +825,19 @@ begin
       if (Position = 0) and (ControlSize >= ZoneSize) then
         NewRange := 0;
 
-      // Set Max
+      // Larger than position
       if NewRange >= Position then
-        Self.Max := Math.Max(NewRange, 0);
+        NewRange := Math.Max(NewRange, 0);
+
+      // Extend range
+      if NewRange > 0 then
+        case Orientation of
+          FXOrientation.Horizontal: Inc(NewRange, FControl.ScrollExtendX);
+          FXOrientation.Vertical: Inc(NewRange, FControl.ScrollExtendY);
+        end;
+
+      // Set range
+      Max := NewRange;
 
       // Visible
       if Orientation = FXOrientation.Vertical then

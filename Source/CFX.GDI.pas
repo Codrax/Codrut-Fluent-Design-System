@@ -1,48 +1,48 @@
 unit CFX.GDI;
 
 interface
-  uses
+uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Imaging.pngimage, Vcl.Imaging.GIFImg, Vcl.Imaging.jpeg,
   Winapi.GDIPAPI, Winapi.GDIPOBJ, CFX.Types, CFX.Colors, Math;
 
-  type
-    // Requirements
-    THackGraphic = class(TGraphic);
-    TRGBAArray = array[Word] of TRGBQuad;
-    PRGBAArray = ^TRGBAArray;
-    TRGBArray = array[Word] of TRGBTriple;
-    PRGBArray = ^TRGBArray;
+type
+  // Requirements
+  THackGraphic = class(TGraphic);
+  TRGBAArray = array[Word] of TRGBQuad;
+  PRGBAArray = ^TRGBAArray;
+  TRGBArray = array[Word] of TRGBTriple;
+  PRGBArray = ^TRGBArray;
 
-    TGDIBrush = TGPSolidBrush;
-    TGDIPen = TGPPen;
+  TGDIBrush = TGPSolidBrush;
+  TGDIPen = TGPPen;
 
-    // Effects
-    procedure TintPicture(Canvas: TCanvas; Rectangle: TRect; Color: FXColor = clBlack; Buffered: boolean = true);
+  // Effects
+  procedure TintPicture(Canvas: TCanvas; Rectangle: TRect; Color: FXColor = clBlack; Buffered: boolean = true);
 
-    // Drawing functions
-    procedure DrawText(Canvas: TCanvas; Text: string; Rectangle: TRect; Font: TGPFont; Format: TGPStringFormat; Brush: TGDIBrush; Angle: single = 0; Buffered: boolean = false);
-    procedure DrawRectangle(Canvas: TCanvas; Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen; Buffered: boolean = true);
-    procedure DrawRoundRect(Canvas: TCanvas; RoundRect: TRoundRect; Brush: TGDIBrush; Pen: TGDIPen; Buffered: boolean = true);
-    procedure DrawCircle(Canvas: TCanvas; Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen; Buffered: boolean = true);
-    procedure DrawPolygon(Canvas: TCanvas; Points: TArray<TPoint>; Brush: TGDIBrush; Pen: TGDIPen; Buffered: boolean = true);
-    procedure DrawLine(Canvas: TCanvas; Line: TLine; Pen: TGDIPen; Buffered: boolean = true);
-    procedure DrawGraphic(Canvas: TCanvas; Graphic: TGraphic; Rect: TRect; Buffered: boolean = true);
-    procedure GraphicStretchDraw(Canvas: TCanvas; Rect: TRect; Graphic: TGraphic; Opacity: Byte); overload;
-    procedure GraphicStretchDraw(Canvas: TCanvas; DestRect, SrcRect: TRect; Bitmap: TBitmap; Opacity: Byte); overload;
-    procedure DrawGraphicHighQuality(Canvas: TCanvas; ARect: TRect; Graphic: TGraphic; Opacity: Byte = 255; HighQuality: Boolean = False); overload;
-    procedure DrawGraphicHighQuality(Canvas: TCanvas; ARect: TRect; Bitmap: TBitmap; Opacity: Byte = 255; HighQuality: Boolean = False); overload;
+  // Drawing functions
+  procedure DrawText(Canvas: TCanvas; Text: string; Rectangle: TRect; Font: TGPFont; Format: TGPStringFormat; Brush: TGDIBrush; Angle: single = 0; Buffered: boolean = false);
+  procedure DrawRectangle(Canvas: TCanvas; Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen; Buffered: boolean = true);
+  procedure DrawRoundRect(Canvas: TCanvas; RoundRect: TRoundRect; Brush: TGDIBrush; Pen: TGDIPen; Buffered: boolean = true);
+  procedure DrawCircle(Canvas: TCanvas; Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen; Buffered: boolean = true);
+  procedure DrawPolygon(Canvas: TCanvas; Points: TArray<TPoint>; Brush: TGDIBrush; Pen: TGDIPen; Buffered: boolean = true);
+  procedure DrawLine(Canvas: TCanvas; Line: TLine; Pen: TGDIPen; Buffered: boolean = true);
+  procedure DrawGraphic(Canvas: TCanvas; Graphic: TGraphic; Rect: TRect; Buffered: boolean = true);
+  procedure GraphicStretchDraw(Canvas: TCanvas; Rect: TRect; Graphic: TGraphic; Opacity: Byte); overload;
+  procedure GraphicStretchDraw(Canvas: TCanvas; DestRect, SrcRect: TRect; Bitmap: TBitmap; Opacity: Byte); overload;
+  procedure DrawGraphicHighQuality(Canvas: TCanvas; ARect: TRect; Graphic: TGraphic; Opacity: Byte = 255; HighQuality: Boolean = False); overload;
+  procedure DrawGraphicHighQuality(Canvas: TCanvas; ARect: TRect; Bitmap: TBitmap; Opacity: Byte = 255; HighQuality: Boolean = False); overload;
 
-    // Utils
-    procedure GraphicAssignToBitmap(Bitmap: TBitmap; Graphic: TGraphic);
-    procedure PngImageAssignToBitmap(Bitmap: TBitmap; PngImage: TPngImage; IsPremultipledBitmap: Boolean = True);
-    procedure DrawBitmapHighQuality(Handle: THandle; ARect: TRect; Bitmap: TBitmap; Opacity: Byte = 255;
-    HighQality: Boolean = False; EgdeFill: Boolean = False);
+  // Utils
+  procedure GraphicAssignToBitmap(Bitmap: TBitmap; Graphic: TGraphic);
+  procedure PngImageAssignToBitmap(Bitmap: TBitmap; PngImage: TPngImage; IsPremultipledBitmap: Boolean = True);
+  procedure DrawBitmapHighQuality(Handle: THandle; ARect: TRect; Bitmap: TBitmap; Opacity: Byte = 255;
+  HighQality: Boolean = False; EgdeFill: Boolean = False);
 
-    // Bitmap
-    procedure GrayscaleBitmap(Bitmap: TBitmap);
+  // Bitmap
+  procedure GrayscaleBitmap(Bitmap: TBitmap);
 
-    procedure ApplyGlowEffect(Bitmap: TBitmap; GlowColor: FXColor; GlowSize: Integer);
+  procedure ApplyGlowEffect(Bitmap: TBitmap; GlowColor: FXColor; GlowSize: Integer);
 
 implementation
 

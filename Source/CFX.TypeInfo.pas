@@ -2,9 +2,9 @@ unit CFX.TypeInfo;
 
 interface
 
-  uses
-    Winapi.Windows, Vcl.Graphics, Types, UITypes, Classes, Vcl.Forms, Math,
-    CFX.Types, TypInfo;
+uses
+  Winapi.Windows, Vcl.Graphics, Types, UITypes, Classes, Vcl.Forms, Math,
+  CFX.Types, TypInfo;
 
 function PropertyExists(Instance: TObject; const PropName: string): boolean;
 

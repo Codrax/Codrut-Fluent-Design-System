@@ -28,51 +28,51 @@ type
   end;
 
   FXPanel = class(FXPanelBase, FXControl)
-    private
-      FCustomColors: FXCompleteColorSets;
+  private
+    FCustomColors: FXCompleteColorSets;
 
-      FDrawColors: FXCompleteColorSet;
-      FBackground: FXBackgroundColor;
+    FDrawColors: FXCompleteColorSet;
+    FBackground: FXBackgroundColor;
 
-      FAccentLine: boolean;
-      FLineWidth: integer;
+    FAccentLine: boolean;
+    FLineWidth: integer;
 
-      procedure SetAccentLine(const Value: boolean);
-      procedure SetAccentLineWidth(const Value: integer);
-      procedure SetBackground(const Value: FXBackgroundColor);
+    procedure SetAccentLine(const Value: boolean);
+    procedure SetAccentLineWidth(const Value: integer);
+    procedure SetBackground(const Value: FXBackgroundColor);
 
-    protected
-      procedure Paint; override;
+  protected
+    procedure Paint; override;
 
-      // Inherited
-      procedure Resize; override;
+    // Inherited
+    procedure Resize; override;
 
-      // Update
-      procedure UpdateColors;
+    // Update
+    procedure UpdateColors;
 
-    published
-      property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors;
-      property BackgroundColor: FXBackgroundColor read FBackground write SetBackground default FXBackgroundColor.Background;
-      property AccentLine: boolean read FAccentLine write SetAccentLine default False;
-      property AccentLineWidth: integer read FLineWidth write SetAccentLineWidth;
+  published
+    property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors;
+    property BackgroundColor: FXBackgroundColor read FBackground write SetBackground default FXBackgroundColor.Background;
+    property AccentLine: boolean read FAccentLine write SetAccentLine default False;
+    property AccentLineWidth: integer read FLineWidth write SetAccentLineWidth;
 
-      property ShowCaption default false;
-      property ParentColor default true;
+    property ShowCaption default false;
+    property ParentColor default true;
 
-      property Canvas;
+    property Canvas;
 
-    public
-      constructor Create(AOwner : TComponent); override;
-      destructor Destroy; override;
+  public
+    constructor Create(AOwner : TComponent); override;
+    destructor Destroy; override;
 
-      // Draw
-      procedure DrawAccentLine; virtual;
+    // Draw
+    procedure DrawAccentLine; virtual;
 
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChildren: Boolean);
+    // Interface
+    function IsContainer: Boolean;
+    procedure UpdateTheme(const UpdateChildren: Boolean);
 
-      function Background: TColor;
+    function Background: TColor;
   end;
 
   FXMinimisePanel = class(FXPanelBase, FXControl)

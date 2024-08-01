@@ -15,21 +15,21 @@ unit CFX.Animation.Utils;
 {$SCOPEDENUMS ON}
 
 interface
-  uses
+uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, System.Types, TypInfo;
 
-  function PropertyExists(Instance: TObject; PropName: string): boolean; overload;
+function PropertyExists(Instance: TObject; PropName: string): boolean; overload;
 
-  function GetPropertyType(Instance: TObject; PropName: string): TTypeKind; overload;
+function GetPropertyType(Instance: TObject; PropName: string): TTypeKind; overload;
 
-  // Root
-  function GetRootInstance(Instance: TObject; var PropName: string): TObject;
+// Root
+function GetRootInstance(Instance: TObject; var PropName: string): TObject;
 
-  // Get
-  function GetPropertyValue(Instance: TObject; PropName: string): Variant;
+// Get
+function GetPropertyValue(Instance: TObject; PropName: string): Variant;
 
-  // Set
-  procedure SetPropertyValue(Instance: TObject; PropName: string; Value: Variant); overload;
+// Set
+procedure SetPropertyValue(Instance: TObject; PropName: string; Value: Variant); overload;
 
 implementation
 

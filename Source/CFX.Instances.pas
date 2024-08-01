@@ -7,18 +7,17 @@ interface
     Vcl.Forms,
     SysUtils;
 
+// App Identifier
+function GetSemafor: string;
+procedure SetSemafor(Value: string);
 
-  // App Identifier
-  function GetSemafor: string;
-  procedure SetSemafor(Value: string);
+// Other instance
+function HasOtherInstances: boolean;
+procedure IPCSendMessage(target: HWND;  const message: string);
 
-  // Other instance
-  function HasOtherInstances: boolean;
-  procedure IPCSendMessage(target: HWND;  const message: string);
-
-  // Handle
-  function GetOtherHandle: HWND;
-  procedure FocusOtherWindow;
+// Handle
+function GetOtherHandle: HWND;
+procedure FocusOtherWindow;
 
 
 implementation

@@ -59,7 +59,6 @@ object Form1: TForm1
     Position.X = 0
     Position.Y = 30
     Align = alLeft
-    RefreshMode = Automatic
     CustomColors.Enabled = False
     CustomColors.Accent = 5789570
     CustomColors.LightBackGround = clWhite
@@ -508,9 +507,9 @@ object Form1: TForm1
     TabOrder = 6
   end
   object FXButton8: FXButton
-    Left = 883
+    Left = 886
     Top = 94
-    Width = 142
+    Width = 139
     Height = 35
     Cursor = crHandPoint
     Margins.Left = 0
@@ -518,9 +517,9 @@ object Form1: TForm1
     Margins.Right = 0
     Margins.Bottom = 0
     Opacity = 100.000000000000000000
-    Size.X = 142
+    Size.X = 139
     Size.Y = 35
-    Position.X = 883
+    Position.X = 886
     Position.Y = 94
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
@@ -943,33 +942,6 @@ object Form1: TForm1
     Font.Style = []
     TabOrder = 14
   end
-  object FXScrollbar1: FXScrollbar
-    Left = 231
-    Top = 271
-    Width = 233
-    Height = 13
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 0
-    Opacity = 100.000000000000000000
-    Size.X = 233
-    Size.Y = 13
-    Position = 0
-    CustomColors.Enabled = False
-    CustomColors.Accent = 13924352
-    CustomColors.LightBackGround = 15987699
-    CustomColors.LightForeGround = 1776410
-    CustomColors.DarkBackGround = 2105376
-    CustomColors.DarkForeGround = clWhite
-    CustomColors.LightBackGroundInterior = 16514043
-    CustomColors.DarkBackGroundInterior = 2829099
-    Orientation = Horizontal
-    Animation = True
-    Minimised = False
-    CustomScrollbarSize = 0
-    TabOrder = 15
-  end
   object FXButton4: FXButton
     Left = 232
     Top = 80
@@ -1021,7 +993,7 @@ object Form1: TForm1
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 17
+    TabOrder = 16
   end
   object FXButton5: FXButton
     Left = 368
@@ -1072,61 +1044,8 @@ object Form1: TForm1
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 18
+    TabOrder = 17
     OnClick = FXButton5Click
-  end
-  object FXButton13: FXButton
-    Left = 232
-    Top = 126
-    Width = 266
-    Height = 35
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 0
-    Opacity = 100.000000000000000000
-    Size.X = 266
-    Size.Y = 35
-    Position.X = 232
-    Position.Y = 126
-    CustomColors.Enabled = False
-    CustomColors.Accent = 13924352
-    CustomColors.LightBackGround = 15987699
-    CustomColors.LightForeGround = 1776410
-    CustomColors.DarkBackGround = 2105376
-    CustomColors.DarkForeGround = clWhite
-    CustomColors.LightBackGroundInterior = 16514043
-    CustomColors.DarkBackGroundInterior = 2829099
-    CustomButtonColors.Enabled = False
-    CustomButtonColors.Accent = clBlack
-    CustomButtonColors.LightBackgroundNone = clBlack
-    CustomButtonColors.LightBackgroundHover = clBlack
-    CustomButtonColors.LightBackgroundPress = clBlack
-    CustomButtonColors.LightForeGroundNone = clBlack
-    CustomButtonColors.LightForeGroundHover = clBlack
-    CustomButtonColors.LightForeGroundPress = clBlack
-    CustomButtonColors.DarkBackGroundNone = clBlack
-    CustomButtonColors.DarkBackGroundHover = clBlack
-    CustomButtonColors.DarkBackGroundPress = clBlack
-    CustomButtonColors.DarkForeGroundNone = clBlack
-    CustomButtonColors.DarkForeGroundHover = clBlack
-    CustomButtonColors.DarkForeGroundPress = clBlack
-    Text = 'Open dialog with smoke effect'
-    Image.SelectSegoe = #59188
-    Image.SelectImageIndex = 0
-    ImageScale = 1.250000000000000000
-    ButtonKind = Accent
-    LineWidth = 3.000000000000000000
-    StateText = 'Success'
-    StateImage.SelectSegoe = #59188
-    StateImage.SelectImageIndex = 0
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = 21
-    Font.Name = 'Segoe UI'
-    Font.Style = []
-    TabOrder = 19
-    OnClick = FXButton13Click
   end
   object FXTextBox2: FXTextBox
     Left = 237
@@ -1154,7 +1073,7 @@ object Form1: TForm1
     Font.Height = -16
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 20
+    TabOrder = 18
     Text = 'Password'
     AutoSize = True
     Elipsis = False
@@ -1186,7 +1105,7 @@ object Form1: TForm1
     Font.Height = -16
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 21
+    TabOrder = 19
     Text = 'Username'
     AutoSize = True
     Elipsis = False
@@ -1218,7 +1137,7 @@ object Form1: TForm1
     Font.Height = -16
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 22
+    TabOrder = 20
     Text = 'Dialogs'
     AutoSize = False
     Elipsis = False
@@ -1250,7 +1169,7 @@ object Form1: TForm1
     Font.Height = -27
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 23
+    TabOrder = 21
     Text = 'Test'
     AutoSize = False
     Elipsis = False
@@ -1306,7 +1225,7 @@ object Form1: TForm1
     Font.Height = -16
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 24
+    TabOrder = 22
     OnClick = FXButton14Click
   end
   object FXButton16: FXButton
@@ -1359,7 +1278,7 @@ object Form1: TForm1
     Font.Height = -16
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 25
+    TabOrder = 23
     OnClick = FXButton16Click
   end
   object FXTextBox8: FXTextBox
@@ -1388,7 +1307,7 @@ object Form1: TForm1
     Font.Height = -16
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 26
+    TabOrder = 24
     Text = 'Wow cool very col indeed wow 23'
     AutoSize = False
     WordWrap = True
@@ -1424,7 +1343,7 @@ object Form1: TForm1
     Font.Height = 22
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 27
+    TabOrder = 25
   end
   object FXSelector1: FXSelector
     Left = 232
@@ -1458,7 +1377,7 @@ object Form1: TForm1
     Font.Height = -16
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 16
+    TabOrder = 15
   end
   object FXTabStrip1: FXTabStrip
     Left = 878
@@ -1480,7 +1399,7 @@ object Form1: TForm1
     CustomColors.LightForeGround = 1776410
     CustomColors.DarkBackGround = 2105376
     CustomColors.DarkForeGround = clWhite
-    TabOrder = 28
+    TabOrder = 26
   end
   object FXTitleBarPanel1: FXTitleBarPanel
     Left = 0
@@ -1509,7 +1428,6 @@ object Form1: TForm1
       Position.X = 0
       Position.Y = 0
       Align = alLeft
-      RefreshMode = Automatic
       CustomColors.Enabled = False
       CustomColors.Accent = 5789570
       CustomColors.LightBackGround = clWhite
@@ -1569,7 +1487,7 @@ object Form1: TForm1
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 31
+    TabOrder = 29
   end
   object FXScrollText1: FXScrollText
     Left = 237
@@ -1607,55 +1525,22 @@ object Form1: TForm1
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 32
+    TabOrder = 30
   end
-  object FXValueTextBox1: FXValueTextBox
-    Left = 568
-    Top = 128
-    Width = 156
-    Height = 21
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 0
-    Opacity = 100.000000000000000000
-    Size.X = 156
-    Size.Y = 21
-    Position.X = 568
-    Position.Y = 128
-    CustomColors.Enabled = False
-    CustomColors.Accent = 13924352
-    CustomColors.LightBackGround = 15987699
-    CustomColors.LightForeGround = 1776410
-    CustomColors.DarkBackGround = 2105376
-    CustomColors.DarkForeGround = clWhite
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = 22
-    Font.Name = 'Segoe UI'
-    Font.Style = []
-    TabOrder = 33
-    AutoSize = True
-    Elipsis = False
-    InnerMargin = 0
-    Value = 'testtting is cool!'
-    ValueName = 'Value'
-    ValueFormat = '%S: %S'
-  end
-  object FXButton2: FXButton
-    Left = 895
-    Top = 461
-    Width = 140
+  object FXButton13: FXButton
+    Left = 232
+    Top = 126
+    Width = 266
     Height = 35
     Margins.Left = 0
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
     Opacity = 100.000000000000000000
-    Size.X = 140
+    Size.X = 266
     Size.Y = 35
-    Position.X = 895
-    Position.Y = 461
+    Position.X = 232
+    Position.Y = 126
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1678,19 +1563,108 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundNone = clBlack
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
-    Text = 'Button'
+    Text = 'Open dialog with smoke effect'
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
     ImageScale = 1.250000000000000000
+    ButtonKind = Accent
     LineWidth = 3.000000000000000000
+    StateText = 'Success'
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 21
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    TabOrder = 32
+    OnClick = FXButton13Click
+  end
+  object FXScrollbar1: FXScrollbar
+    Left = 231
+    Top = 271
+    Width = 233
+    Height = 13
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Opacity = 100.000000000000000000
+    Size.X = 233
+    Size.Y = 13
+    Position = 0
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    CustomColors.LightBackGroundInterior = 16514043
+    CustomColors.DarkBackGroundInterior = 2829099
+    Orientation = Horizontal
+    Animation = True
+    CustomScrollbarSize = 0
+    TabOrder = 33
+  end
+  object FXScrollText3: FXScrollText
+    Left = 568
+    Top = 304
+    Width = 137
+    Height = 30
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Opacity = 100.000000000000000000
+    TabStop = False
+    Size.X = 137
+    Size.Y = 30
+    Position.X = 568
+    Position.Y = 304
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    Text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
+    SpacePercent = 75.000000000000000000
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.000000000000000000
+    AnimationDelay = 150
+    AnimationSpeed = 1
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = 22
     Font.Name = 'Segoe UI'
     Font.Style = []
     TabOrder = 34
+  end
+  object FXShapeSquare1: FXShapeSquare
+    Left = 592
+    Top = 240
+    Width = 137
+    Height = 121
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Opacity = 50.000000000000000000
+    Size.X = 137
+    Size.Y = 121
+    Position.X = 592
+    Position.Y = 240
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    Drawing.ColorPen = -16776961
+    Drawing.ColorBrush = -5383962
+    Drawing.PenSize = 1.000000000000000000
+    TabOrder = 35
   end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False

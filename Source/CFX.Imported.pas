@@ -2,11 +2,11 @@ unit CFX.Imported;
 
 interface
 
-  uses
-    Windows, Classes, Types, Vcl.Graphics, Vcl.Imaging.pngimage;
+uses
+  Windows, Classes, Types, Vcl.Graphics, Vcl.Imaging.pngimage;
 
 
-  procedure ConvertToPNG(Source: TGraphic; Dest: TPngImage);
+procedure ConvertToPNG(Source: TGraphic; Dest: TPngImage);
 
 implementation
 

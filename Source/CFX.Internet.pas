@@ -1,12 +1,13 @@
 unit CFX.Internet;
 
 interface
-  uses
-    Winapi.Windows, Winapi.Messages, Classes, System.SysUtils, System.UITypes,
-    Types, Vcl.Forms, Vcl.Graphics, CFX.Colors, CFX.Registry, ShellAPI,
-    CFX.Types, IOUTils, IdHTTP, UrlMon;
 
-  function DownloadFile(Source, Destination: string): Boolean;
+uses
+  Winapi.Windows, Winapi.Messages, Classes, System.SysUtils, System.UITypes,
+  Types, Vcl.Forms, Vcl.Graphics, CFX.Colors, CFX.Registry, ShellAPI,
+  CFX.Types, IOUTils, IdHTTP, UrlMon;
+
+function DownloadFile(Source, Destination: string): Boolean;
 
 implementation
 

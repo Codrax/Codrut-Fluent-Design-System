@@ -27,123 +27,119 @@ uses
 
 type
   FXProgress = class(FXWindowsControl, FXControl)
-    private
-      const
-        MAX_ANIM = 25;
+  private
+    const
+      MAX_ANIM = 25;
 
-      var DrawRect, FilledRect, LineRect: TRect;
-      FDrawColors: FXCompleteColorSet;
-      FCustomColors: FXCompleteColorSets;
-      FOtherColors: FXColorSet;
-      FCustomOtherColors: FXColorSets;
+    var DrawRect, FilledRect, LineRect: TRect;
+    FDrawColors: FXCompleteColorSet;
+    FCustomColors: FXCompleteColorSets;
+    FOtherColors: FXColorSet;
+    FCustomOtherColors: FXColorSets;
 
-      FAnimations: boolean;
+    FAnimations: boolean;
 
-      FOffset: integer; // the offset position for the marquee animation
-      FInterSize: integer; // the internal size of the drawing width
-      FLengthState: integer;
+    FOffset: integer; // the offset position for the marquee animation
+    FInterSize: integer; // the internal size of the drawing width
+    FLengthState: integer;
 
-      FProgressThread: TThread;
-      FProgressPos: integer;
+    FProgressThread: TThread;
+    FProgressPos: integer;
 
-      FAnimateThread: TThread;
-      FThreadFinishedEvent: TEvent;
-      FThreadActive: boolean;
+    FAnimateThread: TThread;
+    FThreadFinishedEvent: TEvent;
+    FThreadActive: boolean;
 
-      FValue: FXPercent;
-      FValueAdd: single;
-      FValueAddMax: single;
+    FValue: FXPercent;
+    FValueAdd: single;
+    FValueAddMax: single;
 
-      FProgressKind: FXProgressKind;
+    FProgressKind: FXProgressKind;
 
-      FProgressHeight: integer;
-      FProgressLineHeight: integer;
+    FProgressHeight: integer;
+    FProgressLineHeight: integer;
 
-      //  Internal
-      procedure UpdateColors;
-      procedure UpdateRects;
+    // Thread
+    procedure SetAnimationThread(Enabled: boolean);
+    procedure AnimateValue(From: single);
 
-      // Thread
-      procedure SetAnimationThread(Enabled: boolean);
-      procedure AnimateValue(From: single);
+    // Setters
+    procedure SetProgressHeight(const Value: integer);
+    procedure SetProgressLineHeight(const Value: integer);
+    procedure SetProgressKind(const Value: FXProgressKind);
+    procedure SetValue(const Value: FXPercent);
 
-      // Setters
-      procedure SetProgressHeight(const Value: integer);
-      procedure SetProgressLineHeight(const Value: integer);
-      procedure SetProgressKind(const Value: FXProgressKind);
-      procedure SetValue(const Value: FXPercent);
+    // Colors
+    function GetFrontColor: TColor;
 
-      // Colors
-      function GetFrontColor: TColor;
+  protected
+    procedure PaintBuffer; override;
 
-    protected
-      procedure PaintBuffer; override;
-      procedure Resize; override;
+    // Internal
+    procedure UpdateColors; override;
+    procedure UpdateRects; override;
 
-      // Scaler
-      procedure ScaleChanged(Scaler: single); override;
+    // Scaler
+    procedure ScaleChanged(Scaler: single); override;
 
-      // State
-      procedure InteractionStateChanged(AState: FXControlState); override;
+    // State
+    procedure InteractionStateChanged(AState: FXControlState); override;
 
-    published
-      // Custom Colors
-      property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
-      property CustomOtherColors: FXColorSets read FCustomOtherColors write FCustomOtherColors stored true;
+  published
+    // Custom Colors
+    property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
+    property CustomOtherColors: FXColorSets read FCustomOtherColors write FCustomOtherColors stored true;
 
-      // Props
-      property Value: FXPercent read FValue write SetValue;
+    // Props
+    property Value: FXPercent read FValue write SetValue;
 
-      property Animations: boolean read FAnimations write FAnimations;
+    property Animations: boolean read FAnimations write FAnimations;
 
-      property ProgressKind: FXProgressKind read FProgressKind write SetProgressKind default FXProgressKind.Normal;
-      property ProgressHeight: integer read FProgressHeight write SetProgressHeight default PROGRESS_HEIGHT;
-      property ProgressLineHeight: integer read FProgressLineHeight write SetProgressLineHeight default PROGRESS_LINE_HEIGHT;
+    property ProgressKind: FXProgressKind read FProgressKind write SetProgressKind default FXProgressKind.Normal;
+    property ProgressHeight: integer read FProgressHeight write SetProgressHeight default PROGRESS_HEIGHT;
+    property ProgressLineHeight: integer read FProgressLineHeight write SetProgressLineHeight default PROGRESS_LINE_HEIGHT;
 
-      // Utils
-      procedure Reset; (* reset to 0 without animation *)
+    // Utils
+    procedure Reset; (* reset to 0 without animation *)
 
-      // Default props
-      property Align;
-      property Font;
-      property Transparent;
-      property Opacity;
-      property PaddingFill;
-      property Constraints;
-      property Anchors;
-      property Hint;
-      property ShowHint;
-      property ParentShowHint;
-      property TabStop default false;
-      property TabOrder;
-      property FocusFlags;
-      property DragKind;
-      property DragCursor;
-      property DragMode;
-      property OnDragDrop;
-      property OnDragOver;
-      property OnEndDrag;
-      property OnStartDrag;
-      property OnEnter;
-      property OnExit;
-      property OnClick;
-      property OnKeyDown;
-      property OnKeyUp;
-      property OnKeyPress;
-      property OnMouseUp;
-      property OnMouseDown;
-      property OnMouseEnter;
-      property OnMouseLeave;
+    // Default props
+    property Align;
+    property Font;
+    property Transparent;
+    property Opacity;
+    property PaddingFill;
+    property Constraints;
+    property Anchors;
+    property Hint;
+    property ShowHint;
+    property ParentShowHint;
+    property TabStop default false;
+    property TabOrder;
+    property FocusFlags;
+    property DragKind;
+    property DragCursor;
+    property DragMode;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDrag;
+    property OnStartDrag;
+    property OnEnter;
+    property OnExit;
+    property OnClick;
+    property OnKeyDown;
+    property OnKeyUp;
+    property OnKeyPress;
+    property OnMouseUp;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
 
-    public
-      constructor Create(aOwner: TComponent); override;
-      destructor Destroy; override;
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
 
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChildren: Boolean);
-
-      function Background: TColor;
+    // Interface
+    function Background: TColor; override;
   end;
 
 implementation
@@ -250,10 +246,6 @@ begin
   // Sizing
   Height := 20;
   Width := 200;
-
-  // Update
-  UpdateRects;
-  UpdateColors;
 end;
 
 destructor FXProgress.Destroy;
@@ -297,11 +289,6 @@ procedure FXProgress.InteractionStateChanged(AState: FXControlState);
 begin
   inherited;
   Redraw;
-end;
-
-function FXProgress.IsContainer: Boolean;
-begin
-  Result := false;
 end;
 
 procedure FXProgress.PaintBuffer;
@@ -349,19 +336,6 @@ begin
   FOffset := 0;
   FInterSize := 0;
 
-  UpdateRects;
-  Redraw;
-end;
-
-procedure FXProgress.Resize;
-begin
-  inherited;
-  UpdateRects;
-end;
-
-procedure FXProgress.UpdateTheme(const UpdateChildren: Boolean);
-begin
-  UpdateColors;
   UpdateRects;
   Redraw;
 end;
@@ -542,52 +516,46 @@ end;
 
 procedure FXProgress.SetProgressHeight(const Value: integer);
 begin
-  if FProgressHeight <> Value then
-    begin
-      FProgressHeight := Value;
+  if FProgressHeight = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FProgressHeight := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXProgress.SetProgressKind(const Value: FXProgressKind);
 begin
-  if FProgressKind <> Value then
-    begin
-      FProgressKind := Value;
+  if FProgressKind = Value then
+    Exit;
 
-      SetAnimationThread(Value = FXProgressKind.Intermediate);
+  SetAnimationThread(Value = FXProgressKind.Intermediate);
 
-      UpdateRects;
-      Redraw;
-    end;
+  FProgressKind := Value;
+
+  StandardUpdateLayout;
 end;
 
 procedure FXProgress.SetProgressLineHeight(const Value: integer);
 begin
-  if FProgressLineHeight <> Value then
-    begin
-      FProgressLineHeight := Value;
+  if FProgressLineHeight = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FProgressLineHeight := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXProgress.SetValue(const Value: FXPercent);
 begin
-  if (FValue <> Value) and (Value <= 100) then
-    begin
-      const Previous = FValue;
-      FValue := Value;
+  if (FValue = Value) or not InRange(Value, 0, 100) then
+    Exit;
 
-      if Animations and not IsReading then
-        AnimateValue(Previous);
+  const Previous = FValue;
+  FValue := Value;
 
-      UpdateRects;
-      Redraw;
-    end;
+  if Animations and not IsReading then
+    AnimateValue(Previous);
+
+  StandardUpdateLayout;
 end;
 
 end.

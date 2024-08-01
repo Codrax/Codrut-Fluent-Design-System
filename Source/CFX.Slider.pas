@@ -28,165 +28,154 @@ type
   FXSliderOnHint = procedure(Sender: FXSlider; var Hint: string) of object;
 
   FXSlider = class(FXWindowsControl, FXControl)
-    private
-      var DrawRect, IconRect, SliderRect, SliderFull: TRect;
-      FHint: FXHintPopup;
-      FOnChange,
-      FOnChangeValue: TNotifyEvent;
-      FAutomaticMouseCursor: boolean;
-      FOrientation: FXOrientation;
-      FSliderHeight: integer;
-      FIconSize: integer;
-      FRoundness: integer;
-      FPosition, FMin, FMax: int64;
-      FTotalTicks: integer;
-      FSmallChange: integer;
-      FEnablePositionHint: boolean;
-      FOnHint: FXSliderOnHint;
-      FAlwaysSnap: boolean;
+  private
+    var DrawRect, IconRect, SliderRect, SliderFull: TRect;
+    FHint: FXHintPopup;
+    FOnChange,
+    FOnChangeValue: TNotifyEvent;
+    FAutomaticMouseCursor: boolean;
+    FOrientation: FXOrientation;
+    FSliderHeight: integer;
+    FIconSize: integer;
+    FRoundness: integer;
+    FPosition, FMin, FMax: int64;
+    FTotalTicks: integer;
+    FSmallChange: integer;
+    FEnablePositionHint: boolean;
+    FOnHint: FXSliderOnHint;
+    FAlwaysSnap: boolean;
 
-      FPositionDraw: integer;
+    FPositionDraw: integer;
 
-      FFillTick: TTimer;
-      FCenterFill: integer;
-      FDestinedFill: integer;
+    FFillTick: TTimer;
+    FCenterFill: integer;
+    FDestinedFill: integer;
 
-      FCustomColors: FXCompleteColorSets;
-      FDrawColors,
-      FIconColors: FXCompleteColorSet;
+    FCustomColors: FXCompleteColorSets;
+    FDrawColors,
+    FIconColors: FXCompleteColorSet;
 
-      // Update
-      procedure UpdateColors;
-      procedure UpdateRects;
+    // Timer Proc
+    procedure FillTickChange(Sender: TObject);
 
-      // Timer Proc
-      procedure FillTickChange(Sender: TObject);
+    // Set
+    procedure SetOrientation(const Value: FXOrientation);
+    procedure SetMax(const Value: int64);
+    procedure SetMin(const Value: int64);
+    procedure SetPosition(const Value: int64);
+    procedure SetPositionEx(const Value: int64; ARedraw: boolean; UserExecuted: boolean = true);
+    procedure SetSliderHeight(const Value: integer);
+    procedure SetIconSize(const Value: integer);
 
-      // Set
-      procedure SetOrientation(const Value: FXOrientation);
-      procedure SetMax(const Value: int64);
-      procedure SetMin(const Value: int64);
-      procedure SetPosition(const Value: int64);
-      procedure SetPositionEx(const Value: int64; ARedraw: boolean; UserExecuted: boolean = true);
-      procedure SetSliderHeight(const Value: integer);
-      procedure SetIconSize(const Value: integer);
+    // Hint
+    procedure ShowPositionHint;
 
-      // Hint
-      procedure ShowPositionHint;
+    procedure CMHintShow(var Message: TCMHintShow); message CM_HINTSHOW;
 
-      procedure CMHintShow(var Message: TCMHintShow); message CM_HINTSHOW;
+    // Fill Animation
+    procedure AnimateToFill;
 
-      // Fill Animation
-      procedure AnimateToFill;
+    // Data
+    function GetSliderBegin: integer;
+    function GetSliderSize: integer;
+    procedure UpdateSliderPosition;
 
-      // Data
-      function GetSliderBegin: integer;
-      function GetSliderSize: integer;
-      procedure UpdateSliderPosition;
+    // Messages
+    procedure SetSmallChange(const Value: integer);
+    procedure SetTicks(const Value: integer);
 
-      // Messages
-      procedure WM_LButtonUp(var Msg: TWMLButtonUp); message WM_LBUTTONUP;
-      procedure SetSmallChange(const Value: integer);
-      procedure SetTicks(const Value: integer);
+  protected
+    procedure PaintBuffer; override;
 
-    protected
-      procedure PaintBuffer; override;
-      procedure Resize; override;
+    // Update
+    procedure UpdateColors; override;
+    procedure UpdateRects; override;
 
-      // Scale
-      procedure ScaleChanged(Scaler: single); override;
+    // Scale
+    procedure ScaleChanged(Scaler: single); override;
 
-      // State
-      procedure InteractionStateChanged(AState: FXControlState); override;
+    // State
+    procedure InteractionStateChanged(AState: FXControlState); override;
 
-      // Inherited Mouse Detection
-      procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
-      procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
-      procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+    // Inherited Mouse Detection
+    procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+    procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
 
-      procedure KeyPress(var Key: Char); override;
-      procedure HandleKeyDown(var CanHandle: boolean; Key: integer; ShiftState: TShiftState); override;
+    procedure KeyPress(var Key: Char); override;
+    procedure HandleKeyDown(var CanHandle: boolean; Key: integer; ShiftState: TShiftState); override;
 
-    published
-      property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
-      property OnChange: TNotifyEvent read FOnChange write FOnChange;
-      property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
-      property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default true;
-      property Orientation: FXOrientation read FOrientation write SetOrientation default FXOrientation.Horizontal;
-      property SliderHeight: integer read FSliderHeight write SetSliderHeight default 6;
-      property IconSize: integer read FIconSize write SetIconSize default CHECKBOX_ICON_SIZE;
-      property Position: int64 read FPosition write SetPosition;
-      property SmallChange: integer read FSmallChange write SetSmallChange default 1;
-      property Min: int64 read FMin write SetMin default 0;
-      property Max: int64 read FMax write SetMax default 100;
-      property TotalTicks: integer read FTotalTicks write SetTicks default 0;
-      property AlwaysSnap: boolean read FAlwaysSnap write FAlwaysSnap default false;
-      property EnablePositionHint: boolean read FEnablePositionHint write FEnablePositionHint default true;
-      property OnHint: FXSliderOnHint read FOnHint write FOnHint;
+  published
+    property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
+    property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default true;
+    property Orientation: FXOrientation read FOrientation write SetOrientation default FXOrientation.Horizontal;
+    property SliderHeight: integer read FSliderHeight write SetSliderHeight default 6;
+    property IconSize: integer read FIconSize write SetIconSize default CHECKBOX_ICON_SIZE;
+    property Position: int64 read FPosition write SetPosition;
+    property SmallChange: integer read FSmallChange write SetSmallChange default 1;
+    property Min: int64 read FMin write SetMin default 0;
+    property Max: int64 read FMax write SetMax default 100;
+    property TotalTicks: integer read FTotalTicks write SetTicks default 0;
+    property AlwaysSnap: boolean read FAlwaysSnap write FAlwaysSnap default false;
+    property EnablePositionHint: boolean read FEnablePositionHint write FEnablePositionHint default true;
+    property OnHint: FXSliderOnHint read FOnHint write FOnHint;
 
-      //  Modify default props
-      property ParentColor;
+    //  Modify default props
+    property ParentColor;
 
-      property Align;
-      property Transparent;
-      property Opacity;
-      property PaddingFill;
-      property Constraints;
-      property Anchors;
-      property Hint;
-      property ShowHint;
-      property ParentShowHint;
-      property TabStop;
-      property TabOrder;
-      property FocusFlags;
-      property DragKind;
-      property DragCursor;
-      property DragMode;
-      property OnDragDrop;
-      property OnDragOver;
-      property OnEndDrag;
-      property OnStartDrag;
-      property OnEnter;
-      property OnExit;
-      property OnClick;
-      property OnKeyDown;
-      property OnKeyUp;
-      property OnKeyPress;
-      property OnMouseUp;
-      property OnMouseDown;
-      property OnMouseEnter;
-      property OnMouseLeave;
+    property Align;
+    property Transparent;
+    property Opacity;
+    property PaddingFill;
+    property Constraints;
+    property Anchors;
+    property Hint;
+    property ShowHint;
+    property ParentShowHint;
+    property TabStop;
+    property TabOrder;
+    property FocusFlags;
+    property DragKind;
+    property DragCursor;
+    property DragMode;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDrag;
+    property OnStartDrag;
+    property OnEnter;
+    property OnExit;
+    property OnClick;
+    property OnKeyDown;
+    property OnKeyUp;
+    property OnKeyPress;
+    property OnMouseUp;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
 
-    public
-      constructor Create(aOwner: TComponent); override;
-      destructor Destroy; override;
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
 
-      function GetPercentage: real;
+    function GetPercentage: real;
 
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChildren: Boolean);
-
-      function Background: TColor;
+    // Interface
+    function Background: TColor; override;
   end;
 
 implementation
 
 procedure FXSlider.InteractionStateChanged(AState: FXControlState);
 begin
-  inherited;
-  UpdateRects;
+  //UpdateRects;
   AnimateToFill;
-  Redraw;
+  inherited;
 
   if AState <> FXControlState.Press then
     if FEnablePositionHint then
       FHint.AutoHide := true;
-end;
-
-function FXSlider.IsContainer: Boolean;
-begin
-  Result := false;
 end;
 
 procedure FXSlider.KeyPress(var Key: Char);
@@ -287,17 +276,23 @@ procedure FXSlider.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
   Y: integer);
 begin
   inherited;
+
   // Snap to position
   UpdateSliderPosition;
   UpdateRects;
-  ShowPositionHint;
-  Redraw;
-end;
 
-procedure FXSlider.UpdateTheme(const UpdateChildren: Boolean);
-begin
-  UpdateColors;
-  UpdateRects;
+  // Fill
+  AnimateToFill;
+
+  // Hint
+  ShowPositionHint;
+  if FHint.IsVisible then
+    begin
+      FHint.AutoHide := true;
+      FHint.Duration := 100;
+    end;
+
+  // Draw
   Redraw;
 end;
 
@@ -455,10 +450,6 @@ begin
   // Sizing
   Height := 40;
   Width := 225;
-
-  // Update
-  UpdateRects;
-  UpdateColors;
 end;
 
 destructor FXSlider.Destroy;
@@ -473,12 +464,17 @@ end;
 procedure FXSlider.FillTickChange(Sender: TObject);
 begin
   if FCenterFill < FDestinedFill then
+    // Increase
     Inc(FCenterFill, 2)
   else
-    if FCenterFill > FDestinedFill then
-      Dec(FCenterFill, 2)
-        else
-          FFillTick.Enabled := false;
+  if FCenterFill > FDestinedFill then
+    // Decrease
+    Dec(FCenterFill, 2)
+  else begin
+    // Disable
+    FFillTick.Enabled := false;
+    Exit;
+  end;
 
   Redraw;
 end;
@@ -662,94 +658,77 @@ begin
   inherited;
 end;
 
-procedure FXSlider.Resize;
-begin
-  UpdateRects;
-  Redraw;
-  inherited;
-end;
-
 procedure FXSlider.ScaleChanged(Scaler: single);
 begin
   inherited;
   FSliderHeight := round(FSliderHeight * Scaler);
   FIconSize := round(FIconSize * Scaler);
-
-  UpdateRects;
-  Redraw;
 end;
 
 procedure FXSlider.SetIconSize(const Value: integer);
 begin
-  if FIconSize <> Value then
-    begin
-      FIconSize := Value;
+  if FIconSize = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FIconSize := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXSlider.SetMax(const Value: int64);
 begin
-  if FMax <> Value then
+  if FMax = Value then
+    Exit;
+
+  FMax := Value;
+
+  // Constraint
+  if not IsReading then
     begin
-      FMax := Value;
+      if FPosition > FMax then
+        FPosition := FMax;
 
-      if not IsReading then
-        begin
-          if FPosition > FMax then
-            FPosition := FMax;
-
-          if FMin > FMax then
-            FMin := FMax;
-        end;
-
-      UpdateSliderPosition;
-      UpdateRects;
-      Redraw;
+      if FMin > FMax then
+        FMin := FMax;
     end;
+
+  UpdateSliderPosition;
+
+  // Draw
+  StandardUpdateLayout;
 end;
 
 procedure FXSlider.SetMin(const Value: int64);
 begin
-  if FMin <> Value then
+  if FMin = Value then
+    Exit;
+
+  FMin := Value;
+
+  // Constraint
+  if not IsReading then
     begin
-      FMin := Value;
+      if FPosition < FMin then
+        FPosition := FMin;
 
-      if not IsReading then
-        begin
-          if FPosition < FMin then
-            FPosition := FMin;
-
-          if FMax < FMin then
-            FMax := FMin;
-        end;
-
-      UpdateSliderPosition;
-      UpdateRects;
-      Redraw;
+      if FMax < FMin then
+        FMax := FMin;
     end;
+
+  UpdateSliderPosition;
+
+  // Draw
+  StandardUpdateLayout;
 end;
 
 procedure FXSlider.SetOrientation(const Value: FXOrientation);
-var
-  AWidth: integer;
 begin
-  if (FOrientation <> Value) then
-    begin
-      FOrientation := Value;
+  if (FOrientation = Value) then
+    Exit;
 
-      if not IsReading then
-        begin
-          AWidth := Width;
-          Width := Height;
-          Height := AWidth;
+  FOrientation := Value;
 
-          UpdateRects;
-          Redraw;
-        end;
-    end;
+  if CanUpdate then
+    SetBounds(Left, Top, Height, Width);  // this will also invoke UpdateRects() in Sized();
 end;
 
 procedure FXSlider.SetPosition(const Value: int64);
@@ -760,45 +739,44 @@ end;
 procedure FXSlider.SetPositionEx(const Value: int64; ARedraw: boolean;
   UserExecuted: boolean);
 begin
-  if FPosition <> Value then
-    begin
-      FPosition := Value;
+  if FPosition = Value then
+    Exit;
 
-      if not IsReading then
-        begin
-          if FPosition < FMin then
-            FPosition := FMin;
+  FPosition := Value;
 
-          if FPosition > FMax then
-            FPosition := FMax;
+  // Constraint
+  if not IsReading then begin
+    if FPosition < FMin then
+      FPosition := FMin;
 
-          if UserExecuted then
-            if Assigned(OnChange) then
-              OnChange(Self);
+    if FPosition > FMax then
+      FPosition := FMax;
 
-          if Assigned(OnChangeValue) then
-            OnChangeValue(Self);
-        end;
+    // User update
+    if UserExecuted then
+      if Assigned(OnChange) then
+        OnChange(Self);
 
-      if ARedraw then
-        begin
-          UpdateSliderPosition;
+    // User/non-user update
+    if Assigned(OnChangeValue) then
+      OnChangeValue(Self);
+  end;
 
-          UpdateRects;
-          Redraw;
-        end;
-    end;
+  // Draw
+  if ARedraw then begin
+    UpdateSliderPosition;
+
+    StandardUpdateLayout;
+  end;
 end;
 
 procedure FXSlider.SetSliderHeight(const Value: integer);
 begin
-  if FSliderHeight <> Value then
-    begin
-      FSliderHeight := Value;
+  if FSliderHeight = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FSliderHeight := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXSlider.SetSmallChange(const Value: integer);
@@ -849,19 +827,6 @@ begin
 
       FHint.Show;
     end;
-end;
-
-procedure FXSlider.WM_LButtonUp(var Msg: TWMLButtonUp);
-begin
-  AnimateToFill;
-
-  if FHint.IsVisible then
-    begin
-      FHint.AutoHide := true;
-      FHint.Duration := 100;
-    end;
-
-  inherited;
 end;
 
 procedure FXSlider.AnimateToFill;

@@ -27,19 +27,18 @@ uses
 type
   FXEffect = class(FXWindowsControl, FXControl)
   private
-    var DrawRect: TRect;
     FDrawColors: FXCompleteColorSet;
     FCustomColors: FXColorSets;
     FHitTest: boolean;
 
-    //  Internal
-    procedure UpdateColors;
-    procedure UpdateRects;
-
   protected
     procedure PaintBuffer; override;
-    procedure Resize; override;
 
+    // Internal
+    procedure UpdateColors; override;
+    procedure UpdateRects; override;
+
+    // Draw
     procedure DrawBackground(var Background: TBitMap; OnlyFill: boolean); override;
 
     procedure ApplyEffect(Background: TBitMap); virtual;
@@ -81,10 +80,7 @@ type
     destructor Destroy; override;
 
     // Interface
-    function IsContainer: Boolean;
-    procedure UpdateTheme(const UpdateChildren: Boolean);
-
-    function Background: TColor;
+    function Background: TColor; override;
   end;
 
   { Blur background }
@@ -199,10 +195,6 @@ begin
   // Sizing
   Height := 40;
   Width := 200;
-
-  // Update
-  UpdateRects;
-  UpdateColors;
 end;
 
 procedure FXEffect.CreateParams(var Params: TCreateParams);
@@ -227,12 +219,7 @@ end;
 
 procedure FXEffect.InteractionStateChanged(AState: FXControlState);
 begin
-  inherited;
-end;
-
-function FXEffect.IsContainer: Boolean;
-begin
-  Result := false;
+  // do not update
 end;
 
 procedure FXEffect.PaintBuffer;
@@ -243,19 +230,6 @@ begin
 
   // Inherit
   inherited;
-end;
-
-procedure FXEffect.Resize;
-begin
-  inherited;
-  UpdateRects;
-end;
-
-procedure FXEffect.UpdateTheme(const UpdateChildren: Boolean);
-begin
-  UpdateColors;
-  UpdateRects;
-  Redraw;
 end;
 
 procedure FXEffect.WMNCHitTest(var Message: TWMNCHitTest);
@@ -288,8 +262,7 @@ end;
 
 procedure FXEffect.UpdateRects;
 begin
-  // Rect
-  DrawRect := GetClientRect;
+  //
 end;
 
 procedure FXEffect.ScaleChanged(Scaler: single);

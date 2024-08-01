@@ -31,294 +31,294 @@ uses
   CFX.Animations,
   CFX.Types;
 
-  type
-    // Class
-    FXPopupComponent = class;
-    FXPopupItem = class;
-    FXPopupMenu = class;
+type
+  // Class
+  FXPopupComponent = class;
+  FXPopupItem = class;
+  FXPopupMenu = class;
 
-    // Types
-    TOnItemClick = procedure(Sender: TObject; Item: FXPopupComponent; Index: integer) of object;
-    TOnBeforePopup = procedure(Sender: TObject; var CanPopup: boolean; Point: TPoint) of object;
+  // Types
+  TOnItemClick = procedure(Sender: TObject; Item: FXPopupComponent; Index: integer) of object;
+  TOnBeforePopup = procedure(Sender: TObject; var CanPopup: boolean; Point: TPoint) of object;
+
+  // Menu
+  FXPopupItems = class(FXPersistent)
+  private
+    FItems: TArray<FXPopupItem>;
+
+    function GetItem(AIndex: Integer): FXPopupItem;
+
+  protected
+    // Serialization
+    procedure DefineProperties(Filer: TFiler); override;
+    procedure ReadData(Stream: TStream);
+    procedure WriteData(Stream: TStream);
+
+  public
+    // Constructors
+    constructor Create(AOwner: TPersistent); override;
+    destructor Destroy; override;
+
+    // Items
+    property Item[AIndex: Integer]: FXPopupItem read GetItem; default;
+
+    // Data
+    function Count: integer;
+    function IndexOf(AText: string): integer;
+    procedure Add(AItem: FXPopupItem);
+    function AddNew: FXPopupItem;
+    procedure Delete(Index: integer; AndFree: boolean = true);
+
+    procedure Clear(AndFree: boolean = true);
+  end;
+
+  // Popup Container
+  FXPopupContainer = class({TPopupMenu}FXComponent)
+  private
+    // Properties
+    FText: string;
+    FHint: string;
+
+    FAutoCheck: Boolean;
+    FChecked: Boolean;
+    FEnabled: Boolean;
+    FDefault: Boolean;
+    FRadioItem: Boolean;
+    FVisible: Boolean;
+
+    FImage: FXIconSelect;
+    FItems: FXPopupItems;
+
+    FShortCut: string;
+
+    // Notify Events
+    FOnClick: TNotifyEvent;
+    FOnHover: TNotifyEvent;
+    FOnCheck: TNotifyEvent;
+
+    // Internal for Drawing
+    FBounds: TRect;
+
+    function HasSubItems: boolean;
+    procedure SetChecked(const Value: boolean);
+    function GetMenuItem(Index: Integer): FXPopupContainer;
+    function GetIndex: integer;
+    function GetSeparator: boolean;
+    procedure SetSeparator(const Value: boolean);
+
+  protected
+    // Notify Event
+    property OnClick: TNotifyEvent read FOnClick write FOnClick;
+    property OnHover: TNotifyEvent read FOnHover write FOnHover;
+    property OnCheck: TNotifyEvent read FOnCheck write FOnCheck;
+
+    // Data
+    property Text: string read FText write FText;
+    property Hint: string read FHint write FHint;
+
+    property Enabled: boolean read FEnabled write FEnabled default True;
+    property Checked: boolean read FChecked write SetChecked default False;
+    property AutoCheck: boolean read FAutoCheck write FAutoCheck default False;
+    property RadioItem: boolean read FRadioItem write FRadioItem default False;
+
+    property IsDefault: boolean read FDefault write FDefault default False;
+    property Visible: boolean read FVisible write FVisible default True;
+
+    // Items
+    property Items: FXPopupItems read FItems write FItems;
+
+    // Data
+    property Image: FXIconSelect read FImage write FImage;
+    property Shortcut: string read FShortcut write FShortcut;
+
+    // Separator
+    property IsSeparator: boolean read GetSeparator write SetSeparator;
+
+    property MenuIndex: integer read GetIndex;
+
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+
+    // Items
+    property MenuItems[Index: Integer]: FXPopupContainer read GetMenuItem;
+
+    function GetMenuItemCount: integer;
+
+    // Stream Conversion
+    procedure SaveToStream(AStream: TStream);
+    procedure LoadFromStream(AStream: TStream);
+  end;
+
+  // General Component
+  FXPopupComponent = class(FXPopupContainer, FXControl)
+  private
+    // Animation
+    FAnim: TIntAni;
+    FAnimType: FXAnimateSelection;
+
+    // Parent
+    FParentPopup: FXPopupComponent;
+    FParentMenu: FXPopupMenu;
+
+    // Size and Position
+    NormalHeight,
+    NormalWidth: integer;
+
+    FDropPoint: TPoint;
+
+    // Form & Controls
+    FForm: TForm;
+    FGlassBlur: TControl;
+
+    // Colors
+    FCustomColors: FXColorSets;
+    FDrawColors: FXColorSet;
+
+    // Drawing internal
+    FHoverOver: integer;
+
+    // Settings
+    FItemPressed: boolean;
+    FFlatMenu: boolean;
+    FEnableRadius: boolean;
+    FEnableBorder: boolean;
+
+    // Animate
+    procedure Animation;
+
+    // Items
+    procedure SetHover(Index: integer);
+    function IndexIsValid(Index: integer): boolean;
+
+    procedure OpenItem(MenuIndex: integer);
+    procedure ExecuteItem(AMenuIndex: integer);
+    function GetOpenChildIndex: integer;
+    function HasChildOpen: boolean;
 
     // Menu
-    FXPopupItems = class(FXPersistent)
-    private
-      FItems: TArray<FXPopupItem>;
+    function IsOpen: boolean;
 
-      function GetItem(AIndex: Integer): FXPopupItem;
-
-    protected
-      // Serialization
-      procedure DefineProperties(Filer: TFiler); override;
-      procedure ReadData(Stream: TStream);
-      procedure WriteData(Stream: TStream);
-
-    public
-      // Constructors
-      constructor Create(AOwner: TPersistent); override;
-      destructor Destroy; override;
-
-      // Items
-      property Item[AIndex: Integer]: FXPopupItem read GetItem; default;
-
-      // Data
-      function Count: integer;
-      function IndexOf(AText: string): integer;
-      procedure Add(AItem: FXPopupItem);
-      function AddNew: FXPopupItem;
-      procedure Delete(Index: integer; AndFree: boolean = true);
-
-      procedure Clear(AndFree: boolean = true);
-    end;
-
-    // Popup Container
-    FXPopupContainer = class({TPopupMenu}FXComponent)
-    private
-      // Properties
-      FText: string;
-      FHint: string;
-
-      FAutoCheck: Boolean;
-      FChecked: Boolean;
-      FEnabled: Boolean;
-      FDefault: Boolean;
-      FRadioItem: Boolean;
-      FVisible: Boolean;
-
-      FImage: FXIconSelect;
-      FItems: FXPopupItems;
-
-      FShortCut: string;
-
-      // Notify Events
-      FOnClick: TNotifyEvent;
-      FOnHover: TNotifyEvent;
-      FOnCheck: TNotifyEvent;
-
-      // Internal for Drawing
-      FBounds: TRect;
-
-      function HasSubItems: boolean;
-      procedure SetChecked(const Value: boolean);
-      function GetMenuItem(Index: Integer): FXPopupContainer;
-      function GetIndex: integer;
-      function GetSeparator: boolean;
-      procedure SetSeparator(const Value: boolean);
-
-    protected
-      // Notify Event
-      property OnClick: TNotifyEvent read FOnClick write FOnClick;
-      property OnHover: TNotifyEvent read FOnHover write FOnHover;
-      property OnCheck: TNotifyEvent read FOnCheck write FOnCheck;
-
-      // Data
-      property Text: string read FText write FText;
-      property Hint: string read FHint write FHint;
-
-      property Enabled: boolean read FEnabled write FEnabled default True;
-      property Checked: boolean read FChecked write SetChecked default False;
-      property AutoCheck: boolean read FAutoCheck write FAutoCheck default False;
-      property RadioItem: boolean read FRadioItem write FRadioItem default False;
-
-      property IsDefault: boolean read FDefault write FDefault default False;
-      property Visible: boolean read FVisible write FVisible default True;
-
-      // Items
-      property Items: FXPopupItems read FItems write FItems;
-
-      // Data
-      property Image: FXIconSelect read FImage write FImage;
-      property Shortcut: string read FShortcut write FShortcut;
-
-      // Separator
-      property IsSeparator: boolean read GetSeparator write SetSeparator;
-
-      property MenuIndex: integer read GetIndex;
-
-    public
-      constructor Create(AOwner: TComponent); override;
-      destructor Destroy; override;
-
-      // Items
-      property MenuItems[Index: Integer]: FXPopupContainer read GetMenuItem;
-
-      function GetMenuItemCount: integer;
-
-      // Stream Conversion
-      procedure SaveToStream(AStream: TStream);
-      procedure LoadFromStream(AStream: TStream);
-    end;
-
-    // General Component
-    FXPopupComponent = class(FXPopupContainer, FXControl)
-    private
-      // Animation
-      FAnim: TIntAni;
-      FAnimType: FXAnimateSelection;
-
-      // Parent
-      FParentPopup: FXPopupComponent;
-      FParentMenu: FXPopupMenu;
-
-      // Size and Position
-      NormalHeight,
-      NormalWidth: integer;
-
-      FDropPoint: TPoint;
-
-      // Form & Controls
-      FForm: TForm;
-      FGlassBlur: TControl;
-
-      // Colors
-      FCustomColors: FXColorSets;
-      FDrawColors: FXColorSet;
-
-      // Drawing internal
-      FHoverOver: integer;
-
-      // Settings
-      FItemPressed: boolean;
-      FFlatMenu: boolean;
-      FEnableRadius: boolean;
-      FEnableBorder: boolean;
-
-      // Animate
-      procedure Animation;
-
-      // Items
-      procedure SetHover(Index: integer);
-      function IndexIsValid(Index: integer): boolean;
-
-      procedure OpenItem(MenuIndex: integer);
-      procedure ExecuteItem(AMenuIndex: integer);
-      function GetOpenChildIndex: integer;
-      function HasChildOpen: boolean;
-
-      // Menu
-      function IsOpen: boolean;
-
-      // Glass interaction
-      procedure GlassUp(Sender: TObject; Button: TMouseButton;
+    // Glass interaction
+    procedure GlassUp(Sender: TObject; Button: TMouseButton;
+                      Shift: TShiftState; X, Y: Integer);
+    procedure GlassDown(Sender: TObject; Button: TMouseButton;
                         Shift: TShiftState; X, Y: Integer);
-      procedure GlassDown(Sender: TObject; Button: TMouseButton;
-                          Shift: TShiftState; X, Y: Integer);
-      procedure GlassEnter(Sender: TObject);
-      procedure GlassMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure GlassEnter(Sender: TObject);
+    procedure GlassMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 
-      // FXPopupMenu Only
-      procedure CheckFocusLoss;
+    // FXPopupMenu Only
+    procedure CheckFocusLoss;
 
-      // Form
-      procedure FormPosition;
+    // Form
+    procedure FormPosition;
 
-      procedure FormLoseFocus(Sender: TObject);
-      procedure FormGainFocus(Sender: TObject);
-      procedure FormKeyPress(ender: TObject; var Key: Word; Shift: TShiftState);
-      procedure FormOnShow(Sender: TObject);
+    procedure FormLoseFocus(Sender: TObject);
+    procedure FormGainFocus(Sender: TObject);
+    procedure FormKeyPress(ender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormOnShow(Sender: TObject);
 
-      // Paint Glass
-      procedure OnPaintControl(Sender: TObject);
+    // Paint Glass
+    procedure OnPaintControl(Sender: TObject);
 
-      // Popup Internal
-      procedure PopupAtPointS(Point: TPoint);
+    // Popup Internal
+    procedure PopupAtPointS(Point: TPoint);
 
-    protected
-      property CustomColors: FXColorSets read FCustomColors write FCustomColors;
+  protected
+    property CustomColors: FXColorSets read FCustomColors write FCustomColors;
 
-      property AnimationType: FXAnimateSelection read FAnimType write FAnimType default FXAnimateSelection.Linear;
+    property AnimationType: FXAnimateSelection read FAnimType write FAnimType default FXAnimateSelection.Linear;
 
-      property FlatMenu: boolean read FFlatMenu write FFlatMenu default false;
-      property EnableBorder: boolean read FEnableBorder write FEnableBorder default true;
-      property EnableRadius: boolean read FEnableRadius write FEnableRadius default true;
+    property FlatMenu: boolean read FFlatMenu write FFlatMenu default false;
+    property EnableBorder: boolean read FEnableBorder write FEnableBorder default true;
+    property EnableRadius: boolean read FEnableRadius write FEnableRadius default true;
 
-    public
-      constructor Create(AOwner: TComponent); override;
-      destructor Destroy; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
 
-      // Close
-      procedure CloseMenu(FreeMem: boolean = false);
-      procedure CloseWindowsBackwards;
-      procedure CloseWindowsForward(CloseSelf: boolean = false);
+    // Close
+    procedure CloseMenu(FreeMem: boolean = false);
+    procedure CloseWindowsBackwards;
+    procedure CloseWindowsForward(CloseSelf: boolean = false);
 
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChildren: Boolean);
+    // Interface
+    function IsContainer: Boolean;
+    procedure UpdateTheme(const UpdateChildren: Boolean);
 
-      function Background: TColor;
-    end;
+    function Background: TColor;
+  end;
 
-    // Popup Item
-    FXPopupItem = class(FXPopupComponent)
-    published
-      // Notify Event
-      property OnClick;
-      property OnHover;
-      property OnCheck;
+  // Popup Item
+  FXPopupItem = class(FXPopupComponent)
+  published
+    // Notify Event
+    property OnClick;
+    property OnHover;
+    property OnCheck;
 
-      // Data
-      property Text;
-      property Hint;
+    // Data
+    property Text;
+    property Hint;
 
-      property Image;
-      property Shortcut;
+    property Image;
+    property Shortcut;
 
-      // Status
-      property Enabled;
-      property Checked;
-      property AutoCheck;
-      property RadioItem;
+    // Status
+    property Enabled;
+    property Checked;
+    property AutoCheck;
+    property RadioItem;
 
-      property IsDefault;
-      property Visible;
+    property IsDefault;
+    property Visible;
 
-      // Items
-      property Items;
+    // Items
+    property Items;
 
-      // Separator
-      property IsSeparator;
+    // Separator
+    property IsSeparator;
 
-      property MenuIndex;
-    end;
+    property MenuIndex;
+  end;
 
-    // Popup Menu
-    FXPopupMenu = class(FXPopupComponent, FXControl)
-    private
-      FOnPopup: TNotifyEvent;
-      FOnBeforePopup: TOnBeforePopup;
-      FCloseOnCheck,
-      FCloseOnExecute,
-      FCloseOnNoExecuteClick: boolean;
-      FOnItemClick: TOnItemClick;
+  // Popup Menu
+  FXPopupMenu = class(FXPopupComponent, FXControl)
+  private
+    FOnPopup: TNotifyEvent;
+    FOnBeforePopup: TOnBeforePopup;
+    FCloseOnCheck,
+    FCloseOnExecute,
+    FCloseOnNoExecuteClick: boolean;
+    FOnItemClick: TOnItemClick;
 
-    published
-      property CustomColors;
-      property FlatMenu;
-      property AnimationType;
-      property EnableBorder;
-      property EnableRadius;
-      property Items;
+  published
+    property CustomColors;
+    property FlatMenu;
+    property AnimationType;
+    property EnableBorder;
+    property EnableRadius;
+    property Items;
 
-      property OnPopup: TNotifyEvent read FOnPopup write FOnPopup;
-      property OnBeforePopup: TOnBeforePopup read FOnBeforePopup write FOnBeforePopup;
-      property OnItemClick: TOnItemClick read FOnItemClick write FOnItemClick;
+    property OnPopup: TNotifyEvent read FOnPopup write FOnPopup;
+    property OnBeforePopup: TOnBeforePopup read FOnBeforePopup write FOnBeforePopup;
+    property OnItemClick: TOnItemClick read FOnItemClick write FOnItemClick;
 
-      property CloseOnCheck: boolean read FCloseOnCheck write FCloseOnCheck default false;
-      property CloseOnExecute: boolean read FCloseOnExecute write FCloseOnExecute default true;
-      property CloseOnNoExecuteClick: boolean read FCloseOnNoExecuteClick write FCloseOnNoExecuteClick default true;
+    property CloseOnCheck: boolean read FCloseOnCheck write FCloseOnCheck default false;
+    property CloseOnExecute: boolean read FCloseOnExecute write FCloseOnExecute default true;
+    property CloseOnNoExecuteClick: boolean read FCloseOnNoExecuteClick write FCloseOnNoExecuteClick default true;
 
-    public
-      constructor Create(AOwner: TComponent); override;
-      destructor Destroy; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
 
-      // TPopupMenu Inherited
-      procedure Popup(X, Y: integer); //override;
+    // TPopupMenu Inherited
+    procedure Popup(X, Y: integer); //override;
 
-      // Custom Implementations
-      procedure PopupAtCursor;
-      procedure PopupAtPoint(Point: TPoint);
-    end;
+    // Custom Implementations
+    procedure PopupAtCursor;
+    procedure PopupAtPoint(Point: TPoint);
+  end;
 
 implementation
 

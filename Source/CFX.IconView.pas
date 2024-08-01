@@ -23,88 +23,84 @@ uses
 
 type
   FXIconView = class(FXWindowsControl, FXControl)
-    private
-      var DrawRect, IconRect: TRect;
-      FDrawColors: FXCompleteColorSet;
-      FCustomColors: FXColorSets;
-      FScale: real;
-      FImage: FXIconSelect;
-      FVertLayout: FXLayout;
-      FHorizLayout: FXLayout;
+  private
+    var DrawRect, IconRect: TRect;
+    FDrawColors: FXCompleteColorSet;
+    FCustomColors: FXColorSets;
+    FScale: real;
+    FImage: FXIconSelect;
+    FVertLayout: FXLayout;
+    FHorizLayout: FXLayout;
 
-      //  Internal
-      procedure UpdateColors;
-      procedure UpdateRects;
+    // Getters
 
-      // Getters
+    // Setters
+    procedure SetHorizLayout(const Value: FXLayout);
+    procedure SetImage(const Value: FXIconSelect);
+    procedure SetScale(const Value: real);
+    procedure SetVertLayout(const Value: FXLayout);
 
-      // Setters
-      procedure SetHorizLayout(const Value: FXLayout);
-      procedure SetImage(const Value: FXIconSelect);
-      procedure SetScale(const Value: real);
-      procedure SetVertLayout(const Value: FXLayout);
+  protected
+    procedure PaintBuffer; override;
 
-    protected
-      procedure PaintBuffer; override;
-      procedure Resize; override;
+    // Internal
+    procedure UpdateColors; override;
+    procedure UpdateRects; override;
 
-      // Scaler
-      procedure ScaleChanged(Scaler: single); override;
+    // Scaler
+    procedure ScaleChanged(Scaler: single); override;
 
-      // State
-      procedure InteractionStateChanged(AState: FXControlState); override;
+    // State
+    procedure InteractionStateChanged(AState: FXControlState); override;
 
-    published
-      // Custom Colors
-      property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
+  published
+    // Custom Colors
+    property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
 
-      // Props
-      property Image: FXIconSelect read FImage write SetImage;
-      property Scale: real read FScale write SetScale;
-      property LayoutHorizontal: FXLayout read FHorizLayout write SetHorizLayout default FXLayout.Center;
-      property LayoutVertical: FXLayout read FVertLayout write SetVertLayout default FXLayout.Center;
+    // Props
+    property Image: FXIconSelect read FImage write SetImage;
+    property Scale: real read FScale write SetScale;
+    property LayoutHorizontal: FXLayout read FHorizLayout write SetHorizLayout default FXLayout.Center;
+    property LayoutVertical: FXLayout read FVertLayout write SetVertLayout default FXLayout.Center;
 
-      // Default props
-      property Align;
-      property Font;
-      property Transparent;
-      property Opacity;
-      property PaddingFill;
-      property Constraints;
-      property Anchors;
-      property Hint;
-      property ShowHint;
-      property ParentShowHint;
-      property TabStop;
-      property TabOrder;
-      property FocusFlags;
-      property DragKind;
-      property DragCursor;
-      property DragMode;
-      property OnDragDrop;
-      property OnDragOver;
-      property OnEndDrag;
-      property OnStartDrag;
-      property OnEnter;
-      property OnExit;
-      property OnClick;
-      property OnKeyDown;
-      property OnKeyUp;
-      property OnKeyPress;
-      property OnMouseUp;
-      property OnMouseDown;
-      property OnMouseEnter;
-      property OnMouseLeave;
+    // Default props
+    property Align;
+    property Font;
+    property Transparent;
+    property Opacity;
+    property PaddingFill;
+    property Constraints;
+    property Anchors;
+    property Hint;
+    property ShowHint;
+    property ParentShowHint;
+    property TabStop;
+    property TabOrder;
+    property FocusFlags;
+    property DragKind;
+    property DragCursor;
+    property DragMode;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDrag;
+    property OnStartDrag;
+    property OnEnter;
+    property OnExit;
+    property OnClick;
+    property OnKeyDown;
+    property OnKeyUp;
+    property OnKeyPress;
+    property OnMouseUp;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
 
-    public
-      constructor Create(aOwner: TComponent); override;
-      destructor Destroy; override;
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
 
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChildren: Boolean);
-
-      function Background: TColor;
+    // Interface
+    function Background: TColor; override;
   end;
 
 implementation
@@ -133,10 +129,6 @@ begin
   // Sizing
   Height := 60;
   Width := 60;
-
-  // Update
-  UpdateRects;
-  UpdateColors;
 end;
 
 destructor FXIconView.Destroy;
@@ -151,11 +143,6 @@ procedure FXIconView.InteractionStateChanged(AState: FXControlState);
 begin
   inherited;
   Redraw;
-end;
-
-function FXIconView.IsContainer: Boolean;
-begin
-  Result := false;
 end;
 
 procedure FXIconView.PaintBuffer;
@@ -183,19 +170,6 @@ begin
 
   // Inherit
   inherited;
-end;
-
-procedure FXIconView.Resize;
-begin
-  inherited;
-  UpdateRects;
-end;
-
-procedure FXIconView.UpdateTheme(const UpdateChildren: Boolean);
-begin
-  UpdateColors;
-  UpdateRects;
-  Redraw;
 end;
 
 procedure FXIconView.UpdateColors;
@@ -244,51 +218,44 @@ end;
 
 procedure FXIconView.ScaleChanged(Scaler: single);
 begin
+  UpdateRects;
   inherited;
-  // update scale
 end;
 
 procedure FXIconView.SetHorizLayout(const Value: FXLayout);
 begin
-if FHorizLayout <> Value then
-    begin
-      FHorizLayout := Value;
+  if FHorizLayout = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FHorizLayout := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXIconView.SetImage(const Value: FXIconSelect);
 begin
-  if FImage <> Value then
-    begin
-      FImage := Value;
+  if FImage = Value then
+    Exit;
 
-      Redraw;
-    end;
+  FImage := Value;
+  StandardUpdateDraw;
 end;
 
 procedure FXIconView.SetScale(const Value: real);
 begin
-  if FScale <> Value then
-    begin
-      FScale := Value;
+  if FScale = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FScale := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXIconView.SetVertLayout(const Value: FXLayout);
 begin
-  if FVertLayout <> Value then
-    begin
-      FVertLayout := Value;
+  if FVertLayout = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FVertLayout := Value;
+  StandardUpdateLayout;
 end;
 
 end.

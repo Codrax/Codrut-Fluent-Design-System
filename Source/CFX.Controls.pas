@@ -59,7 +59,7 @@ type
   end;
 
   // Control
-  FXWindowsControl = class(FXCustomControl)
+  FXWindowsControl = class(FXCustomControl, FXControl)
   private
     FPopupMenu: FXPopupMenu;
     FBufferedComponent: boolean;
@@ -68,7 +68,7 @@ type
     FHasEnteredTab: boolean;
     FInteraction: FXControlState;
     FPreviousInteraction: FXControlState;
-    FCreated: boolean;
+    FCreated: boolean; // Handle (WND) created
     FOpacity: FXPercent;
     FBackground: TBitMap;
     FOnPaint: FXControlOnPaint;
@@ -108,14 +108,40 @@ type
     // Object Notify Events
     procedure FontNotifyUpdate(Sender: TObject);
 
+    // Get
+    function GetLeft: integer;
+    function GetTop: integer;
+    function GetHeight: integer;
+    function GetWidth: integer;
+
     // Set
     procedure SetState(const Value: FXControlState);
     procedure SetTransparent(const Value: boolean);
     procedure SetOpacity(const Value: FXPercent);
     procedure SetPosition(const Value: FXControlPosition);
     procedure SetSize(const Value: FXControlSize);
+    procedure SetLeft(const Value: integer);
+    procedure SetTop(const Value: integer);
+    procedure SetHeight(const Value: integer);
+    procedure SetWidth(const Value: integer);
 
   protected
+    // Paint
+    procedure Paint; override;
+    procedure DoPaint; virtual;
+    procedure PaintBuffer; virtual;
+
+    // Internal
+    function CanUpdate: boolean;
+    procedure UpdateRects; virtual;
+    procedure UpdateColors; virtual;
+
+    // General standard updates to make code shorter (for properties)
+    procedure StandardUpdateLayout;
+    procedure StandardUpdateColor;
+    procedure StandardUpdateDraw;
+    procedure StandardUpdateComplete;
+
     // Messages
     procedure WMSize(var Message: TWMSize); message WM_SIZE;
     procedure WMMove(var Message: TWMMove); message WM_MOVE;
@@ -127,13 +153,12 @@ type
 
     // Size
     procedure Resize; override;
+    procedure Sized; virtual;
+    procedure Moved; virtual;
     procedure ApplyPadding; virtual;
+    procedure BoundsUpdated; virtual; // move, size or either one
 
-    // Paint
-    procedure Paint; override;
-    procedure DoPaint; virtual;
-    procedure PaintBuffer; virtual;
-
+    // Utils
     function GetInheritedOpacity: FXPercent;
 
     // Props
@@ -175,6 +200,8 @@ type
     procedure CMMouseEnter(var Message : TMessage); message CM_MOUSEENTER;
     procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
     procedure CNKeyDown(var Message: TWMKeyDown); message CN_KEYDOWN;
+    procedure CMFontChanged(var Message: TMessage); message CM_FONTCHANGED;
+    procedure CMColorChanged(var Message: TMessage); message CM_COLORCHANGED;
 
     procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
     procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
@@ -190,7 +217,7 @@ type
     function IsReading: boolean;
     function IsDesigning: boolean;
     function IsDestroying: boolean;
-    //function Creating: boolean;
+    function IsCreating: boolean;
     function Destroyed: boolean;
 
     // Component redraw utilities
@@ -241,12 +268,18 @@ type
     property Visible;
     property Tag;
 
+    property Left: integer read GetLeft write SetLeft;
+    property Top: integer read GetTop write SetTop;
+    property Width: integer read GetWidth write SetWidth;
+    property Height: integer read GetHeight write SetHeight;
+
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
     // Override
     procedure SetBounds(ALeft, ATop, AWidth, AHeight: Integer); override;
+    procedure Inflate(ALeft, ATop, AWidth, AHeight: Integer);
 
     // Drawing
     procedure DrawTo(ACanvas: TCanvas; Destination: TRect); overload;
@@ -269,10 +302,19 @@ type
     function GetControlsAbove: TArray<TControl>;
     function GetChildControls: TArray<TControl>;
 
+    // Handles
+    procedure AllocateHandles;
+
     // Redraw
     procedure Redraw(RedrawAbove: boolean=true);
     procedure RedrawChildren;
     procedure RedrawControlsAbove;
+
+    // Interface
+    function IsContainer: Boolean; virtual;
+    function Background: TColor; virtual;
+
+    procedure UpdateTheme(const UpdateChildren: Boolean); virtual;
   end;
 
 // Utilities
@@ -288,9 +330,31 @@ begin
         Result := Default;
 end;
 
+procedure FXWindowsControl.AllocateHandles;
+begin
+  HandleNeeded; // allocate self
+
+  // Allocate children
+  const AControls = GetChildControls;
+  for var I := 0 to High(AControls) do
+    if (AControls[I] is FXWindowsControl) then
+      (AControls[I] as FXWindowsControl).AllocateHandles;
+end;
+
 procedure FXWindowsControl.ApplyPadding;
 begin
   Resize;
+  UpdateRects;
+end;
+
+function FXWindowsControl.Background: TColor;
+begin
+  Result := Color;
+end;
+
+procedure FXWindowsControl.BoundsUpdated;
+begin
+  Redraw;
 end;
 
 { FXTransparentControl }
@@ -300,11 +364,24 @@ begin
   Result := AutoFocusLine and Focused and FHasEnteredTab and not IsDesigning;
 end;
 
+function FXWindowsControl.CanUpdate: boolean;
+begin
+  Result := not IsReading and (Parent <> nil) and HandleAllocated;
+end;
+
 procedure FXWindowsControl.ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF});
 begin
   inherited;
   ScaleChanged( M / D );
-  Invalidate;
+  if isDpiChange then begin
+    UpdateRects;
+    Redraw;
+  end;
+end;
+
+procedure FXWindowsControl.CMColorChanged(var Message: TMessage);
+begin
+  // no NOT invalidate
 end;
 
 procedure FXWindowsControl.CMEnabledChanged(var Message: TMessage);
@@ -314,8 +391,13 @@ begin
   if BufferedComponent and Supports(Self, FXControl) then
     begin
       (Self as FXControl).UpdateTheme(false);
-      Invalidate;
+      Redraw;
     end;
+end;
+
+procedure FXWindowsControl.CMFontChanged(var Message: TMessage);
+begin
+  // no NOT invalidate
 end;
 
 procedure FXWindowsControl.CMMouseEnter(var Message: TMessage);
@@ -348,7 +430,11 @@ end;
 
 procedure FXWindowsControl.ComponentCreated;
 begin
-  // nothing
+  // Update colors when first created
+  UpdateColors;
+
+  // First draw
+  Redraw;
 end;
 
 constructor FXWindowsControl.Create(AOwner: TComponent);
@@ -403,10 +489,10 @@ end;
 
 procedure FXWindowsControl.CreateWnd;
 begin
-  FCreated := true;
   inherited;
 
-  // Notify
+  // Was created
+  FCreated := true;
   ComponentCreated;
 end;
 
@@ -437,7 +523,7 @@ begin
   if AutoFocusLine and (InteractionState <> FXControlState.Press) then
     begin
       FHasEnteredTab := true;
-      Redraw;
+      Invalidate; // do not redraw
     end;
 end;
 
@@ -447,7 +533,7 @@ begin
   if AutoFocusLine then
     begin
       FHasEnteredTab := false;
-      Redraw;
+      Invalidate; // do not redraw
     end;
 end;
 
@@ -538,8 +624,8 @@ begin
         Host := Intersection;
         Host.Offset(-ControlBounds.Left, -ControlBounds.Top);
 
-        // Copy colliding
-        CopyRect(Local, FControl.Buffer, Host);
+        // Copy colliding (draw from system cache)
+        CopyRect(Local, FControl.GetCacheBuffer.Canvas, Host);
       end;
 
       // Copy child controls
@@ -711,6 +797,11 @@ begin
     end;
 end;
 
+function FXWindowsControl.GetHeight: integer;
+begin
+  Result := inherited Height;
+end;
+
 function FXWindowsControl.GetInheritedOpacity: FXPercent;
 begin
   Result := FOpacity;
@@ -727,9 +818,24 @@ begin
     Result := (Parent as FXWindowsControl).Opacity.Percentage * FOpacity
 end;
 
+function FXWindowsControl.GetLeft: integer;
+begin
+  Result := inherited Left;
+end;
+
 function FXWindowsControl.GetParentBackgroundColor(Default: TColor): TColor;
 begin
   Result := GetParentBackgroundColorEx(Self, Default);
+end;
+
+function FXWindowsControl.GetTop: integer;
+begin
+  Result := inherited Top;
+end;
+
+function FXWindowsControl.GetWidth: integer;
+begin
+  Result := inherited Width;
 end;
 
 procedure FXWindowsControl.HandleKeyDown(var CanHandle: boolean; Key: integer;
@@ -751,6 +857,11 @@ begin
     end;
 end;
 
+procedure FXWindowsControl.Inflate(ALeft, ATop, AWidth, AHeight: Integer);
+begin
+  SetBounds(Left-ALeft, Top-ATop, Width+AWidth, Height+AHeight);
+end;
+
 procedure FXWindowsControl.InteractionStateChanged(AState: FXControlState);
 begin
   Redraw;
@@ -758,12 +869,23 @@ end;
 
 procedure FXWindowsControl.Invalidate;
 begin
-  if IsReading then
+  if IsReading or not Visible then
     Exit;
 
-  Redraw;
+  // Draw the buffer
+  DoPaint;
 
   inherited;
+end;
+
+function FXWindowsControl.IsContainer: Boolean;
+begin
+  Result := false;
+end;
+
+function FXWindowsControl.IsCreating: boolean;
+begin
+  Result := not Self.FCreated;
 end;
 
 function FXWindowsControl.IsDesigning: boolean;
@@ -784,8 +906,6 @@ end;
 procedure FXWindowsControl.Loaded;
 begin
   inherited;
-  FCreated := true;
-  Redraw;
 end;
 
 procedure FXWindowsControl.MarginsUpdated(Sender: TObject);
@@ -824,6 +944,11 @@ begin
   // Popup Menu
   if (Button = mbRight) then
     OpenPopupMenu(X, Y);
+end;
+
+procedure FXWindowsControl.Moved;
+begin
+  // no need to invoke Redraw() here since BoundsUpdated() allready calls It
 end;
 
 procedure FXWindowsControl.OnVisibleChange(var Message: TMessage);
@@ -882,27 +1007,28 @@ end;
 
 procedure FXWindowsControl.Redraw(RedrawAbove: boolean);
 begin
-  if BufferedComponent and (Parent <> nil) and not IsReading and FCreated then begin
-    // Draw
-    ResizeBuffer;
-    SolidifyBuffer;
-    PaintBuffer;
+  if not BufferedComponent or (Parent = nil) or IsReading or not HandleAllocated then
+    Exit;
 
-    // Switch to new buffer
-    SwitchBuffer;
+  // Draw
+  ResizeBuffer;
+  SolidifyBuffer;
+  PaintBuffer;
 
-    // Draw new buffer
-    DoPaint;
+  // Switch to new buffer
+  SwitchBuffer;
 
-    // Draw children (always need to be redraw)
-    RedrawChildren;
+  // Draw new buffer
+  DoPaint;
 
-    // Draw controls above
-    if RedrawAbove then
-      RedrawControlsAbove;
+  // Draw children (always need to be redraw)
+  RedrawChildren;
 
-    LastDraw := Now;
-  end;
+  // Draw controls above
+  if RedrawAbove then
+    RedrawControlsAbove;
+
+  LastDraw := Now;
 end;
 
 procedure FXWindowsControl.RedrawAndSortControls(AControls: TArray<TControl>);
@@ -964,6 +1090,9 @@ begin
 
   FPadding.ScaleChanged(Scaler);
   FMargins.ScaleChanged(Scaler);
+
+  // Rects
+  UpdateRects;
 end;
 
 procedure FXWindowsControl.SetBounds(ALeft, ATop, AWidth, AHeight: Integer);
@@ -979,6 +1108,20 @@ begin
     RedrawAndSortControls(AControls);
   end else
     inherited;
+
+  BoundsUpdated;
+end;
+
+procedure FXWindowsControl.SetHeight(const Value: integer);
+begin
+  if Height = Value then
+    Exit;
+  inherited Height := Value;
+end;
+
+procedure FXWindowsControl.SetLeft(const Value: integer);
+begin
+  inherited Left := Value;
 end;
 
 procedure FXWindowsControl.SetNewInteractionState(AState: FXControlState;
@@ -996,13 +1139,13 @@ end;
 
 procedure FXWindowsControl.SetOpacity(const Value: FXPercent);
 begin
-  if (FOpacity <> Value) and InRange(Value, 0, 100) then
-    begin
-      FOpacity := Value;
+  if (FOpacity = Value) or not InRange(Value, 0, 100) then
+    Exit;
 
-      // Draw
-      Invalidate;
-    end;
+  FOpacity := Value;
+
+  // Draw
+  StandardUpdateDraw;
 end;
 
 procedure FXWindowsControl.SetPosition(const Value: FXControlPosition);
@@ -1020,6 +1163,14 @@ begin
   SetNewInteractionState(Value);
 end;
 
+procedure FXWindowsControl.SetTop(const Value: integer);
+begin
+  if Top = Value then
+    Exit;
+
+  inherited Top := Value;
+end;
+
 procedure FXWindowsControl.SetTransparent(const Value: boolean);
 begin
   if Value = FTransparent then
@@ -1027,6 +1178,20 @@ begin
 
   FTransparent := Value;
   Redraw;
+end;
+
+procedure FXWindowsControl.SetWidth(const Value: integer);
+begin
+  if Width = Value then
+    Exit;
+  inherited Width := Value;
+end;
+
+procedure FXWindowsControl.Sized;
+begin
+  if not IsReading then
+    // When sized, update the Rects
+    UpdateRects;
 end;
 
 procedure FXWindowsControl.SolidifyBuffer;
@@ -1050,9 +1215,49 @@ begin
     end);
 end;
 
+procedure FXWindowsControl.StandardUpdateColor;
+begin
+  if not CanUpdate then
+    Exit;
+
+  UpdateColors;
+end;
+
+procedure FXWindowsControl.StandardUpdateComplete;
+begin
+  if not CanUpdate then
+    Exit;
+
+  UpdateColors;
+  UpdateRects;
+  Redraw;
+end;
+
+procedure FXWindowsControl.StandardUpdateDraw;
+begin
+  if not CanUpdate then
+    Exit;
+
+  Redraw;
+end;
+
+procedure FXWindowsControl.StandardUpdateLayout;
+begin
+  if not CanUpdate then
+    Exit;
+
+  UpdateRects;
+  Redraw;
+end;
+
 procedure FXWindowsControl.SwitchBuffer;
 begin
   BufferSecondary := not BufferSecondary;
+end;
+
+procedure FXWindowsControl.UpdateColors;
+begin
+  //
 end;
 
 procedure FXWindowsControl.UpdateFocusRect;
@@ -1063,12 +1268,25 @@ begin
   FFocusRect.Bottom := FocusRect.Bottom - FOCUS_LINE_SIZE;
 end;
 
+procedure FXWindowsControl.UpdateRects;
+begin
+  //
+end;
+
+procedure FXWindowsControl.UpdateTheme(const UpdateChildren: Boolean);
+begin
+  UpdateColors;
+  UpdateRects;
+
+  // Re-paint
+  Redraw;
+end;
+
 procedure FXWindowsControl.WMMove(var Message: TWMMove);
 begin
   inherited;
 
-  // Redraw at current position
-  Redraw;
+  Moved;
 end;
 
 procedure FXWindowsControl.WMNCHitTest(var Message: TWMNCHitTest);
@@ -1083,8 +1301,7 @@ procedure FXWindowsControl.WMSize(var Message: TWMSize);
 begin
   inherited;
 
-  // Redraw at current position
-  Redraw;
+  Sized;
 end;
 
 procedure FXWindowsControl.WndProc(var Message: TMessage);

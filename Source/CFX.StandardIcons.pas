@@ -25,77 +25,74 @@ uses
 
 type
   FXStandardIcon = class(FXWindowsControl, FXControl)
-    private
-      var DrawRect: TRect;
-      FIcon : FXStandardIconType;
-      FPenWidth: integer;
-      FDrawColors: FXColorSet;
-      FCustomColors: FXColorSets;
-      FProportional: boolean;
-      FUseAccentColor: boolean;
+  private
+    var DrawRect: TRect;
+    FIcon : FXStandardIconType;
+    FPenWidth: integer;
+    FDrawColors: FXColorSet;
+    FCustomColors: FXColorSets;
+    FProportional: boolean;
+    FUseAccentColor: boolean;
 
-      // Star drawing
-      class procedure DrawPentacle(Canvas : TCanvas; Pent : TPent);
-      class function MakePent(X, Y, L : integer) : TPent;
-      class procedure MakeStar(Canvas : TCanvas; cX, cY, size : integer; Colour :TColor; bordersize: integer; bordercolor: TColor);
+    // Star drawing
+    class procedure DrawPentacle(Canvas : TCanvas; Pent : TPent);
+    class function MakePent(X, Y, L : integer) : TPent;
+    class procedure MakeStar(Canvas : TCanvas; cX, cY, size : integer; Colour :TColor; bordersize: integer; bordercolor: TColor);
 
-      // Update
-      procedure UpdateColors;
-      procedure UpdateRects;
+    // Setters
+    procedure SetIcon(const Value: FXStandardIconType);
+    procedure SetWid(const Value: integer);
+    procedure SetProportional(const Value: boolean);
+    procedure SetUseAccentColor(const Value: boolean);
 
-      // Setters
-      procedure SetIcon(const Value: FXStandardIconType);
-      procedure SetWid(const Value: integer);
-      procedure SetProportional(const Value: boolean);
-      procedure SetUseAccentColor(const Value: boolean);
+  protected
+    procedure PaintBuffer; override;
 
-    protected
-      procedure PaintBuffer; override;
+    // Update
+    procedure UpdateColors; override;
+    procedure UpdateRects; override;
 
-      // Events
-      procedure Resize; override;
+    // Interaction
+    procedure InteractionStateChanged(AState: FXControlState); override;
 
-    published
-      property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
+  published
+    property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
 
-      property Transparent;
-      property PaddingFill;
-      property OnMouseEnter;
-      property OnMouseLeave;
-      property OnMouseDown;
-      property OnMouseUp;
-      property OnMouseMove;
-      property OnClick;
-      property OnDblClick;
+    property Transparent;
+    property PaddingFill;
+    property OnMouseEnter;
+    property OnMouseLeave;
+    property OnMouseDown;
+    property OnMouseUp;
+    property OnMouseMove;
+    property OnClick;
+    property OnDblClick;
 
-      property Color;
+    property Color;
 
-      property Align;
-      property Constraints;
-      property Anchors;
-      property Hint;
-      property ShowHint;
-      property Cursor;
-      property Visible;
-      property Enabled;
+    property Align;
+    property Constraints;
+    property Anchors;
+    property Hint;
+    property ShowHint;
+    property Cursor;
+    property Visible;
+    property Enabled;
 
-      property Proportional: boolean read FProportional write SetProportional default true;
-      property UseAccentColor: boolean read FUseAccentColor write SetUseAccentColor default false;
-      property SelectedIcon : FXStandardIconType read FIcon write SetIcon;
-      property PenWidth : integer read FPenWidth write SetWid;
+    property Proportional: boolean read FProportional write SetProportional default true;
+    property UseAccentColor: boolean read FUseAccentColor write SetUseAccentColor default false;
+    property SelectedIcon : FXStandardIconType read FIcon write SetIcon;
+    property PenWidth : integer read FPenWidth write SetWid;
 
-    public
-      constructor Create(AOwner : TComponent); override;
-      destructor Destroy; override;
+  public
+    constructor Create(AOwner : TComponent); override;
+    destructor Destroy; override;
 
-      // Override
-      procedure SetBounds(ALeft, ATop, AWidth, AHeight: Integer); override;
+    // Override
+    procedure SetBounds(ALeft, ATop, AWidth, AHeight: Integer); override;
 
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChidlren: Boolean);
-
-      function Background: TColor;
+    // Interface
+    function Background: TColor; override;
   end;
 
 implementation
@@ -118,11 +115,9 @@ begin
   FCustomColors := FXColorSets.Create(Self);
   FDrawColors := FXColorSet.Create;
 
+  // Sizing
   Width := 60;
   Height := 60;
-
-  UpdateRects;
-  UpdateColors;
 end;
 
 destructor FXStandardIcon.Destroy;
@@ -130,11 +125,6 @@ begin
   FDrawColors.Free;
   FCustomColors.Free;
   inherited;
-end;
-
-function FXStandardIcon.IsContainer: Boolean;
-begin
-  Result := false;
 end;
 
 class procedure FXStandardIcon.MakeStar(Canvas : TCanvas; cX, cY, size : integer; Colour :TColor; bordersize: integer; bordercolor: TColor);
@@ -192,6 +182,11 @@ begin
     LineTo(Pent[3].X, Pent[3].Y);
     LineTo(Pent[0].X, Pent[0].Y);
   end;
+end;
+
+procedure FXStandardIcon.InteractionStateChanged(AState: FXControlState);
+begin
+  // do not redraw
 end;
 
 procedure FXStandardIcon.PaintBuffer;
@@ -292,12 +287,6 @@ begin
   inherited;
 end;
 
-procedure FXStandardIcon.Resize;
-begin
-  UpdateRects;
-  inherited;
-end;
-
 procedure FXStandardIcon.SetBounds(ALeft, ATop, AWidth, AHeight: Integer);
 begin
   if FProportional then begin
@@ -322,9 +311,8 @@ begin
   if FIcon = Value then
     Exit;
 
-
   FIcon := Value;
-  Redraw;
+  StandardUpdateLayout;
 end;
 
 procedure FXStandardIcon.SetProportional(const Value: boolean);
@@ -337,7 +325,7 @@ begin
 
   FProportional := Value;
   UpdateRects;
-  Redraw;
+  StandardUpdateLayout;
 end;
 
 procedure FXStandardIcon.SetUseAccentColor(const Value: boolean);
@@ -346,7 +334,7 @@ begin
     Exit;
 
   FUseAccentColor := Value;
-  Redraw;
+  StandardUpdateLayout;
 end;
 
 procedure FXStandardIcon.SetWid(const Value: integer);
@@ -355,7 +343,7 @@ begin
     Exit;
 
   FPenWidth := Value;
-  Redraw;
+  StandardUpdateLayout;
 end;
 
 procedure FXStandardIcon.UpdateColors;
@@ -370,13 +358,6 @@ end;
 procedure FXStandardIcon.UpdateRects;
 begin
   DrawRect := ClientRect;
-end;
-
-procedure FXStandardIcon.UpdateTheme(const UpdateChidlren: Boolean);
-begin
-  UpdateColors;
-
-  Paint;
 end;
 
 end.

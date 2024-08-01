@@ -7,34 +7,34 @@ uses
 
 type
   FXCustomTooltip = class(THintWindow)
-    const
-      VERT_SPACE: Byte = 5;
-      HORZ_SPACE: Byte = 7;
-    private
-      var ShowShadow: Boolean;
-      var BorderThickness: Byte;
-      var BorderColor, BackColor: TColor;
-    protected
-      procedure CreateParams(var Params: TCreateParams); override;
-      procedure Paint; override;
-      procedure NCPaint(DC: HDC); override;
-    public
-      constructor Create(aOwner: TComponent); override;
-      function CalcHintRect(MaxWidth: Integer; const AHint: string; AData: Pointer): TRect; override;
+  const
+    VERT_SPACE: Byte = 5;
+    HORZ_SPACE: Byte = 7;
+  private
+    var ShowShadow: Boolean;
+    var BorderThickness: Byte;
+    var BorderColor, BackColor: TColor;
+  protected
+    procedure CreateParams(var Params: TCreateParams); override;
+    procedure Paint; override;
+    procedure NCPaint(DC: HDC); override;
+  public
+    constructor Create(aOwner: TComponent); override;
+    function CalcHintRect(MaxWidth: Integer; const AHint: string; AData: Pointer): TRect; override;
   end;
 
   FXLightTooltip = class(FXCustomTooltip)
-    public
-      constructor Create(aOwner: TComponent); override;
+  public
+    constructor Create(aOwner: TComponent); override;
 
-      procedure ApplyColor;
+    procedure ApplyColor;
   end;
 
   FXDarkTooltip = class(FXCustomTooltip)
-    public
-      constructor Create(aOwner: TComponent); override;
+  public
+    constructor Create(aOwner: TComponent); override;
 
-      procedure ApplyColor;
+    procedure ApplyColor;
   end;
 
 implementation

@@ -22,15 +22,11 @@ uses
   CFX.Controls;
 
 type
-  FXTemplate = class(FXWindowsControl, FXControl)
+  FXTemplate = class(FXWindowsControl)
   private
     var DrawRect: TRect;
     FDrawColors: FXCompleteColorSet;
     FCustomColors: FXColorSets;
-
-    //  Internal
-    procedure UpdateColors;
-    procedure UpdateRects;
 
     // Getters
 
@@ -38,8 +34,10 @@ type
 
   protected
     procedure PaintBuffer; override;
-    procedure Resize; override;
-    procedure ApplyPadding; override;
+
+    // Internal
+    procedure UpdateColors; override;
+    procedure UpdateRects; override;
 
     // Scaler
     procedure ScaleChanged(Scaler: single); override;
@@ -86,18 +84,11 @@ type
     destructor Destroy; override;
 
     // Interface
-    function IsContainer: Boolean;
-    procedure UpdateTheme(const UpdateChildren: Boolean);
-    function Background: TColor;
+    function IsContainer: Boolean; override;
+    function Background: TColor; override;
   end;
 
 implementation
-
-procedure FXTemplate.ApplyPadding;
-begin
-  inherited;
-  UpdateRects;
-end;
 
 function FXTemplate.Background: TColor;
 begin
@@ -114,10 +105,6 @@ begin
   // Sizing
   Height := 30;
   Width := 180;
-
-  // Update
-  UpdateRects;
-  UpdateColors;
 end;
 
 destructor FXTemplate.Destroy;
@@ -147,19 +134,6 @@ begin
 
   // Inherit
   inherited;
-end;
-
-procedure FXTemplate.Resize;
-begin
-  inherited;
-  UpdateRects;
-end;
-
-procedure FXTemplate.UpdateTheme(const UpdateChildren: Boolean);
-begin
-  UpdateColors;
-  UpdateRects;
-  Redraw;
 end;
 
 procedure FXTemplate.UpdateColors;

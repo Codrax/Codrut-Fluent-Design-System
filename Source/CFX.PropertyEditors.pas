@@ -47,156 +47,156 @@ uses
   VCLEditors,
   CFX.DesignEditors;
 
-  type
-    // Default Edit Form Template
-    FXEditForm = class(TForm)
-    private
-      FMainTitle,
-      FSubTitle: string;
+type
+  // Default Edit Form Template
+  FXEditForm = class(TForm)
+  private
+    FMainTitle,
+    FSubTitle: string;
 
-      FTitle1,
-      FTitle2: TLabel;
+    FTitle1,
+    FTitle2: TLabel;
 
-      FButtonSave,
-      FButtonClose: FXButtonDesign;
+    FButtonSave,
+    FButtonClose: FXButtonDesign;
 
-      FAllowCancel: boolean;
-      FStyled: boolean;
+    FAllowCancel: boolean;
+    FStyled: boolean;
 
-      const
-        ZONE_MARGIN = 20;
+    const
+      ZONE_MARGIN = 20;
 
-      procedure SetSubTitle(const Value: string);
-      procedure SetTitle(const Value: string);
-      procedure SetAllowCancel(const Value: boolean);
+    procedure SetSubTitle(const Value: string);
+    procedure SetTitle(const Value: string);
+    procedure SetAllowCancel(const Value: boolean);
 
-    public
-      property Title: string read FMainTitle write SetTitle;
-      property SubTitle: string read FSubTitle write SetSubTitle;
+  public
+    property Title: string read FMainTitle write SetTitle;
+    property SubTitle: string read FSubTitle write SetSubTitle;
 
-      property AllowCancel: boolean read FAllowCancel write SetAllowCancel;
-      property Styled: boolean read FStyled write FStyled;
+    property AllowCancel: boolean read FAllowCancel write SetAllowCancel;
+    property Styled: boolean read FStyled write FStyled;
 
-      function ComponentsZone: TRect;
-      function Margin: integer;
-      function MarginTiny: integer;
+    function ComponentsZone: TRect;
+    function Margin: integer;
+    function MarginTiny: integer;
 
-      procedure UpdateUI;
+    procedure UpdateUI;
 
-      constructor CreateNew(AOwner: TComponent; Dummy: Integer  = 0); override;
-      destructor Destroy; override;
-    end;
+    constructor CreateNew(AOwner: TComponent; Dummy: Integer  = 0); override;
+    destructor Destroy; override;
+  end;
 
-    // Popup Menu Items
-    TFXPopupItemsProperty = class(TPropertyEditor)
-    private
-      Form: FXEditForm;
-      Item: FXPopupItems;
+  // Popup Menu Items
+  TFXPopupItemsProperty = class(TPropertyEditor)
+  private
+    Form: FXEditForm;
+    Item: FXPopupItems;
 
-    public
-      procedure Edit; override;
-      function GetAttributes: TPropertyAttributes; override;
-      function GetValue: string; override;
-      procedure SetValue(const Value: string); override;
-    end;
+  public
+    procedure Edit; override;
+    function GetAttributes: TPropertyAttributes; override;
+    function GetValue: string; override;
+    procedure SetValue(const Value: string); override;
+  end;
 
-    // Percent Property
-    TFXPercentProperty = class(TPropertyEditor)
-    private
-    public
-      function GetAttributes: TPropertyAttributes; override;
-      function GetValue: string; override;
-      procedure SetValue(const Value: string); override;
-    end;
+  // Percent Property
+  TFXPercentProperty = class(TPropertyEditor)
+  private
+  public
+    function GetAttributes: TPropertyAttributes; override;
+    function GetValue: string; override;
+    procedure SetValue(const Value: string); override;
+  end;
 
-    // Angle Property
-    TFXAngleProperty = class(TPropertyEditor)
-    private
-    public
-      function GetAttributes: TPropertyAttributes; override;
-      function GetValue: string; override;
-      procedure SetValue(const Value: string); override;
-    end;
+  // Angle Property
+  TFXAngleProperty = class(TPropertyEditor)
+  private
+  public
+    function GetAttributes: TPropertyAttributes; override;
+    function GetValue: string; override;
+    procedure SetValue(const Value: string); override;
+  end;
 
-    // Color Property
-    TFXColorProperty = class(FXPropertyEditor, ICustomPropertyDrawing,
-      ICustomPropertyListDrawing, ICustomPropertyDrawing80)
-    private
-      const
-        COLBOX_WIDTH = 25;
-        COLBOX_SPACING = 5;
+  // Color Property
+  TFXColorProperty = class(FXPropertyEditor, ICustomPropertyDrawing,
+    ICustomPropertyListDrawing, ICustomPropertyDrawing80)
+  private
+    const
+      COLBOX_WIDTH = 25;
+      COLBOX_SPACING = 5;
 
-      procedure DrawColorBox(ACanvas: TCanvas; ARect: TRect; AColor: FXColor);
-      function OpenEditor: FXColor;
+    procedure DrawColorBox(ACanvas: TCanvas; ARect: TRect; AColor: FXColor);
+    function OpenEditor: FXColor;
 
-    public
-      procedure Edit(const Host: IPropertyHost; DblClick: Boolean); override;
+  public
+    procedure Edit(const Host: IPropertyHost; DblClick: Boolean); override;
 
-      function GetAttributes: TPropertyAttributes; override;
-      function GetValue: string; override;
-      procedure SetValue(const Value: string); override;
+    function GetAttributes: TPropertyAttributes; override;
+    function GetValue: string; override;
+    procedure SetValue(const Value: string); override;
 
-      procedure GetValues(Proc: TGetStrProc); override;
+    procedure GetValues(Proc: TGetStrProc); override;
 
-      { ICustomPropertyListDrawing }
-      procedure ListMeasureHeight(const Value: string; ACanvas: TCanvas;
-        var AHeight: Integer);
-      procedure ListMeasureWidth(const Value: string; ACanvas: TCanvas;
-        var AWidth: Integer);
-      procedure ListDrawValue(const Value: string; ACanvas: TCanvas;
-        const ARect: TRect; ASelected: Boolean);
+    { ICustomPropertyListDrawing }
+    procedure ListMeasureHeight(const Value: string; ACanvas: TCanvas;
+      var AHeight: Integer);
+    procedure ListMeasureWidth(const Value: string; ACanvas: TCanvas;
+      var AWidth: Integer);
+    procedure ListDrawValue(const Value: string; ACanvas: TCanvas;
+      const ARect: TRect; ASelected: Boolean);
 
-      { ICustomPropertyDrawing }
-      procedure PropDrawName(ACanvas: TCanvas; const ARect: TRect;
-        ASelected: Boolean);
-      procedure PropDrawValue(ACanvas: TCanvas; const ARect: TRect;
-        ASelected: Boolean);
-      { ICustomPropertyDrawing80 }
-      function PropDrawNameRect(const ARect: TRect): TRect;
-      function PropDrawValueRect(const ARect: TRect): TRect;
-    end;
+    { ICustomPropertyDrawing }
+    procedure PropDrawName(ACanvas: TCanvas; const ARect: TRect;
+      ASelected: Boolean);
+    procedure PropDrawValue(ACanvas: TCanvas; const ARect: TRect;
+      ASelected: Boolean);
+    { ICustomPropertyDrawing80 }
+    function PropDrawNameRect(const ARect: TRect): TRect;
+    function PropDrawValueRect(const ARect: TRect): TRect;
+  end;
 
-    // FXPictureImages Items
-    TFXPictureImagesProperty = class(TPropertyEditor)
-    private
-      Form: FXEditForm;
-      Item: FXPictureImages;
+  // FXPictureImages Items
+  TFXPictureImagesProperty = class(TPropertyEditor)
+  private
+    Form: FXEditForm;
+    Item: FXPictureImages;
 
-    public
-      procedure Edit; override;
-      function GetAttributes: TPropertyAttributes; override;
-      function GetValue: string; override;
-      procedure SetValue(const Value: string); override;
-    end;
+  public
+    procedure Edit; override;
+    function GetAttributes: TPropertyAttributes; override;
+    function GetValue: string; override;
+    procedure SetValue(const Value: string); override;
+  end;
 
-    // Icon Selector
-    TFXIconSelectProperty = class(TPropertyEditor)
-    private
-      Item: FXIconSelect;
-      Form: FXEditForm;
+  // Icon Selector
+  TFXIconSelectProperty = class(TPropertyEditor)
+  private
+    Item: FXIconSelect;
+    Form: FXEditForm;
 
-      LB1,
-      LB2: TLabel;
+    LB1,
+    LB2: TLabel;
 
-      ImagePicture,
-      ImageBitmap: TImage;
-      FontIcon: TEdit;
+    ImagePicture,
+    ImageBitmap: TImage;
+    FontIcon: TEdit;
 
-      const
-        IMAGEBOX_SIZE = 150;
+    const
+      IMAGEBOX_SIZE = 150;
 
-    public
-      procedure Edit; override;
-      function GetAttributes: TPropertyAttributes; override;
-      function GetValue: string; override;
-      procedure SetValue(const Value: string); override;
+  public
+    procedure Edit; override;
+    function GetAttributes: TPropertyAttributes; override;
+    function GetValue: string; override;
+    procedure SetValue(const Value: string); override;
 
-      procedure ButtonSelect(Sender: TObject);
-      procedure ButtonImageAction(Sender: TObject);
-      procedure EditInteract(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure ButtonSelect(Sender: TObject);
+    procedure ButtonImageAction(Sender: TObject);
+    procedure EditInteract(Sender: TObject; var Key: Word; Shift: TShiftState);
 
-      procedure ShowPanel(Index: integer);
-    end;
+    procedure ShowPanel(Index: integer);
+  end;
 
 
 const

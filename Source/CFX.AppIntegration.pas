@@ -28,10 +28,10 @@ uses
   CFX.Utilities;
 
 
-  // UI Utilities
-  procedure PromptUpdateUser(MainForm: TForm; var Form: TForm);
-  procedure PromptUpdateUserClose(var Form: TForm);
-  procedure PromptUpdate(MainForm: TForm; Required: boolean = false);
+// UI Utilities
+procedure PromptUpdateUser(MainForm: TForm; var Form: TForm);
+procedure PromptUpdateUserClose(var Form: TForm);
+procedure PromptUpdate(MainForm: TForm; Required: boolean = false);
 
 implementation
 

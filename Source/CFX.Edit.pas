@@ -64,17 +64,12 @@ type
     FTextHint: string;
     FDetail: FXDetailType;
 
-    //  Internal
-    procedure UpdateColors;
-    procedure UpdateRects;
-
     // Canvas
     function TextW(AText: string): integer;
     function TextH(AText: string): integer;
 
     // Handle Messages
     procedure WM_LButtonDown(var Msg: TWMMouse); message WM_LBUTTONDOWN;
-    procedure WMSize(var Message: TWMSize); message WM_SIZE;
 
     // Data
     procedure UpdateAutoSize;
@@ -125,16 +120,22 @@ type
 
   protected
     procedure PaintBuffer; override;
-    procedure Resize; override;
-    procedure ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF}); override;
 
-    function CanEdit: boolean;
+    //  Internal
+    procedure UpdateColors; override;
+    procedure UpdateRects; override;
+
+    // Size
+    procedure Sized; override;
 
     // State
     procedure InteractionStateChanged(AState: FXControlState); override;
 
     // Font
     procedure FontUpdate; override;
+
+    // Utils
+    function CanEdit: boolean;
 
     // Key Presses
     procedure HandleKeyDown(var CanHandle: boolean; Key: integer; ShiftState: TShiftState); override;
@@ -145,8 +146,6 @@ type
     procedure DblClick; override;
 
     // Inherited
-    procedure ComponentCreated; override;
-    procedure Loaded; override;
     procedure OpenPopupMenu(X, Y: integer); override;
     procedure DoEnter; override;
     procedure DoExit; override;
@@ -248,10 +247,7 @@ type
     destructor Destroy; override;
 
     // Interface
-    function IsContainer: Boolean;
-    procedure UpdateTheme(const UpdateChildren: Boolean);
-
-    function Background: TColor;
+    function Background: TColor; override;
   end;
 
   FXEdit = class(FXCustomEdit)
@@ -287,17 +283,6 @@ type
 
 implementation
 
-procedure FXCustomEdit.InteractionStateChanged(AState: FXControlState);
-begin
-  inherited;
-  Redraw;
-end;
-
-function FXCustomEdit.IsContainer: Boolean;
-begin
-  Result := false;
-end;
-
 procedure FXCustomEdit.KeyPress(var Key: Char);
 begin
   inherited;
@@ -324,12 +309,6 @@ begin
   // Add
   ChangeText( Copy(Text, 1, FPosition) + Key + Copy(Text, + FPosition+1, Length(Text)) );
   Position := Position + 1;
-end;
-
-procedure FXCustomEdit.Loaded;
-begin
-  inherited;
-  Redraw;
 end;
 
 function FXCustomEdit.TextLength: integer;
@@ -366,7 +345,7 @@ begin
               ScrollForCursor( TextW(Copy(FText, 1, Value))-FCutPosition );
 
               // Invalidate
-              Redraw;
+              StandardUpdateDraw;
             end;
         end;
     end;
@@ -378,13 +357,6 @@ begin
     FDefaultMenu.PopupAtPoint(ClientToScreen(Point(X, Y)))
   else
     inherited;
-end;
-
-procedure FXCustomEdit.UpdateTheme(const UpdateChildren: Boolean);
-begin
-  UpdateColors;
-  UpdateRects;
-  Redraw;
 end;
 
 function FXCustomEdit.GetValue: int64;
@@ -413,27 +385,15 @@ begin
       FHistory.Delete(Index);
 
       // Update
-      UpdateRects;
-      Redraw;
+      StandardUpdateLayout;
     end;
 end;
 
 procedure FXCustomEdit.UpdateAutoSize;
-var
-  AHeight: integer;
 begin
   if FAutoSize then
-    begin
-      AHeight := TextH(Text);
-
-      if AHeight > 0 then
-        begin
-          AHeight := AHeight + LineSize + FTextMarginX * 2;
-
-          if Height <> AHeight then
-            Height := AHeight;
-        end;
-    end;
+    if CanUpdate then
+      SetBounds(Left, Top, Width, TextH('Aa.') + LineSize + FTextMarginX * 2)
 end;
 
 procedure FXCustomEdit.UpdateColors;
@@ -481,7 +441,9 @@ begin
     FLineColor := FDrawColors.Accent
   else
     FLineColor := FDrawColors.BackGroundInterior;
-  Redraw;
+
+  // Line
+  StandardUpdateDraw;
 end;
 
 procedure FXCustomEdit.UpdateRects;
@@ -567,10 +529,6 @@ begin
 
   // Font
   Font.Height := ThemeManager.FormFontHeight;
-
-  // Update
-  UpdateRects;
-  UpdateColors;
 end;
 
 procedure FXCustomEdit.CutToClipBoard;
@@ -581,12 +539,6 @@ begin
   CopyToClipBoard;
 
   DeleteSelection;
-end;
-
-procedure FXCustomEdit.ComponentCreated;
-begin
-  inherited;
-  Redraw;
 end;
 
 procedure FXCustomEdit.CopyToClipBoard;
@@ -707,13 +659,13 @@ begin
           end;
       end
     else
-      while Result < ATotal do
+      while Result <= ATotal-1 do
       begin
         Inc(Result);
 
         if AnaliseChar(FText[Result]) then
           begin
-            Exit(Result - 1);
+            Exit(Result);
           end;
       end;
 end;
@@ -735,9 +687,11 @@ begin
 end;
 var
   NewPos: integer;
+  SelectionDone: boolean;
 begin
   inherited;
 
+  SelectionDone := false;
   LastShiftState := ShiftState;
 
   if FHandleUpDown then
@@ -749,6 +703,8 @@ begin
   case Key of
     // Left & Right
     VK_LEFT: begin
+      SelectionDone := true;
+      
       // Select
       if FSelLength = 0 then
         FSelGoesLeft := true;
@@ -786,13 +742,15 @@ begin
     end;
 
     VK_RIGHT: begin
+      SelectionDone := true;
+      
       if FSelLength = 0 then
         FSelGoesLeft := false;
 
       // Select
       if ssCtrl in ShiftState then
         begin
-          NewPos := FindNext(SelectionEnd+1, false);
+          NewPos := FindNext(SelectionEnd, false);
 
           if ssShift in ShiftState then
             SelectPoints(NewPos, SelectionStart)
@@ -875,11 +833,31 @@ begin
     90: if CanEdit and (ssCtrl in ShiftState) then
       Undo;
   end;
+
+  // Selection common
+  if SelectionDone and (SelectionLength > 0) then begin
+    var ScrollCursor: integer;
+    if FSelGoesLeft then
+      ScrollCursor := FPosition
+    else
+      ScrollCursor := SelectionLength+FPosition;
+
+    // When selecting text with Ctrl+Shift, this code ensures that the END of the selection is visible
+    ScrollForCursor( TextW( Copy(DrawText, 1, ScrollCursor) )-FCutPosition );
+
+    // Draw
+    StandardUpdateDraw;
+  end;
 end;
 
 function FXCustomEdit.HasSelection: boolean;
 begin
   Result := FSelLength > 0;
+end;
+
+procedure FXCustomEdit.InteractionStateChanged(AState: FXControlState);
+begin
+  inherited;
 end;
 
 procedure FXCustomEdit.ApplyCharCase;
@@ -898,12 +876,6 @@ end;
 function FXCustomEdit.CanEdit: boolean;
 begin
   Result := not FReadOnly;
-end;
-
-procedure FXCustomEdit.ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF});
-begin
-  inherited;
-  UpdateRects;
 end;
 
 procedure FXCustomEdit.ChangeText(AText: string);
@@ -928,8 +900,7 @@ begin
   ScrollForCursor;
 
   // Update
-  UpdateRects;
-  Redraw;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomEdit.Clear;
@@ -1175,12 +1146,6 @@ begin
     end;
 end;
 
-procedure FXCustomEdit.Resize;
-begin
-  inherited;
-  UpdateRects;
-end;
-
 procedure FXCustomEdit.ScrollForCursor;
 begin
   ScrollForCursor(FDrawPosition);
@@ -1280,152 +1245,140 @@ begin
     end;
 
   // Update
-  UpdateRects;
-  Redraw;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomEdit.SetAutoSizing(const Value: boolean);
 begin
-  if FAutoSize <> Value then
-    begin
-      FAutoSize := Value;
+  if FAutoSize = Value then
+    Exit;
 
-      // Auto Size
-      UpdateAutoSize;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FAutoSize := Value;
+
+  // Auto Size
+  UpdateAutoSize;
+
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomEdit.SetCanUndo(const Value: boolean);
 begin
-  if FCanUndo <> Value then
-    begin
-      FCanUndo := Value;
+  if FCanUndo = Value then
+    Exit;
 
-      if not Value then
-        FHistory.Clear;
-    end;
+  if not Value then
+    FHistory.Clear;
+
+  FCanUndo := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomEdit.SetCharCase(const Value: FXCharCase);
 begin
-  if FCharCase <> Value then
-    begin
-      FCharCase := Value;
+  if FCharCase = Value then
+    Exit;
 
-      ApplyCharCase;
+  FCharCase := Value;
 
-      Redraw;
-    end;
+  ApplyCharCase;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomEdit.SetDetail(const Value: FXDetailType);
 begin
-  if FDetail <> Value then
-    begin
-      FDetail := Value;
+  if FDetail = Value then
+    Exit;
 
-      Redraw;
-    end;
+  FDetail := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomEdit.SetEnableSelection(const Value: boolean);
 begin
-  if FEnableSelection <> Value then
-    begin
-      FEnableSelection := Value;
+  if FEnableSelection = Value then
+    Exit;
 
-      if SelectionLength <> 0 then
-        SelectionLength := 0;
-    end;
+  FEnableSelection := Value;
+
+  if SelectionLength <> 0 then
+    SelectionLength := 0 // this will update the UI instead
+  else
+    StandardUpdateLayout;
 end;
 
 procedure FXCustomEdit.SetLayout(const Value: FXLayout);
 begin
-  if FLayout <> Value then
-    begin
-      FLayout := Value;
+  if FLayout = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FLayout := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomEdit.SetLayoutHoriz(const Value: FXLayout);
 begin
-  if FLayoutHoriz <> Value then
-    begin
-      FLayoutHoriz := Value;
+  if FLayoutHoriz = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FLayoutHoriz := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomEdit.SetLineSize(const Value: integer);
 begin
-  if FLineSize <> Value then
-    begin
-      FLineSize := Value;
+  if FLineSize = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FLineSize := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomEdit.SetNumbersOnly(const Value: boolean);
 begin
-  if FNumbersOnly <> Value then
-    begin
-      FNumbersOnly := Value;
+  if FNumbersOnly = Value then
+    Exit;
 
-      try
-        FText.ToInt64;
-      except
-        FText := '0';
-      end;
+  FNumbersOnly := Value;
+  try
+    FText.ToInt64;
+  except
+    FText := '0';
+  end;
 
-      Redraw;
-    end;
+  StandardUpdateLayout;;
 end;
 
 procedure FXCustomEdit.SetPasswordChar(const Value: char);
 begin
-  if FPassChar <> Value then
-    begin
-      FPassChar := Value;
+  if FPassChar = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FPassChar := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomEdit.SetPosition(const Value: integer);
 begin
-  if FPosition <> Value then
-    begin
-      if (Value >=0) and (Value <= Length(Text)) then
-        begin
-          FPosition := Value;
+  if (FPosition = Value) or (Value < 0) or (Value > Length(Text)) then
+    Exit;
 
-          ClearSelection;
-          UpdateRects;
+  FPosition := Value;
 
-          Redraw;
-        end;
-    end;
+  // Sel
+  ClearSelection;
+
+  // Draw
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomEdit.SetRoundness(const Value: integer);
 begin
-  if FRoundness <> Value then
-    begin
-      FRoundness := Value;
+  if FRoundness = Value then
+    Exit;
 
-      Redraw;
-    end;
+  FRoundness := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomEdit.SetSelLength(const Value: integer);
@@ -1433,22 +1386,21 @@ var
   ATotal: integer;
 begin
   // Set Selection
-  if FSelLength <> Value then
-    begin
-      FSelLength := Value;
+  if FSelLength = Value then
+    Exit;
 
-      ATotal := TextLength;
+  FSelLength := Value;
 
-      if FPosition + FSelLength > ATotal then
-        FSelLength := ATotal - FPosition;
+  ATotal := TextLength;
 
-      if FSelLength < 0 then
-        FSelLength := 0;
+  if FPosition + FSelLength > ATotal then
+    FSelLength := ATotal - FPosition;
 
-      // Update
-      UpdateRects;
-      Redraw;
-    end;
+  if FSelLength < 0 then
+    FSelLength := 0;
+
+  // Draw
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomEdit.SetText(const Value: string);
@@ -1463,40 +1415,34 @@ begin
     OnChangeValue(Self);
 
   // Update
-  UpdateRects;
-  Redraw;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomEdit.SetTextHint(const Value: string);
 begin
-  if FTextHint <> Value then
-    begin
-      FTextHint := Value;
+  if FTextHint = Value then
+    Exit;
 
-      Redraw;
-    end;
+  FTextHint := Value;
+  StandardUpdateDraw;
 end;
 
 procedure FXCustomEdit.SetTextMarginX(const Value: integer);
 begin
-  if FTextMarginX <> Value then
-    begin
-      FTextMarginX := Value;
+  if FTextMarginX = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FTextMarginX := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomEdit.SetTextMarginY(const Value: integer);
 begin
-    if FTextMarginY <> Value then
-    begin
-      FTextMarginY := Value;
+  if FTextMarginY = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FTextMarginY := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomEdit.SetValue(const Value: int64);
@@ -1505,13 +1451,19 @@ begin
     Text := Value.ToString;
 end;
 
+procedure FXCustomEdit.Sized;
+begin
+  inherited;
+  UpdateAutoSize;
+end;
+
 function FXCustomEdit.TextH(AText: string): integer;
 begin
   Result := 0;
   if Parent <> nil then
     begin
-      Canvas.Font.Assign( Self.Font );
-      Result := Canvas.TextHeight(AText);
+      Buffer.Font.Assign( Self.Font );
+      Result := Buffer.TextHeight(AText);
     end;
 end;
 
@@ -1520,15 +1472,9 @@ begin
   Result := 0;
   if Parent <> nil then
     begin
-      Canvas.Font.Assign( Self.Font );
-      Result := Canvas.TextWidth(AText);
+      Buffer.Font.Assign( Self.Font );
+      Result := Buffer.TextWidth(AText);
     end;
-end;
-
-procedure FXCustomEdit.WMSize(var Message: TWMSize);
-begin
-  UpdateRects;
-  Redraw;
 end;
 
 procedure FXCustomEdit.WM_LButtonDown(var Msg: TWMMouse);

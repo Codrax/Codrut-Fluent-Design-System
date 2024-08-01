@@ -11,13 +11,13 @@ uses
   SysUtils,
   Threading;
 
-  type
-    FXThreadHelper = class helper for TThread
-      public
-        function Running: boolean;
+type
+  FXThreadHelper = class helper for TThread
+  public
+    function Running: boolean;
 
-        procedure Halt;
-    end;
+    procedure Halt;
+  end;
 
 implementation
 

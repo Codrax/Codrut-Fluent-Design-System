@@ -41,11 +41,9 @@ type
     FXScrollText2: FXScrollText;
     FXSlider1: FXSlider;
     FXCheckBox1: FXCheckBox;
-    FXScrollbar1: FXScrollbar;
     FXSelector1: FXSelector;
     FXButton4: FXButton;
     FXButton5: FXButton;
-    FXButton13: FXButton;
     FXTextBox2: FXTextBox;
     FXTextBox3: FXTextBox;
     FXTextBox4: FXTextBox;
@@ -63,8 +61,10 @@ type
     FXBlurMaterial2: FXBlurMaterial;
     FXButton9: FXButton;
     FXScrollText1: FXScrollText;
-    FXValueTextBox1: FXValueTextBox;
-    FXButton2: FXButton;
+    FXButton13: FXButton;
+    FXScrollbar1: FXScrollbar;
+    FXScrollText3: FXScrollText;
+    FXShapeSquare1: FXShapeSquare;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButton13Click(Sender: TObject);

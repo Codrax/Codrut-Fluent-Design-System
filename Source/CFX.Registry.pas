@@ -19,136 +19,136 @@ interface
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
   Registry, Vcl.Dialogs;
 
-  type
-    TRegistryMode = (rmUnloaded, rmWindows32, rmWindows64, rmAutomatic);
-    TRegistryError = (reNone, reAccessDenied, reKeyNoExist, reReadError);
-    TRegistryNeed = (rnRead, rnWrite, rnComplete);
+type
+  TRegistryMode = (rmUnloaded, rmWindows32, rmWindows64, rmAutomatic);
+  TRegistryError = (reNone, reAccessDenied, reKeyNoExist, reReadError);
+  TRegistryNeed = (rnRead, rnWrite, rnComplete);
 
-    // Moved Helper from Cod.VarHelpers for FMX compatability
-    TRegHelper = class helper for TRegistry
-      procedure RenameKey(const OldName, NewName: string);
-      function CloneKey(const KeyName: string): string;
+  // Moved Helper from Cod.VarHelpers for FMX compatability
+  TRegHelper = class helper for TRegistry
+    procedure RenameKey(const OldName, NewName: string);
+    function CloneKey(const KeyName: string): string;
 
-      function ReadCardinal(const Name: string): Cardinal;
+    function ReadCardinal(const Name: string): Cardinal;
 
-      procedure MoveKeyTo(const OldName, NewKeyPath: string; Delete: Boolean);
-    end;
+    procedure MoveKeyTo(const OldName, NewKeyPath: string; Delete: Boolean);
+  end;
 
-    // Predefine
-    FXRegistry = class;
+  // Predefine
+  FXRegistry = class;
 
-    // TQuickReg Class
-    FXQuickReg = class
-    public
-      class function CreateKey(KeyLocation: string): boolean;
-      class function KeyExists(KeyLocation: string): boolean;
-      class function DeleteKey(KeyLocation: string): boolean;
-      class function RenameKey(KeyLocation, NewName: string): boolean;
+  // TQuickReg Class
+  FXQuickReg = class
+  public
+    class function CreateKey(KeyLocation: string): boolean;
+    class function KeyExists(KeyLocation: string): boolean;
+    class function DeleteKey(KeyLocation: string): boolean;
+    class function RenameKey(KeyLocation, NewName: string): boolean;
 
-      class function GetStringValue(KeyLocation, ValueName: string): string;
+    class function GetStringValue(KeyLocation, ValueName: string): string;
 
-      class function GetValueExists(KeyLocation, ValueName: string): boolean;
-      class function DeleteValue(KeyLocation, ValueName: string): boolean;
-    end;
+    class function GetValueExists(KeyLocation, ValueName: string): boolean;
+    class function DeleteValue(KeyLocation, ValueName: string): boolean;
+  end;
 
-    // TWinRegistry Class
-    FXRegistry = class(TObject)
-    private
-      // Vars
-      FLastError: TRegistryError;
-      FErrorMessage: boolean;
-      FRegistry: TRegistry;
-      FRegistryMode: TRegistryMode;
-      FHive, FDefaultHive: HKEY;
-      FAutoHive: boolean;
+  // TWinRegistry Class
+  FXRegistry = class(TObject)
+  private
+    // Vars
+    FLastError: TRegistryError;
+    FErrorMessage: boolean;
+    FRegistry: TRegistry;
+    FRegistryMode: TRegistryMode;
+    FHive, FDefaultHive: HKEY;
+    FAutoHive: boolean;
 
-      // Registry Edit
-      procedure CreateReg(AType: TRegistryNeed; APosition: string = '');
+    // Registry Edit
+    procedure CreateReg(AType: TRegistryNeed; APosition: string = '');
 
-      function GetPathEnd(Path: string): string;
-      function GetPathItem(Path: string): string;
-      procedure ApplyPath(var Path: string);
-      procedure RemovePathLevels(var Path: string; Levels: integer);
+    function GetPathEnd(Path: string): string;
+    function GetPathItem(Path: string): string;
+    procedure ApplyPath(var Path: string);
+    procedure RemovePathLevels(var Path: string; Levels: integer);
 
-      // Error
-      procedure RaiseError(Error: TRegistryError);
+    // Error
+    procedure RaiseError(Error: TRegistryError);
 
-      // Registry Mode
-      function ApplyRegMode(mode: Cardinal = KEY_ALL_ACCESS): Cardinal;
+    // Registry Mode
+    function ApplyRegMode(mode: Cardinal = KEY_ALL_ACCESS): Cardinal;
 
-      // Imported Utils
-      function IsWOW64Emulated: Boolean;
-      function IsWow64Executable: Boolean;
-    procedure SetManualHive(const Value: HKEY);
+    // Imported Utils
+    function IsWOW64Emulated: Boolean;
+    function IsWow64Executable: Boolean;
+  procedure SetManualHive(const Value: HKEY);
 
-    public
-      // Create
-      constructor Create;
-      destructor Destroy; override;
+  public
+    // Create
+    constructor Create;
+    destructor Destroy; override;
 
-      // Registry Mode
-      procedure SetNewRegistryMode(AMode: TRegistryMode);
+    // Registry Mode
+    procedure SetNewRegistryMode(AMode: TRegistryMode);
 
-      // Key Functions
-      function CreateKey(KeyLocation: string): boolean;
-      function KeyExists(KeyLocation: string): boolean;
-      function DeleteKey(KeyLocation: string): boolean;
-      function CloneKey(KeyLocation: string): string;
-      function RenameKey(KeyLocation, NewName: string): boolean;
-      function MoveKey(KeyLocation, NewLocation: string; AlsoDelete: boolean = true): boolean;
-      function CopyKey(KeyLocation, NewLocation: string): boolean;
+    // Key Functions
+    function CreateKey(KeyLocation: string): boolean;
+    function KeyExists(KeyLocation: string): boolean;
+    function DeleteKey(KeyLocation: string): boolean;
+    function CloneKey(KeyLocation: string): string;
+    function RenameKey(KeyLocation, NewName: string): boolean;
+    function MoveKey(KeyLocation, NewLocation: string; AlsoDelete: boolean = true): boolean;
+    function CopyKey(KeyLocation, NewLocation: string): boolean;
 
-      function GetKeyNames(KeyLocation: string): TStringList;
-      function GetValueNames(KeyLocation: string): TStringList;
+    function GetKeyNames(KeyLocation: string): TStringList;
+    function GetValueNames(KeyLocation: string): TStringList;
 
-      function GetValueExists(KeyLocation, ValueName: string): boolean;
-      function DeleteValue(KeyLocation, ValueName: string): boolean;
+    function GetValueExists(KeyLocation, ValueName: string): boolean;
+    function DeleteValue(KeyLocation, ValueName: string): boolean;
 
-      procedure WriteValue(KeyLocation, ItemName: string; Value: string = ''); overload;
-      procedure WriteValue(KeyLocation, ItemName: string; Value: integer = 0); overload;
-      procedure WriteValue(KeyLocation, ItemName: string; Value: boolean = false); overload;
-      procedure WriteValue(KeyLocation, ItemName: string; Value: double = 0); overload;
-      procedure WriteValue(KeyLocation, ItemName: string; Value: TDateTime); overload;
-      procedure WriteValue(KeyLocation, ItemName: string; Value: TDate); overload;
-      procedure WriteValue(KeyLocation, ItemName: string; Value: TTime); overload;
+    procedure WriteValue(KeyLocation, ItemName: string; Value: string = ''); overload;
+    procedure WriteValue(KeyLocation, ItemName: string; Value: integer = 0); overload;
+    procedure WriteValue(KeyLocation, ItemName: string; Value: boolean = false); overload;
+    procedure WriteValue(KeyLocation, ItemName: string; Value: double = 0); overload;
+    procedure WriteValue(KeyLocation, ItemName: string; Value: TDateTime); overload;
+    procedure WriteValue(KeyLocation, ItemName: string; Value: TDate); overload;
+    procedure WriteValue(KeyLocation, ItemName: string; Value: TTime); overload;
 
-      function GetStringValue(KeyLocation, ValueName: string): string;
-      function GetIntValue(KeyLocation, ValueName: string): integer;
-      function GetDateTimeValue(KeyLocation, ValueName: string): TDateTime;
-      function GetBooleanValue(KeyLocation, ValueName: string): boolean;
-      function GetFloatValue(KeyLocation, ValueName: string): double;
-      function GetCurrencyValue(KeyLocation, ValueName: string): currency;
-      function GetTimeValue(KeyLocation, ValueName: string): TTime;
-      function GetDateValue(KeyLocation, ValueName: string): TDate;
+    function GetStringValue(KeyLocation, ValueName: string): string;
+    function GetIntValue(KeyLocation, ValueName: string): integer;
+    function GetDateTimeValue(KeyLocation, ValueName: string): TDateTime;
+    function GetBooleanValue(KeyLocation, ValueName: string): boolean;
+    function GetFloatValue(KeyLocation, ValueName: string): double;
+    function GetCurrencyValue(KeyLocation, ValueName: string): currency;
+    function GetTimeValue(KeyLocation, ValueName: string): TTime;
+    function GetDateValue(KeyLocation, ValueName: string): TDate;
 
-      function GetValueType(KeyLocation, ValueName: string): TRegDataType;
-      function GetValueAsString(KeyLocation, ValueName: string): string;
-      function GetValueAsStringEx(KeyLocation, ValueName: string): string;
+    function GetValueType(KeyLocation, ValueName: string): TRegDataType;
+    function GetValueAsString(KeyLocation, ValueName: string): string;
+    function GetValueAsStringEx(KeyLocation, ValueName: string): string;
 
-      procedure WriteStringValue(KeyLocation, ItemName: string; Value: string);
-      procedure WriteIntValue(KeyLocation, ItemName: string; Value: integer);
-      procedure WriteDateTimeValue(KeyLocation, ItemName: string; Value: TDateTime);
-      procedure WriteBooleanValue(KeyLocation, ItemName: string; Value: boolean);
-      procedure WriteFloatValue(KeyLocation, ItemName: string; Value: double);
-      procedure WriteCurrency(KeyLocation, ItemName: string; Value: Currency);
-      procedure WriteTime(KeyLocation, ItemName: string; Value: TTime);
-      procedure WriteDate(KeyLocation, ItemName: string; Value: TDate);
+    procedure WriteStringValue(KeyLocation, ItemName: string; Value: string);
+    procedure WriteIntValue(KeyLocation, ItemName: string; Value: integer);
+    procedure WriteDateTimeValue(KeyLocation, ItemName: string; Value: TDateTime);
+    procedure WriteBooleanValue(KeyLocation, ItemName: string; Value: boolean);
+    procedure WriteFloatValue(KeyLocation, ItemName: string; Value: double);
+    procedure WriteCurrency(KeyLocation, ItemName: string; Value: Currency);
+    procedure WriteTime(KeyLocation, ItemName: string; Value: TTime);
+    procedure WriteDate(KeyLocation, ItemName: string; Value: TDate);
 
-      (* Properties *)
-      property LastError: TRegistryError read FLastError;
-      property ErrorMessage: boolean read FErrorMessage write FErrorMessage;
-      property RegistryMode: TRegistryMode read FRegistryMode write FRegistryMode;
+    (* Properties *)
+    property LastError: TRegistryError read FLastError;
+    property ErrorMessage: boolean read FErrorMessage write FErrorMessage;
+    property RegistryMode: TRegistryMode read FRegistryMode write FRegistryMode;
 
-      // Registry Mode
-      procedure ResetRegistryMode;
-      function WinModeLoaded: boolean;
+    // Registry Mode
+    procedure ResetRegistryMode;
+    function WinModeLoaded: boolean;
 
-      // Hive
-      property AutomaticHive: boolean read FAutoHive write FAutoHive;
-      property ManualHive: HKEY read FDefaultHive write SetManualHive;
-      (* Detect the hive automatically from the KeyLocation, overriden by DefaultHive *)
-      property DefaultHive: HKEY read FDefaultHive write FDefaultHive;
-    end;
+    // Hive
+    property AutomaticHive: boolean read FAutoHive write FAutoHive;
+    property ManualHive: HKEY read FDefaultHive write SetManualHive;
+    (* Detect the hive automatically from the KeyLocation, overriden by DefaultHive *)
+    property DefaultHive: HKEY read FDefaultHive write FDefaultHive;
+  end;
 
 const
   KEY_SEPAR = '\';

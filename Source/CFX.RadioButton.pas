@@ -20,137 +20,118 @@ uses
 
 type
   FXRadioButton = class(FXWindowsControl, FXControl)
-    private
-      var DrawRect, IconRect, TextRect, ImageRect: TRect;
-      FIconFont: TFont;
-      FChecked: boolean;
-      FTextSpacing: Integer;
-      FOnCheck: TNotifyEvent;
-      FCustomColors: FXColorSets;
-      FIconAccentColors: FXSingleColorStateSet;
-      FText: string;
-      FAutomaticMouseCursor: boolean;
-      FDrawColors: FXCompleteColorSet;
-      FWordWrap: boolean;
-      FImage: FXIconSelect;
-      FImageScale: single;
-      FLayout: FXDrawLayout;
-      FTextLayout: FXLayout;
+  private
+    var DrawRect, IconRect, TextRect, ImageRect: TRect;
+    FIconFont: TFont;
+    FChecked: boolean;
+    FTextSpacing: Integer;
+    FOnCheck: TNotifyEvent;
+    FCustomColors: FXColorSets;
+    FIconAccentColors: FXSingleColorStateSet;
+    FText: string;
+    FAutomaticMouseCursor: boolean;
+    FDrawColors: FXCompleteColorSet;
+    FWordWrap: boolean;
+    FImage: FXIconSelect;
+    FImageScale: single;
+    FLayout: FXDrawLayout;
+    FTextLayout: FXLayout;
 
-      //  Internal
-      procedure UpdateColors;
-      procedure UpdateRects;
+    // Set properties
+    procedure SetText(const Value: string);
+    procedure SetWordWrap(const Value: boolean);
+    procedure SetTextSpacing(const Value: Integer);
+    procedure SetChecked(const Value: Boolean);
+    procedure SetImage(const Value: FXIconSelect);
+    procedure SetLayout(const Value: FXDrawLayout);
+    procedure SetImageScale(const Value: single);
 
-      // Set properties
-      procedure SetText(const Value: string);
-      procedure SetWordWrap(const Value: boolean);
-      procedure SetTextSpacing(const Value: Integer);
-      procedure SetChecked(const Value: Boolean);
-      procedure SetImage(const Value: FXIconSelect);
-      procedure SetLayout(const Value: FXDrawLayout);
-      procedure SetImageScale(const Value: single);
+    // Draw functions
+    function GetTextHeight: integer;
 
-      // Draw functions
-      function GetTextHeight: integer;
+    // Checked
+    procedure SetToChecked;
 
-      // Checked
-      procedure SetToChecked;
+    // Get properties
+    function GetChecked: Boolean;
 
-      // Get properties
-      function GetChecked: Boolean;
+  protected
+    procedure PaintBuffer; override;
 
-      // Handle Messages
-      procedure WM_LButtonUp(var Msg: TWMLButtonUp); message WM_LBUTTONUP;
-      procedure WMSize(var Message: TWMSize); message WM_SIZE;
+    //  Internal
+    procedure UpdateColors; override;
+    procedure UpdateRects; override;
 
-    protected
-      procedure PaintBuffer; override;
-      procedure Resize; override;
+    // Scale
+    procedure ScaleChanged(Scaler: single); override;
 
-      // Scale
-      procedure ScaleChanged(Scaler: single); override;
+    // Mouse
+    procedure Click; override;
 
-      // State
-      procedure InteractionStateChanged(AState: FXControlState); override;
+    // Key Presses
+    procedure KeyPress(var Key: Char); override;
 
-      // Key Presses
-      procedure KeyPress(var Key: Char); override;
+    // Inherited Mouse Detection
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
 
-      // Inherited Mouse Detection
-      procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+  published
+    property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
+    property IconFont: TFont read FIconFont write FIconFont;
+    property TextSpacing: Integer read FTextSpacing write SetTextSpacing default RADIO_TEXT_SPACE;
+    property Checked: Boolean read GetChecked write SetChecked default false;
+    property OnCheck: TNotifyEvent read FOnCheck write FOnCheck;
+    property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default false;
 
-    published
-      property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
-      property IconFont: TFont read FIconFont write FIconFont;
-      property TextSpacing: Integer read FTextSpacing write SetTextSpacing default RADIO_TEXT_SPACE;
-      property Checked: Boolean read GetChecked write SetChecked default false;
-      property OnCheck: TNotifyEvent read FOnCheck write FOnCheck;
-      property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default false;
+    property Text: string read FText write SetText;
+    property WordWrap: boolean read FWordWrap write SetWordWrap default true;
+    property Image: FXIconSelect read FImage write SetImage;
+    property ImageScale: single read FImageScale write SetImageScale;
 
-      property Text: string read FText write SetText;
-      property WordWrap: boolean read FWordWrap write SetWordWrap default true;
-      property Image: FXIconSelect read FImage write SetImage;
-      property ImageScale: single read FImageScale write SetImageScale;
+    property Layout: FXDrawLayout read FLayout write SetLayout default FXDrawLayout.Left;
 
-      property Layout: FXDrawLayout read FLayout write SetLayout default FXDrawLayout.Left;
+    property Align;
+    property Font;
+    property Transparent;
+    property Opacity;
+    property PaddingFill;
+    property Constraints;
+    property Anchors;
+    property Hint;
+    property ShowHint;
+    property ParentShowHint;
+    property TabStop;
+    property TabOrder;
+    property FocusFlags;
+    property DragKind;
+    property DragCursor;
+    property DragMode;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDrag;
+    property OnStartDrag;
+    property OnEnter;
+    property OnExit;
+    property OnClick;
+    property OnKeyDown;
+    property OnKeyUp;
+    property OnKeyPress;
+    property OnMouseUp;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
 
-      property Align;
-      property Font;
-      property Transparent;
-      property Opacity;
-      property PaddingFill;
-      property Constraints;
-      property Anchors;
-      property Hint;
-      property ShowHint;
-      property ParentShowHint;
-      property TabStop;
-      property TabOrder;
-      property FocusFlags;
-      property DragKind;
-      property DragCursor;
-      property DragMode;
-      property OnDragDrop;
-      property OnDragOver;
-      property OnEndDrag;
-      property OnStartDrag;
-      property OnEnter;
-      property OnExit;
-      property OnClick;
-      property OnKeyDown;
-      property OnKeyUp;
-      property OnKeyPress;
-      property OnMouseUp;
-      property OnMouseDown;
-      property OnMouseEnter;
-      property OnMouseLeave;
+    // Checked Tag
+    function GetCheckedTag: integer;
 
-      // Checked Tag
-      function GetCheckedTag: integer;
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
 
-    public
-      constructor Create(aOwner: TComponent); override;
-      destructor Destroy; override;
-
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChildren: Boolean);
-
-      function Background: TColor;
+    // Interface
+    function Background: TColor; override;
   end;
 
 implementation
-
-procedure FXRadioButton.InteractionStateChanged(AState: FXControlState);
-begin
-  inherited;
-  PaintBuffer;
-end;
-
-function FXRadioButton.IsContainer: Boolean;
-begin
-  Result := false;
-end;
 
 procedure FXRadioButton.KeyPress(var Key: Char);
 begin
@@ -168,13 +149,6 @@ begin
       Self.Cursor := crHandPoint
     else
       Self.Cursor := crDefault;
-end;
-
-procedure FXRadioButton.UpdateTheme(const UpdateChildren: Boolean);
-begin
-  UpdateColors;
-  UpdateRects;
-  Redraw;
 end;
 
 procedure FXRadioButton.UpdateColors;
@@ -283,22 +257,20 @@ end;
 
 procedure FXRadioButton.SetText(const Value: string);
 begin
-  if FText <> Value then
-    begin
-      FText := Value;
+  if FText = Value then
+    Exit;
 
-      Redraw;
-    end;
+  FText := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXRadioButton.SetTextSpacing(const Value: Integer);
 begin
-  if Value <> FTextSpacing then
-    begin
-      FTextSpacing := Value;
-      UpdateRects;
-      Redraw;
-    end;
+  if Value = FTextSpacing then
+    Exit;
+
+  FTextSpacing := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXRadioButton.SetToChecked;
@@ -321,12 +293,11 @@ end;
 
 procedure FXRadioButton.SetWordWrap(const Value: boolean);
 begin
-  if FWordWrap <> Value then
-    begin
-      FWordWrap := Value;
+  if FWordWrap = Value then
+    Exit;
 
-      Redraw;
-    end;
+  FWordWrap := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXRadioButton.ScaleChanged(Scaler: single);
@@ -339,49 +310,41 @@ end;
 
 procedure FXRadioButton.SetChecked(const Value: Boolean);
 begin
-  if Value <> FChecked then
-    begin
-      FChecked := Value;
-      if Value then
-        begin
-          SetToChecked;
-        end;
+  if Value = FChecked then
+    Exit;
 
-      Redraw;
-    end;
+  FChecked := Value;
+  if Value then
+    SetToChecked;
+
+  StandardUpdateLayout;
 end;
 
 procedure FXRadioButton.SetImage(const Value: FXIconSelect);
 begin
-  if FImage <> Value then
-    begin
-      FImage := Value;
+  if FImage = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FImage := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXRadioButton.SetImageScale(const Value: single);
 begin
-  if FImageScale <> Value then
-    begin
-      FImageScale := Value;
+  if FImageScale = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FImageScale := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXRadioButton.SetLayout(const Value: FXDrawLayout);
 begin
-  if FLayout <> Value then
-    begin
-      FLayout := Value;
+  if FLayout = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FLayout := Value;
+  StandardUpdateLayout;
 end;
 
 function FXRadioButton.GetChecked;
@@ -414,6 +377,16 @@ begin
     end;
 end;
 
+procedure FXRadioButton.Click;
+begin
+  inherited;
+  if not Enabled then
+    Exit;
+
+  if not Checked then
+    Checked := true;
+end;
+
 constructor FXRadioButton.Create(aOwner: TComponent);
 begin
   inherited;
@@ -443,10 +416,6 @@ begin
   // Sizing
   Height := 30;
   Width := 180;
-
-  // Update
-  UpdateRects;
-  UpdateColors;
 end;
 
 destructor FXRadioButton.Destroy;
@@ -525,27 +494,6 @@ begin
         end;
     end;
 
-  inherited;
-end;
-
-procedure FXRadioButton.Resize;
-begin
-  inherited;
-  UpdateRects;
-end;
-
-procedure FXRadioButton.WMSize(var Message: TWMSize);
-begin
-  UpdateRects;
-  Redraw;
-end;
-
-procedure FXRadioButton.WM_LButtonUp(var Msg: TWMLButtonUp);
-begin
-  if not Enabled then exit;
-
-  if not Checked then
-    Checked := true;
   inherited;
 end;
 

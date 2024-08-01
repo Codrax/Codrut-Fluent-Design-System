@@ -92,10 +92,7 @@ type
     FOnItemHover,
     FOnItemSelect: TNotifyEvent;
 
-    //  Internal
-    procedure UpdateColors;
-    procedure UpdateRects; virtual;
-
+    // Internal
     procedure ClearSelectedInternal;
 
     procedure UpdateScrollbars; // update actual position & size of scroll bars!
@@ -112,7 +109,6 @@ type
     function GetItemSelected(Index: integer): boolean;
 
     // Setters
-    procedure SetOrientation(const Value: FXOrientation);
     procedure SetNoOutOfBoundsDraw(const Value: boolean);
     procedure SetExtX(const Value: integer);
     procedure SetExtY(const Value: integer);
@@ -124,8 +120,15 @@ type
 
   protected
     procedure PaintBuffer; override;
+
+    // Size
     procedure Resize; override;
 
+    // Internal
+    procedure UpdateColors; override;
+    procedure UpdateRects; override;
+
+    // Draw
     function GetItemBackgroundColor(Index: integer): TColor; virtual;
     procedure DrawItem(Index: integer; ARect: TRect; Canvas: TCanvas); virtual;
 
@@ -233,10 +236,8 @@ type
     procedure ClearSelection;
 
     // Interface
-    function IsContainer: Boolean;
-    procedure UpdateTheme(const UpdateChildren: Boolean);
-
-    function Background: TColor;
+    function IsContainer: Boolean; override;
+    function Background: TColor; override;
   end;
 
   FXLinearDrawList = class(FXDrawList)
@@ -311,10 +312,8 @@ type
     destructor Destroy; override;
 
     // Interface
-    function IsContainer: Boolean;
-    procedure UpdateTheme(const UpdateChildren: Boolean);
-
-    function Background: TColor;
+    function IsContainer: Boolean; override;
+    function Background: TColor; override;
   end;
 
   FXLinearControlList = class(FXLinearDrawList)
@@ -331,6 +330,9 @@ type
 
     // Control adder
     procedure CMControlListChange(var Msg: TCMControlListChange); message CM_CONTROLLISTCHANGE;
+
+    // Created
+    procedure ComponentCreated; override;
 
     // Internal
     procedure UpdateRects; override;
@@ -352,6 +354,9 @@ type
 
     // Control manage
     procedure AddControlToItem(AControl: TControl);
+
+    // Interface
+    function IsContainer: Boolean; override;
   end;
 
 implementation
@@ -382,7 +387,7 @@ procedure FXDrawList.ClearSelection;
 begin
   ClearSelectedInternal;
 
-  Redraw;
+  StandardUpdateDraw;
 end;
 
 procedure FXDrawList.ClearSelectedInternal;
@@ -484,10 +489,6 @@ begin
   Width := 350;
   Height := 250;
 
-  // Update
-  UpdateRects;
-  UpdateColors;
-
   // Update Position
   UpdateScrollbars;
 end;
@@ -520,6 +521,9 @@ end;
 function FXDrawList.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
   MousePos: TPoint): Boolean;
 begin
+  if IsDesigning then
+    Exit(false);
+
   Result := false;
 
   if FHandleScrolling and not (ssCtrl in Shift) then begin
@@ -613,12 +617,13 @@ end;
 
 function FXDrawList.GetInBounds(Index: integer): boolean;
 var
-  ARect: TRect;
+  ARect, Client: TRect;
 begin
   ARect := GetItemDisplayRect(Index);
 
   // Return if element is visible
-  Result := ARect.IntersectsWith( GetClientRect );
+  Client := GetClientRect;
+  Result := ARect.IntersectsWith( Client );
 end;
 
 function FXDrawList.GetItemBackgroundColor(Index: integer): TColor;
@@ -706,7 +711,6 @@ end;
 procedure FXDrawList.InteractionStateChanged(AState: FXControlState);
 begin
   inherited;
-  Redraw;
 end;
 
 function FXDrawList.IsContainer: Boolean;
@@ -789,6 +793,12 @@ begin
   inherited;
 end;
 
+procedure FXDrawList.Resize;
+begin
+  inherited;
+  UpdateScrollbars;
+end;
+
 procedure FXDrawList.CalculateScroll;
 var
   MaxX, MaxY: integer;
@@ -813,19 +823,6 @@ begin
     FVertScroll.Max := MaxY + FExtendY;
 end;
 
-procedure FXDrawList.Resize;
-begin
-  inherited;
-  UpdateRects;
-end;
-
-procedure FXDrawList.UpdateTheme(const UpdateChildren: Boolean);
-begin
-  UpdateColors;
-  UpdateRects;
-  Redraw;
-end;
-
 procedure FXDrawList.ScrollChanged(Sender: TObject);
 begin
   // STOP scroll animations
@@ -835,7 +832,7 @@ end;
 procedure FXDrawList.ScrollChangedValue(Sender: TObject);
 begin
   // Draw
-  Redraw;
+  StandardUpdateDraw;
 end;
 
 procedure FXDrawList.UpdateColors;
@@ -914,7 +911,7 @@ begin
     Exit;
 
   FDefaultDraw := Value;
-  Redraw;
+  StandardUpdateDraw;
 end;
 
 procedure FXDrawList.SetExtX(const Value: integer);
@@ -945,8 +942,9 @@ begin
 
   SetLength(FItemRects, Value);
   SetLength(FItemSelected, Value);
-  UpdateRects;
-  Redraw;
+
+  // Draw
+  StandardUpdateLayout;
 end;
 
 procedure FXDrawList.SetItemIndex(const Value: integer);
@@ -965,7 +963,7 @@ begin
   EnsureIndexVisible;
 
   // Draw
-  Redraw;
+  StandardUpdateDraw;
 end;
 
 procedure FXDrawList.SetItemIndexHover(const Value: integer);
@@ -974,14 +972,14 @@ begin
     Exit;
 
   FItemIndexHover := Value;
-  Redraw;
+  StandardUpdateDraw;
 end;
 
 procedure FXDrawList.SetItemSelected(Index: integer; const Value: boolean);
 begin
   FItemSelected[Index] := Value;
 
-  Redraw;
+  StandardUpdateDraw;
 end;
 
 procedure FXDrawList.SetNoOutOfBoundsDraw(const Value: boolean);
@@ -990,7 +988,6 @@ begin
     Exit;
 
   FNoOutOfBoundsDraw := Value;
-  Redraw;
 end;
 
 procedure FXDrawList.SetOpacityHover(const Value: byte);
@@ -999,7 +996,7 @@ begin
     Exit;
 
   FOpacityHover := Value;
-  Redraw;
+  StandardUpdateDraw;
 end;
 
 procedure FXDrawList.SetOpacitySelected(const Value: byte);
@@ -1008,12 +1005,7 @@ begin
     Exit;
 
   FOpacitySelected := Value;
-  Redraw;
-end;
-
-procedure FXDrawList.SetOrientation(const Value: FXOrientation);
-begin
-
+  StandardUpdateDraw;
 end;
 
 procedure FXDrawList.SetShowScrollbars(const Value: boolean);
@@ -1022,8 +1014,8 @@ begin
     Exit;
 
   FShowScrollbars := Value;
-  UpdateScrollbars;
-  UpdateRects;
+  UpdateRects; // also scrollbars are updated
+  StandardUpdateLayout;
 end;
 
 procedure FXDrawList.StopScrollAnimations;
@@ -1175,8 +1167,8 @@ begin
     Exit;
 
   FFullLine := Value;
-  UpdateRects;
-  Redraw;
+
+  StandardUpdateLayout;
 end;
 
 procedure FXLinearDrawList.SetItemHeight(const Value: integer);
@@ -1186,8 +1178,8 @@ begin
 
   FVertScroll.SmallChange := Value;
   FItemHeight := Value;
-  UpdateRects;
-  Redraw;
+
+  StandardUpdateLayout;
 end;
 
 procedure FXLinearDrawList.SetItemWidth(const Value: integer);
@@ -1196,8 +1188,7 @@ begin
     Exit;
 
   FItemWidth := Value;
-  UpdateRects;
-  Redraw;
+  StandardUpdateLayout;
 end;
 
 procedure FXLinearDrawList.SetJustifyContent(const Value: FXContentJustify);
@@ -1206,8 +1197,7 @@ begin
     Exit;
 
   FJustifyContent := Value;
-  UpdateRects;
-  Redraw;
+  StandardUpdateLayout;
 end;
 
 procedure FXLinearDrawList.SetOrientation(const Value: FXOrientation);
@@ -1216,8 +1206,7 @@ begin
     Exit;
 
   FOrientation := Value;
-  UpdateRects;
-  Redraw;
+  StandardUpdateLayout;
 end;
 
 procedure FXLinearDrawList.SetSpacingColumn(const Value: integer);
@@ -1226,8 +1215,7 @@ begin
     Exit;
 
   FSpacingColumn := Value;
-  UpdateRects;
-  Redraw;
+  StandardUpdateLayout;
 end;
 
 procedure FXLinearDrawList.SetSpacingRow(const Value: integer);
@@ -1236,8 +1224,7 @@ begin
     Exit;
 
   FSpacingRow := Value;
-  UpdateRects;
-  Redraw;
+  StandardUpdateLayout;
 end;
 
 procedure FXLinearDrawList.SetWrap(const Value: boolean);
@@ -1246,8 +1233,7 @@ begin
     Exit;
 
   FWrap := Value;
-  UpdateRects;
-  Redraw;
+  StandardUpdateLayout;
 end;
 
 procedure FXLinearDrawList.UpdateRects;
@@ -1278,9 +1264,16 @@ begin
   if Msg.Inserting and (Msg.Control is FXWindowsControl)
     and not IsReading then begin
 
+    // Set parent
     if Msg.Control.Parent <> FContainer then
       Msg.Control.Parent := FContainer;
   end;
+end;
+
+procedure FXLinearControlList.ComponentCreated;
+begin
+  inherited;
+  FContainer.AllocateHandles; // allocate handle for container
 end;
 
 constructor FXLinearControlList.Create(aOwner: TComponent);
@@ -1290,6 +1283,7 @@ begin
     csNeedsBorderPaint, csPannable, csGestures];
 
   FContainer := FXControlContainer.CreateInList(Self);
+  FContainer.Parent := Self;
   FContainer.Visible := IsDesigning;
 end;
 
@@ -1304,7 +1298,7 @@ procedure FXLinearControlList.DrawItem(Index: integer; ARect: TRect;
 begin
   // Set the background before drawing occurs
   FContainer.FBackgroundColor := GetItemBackgroundColor(Index);
-  FContainer.Redraw(false); // draw background
+  FContainer.Redraw;
 
   // Default draw
   inherited;
@@ -1332,7 +1326,6 @@ begin
   FContainer.Height := ARect.Height;
 
   // Draw controls
-  FContainer.Redraw;
   FContainer.DrawTo(Buffer, ARect);
 end;
 
@@ -1350,6 +1343,11 @@ end;
 function FXLinearControlList.GetItemPaddding: FXMargins;
 begin
   Result := FContainer.PaddingFill;
+end;
+
+function FXLinearControlList.IsContainer: Boolean;
+begin
+  Result := true;
 end;
 
 procedure FXLinearControlList.PaintBuffer;
@@ -1437,11 +1435,6 @@ begin
     Brush.Color := FBackgroundColor;
     FillRect( ClipRect );
   end;
-end;
-
-procedure FXControlContainer.UpdateTheme(const UpdateChildren: Boolean);
-begin
-
 end;
 
 end.

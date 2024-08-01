@@ -104,19 +104,15 @@ type
     var Points: TArray<TPoint>;
 
     procedure PaintBuffer; override;
-    procedure Resize; override;
 
-    //  Internal
-    procedure UpdateColors; virtual;
-    procedure UpdateRects; virtual;
+    // Internal
+    procedure UpdateColors; override;
+    procedure UpdateRects; override;
 
     // Shape building
     procedure BuildPoints; virtual;
     procedure RotatePoints; virtual;
     procedure CreatePath; virtual;
-
-    // Scaler
-    procedure ScaleChanged(Scaler: single); override;
 
     // State
     procedure InteractionStateChanged(AState: FXControlState); override;
@@ -171,10 +167,7 @@ type
     procedure SetBounds(ALeft, ATop, AWidth, AHeight: Integer); override;
 
     // Interface
-    function IsContainer: Boolean;
-    procedure UpdateTheme(const UpdateChildren: Boolean);
-
-    function Background: TColor;
+    function Background: TColor; override;
   end;
 
   FXShapeLines = class(FXShape)
@@ -242,10 +235,6 @@ begin
 
   // GDI Obj
   FPath := TGPGraphicsPath.Create;
-
-  // Update
-  UpdateRects;
-  UpdateColors;
 end;
 
 procedure FXShape.CreatePath;
@@ -270,13 +259,7 @@ end;
 
 procedure FXShape.InteractionStateChanged(AState: FXControlState);
 begin
-  inherited;
-  Redraw;
-end;
-
-function FXShape.IsContainer: Boolean;
-begin
-  Result := false;
+  //
 end;
 
 procedure FXShape.PaintBuffer;
@@ -303,24 +286,11 @@ begin
   inherited;
 end;
 
-procedure FXShape.Resize;
-begin
-  inherited;
-  UpdateRects;
-end;
-
 procedure FXShape.RotatePoints;
 begin
   for var I := 0 to High(Points) do
     Points[I] :=
       RotatePointAroundPoint(Points[I], DrawRect.CenterPoint, FRotation);
-end;
-
-procedure FXShape.UpdateTheme(const UpdateChildren: Boolean);
-begin
-  UpdateColors;
-  UpdateRects;
-  Redraw;
 end;
 
 procedure FXShape.UpdateColors;
@@ -391,12 +361,6 @@ begin
 
   // Path
   CreatePath;
-end;
-
-procedure FXShape.ScaleChanged(Scaler: single);
-begin
-  inherited;
-  // update scale
 end;
 
 procedure FXShape.SetBounds(ALeft, ATop, AWidth, AHeight: Integer);
@@ -545,9 +509,9 @@ begin
 
   Points := [
     DrawRect.TopLeft,
-    Point(DrawRect.Top, DrawRect.Right),
+    Point(DrawRect.Right, DrawRect.Top),
     DrawRect.BottomRight,
-    Point(DrawRect.Bottom, DrawRect.Left)
+    Point(DrawRect.Left, DrawRect.Bottom)
   ];
   TArrayUtils<TPoint>.AddValues([Points[0], Points[1]], Points);
 end;

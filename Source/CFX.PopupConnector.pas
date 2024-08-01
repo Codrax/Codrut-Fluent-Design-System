@@ -5,18 +5,18 @@ interface
 uses
   Vcl.Menus, CFX.PopupMenu;
 
-  type
-    FXPopupConnector = class(TPopupMenu)
-    private
-      FPopupMenu: FXPopupMenu;
+type
+  FXPopupConnector = class(TPopupMenu)
+  private
+    FPopupMenu: FXPopupMenu;
 
-    published
-      property PopupMenu: FXPopupMenu read FPopupMenu write FPopupMenu;
+  published
+    property PopupMenu: FXPopupMenu read FPopupMenu write FPopupMenu;
 
-    public
-      procedure Popup(X, Y: Integer); override;
+  public
+    procedure Popup(X, Y: Integer); override;
 
-    end;
+  end;
 
 implementation
 

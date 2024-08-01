@@ -7,33 +7,33 @@ uses
   Types, Vcl.Forms, Vcl.Graphics, CFX.Colors, CFX.Registry, ShellAPI,
   CFX.Types, IOUTils, RegularExpressions, CFX.Files, CFX.Constants;
 
-  function GetAppsUseDarkTheme: Boolean;
-  function GetAccentColor( brightencolor: boolean = true ): TColor;
-  /// <summary> Returns the scroll amount in Pixels. </summary>
-  function GetScrollAmount(Delta: integer; ViewHeight: integer): integer;
-  function GetLinesPerScroll: integer;
-  function GetLineScrollHeight: integer;
-  function GetNTKernelVersion: single;
+function GetAppsUseDarkTheme: Boolean;
+function GetAccentColor( brightencolor: boolean = true ): TColor;
+/// <summary> Returns the scroll amount in Pixels. </summary>
+function GetScrollAmount(Delta: integer; ViewHeight: integer): integer;
+function GetLinesPerScroll: integer;
+function GetLineScrollHeight: integer;
+function GetNTKernelVersion: single;
 
-  function GetUserNameString: string;
+function GetUserNameString: string;
 
-  // Shell
-  procedure ShellRun(Command: string; Parameters: string = '');
+// Shell
+procedure ShellRun(Command: string; Parameters: string = '');
 
-  // String
-  function IsStringAlphaNumeric(const S: string): Boolean;
+// String
+function IsStringAlphaNumeric(const S: string): Boolean;
 
-  // File
-  function GetFileBytesString(FileName: string; FirstCount: integer): TArray<string>;
-  function ReadFileSignature(FileName: string): TFileType;
+// File
+function GetFileBytesString(FileName: string; FirstCount: integer): TArray<string>;
+function ReadFileSignature(FileName: string): TFileType;
 
-  // General Folder
-  function GetAppDataFolder: string;
-  function GetPackagesFolder: string;
+// General Folder
+function GetAppDataFolder: string;
+function GetPackagesFolder: string;
 
-  // Screen
-  procedure QuickScreenShot(var BitMap: TBitMap; Monitor: integer = -2);
-  procedure AppScreenShot(var BitMap: TBitMap; ApplicationCapton: string);
+// Screen
+procedure QuickScreenShot(var BitMap: TBitMap; Monitor: integer = -2);
+procedure AppScreenShot(var BitMap: TBitMap; ApplicationCapton: string);
 
 
 implementation

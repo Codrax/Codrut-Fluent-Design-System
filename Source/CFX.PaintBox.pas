@@ -34,10 +34,11 @@ type
     procedure SetWhiteTint(const Value: integer);
     procedure SetCustomColor(const Value: FXColorSets);
 
-    procedure UpdateColors;
-
   protected
     procedure PaintBuffer; override;
+
+    // Internal
+    procedure UpdateColors; override;
 
   published
     property Align;
@@ -86,10 +87,7 @@ type
     procedure Inflate(up,right,down,lft: integer);
 
     // Interface
-    function IsContainer: Boolean;
-    procedure UpdateTheme(const UpdateChildren: Boolean);
-
-    function Background: TColor;
+    function Background: TColor; override;
   end;
 
 implementation
@@ -157,11 +155,6 @@ begin
   // LEFT
   Left := Left - lft;
   Width := Width + lft;
-end;
-
-function FXPaintBox.IsContainer: Boolean;
-begin
-  Result := false;
 end;
 
 procedure FXPaintBox.PaintBuffer;
@@ -236,13 +229,6 @@ end;
 procedure FXPaintBox.SetWhiteTint(const Value: integer);
 begin
   FWhiteTintOpacity := Value;
-
-  Invalidate;
-end;
-
-procedure FXPaintBox.UpdateTheme(const UpdateChildren: Boolean);
-begin
-  UpdateColors;
 
   Invalidate;
 end;

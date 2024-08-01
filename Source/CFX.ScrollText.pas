@@ -24,164 +24,125 @@ uses
 
 type
   FXScrollText = class(FXWindowsControl, FXControl)
-    private
-      var DrawRect, ImageRect, TextRect: TRect;
+  private
+    var DrawRect, ImageRect, TextRect: TRect;
 
-      FTextSpacing: Integer;
-      FCustomColors: FXColorSets;
-      FText: string;
-      FDrawColors: FXCompleteColorSet;
-      FVertLayout: FXLayout;
-      FHorzLayout: FXLayout;
-      FImage: FXIconSelect;
-      FImageScale: real;
+    FTextSpacing: Integer;
+    FCustomColors: FXColorSets;
+    FText: string;
+    FDrawColors: FXCompleteColorSet;
+    FVertLayout: FXLayout;
+    FHorzLayout: FXLayout;
+    FImage: FXIconSelect;
+    FImageScale: real;
 
-      FAnimationDelay: integer;
-      FAnimationSpeed: integer;
+    FAnimationDelay: integer;
+    FAnimationSpeed: integer;
 
-      FSpacePercent: FXPercent;
+    FSpacePercent: FXPercent;
 
-      FOffset: integer;
-      FOffsetEnd: integer;
-      FAnimateValue: integer;
-      FAnimateMax: integer;
-      FAnimateSpace,
-      FAnimateWidth: integer;
+    FOffset: integer;
+    FOffsetEnd: integer;
+    FAnimateValue: integer;
+    FAnimateMax: integer;
+    FAnimateSpace,
+    FAnimateWidth: integer;
 
-      FFadeRight, 
-      FFadeLeft: boolean;
-      FFadeSize: integer;
+    FFadeRight,
+    FFadeLeft: boolean;
+    FFadeSize: integer;
 
-      FAnimateTimer: TTimer;
+    FAnimateTimer: TTimer;
 
-      //  Internal
-      procedure UpdateColors;
-      procedure UpdateRects;
+    // Set properties
+    procedure SetText(const Value: string);
+    procedure SetTextSpacing(const Value: Integer);
+    procedure SetHorzLayout(const Value: FXLayout);
+    procedure SetVertLayout(const Value: FXLayout);
+    procedure SetImage(const Value: FXIconSelect);
+    procedure SetImageScale(const Value: real);
+    procedure SetAnimationDelay(const Value: integer);
+    procedure SetAnimationSpeed(const Value: integer);
+    procedure SetFadeSize(const Value: integer);
 
-      // Set properties
-      procedure SetText(const Value: string);
-      procedure SetTextSpacing(const Value: Integer);
-      procedure SetHorzLayout(const Value: FXLayout);
-      procedure SetVertLayout(const Value: FXLayout);
-      procedure SetImage(const Value: FXIconSelect);
-      procedure SetImageScale(const Value: real);
-      procedure SetAnimationDelay(const Value: integer);
-      procedure SetAnimationSpeed(const Value: integer);
-      procedure SetFadeSize(const Value: integer);
+    // Animation
+    procedure ResetAnimation;
 
-      // Handle Messages
-      procedure WM_LButtonUp(var Msg: TWMLButtonUp); message WM_LBUTTONUP;
-      procedure WMSize(var Message: TWMSize); message WM_SIZE;
+    procedure AnimationProgress(Sender: TObject);
 
-      // Animation
-      procedure ResetAnimation;
+  protected
+    procedure PaintBuffer; override;
 
-      procedure AnimationProgress(Sender: TObject);
+    // Internal
+    procedure UpdateColors; override;
+    procedure UpdateRects; override;
 
-    protected
-      procedure PaintBuffer; override;
-      procedure Resize; override;
-      procedure ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF}); override;
+    // Size
+    procedure Sized; override;
 
-      // Scale
-      procedure ScaleChanged(Scaler: single); override;
+    // Scale
+    procedure ScaleChanged(Scaler: single); override;
 
-      // State
-      procedure InteractionStateChanged(AState: FXControlState); override;
+    // State
+    procedure InteractionStateChanged(AState: FXControlState); override;
 
-      // Key Presses
-      procedure KeyPress(var Key: Char); override;
+  published
+    property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
+    property TextSpacing: Integer read FTextSpacing write SetTextSpacing default CHECKBOX_TEXT_SPACE;
 
-      // Inherited Mouse Detection
-      procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    property Text: string read FText write SetText;
+    property SpacePercent: FXPercent read FSpacePercent write FSpacePercent;
+    property FadeSize: integer read FFadeSize write SetFadeSize default SCROLL_TEXT_FADE_SIZE;
 
-    published
-      property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
-      property TextSpacing: Integer read FTextSpacing write SetTextSpacing default CHECKBOX_TEXT_SPACE;
+    property Image: FXIconSelect read FImage write SetImage;
+    property ImageScale: real read FImageScale write SetImageScale;
 
-      property Text: string read FText write SetText;
-      property SpacePercent: FXPercent read FSpacePercent write FSpacePercent;
-      property FadeSize: integer read FFadeSize write SetFadeSize default SCROLL_TEXT_FADE_SIZE;
+    property AnimationDelay: integer read FAnimationDelay write SetAnimationDelay;
+    property AnimationSpeed: integer read FAnimationSpeed write SetAnimationSpeed;
 
-      property Image: FXIconSelect read FImage write SetImage;
-      property ImageScale: real read FImageScale write SetImageScale;
+    property LayoutHorizontal: FXLayout read FHorzLayout write SetHorzLayout default FXLayout.Beginning;
+    property LayoutVertical: FXLayout read FVertLayout write SetVertLayout default FXLayout.Center;
 
-      property AnimationDelay: integer read FAnimationDelay write SetAnimationDelay;
-      property AnimationSpeed: integer read FAnimationSpeed write SetAnimationSpeed;
+    property Align;
+    property Font;
+    property Transparent;
+    property Opacity;
+    property PaddingFill;
+    property Constraints;
+    property Anchors;
+    property Hint;
+    property ShowHint;
+    property ParentShowHint;
+    property TabStop;
+    property TabOrder;
+    property FocusFlags;
+    property DragKind;
+    property DragCursor;
+    property DragMode;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDrag;
+    property OnStartDrag;
+    property OnEnter;
+    property OnExit;
+    property OnClick;
+    property OnKeyDown;
+    property OnKeyUp;
+    property OnKeyPress;
+    property OnMouseUp;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
 
-      property LayoutHorizontal: FXLayout read FHorzLayout write SetHorzLayout default FXLayout.Beginning;
-      property LayoutVertical: FXLayout read FVertLayout write SetVertLayout default FXLayout.Center;
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
 
-      property Align;
-      property Font;
-      property Transparent;
-      property Opacity;
-      property PaddingFill;
-      property Constraints;
-      property Anchors;
-      property Hint;
-      property ShowHint;
-      property ParentShowHint;
-      property TabStop;
-      property TabOrder;
-      property FocusFlags;
-      property DragKind;
-      property DragCursor;
-      property DragMode;
-      property OnDragDrop;
-      property OnDragOver;
-      property OnEndDrag;
-      property OnStartDrag;
-      property OnEnter;
-      property OnExit;
-      property OnClick;
-      property OnKeyDown;
-      property OnKeyUp;
-      property OnKeyPress;
-      property OnMouseUp;
-      property OnMouseDown;
-      property OnMouseEnter;
-      property OnMouseLeave;
-
-    public
-      constructor Create(aOwner: TComponent); override;
-      destructor Destroy; override;
-
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChildren: Boolean);
-
-      function Background: TColor;
+    // Interface
+    function Background: TColor; override;
   end;
 
 implementation
-
-procedure FXScrollText.InteractionStateChanged(AState: FXControlState);
-begin
-  inherited;
-end;
-
-function FXScrollText.IsContainer: Boolean;
-begin
-  Result := false;
-end;
-
-procedure FXScrollText.KeyPress(var Key: Char);
-begin
-  inherited;
-end;
-
-procedure FXScrollText.MouseMove(Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-end;
-
-procedure FXScrollText.UpdateTheme(const UpdateChildren: Boolean);
-begin
-  UpdateColors;
-  UpdateRects;
-  Redraw;
-end;
 
 procedure FXScrollText.UpdateColors;
 begin
@@ -268,97 +229,93 @@ end;
 
 procedure FXScrollText.SetAnimationDelay(const Value: integer);
 begin
-  if FAnimationDelay <> Value then
-    begin
-      FAnimationDelay := Value;
+  if FAnimationDelay = Value then
+    Exit;
 
-      if FAnimateValue < 0 then
-        FAnimateValue := -Value;
-    end;
+  FAnimationDelay := Value;
+
+  if FAnimateValue < 0 then
+    FAnimateValue := -Value;
 end;
 
 procedure FXScrollText.SetAnimationSpeed(const Value: integer);
 begin
-  if FAnimationSpeed <> Value then
-    FAnimationSpeed := Value;
+  if FAnimationSpeed = Value then
+    Exit;
+
+  FAnimationSpeed := Value;
 end;
 
 procedure FXScrollText.SetFadeSize(const Value: integer);
 begin
-  if FFadeSize <> Value then
-    begin
-      FFadeSize := Value;
+  if FFadeSize = Value then
+    Exit;
 
-      Redraw;
-    end;
+  FFadeSize := Value;
+  StandardUpdateDraw;
 end;
 
 procedure FXScrollText.SetHorzLayout(const Value: FXLayout);
 begin
-  if FHorzLayout <> Value then
-    begin
-      FHorzLayout := Value;
+  if FHorzLayout = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FHorzLayout := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXScrollText.SetImage(const Value: FXIconSelect);
 begin
-  if FImage <> Value then
-    begin
-      FImage := Value;
+  if FImage = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FImage := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXScrollText.SetImageScale(const Value: real);
 begin
-  if FImageScale <> Value then
-    begin
-      FImageScale := Value;
+  if FImageScale = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FImageScale := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXScrollText.SetText(const Value: string);
 begin
-  if FText <> Value then
-    begin
-      FText := Value;
+  if FText = Value then
+    Exit;
 
-      UpdateRects;
-      ResetAnimation;
-      Redraw;
-    end;
+  FText := Value;
+
+  ResetAnimation;
+  StandardUpdateLayout;
 end;
 
 procedure FXScrollText.SetTextSpacing(const Value: Integer);
 begin
-  if Value <> FTextSpacing then
-    begin
-      FTextSpacing := Value;
+  if Value = FTextSpacing then
+    Exit;
 
-      ResetAnimation;
-      UpdateRects;
-      Redraw;
-    end;
+  FTextSpacing := Value;
+  ResetAnimation;
+  StandardUpdateLayout;
 end;
 
 procedure FXScrollText.SetVertLayout(const Value: FXLayout);
 begin
-    if FVertLayout <> Value then
-    begin
-      FVertLayout := Value;
+  if FVertLayout = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FVertLayout := Value;
+  StandardUpdateLayout;
+end;
+
+procedure FXScrollText.Sized;
+begin
+  inherited;
+  ResetAnimation;
 end;
 
 constructor FXScrollText.Create(aOwner: TComponent);
@@ -369,7 +326,7 @@ begin
   FAnimateTimer := TTimer.Create(nil);
   with FAnimateTimer do
     begin
-      Enabled := true;
+      Enabled := false;
       Interval := 1;
       OnTimer := AnimationProgress;
     end;
@@ -398,10 +355,6 @@ begin
   // Sizing
   Height := 30;
   Width := 180;
-
-  // Update
-  UpdateRects;
-  UpdateColors;
 end;
 
 destructor FXScrollText.Destroy;
@@ -412,6 +365,11 @@ begin
   FAnimateTimer.Enabled := false;
   FreeAndNil( FAnimateTimer );
   inherited;
+end;
+
+procedure FXScrollText.InteractionStateChanged(AState: FXControlState);
+begin
+  // do not update
 end;
 
 procedure FXScrollText.AnimationProgress(Sender: TObject);
@@ -443,19 +401,12 @@ begin
   Result := FDrawColors.Background;
 end;
 
-procedure FXScrollText.ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF});
-begin
-  inherited;
-  FTextSpacing := MulDiv(FTextSpacing, M, D);
-  UpdateRects;
-end;
-
 procedure FXScrollText.PaintBuffer;
 var
   DrawFlags: FXTextFlags;
   RectText, RectImage, DRect: TRect;
   Fade: integer;
-  
+
   I: Integer;
   ARect: TRect;
 begin
@@ -549,24 +500,6 @@ begin
   FOffsetEnd := 0;
   FFadeLeft := false;
   FAnimateValue := -AnimationDelay;
-end;
-
-procedure FXScrollText.Resize;
-begin
-  inherited;
-  UpdateRects;
-end;
-
-procedure FXScrollText.WMSize(var Message: TWMSize);
-begin
-  UpdateRects;
-  Redraw;
-  ResetAnimation;
-end;
-
-procedure FXScrollText.WM_LButtonUp(var Msg: TWMLButtonUp);
-begin
-  inherited;
 end;
 
 end.

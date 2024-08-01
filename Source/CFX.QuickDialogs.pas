@@ -4,13 +4,13 @@ interface
   uses
     Windows, SysUtils, CFX.Dialogs, Vcl.Forms, System.UITypes;
 
-  // Dialogs
-  procedure OpenMessage(AText: string); overload;
-  procedure OpenMessage(ATitle, AText: string); overload;
-  function OpenDialog(AText: string; AButtons: TMsgDlgButtons): TModalResult; overload;
-  function OpenDialog(ATitle, AText: string; AButtons: TMsgDlgButtons): TModalResult; overload;
-  function OpenInput(ATitle, AText: string; var AValue: string): boolean; overload;
-  function OpenInput(ATitle, AText: string; var AValue: integer; DefaultValue: integer=0): boolean; overload;
+// Dialogs
+procedure OpenMessage(AText: string); overload;
+procedure OpenMessage(ATitle, AText: string); overload;
+function OpenDialog(AText: string; AButtons: TMsgDlgButtons): TModalResult; overload;
+function OpenDialog(ATitle, AText: string; AButtons: TMsgDlgButtons): TModalResult; overload;
+function OpenInput(ATitle, AText: string; var AValue: string): boolean; overload;
+function OpenInput(ATitle, AText: string; var AValue: integer; DefaultValue: integer=0): boolean; overload;
 
 implementation
 

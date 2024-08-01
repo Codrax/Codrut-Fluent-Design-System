@@ -297,10 +297,8 @@ type
     procedure SetFocus(); override;
 
     // Interface
-    function IsContainer: Boolean;
-    procedure UpdateTheme(const UpdateChildren: Boolean);
-
-    function Background: TColor;
+    procedure UpdateTheme(const UpdateChildren: Boolean); override;
+    function Background: TColor; override;
   end;
 
 const
@@ -708,11 +706,6 @@ begin
   FadeAnim.Enabled := false;
 end;
 
-function FXButtonDesign.IsContainer: Boolean;
-begin
-  Result := false;
-end;
-
 procedure FXButtonDesign.KeyPress(var Key: Char);
 begin
   inherited;
@@ -758,9 +751,6 @@ var
   TmpFont: TFont;
   ImagePointer: FXIconSelect;
 begin
-  if (Parent = nil) then
-    Exit;
-
   ApplyAccentColor;
 
   // Select Color
@@ -1279,7 +1269,7 @@ end;
 procedure FXButtonDesign.UpdateTheme(const UpdateChildren: Boolean);
 begin
   ApplyAccentColor;
-  Redraw;
+  inherited;
 end;
 
 { FXButtonDesignUnderLine }

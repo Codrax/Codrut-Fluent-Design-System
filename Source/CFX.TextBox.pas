@@ -24,129 +24,115 @@ uses
 
 type
   FXCustomTextBox = class(FXWindowsControl, FXControl)
-    private
-      var TextRect: TRect;
+  private
+    var TextRect: TRect;
 
-      FCustomColors: FXColorSets;
-      FDrawColors: FXCompleteColorSet;
+    FCustomColors: FXColorSets;
+    FDrawColors: FXCompleteColorSet;
 
-      FText: string;
-      FVertLayout: FXLayout;
-      FHorzLayout: FXLayout;
-      FInnerMargin: integer;
+    FText: string;
+    FVertLayout: FXLayout;
+    FHorzLayout: FXLayout;
+    FInnerMargin: integer;
 
-      FAutoSize: boolean;
-      FWordWrap: boolean;
-      FShowAccelChar: boolean;
-      FElipsis: boolean;
+    FAutoSize: boolean;
+    FWordWrap: boolean;
+    FShowAccelChar: boolean;
+    FElipsis: boolean;
 
-      FDrawOffset: TPoint;
+    FDrawOffset: TPoint;
 
-      //  Internal
-      procedure UpdateColors;
-      procedure UpdateRects;
+    // Set properties
+    procedure SetText(const Value: string);
+    procedure SetHorzLayout(const Value: FXLayout);
+    procedure SetVertLayout(const Value: FXLayout);
+    procedure SetInnermargin(const Value: integer);
+    procedure SetElipsis(const Value: boolean);
+    procedure SetWordWrap(const Value: boolean);
+    procedure SetAutoSizeEx(const Value: boolean);
+    procedure SetShowAccelChar(const Value: boolean);
 
-      // Set properties
-      procedure SetText(const Value: string);
-      procedure SetHorzLayout(const Value: FXLayout);
-      procedure SetVertLayout(const Value: FXLayout);
-      procedure SetInnermargin(const Value: integer);
-      procedure SetElipsis(const Value: boolean);
-      procedure SetWordWrap(const Value: boolean);
-      procedure SetAutoSizeEx(const Value: boolean);
-      procedure SetShowAccelChar(const Value: boolean);
+    // Size
+    procedure PaddingUpdated(Sender: TObject);
 
-      // Size
-      procedure PaddingUpdated(Sender: TObject);
+  protected
+    procedure PaintBuffer; override;
 
-      // Handle Messages
-      procedure WM_LButtonUp(var Msg: TWMLButtonUp); message WM_LBUTTONUP;
-      procedure WMSize(var Message: TWMSize); message WM_SIZE;
+    // Internal
+    procedure UpdateColors; override;
+    procedure UpdateRects; override;
 
-    protected
-      procedure PaintBuffer; override;
-      procedure Resize; override;
-      procedure ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF}); override;
+    // Size
+    procedure Sized; override;
 
-      // Created
-      procedure ComponentCreated; override;
+    // State
+    procedure InteractionStateChanged(AState: FXControlState); override;
 
-      // Font
-      procedure FontUpdate; override;
-      function BuildFlags: FXTextFlags;
+    // Font
+    procedure FontUpdate; override;
+    function BuildFlags: FXTextFlags;
 
-      // State
-      procedure InteractionStateChanged(AState: FXControlState); override;
+    // Properties
+    //property Caption: string read FText write SetText;
+    property Text: string read FText write SetText;
 
-      // Key Presses
-      procedure KeyPress(var Key: Char); override;
+    property LayoutHorizontal: FXLayout read FHorzLayout write SetHorzLayout default FXLayout.Beginning;
+    property LayoutVertical: FXLayout read FVertLayout write SetVertLayout default FXLayout.Center;
 
-      // Inherited Mouse Detection
-      procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    property AutoSize: boolean read FAutoSize write SetAutoSizeEx;
+    property WordWrap: boolean read FWordWrap write SetWordWrap default false;
+    property ShowAccelChar: boolean read FShowAccelChar write SetShowAccelChar default false;
+    property Elipsis: boolean read FElipsis write SetElipsis;
 
-      // Properties
-      //property Caption: string read FText write SetText;
-      property Text: string read FText write SetText;
+    property InnerMargin: integer read FInnerMargin write SetInnermargin;
 
-      property LayoutHorizontal: FXLayout read FHorzLayout write SetHorzLayout default FXLayout.Beginning;
-      property LayoutVertical: FXLayout read FVertLayout write SetVertLayout default FXLayout.Center;
+  published
+    property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
 
-      property AutoSize: boolean read FAutoSize write SetAutoSizeEx;
-      property WordWrap: boolean read FWordWrap write SetWordWrap default false;
-      property ShowAccelChar: boolean read FShowAccelChar write SetShowAccelChar default false;
-      property Elipsis: boolean read FElipsis write SetElipsis;
+    property Align;
+    property Font;
+    property Transparent;
+    property HitTest;
+    property Opacity;
+    property Constraints;
+    property Anchors;
+    property Hint;
+    property ShowHint;
+    property ParentShowHint;
+    property TabStop default false;
+    property TabOrder;
+    property FocusFlags;
+    property DragKind;
+    property DragCursor;
+    property DragMode;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDrag;
+    property OnStartDrag;
+    property OnEnter;
+    property OnExit;
+    property OnClick;
+    property OnKeyDown;
+    property OnKeyUp;
+    property OnKeyPress;
+    property OnMouseUp;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
 
-      property InnerMargin: integer read FInnerMargin write SetInnermargin;
+    // Size
+    procedure UpdateAutoSize;
 
-    published
-      property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
 
-      property Align;
-      property Font;
-      property Transparent;
-      property HitTest;
-      property Opacity;
-      property Constraints;
-      property Anchors;
-      property Hint;
-      property ShowHint;
-      property ParentShowHint;
-      property TabStop default false;
-      property TabOrder;
-      property FocusFlags;
-      property DragKind;
-      property DragCursor;
-      property DragMode;
-      property OnDragDrop;
-      property OnDragOver;
-      property OnEndDrag;
-      property OnStartDrag;
-      property OnEnter;
-      property OnExit;
-      property OnClick;
-      property OnKeyDown;
-      property OnKeyUp;
-      property OnKeyPress;
-      property OnMouseUp;
-      property OnMouseDown;
-      property OnMouseEnter;
-      property OnMouseLeave;
-
-      // Size
-      procedure UpdateAutoSize;
-
-    public
-      constructor Create(aOwner: TComponent); override;
-      destructor Destroy; override;
-
-      // Interface
-      function IsContainer: Boolean;
-      procedure UpdateTheme(const UpdateChildren: Boolean);
-
-      function Background: TColor;
+    // Interface
+    function Background: TColor; override;
   end;
 
   FXTextBox = class(FXCustomTextBox)
+  published
     property Text;
 
     property LayoutHorizontal;
@@ -193,85 +179,63 @@ type
   end;
 
   FXAnimatedTextBox = class(FXCustomTextBox)
-    private
-      FItems: TStringList;
+  private
+    FItems: TStringList;
 
-      FAnimating: boolean;
-      FDelay: integer;
-      FTimer: TTimer;
+    FAnimating: boolean;
+    FDelay: integer;
+    FTimer: TTimer;
 
-      FPosition: integer;
+    FPosition: integer;
 
-      FAdderMode: boolean;
-      FAdderText: string;
+    FAdderMode: boolean;
+    FAdderText: string;
 
-      // Settters
-      procedure SetAnimating(const Value: boolean);
-      procedure SetItems(const Value: TStringList);
-      procedure SetAdderMode(const Value: boolean);
-      procedure SetAdderText(const Value: string);
-      procedure SetDelay(const Value: integer);
+    // Settters
+    procedure SetAnimating(const Value: boolean);
+    procedure SetItems(const Value: TStringList);
+    procedure SetAdderMode(const Value: boolean);
+    procedure SetAdderText(const Value: string);
+    procedure SetDelay(const Value: integer);
 
-      // Text
-      procedure LoadItem(Index: integer; Update: boolean = true);
-      procedure ReloadItem;
+    // Text
+    procedure LoadItem(Index: integer; Update: boolean = true);
+    procedure ReloadItem;
 
-      // Tick
-      procedure TimerTick(Sender: TObject);
-      procedure ItemsOnChange(Sender: TObject);
+    // Tick
+    procedure TimerTick(Sender: TObject);
+    procedure ItemsOnChange(Sender: TObject);
 
-    published
-      property LayoutHorizontal;
-      property LayoutVertical;
+  published
+    property LayoutHorizontal;
+    property LayoutVertical;
 
-      property AutoSize;
-      property WordWrap;
-      property ShowAccelChar;
-      property Elipsis;
+    property AutoSize;
+    property WordWrap;
+    property ShowAccelChar;
+    property Elipsis;
 
-      property InnerMargin;
+    property InnerMargin;
 
-      property Items: TStringList read FItems write SetItems;
-      property Delay: integer read FDelay write SetDelay default 1000;
-      property Animating: boolean read FAnimating write SetAnimating default true;
+    property Items: TStringList read FItems write SetItems;
+    property Delay: integer read FDelay write SetDelay default 1000;
+    property Animating: boolean read FAnimating write SetAnimating default true;
 
-      property AdderMode: boolean read FAdderMode write SetAdderMode default false;
-      property AdderText: string read FAdderText write SetAdderText;
+    property AdderMode: boolean read FAdderMode write SetAdderMode default false;
+    property AdderText: string read FAdderText write SetAdderText;
 
-      function Count: integer;
+    function Count: integer;
 
-    public
-      constructor Create(aOwner: TComponent); override;
-      destructor Destroy; override;
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
   end;
 
 implementation
 
 procedure FXCustomTextBox.InteractionStateChanged(AState: FXControlState);
 begin
-  inherited;
-end;
-
-function FXCustomTextBox.IsContainer: Boolean;
-begin
-  Result := false;
-end;
-
-procedure FXCustomTextBox.KeyPress(var Key: Char);
-begin
-  inherited;
-end;
-
-procedure FXCustomTextBox.MouseMove(Shift: TShiftState; X, Y: Integer);
-begin
-  inherited;
-end;
-
-procedure FXCustomTextBox.UpdateTheme(const UpdateChildren: Boolean);
-begin
-  UpdateColors;
-  UpdateRects;
-  Redraw;
+  // do not update
 end;
 
 procedure FXCustomTextBox.UpdateAutoSize;
@@ -280,29 +244,34 @@ var
   ARect: TRect;
   AFlags: FXTextFlags;
 begin
-  with Canvas do
-    begin
-      Font.Assign( Self.Font );
+  with Canvas do begin
+    Font.Assign( Self.Font );
 
-      if WordWrap then
-        // Word Wrap
-        begin
-          AFlags := BuildFlags;
-          ARect := GetTextRect(Canvas, Self.TextRect, FText, AFlags, FInnerMargin);
+    if WordWrap then
+      // Word Wrap
+      begin
+        AFlags := BuildFlags;
+        ARect := GetTextRect(Canvas, Self.TextRect, FText, AFlags, FInnerMargin);
 
-          Width := ARect.Width + PaddingFill.AbsoluteHorizontal;
-          Height := ARect.Height + PaddingFill.AbsoluteVertical;
-        end
-      else
-        // Single Line
-        begin
-          AWidth := TextWidth(FText);
-          AHeight := TextHeight(FText);
+        AWidth := ARect.Width + PaddingFill.AbsoluteHorizontal;
+        AHeight := ARect.Height + PaddingFill.AbsoluteVertical;
 
-          Width := AWidth + PaddingFill.AbsoluteHorizontal;
-          Height := AHeight + PaddingFill.AbsoluteVertical;
-        end;
-    end;
+        if (Width <> AWidth) or (Height <> AHeight) then
+          Self.SetBounds(Left, Top, AWidth, AHeight);
+      end
+    else
+      // Single Line
+      begin
+        AWidth := TextWidth(FText);
+        AHeight := TextHeight(FText);
+
+        AWidth := AWidth + PaddingFill.AbsoluteHorizontal;
+        AHeight := AHeight + PaddingFill.AbsoluteVertical;
+
+        if (Width <> AWidth) or (Height <> AHeight) then
+          Self.SetBounds(Left, Top, AWidth, AHeight);
+      end;
+  end;
 end;
 
 procedure FXCustomTextBox.UpdateColors;
@@ -337,96 +306,93 @@ end;
 
 procedure FXCustomTextBox.SetAutoSizeEx(const Value: boolean);
 begin
-  if FAutoSize <> Value then
-    begin
-      FAutoSize := Value;
+  if FAutoSize = Value then
+    Exit;
 
-      if FAutoSize and not IsReading then
-        UpdateAutoSize
-      else
-        Redraw;
-    end;
+  FAutoSize := Value;
+
+  if FAutoSize and CanUpdate then
+    UpdateAutoSize
+  else
+    StandardUpdateLayout;
 end;
 
 procedure FXCustomTextBox.SetElipsis(const Value: boolean);
 begin
-  if FElipsis <> Value then
-    begin
-      FElipsis := Value;
+  if FElipsis = Value then
+    Exit;
 
-      Redraw;
-    end;
+  FElipsis := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomTextBox.SetHorzLayout(const Value: FXLayout);
 begin
-  if FHorzLayout <> Value then
-    begin
-      FHorzLayout := Value;
+  if FHorzLayout = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FHorzLayout := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomTextBox.SetInnermargin(const Value: integer);
 begin
+  if FInnerMargin = Value then
+    Exit;
+
   FInnerMargin := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomTextBox.SetShowAccelChar(const Value: boolean);
 begin
-  if FShowAccelChar <> Value then
-    begin
-      FShowAccelChar := Value;
+  if FShowAccelChar = Value then
+    Exit;
 
-      Redraw;
-    end;
+  FShowAccelChar := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomTextBox.SetText(const Value: string);
 begin
-  if FText <> Value then
-    begin
-      FText := Value;
-      
-      UpdateRects;
+  if FText = Value then
+    Exit;
 
-      // Reading
-      if IsReading then
-        Exit;
+  FText := Value;
 
-      // Update
-      if AutoSize then
-        UpdateAutoSize;
+  // Update
+  if AutoSize and CanUpdate then
+    UpdateAutoSize;
 
-      Redraw;
-    end;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomTextBox.SetVertLayout(const Value: FXLayout);
 begin
-    if FVertLayout <> Value then
-    begin
-      FVertLayout := Value;
+  if FVertLayout = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;
-    end;
+  FVertLayout := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomTextBox.SetWordWrap(const Value: boolean);
 begin
-  if FWordWrap <> Value then
-    begin
-      FWordWrap := Value;
+  if FWordWrap = Value then
+    Exit;
 
-      if AutoSize then
-        UpdateAutoSize;
-      
-      UpdateRects;
-      Redraw;
-    end;
+  FWordWrap := Value;
+  if AutoSize and CanUpdate then
+    UpdateAutoSize
+  else
+    StandardUpdateLayout;
+end;
+
+procedure FXCustomTextBox.Sized;
+begin
+  inherited;
+  if AutoSize and not IsReading and (Parent <> nil) then
+    UpdateAutoSize;
 end;
 
 constructor FXCustomTextBox.Create(aOwner: TComponent);
@@ -458,10 +424,6 @@ begin
   // Sizing
   Height := 30;
   Width := 180;
-
-  // Update
-  UpdateRects;
-  UpdateColors;
 end;
 
 destructor FXCustomTextBox.Destroy;
@@ -510,19 +472,6 @@ begin
   end;
 end;
 
-procedure FXCustomTextBox.ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF});
-begin
-  inherited;
-  UpdateRects;
-end;
-
-procedure FXCustomTextBox.ComponentCreated;
-begin
-  inherited;
-  if AutoSize then
-    UpdateAutoSize;
-end;
-
 procedure FXCustomTextBox.PaddingUpdated(Sender: TObject);
 begin
   UpdateRects;
@@ -556,31 +505,6 @@ begin
   DrawTextRect(Buffer, ARect, FText, Flags, InnerMargin);
   //Buffer.GDIText(FText, ARect, Flags);
 
-  inherited;
-end;
-
-procedure FXCustomTextBox.Resize;
-begin
-  inherited;
-  if AutoSize then
-    UpdateAutoSize;
-
-  UpdateRects;
-end;
-
-procedure FXCustomTextBox.WMSize(var Message: TWMSize);
-begin
-  UpdateRects;
-
-  if AutoSize and not IsDesigning and not IsReading then
-    UpdateAutoSize;
-  
-  // Invalidate
-  Redraw;
-end;
-
-procedure FXCustomTextBox.WM_LButtonUp(var Msg: TWMLButtonUp);
-begin
   inherited;
 end;
 
@@ -671,42 +595,39 @@ end;
 
 procedure FXAnimatedTextBox.SetAdderMode(const Value: boolean);
 begin
-  if FAdderMode <> Value then
-    begin
-      FAdderMode := Value;
+  if FAdderMode = Value then
+    Exit;
 
-      ReloadItem;
-    end;
+  FAdderMode := Value;
+  ReloadItem;
 end;
 
 procedure FXAnimatedTextBox.SetAdderText(const Value: string);
 begin
-  if FAdderText <> Value then
-    begin
-      FAdderText := Value;
+  if FAdderText = Value then
+    Exit;
 
-      ReloadItem;
-    end;
+  FAdderText := Value;
+  ReloadItem;
 end;
 
 procedure FXAnimatedTextBox.SetAnimating(const Value: boolean);
 begin
-  if FAnimating <> Value then
-    begin
-      FAnimating := Value;
+  if FAnimating = Value then
+    Exit;
 
-      FTimer.Enabled := Value;
-    end;
+  FAnimating := Value;
+  FTimer.Enabled := Value;
 end;
 
 procedure FXAnimatedTextBox.SetDelay(const Value: integer);
 begin
-  if FDelay <> Value then
-    begin
-      FDelay := Value;
+  if FDelay =Value then
+    Exit;
 
-      FTimer.Interval := Value;
-    end;
+
+  FDelay := Value;
+  FTimer.Interval := Value;
 end;
 
 procedure FXAnimatedTextBox.SetItems(const Value: TStringList);

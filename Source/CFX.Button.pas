@@ -80,10 +80,6 @@ type
     FArrowOffset: integer;
     FAutomaticCheck: boolean;
 
-    //  Internal
-    procedure UpdateColors;
-    procedure UpdateRects;
-
     // Set properties
     procedure SetText(const Value: string);
     procedure SetWordWrap(const Value: boolean);
@@ -121,12 +117,13 @@ type
     // Get properties
     function GetChecked: Boolean;
 
-    // Handle Messages
-    procedure WMSize(var Message: TWMSize); message WM_SIZE;
-
   protected
     procedure PaintBuffer; override;
-    procedure Resize; override;
+
+    //  Internal
+    procedure UpdateColors; override;
+    procedure UpdateRects; override;
+
     // Scale
     procedure ScaleChanged(Scaler: single); override;
 
@@ -225,10 +222,7 @@ type
     destructor Destroy; override;
 
     // Interface
-    function IsContainer: Boolean;
-    procedure UpdateTheme(const UpdateChildren: Boolean);
-
-    function Background: TColor;
+    function Background: TColor; override;
   end;
 
 implementation
@@ -238,7 +232,6 @@ var
   FAnim: TIntAni;
 begin
   inherited;
-  Redraw;
 
   // Animation
   if FAnimation and not IsReading and not Destroyed and not FAnimationRunning then
@@ -287,11 +280,6 @@ begin
     end;
 end;
 
-function FXButton.IsContainer: Boolean;
-begin
-  Result := false;
-end;
-
 procedure FXButton.KeyDown(var Key: Word; Shift: TShiftState);
 begin
   inherited;
@@ -337,13 +325,6 @@ begin
   inherited;
   if RepeatWhenPressed then
     FAutoRepeat.Enabled := false;
-end;
-
-procedure FXButton.UpdateTheme(const UpdateChildren: Boolean);
-begin
-  UpdateColors;
-  UpdateRects;
-  Redraw;;
 end;
 
 procedure FXButton.UpdateColors;
@@ -473,8 +454,7 @@ var
   AMargin, ATextHeight, ATextWidth, ATextLinesCount, ASize: integer;
   ALeft, ATop: integer;
 begin
-  if Parent = nil then
-    Exit;
+  inherited;
 
   DrawRect := GetClientRect;
 
@@ -663,35 +643,29 @@ end;
 
 procedure FXButton.SetText(const Value: string);
 begin
-  if FText <> Value then
-    begin
-      FText := Value;
+  if FText = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;;
-    end;
+  FText := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXButton.SetVertLayout(const Value: FXLayout);
 begin
-  if FVertLayout <> Value then
-    begin
-      FVertLayout := Value;
+  if FVertLayout = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;;
-    end;
+  FVertLayout := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXButton.SetWordWrap(const Value: boolean);
 begin
-  if FWordWrap <> Value then
-    begin
-      FWordWrap := Value;
+  if FWordWrap = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;;
-    end;
+  FWordWrap := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXButton.StateStop(Sender: TObject);
@@ -708,30 +682,26 @@ begin
   if not RepeatWhenPressed or (InteractionState <> FXControlState.Press) then
     FAutoRepeat.Enabled := false;
 
-  Redraw;;
+  Redraw;
 end;
 
 procedure FXButton.ScaleChanged(Scaler: single);
 begin
-  inherited;
   FImageScale := FImageScale * Scaler;
   FLineWidth := FLineWidth * Scaler;
   FMargin := round(FMargin * Scaler);
   FBorderWidth := FBorderWidth * Scaler;
 
-  UpdateRects;
+  inherited;
 end;
 
 procedure FXButton.SetButtonKind(const Value: FXButtonKind);
 begin
-  if FButtonKind <> Value then
-    begin
-      FButtonKind := Value;
+  if FButtonKind = Value then
+    Exit;
 
-      UpdateColors;
-      UpdateRects;
-      Redraw;;
-    end;
+  FButtonKind := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXButton.SetCancel(const Value: boolean);
@@ -746,7 +716,7 @@ begin
       FChecked := Value;
 
       UpdateColors;
-      Redraw;;
+      Redraw;
     end;
 end;
 
@@ -757,157 +727,130 @@ end;
 
 procedure FXButton.SetDetail(const Value: FXDetailType);
 begin
-  if FDetail <> Value then
-    begin
-      FDetail := Value;
-
-      Redraw;;
-    end;
+  if FDetail = Value then
+    Exit;
+    
+  FDetail := Value;
+  StandardUpdateDraw;
 end;
 
 procedure FXButton.SetHorizLayout(const Value: FXLayout);
 begin
-  if FHorizLayout <> Value then
-    begin
-      FHorizLayout := Value;
-
-      UpdateRects;
-      Redraw;;
-    end;
+  if FHorizLayout = Value then
+    Exit;
+    
+  FHorizLayout := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXButton.SetImage(const Value: FXIconSelect);
 begin
-  if FImage <> Value then
-    begin
-      FImage := Value;
+  if FImage = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;;
-    end;
+  FImage := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXButton.SetImageLayout(const Value: FXDrawLayout);
 begin
-  if FImageLayout <> Value then
-    begin
-      FImageLayout := Value;
-
-      UpdateRects;
-      Redraw;;
-    end;
+  if FImageLayout = Value then
+    Exit;
+    
+  FImageLayout := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXButton.SetImageScale(const Value: real);
 begin
-  if FImageScale <> Value then
-    begin
-      FImageScale := Value;
+  if FImageScale = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;;
-    end;
+  FImageScale := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXButton.SetLineWidth(const Value: real);
 begin
-  if FLineWidth <> Value then
-    begin
-      FLineWidth := Value;
+  if FLineWidth = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;;
-    end;
+  FLineWidth := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXButton.SetMargin(const Value: integer);
 begin
-  if FMargin <> Value then
-    begin
-      FMargin := Value;
+  if FMargin = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;;
-    end;
+  FMargin := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXButton.SetRoundness(const Value: integer);
 begin
-  if FRoundness <> Value then
-    begin
-      FRoundness := Value;
+  if FRoundness = Value then
+    Exit;
 
-      Redraw;;
-    end;
+  FRoundness := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXButton.SetShowText(const Value: boolean);
 begin
-  if FShowText <> Value then
-    begin
-      FShowText := Value;
+  if FShowText = Value then
+    Exit;
 
-      UpdateRects;
-      Redraw;;
-    end;
+  FShowText := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXButton.SetStateDuration(const Value: integer);
 begin
-  if FStateDuration <> Value then
-    begin
-      FStateDuration := Value;
-
-      FAutoStopState.Interval := Value;
-    end;
+  if FStateDuration = Value then
+    Exit;
+    
+  FStateDuration := Value;
+  FAutoStopState.Interval := Value;
 end;
 
 procedure FXButton.SetStateEnabled(const Value: boolean);
 begin
-  if FStateEnabled <> Value then
-    begin
-      FStateEnabled := Value;
+  if FStateEnabled = Value then begin
+    // Reset
+    if Value then
+      FAutoStopState.ResetTimer;
 
-      FAutoStopState.Enabled := false;
-      if Value and (StateDuration <> 0) then
-        FAutoStopState.Enabled := true;
+    Exit;
+  end;
 
-      UpdateRects;
-      Redraw;;
-    end
-  else
-    if Value and FAutoStopState.Enabled then
-      begin
-        FAutoStopState.ResetTimer;
-      end;
+  // Set to value
+  FStateEnabled := Value;
+
+  FAutoStopState.Enabled := false;
+  if Value and (StateDuration <> 0) then
+    FAutoStopState.Enabled := true;
+
+  StandardUpdateLayout;
 end;
 
 procedure FXButton.SetStateImage(const Value: FXIconSelect);
 begin
-  if FStateImage <> Value then
-    begin
-      FStateImage := Value;
+  if FStateImage = Value then
+    Exit;
 
-      if StateEnabled then
-        begin
-          UpdateRects;
-          Redraw;;
-        end;
-    end;
+  FStateImage := Value;
+  StandardUpdateLayout;
 end;
 
 procedure FXButton.SetStateText(const Value: string);
 begin
-  if FStateText <> Value then
-    begin
-      FStateText := Value;
+  if FStateText = Value then
+    Exit;
 
-      if FStateEnabled then
-        begin
-          UpdateRects;
-          Redraw;;
-        end;
-    end;
+  FStateText := Value;
+  StandardUpdateLayout;
 end;
 
 function FXButton.GetChecked;
@@ -948,7 +891,7 @@ end;
 
 function FXButton.GetTextH: integer;
 begin
-  with Canvas do
+  with Buffer do
     begin
       Font.Assign(Self.Font);
 
@@ -958,7 +901,7 @@ end;
 
 function FXButton.GetTextW: integer;
 begin
-  with Canvas do
+  with Buffer do
     begin
       Font.Assign(Self.Font);
 
@@ -1030,10 +973,6 @@ begin
   // Sizing
   Height := 35;
   Width := 140;
-
-  // Update
-  UpdateRects;
-  UpdateColors;
 end;
 
 destructor FXButton.Destroy;
@@ -1214,18 +1153,6 @@ begin
     end;
 
   inherited;
-end;
-
-procedure FXButton.Resize;
-begin
-  inherited;
-  UpdateRects;
-end;
-
-procedure FXButton.WMSize(var Message: TWMSize);
-begin
-  UpdateRects;
-  Redraw;;
 end;
 
 end.

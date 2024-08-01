@@ -23,69 +23,69 @@ interface
   WinApi.GdipObj, WinApi.GdipApi, Win.Registry, CFX.GDI, CFX.Types,
   Vcl.ExtCtrls, UITypes;
 
-  type
-    // Requirements
-    THackGraphic = class(TGraphic);
-    TRGBAArray = array[Word] of TRGBQuad;
-    PRGBAArray = ^TRGBAArray;
-    TRGBArray = array[Word] of TRGBTriple;
-    PRGBArray = ^TRGBArray;
+type
+  // Requirements
+  THackGraphic = class(TGraphic);
+  TRGBAArray = array[Word] of TRGBQuad;
+  PRGBAArray = ^TRGBAArray;
+  TRGBArray = array[Word] of TRGBTriple;
+  PRGBArray = ^TRGBArray;
 
-    // Color Helper (ex)
-    TColorHelper = record helper for TColor
-    public
-      function ToString: string; overload; inline;
-      function ToInteger: integer; overload; inline;
-    end;
+  // Color Helper (ex)
+  TColorHelper = record helper for TColor
+  public
+    function ToString: string; overload; inline;
+    function ToInteger: integer; overload; inline;
+  end;
 
-    // TTimer
-    TTimerHelper = class helper for TTimer
-    public
-      procedure ResetTimer;
-    end;
+  // TTimer
+  TTimerHelper = class helper for TTimer
+  public
+    procedure ResetTimer;
+  end;
 
-    // TFont
-    TAdvFont = type string;
+  // TFont
+  TAdvFont = type string;
 
-    TAdvFontHelper = record helper for TAdvFont
-      function ToString: string;
-      procedure FromString(AString: string);
-    end;
+  TAdvFontHelper = record helper for TAdvFont
+    function ToString: string;
+    procedure FromString(AString: string);
+  end;
 
-    // Canvas
-    TCanvasHelper = class helper for TCanvas
-      procedure DrawHighQuality(ARect: TRect; Bitmap: TBitmap; Opacity: Byte = 255; HighQuality: Boolean = False); overload;
-      procedure DrawHighQuality(ARect: TRect; Graphic: TGraphic; Opacity: Byte = 255; HighQuality: Boolean = False); overload;
+  // Canvas
+  TCanvasHelper = class helper for TCanvas
+    procedure DrawHighQuality(ARect: TRect; Bitmap: TBitmap; Opacity: Byte = 255; HighQuality: Boolean = False); overload;
+    procedure DrawHighQuality(ARect: TRect; Graphic: TGraphic; Opacity: Byte = 255; HighQuality: Boolean = False); overload;
 
-      procedure StretchDraw(DestRect, SrcRect: TRect; Bitmap: TBitmap; Opacity: Byte); overload;
-      procedure StretchDraw(Rect: TRect; Graphic: TGraphic; Opacity: Byte); overload;
+    procedure StretchDraw(DestRect, SrcRect: TRect; Bitmap: TBitmap; Opacity: Byte); overload;
+    procedure StretchDraw(Rect: TRect; Graphic: TGraphic; Opacity: Byte); overload;
 
-      procedure DrawFocusedLine(ARect: TRect);
+    procedure DrawFocusedLine(ARect: TRect);
 
-      procedure GDIText(Text: string; Rectangle: TRect; Flags: FXTextFlags = [FXTextFlag.WordWrap]; Angle: single = 0);
-      procedure GDITint(Rectangle: TRect; Color: TColor; Opacity: byte = 75); overload;
-      procedure GDITint(Rectangle: TRect; Color: FXColor); overload;
-      procedure GDIRectangle(Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen);
-      procedure GDIRoundRect(RoundRect: TRoundRect; Brush: TGDIBrush; Pen: TGDIPen);
-      procedure GDICircle(Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen);
-      procedure GDIPolygon(Points: TArray<TPoint>; Brush: TGDIBrush; Pen: TGDIPen);
-      procedure GDILine(Line: TLine; Pen: TGDIPen);
-      procedure GDIGraphic(Graphic: TGraphic; Rect: TRect);
-    end;
+    procedure GDIText(Text: string; Rectangle: TRect; Flags: FXTextFlags = [FXTextFlag.WordWrap]; Angle: single = 0);
+    procedure GDITint(Rectangle: TRect; Color: TColor; Opacity: byte = 75); overload;
+    procedure GDITint(Rectangle: TRect; Color: FXColor); overload;
+    procedure GDIRectangle(Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen);
+    procedure GDIRoundRect(RoundRect: TRoundRect; Brush: TGDIBrush; Pen: TGDIPen);
+    procedure GDICircle(Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen);
+    procedure GDIPolygon(Points: TArray<TPoint>; Brush: TGDIBrush; Pen: TGDIPen);
+    procedure GDILine(Line: TLine; Pen: TGDIPen);
+    procedure GDIGraphic(Graphic: TGraphic; Rect: TRect);
+  end;
 
-    // Registry
-    TRegHelper = class helper for TRegistry
-      procedure RenameKey(const OldName, NewName: string);
-      procedure CloneKey(const KeyName: string);
+  // Registry
+  TRegHelper = class helper for TRegistry
+    procedure RenameKey(const OldName, NewName: string);
+    procedure CloneKey(const KeyName: string);
 
-      procedure MoveKeyTo(const OldName, NewKeyPath: string; Delete: Boolean);
-    end;
+    procedure MoveKeyTo(const OldName, NewKeyPath: string; Delete: Boolean);
+  end;
 
-  // Functions for TCanvasHelper
-  procedure GraphicAssignToBitmap(Bitmap: TBitmap; Graphic: TGraphic);
-  procedure PngImageAssignToBitmap(Bitmap: TBitmap; PngImage: TPngImage; IsPremultipledBitmap: Boolean = True);
-  procedure DrawBitmapHighQuality(Handle: THandle; ARect: TRect; Bitmap: TBitmap; Opacity: Byte = 255;
-  HighQality: Boolean = False; EgdeFill: Boolean = False);
+// Functions for TCanvasHelper
+procedure GraphicAssignToBitmap(Bitmap: TBitmap; Graphic: TGraphic);
+procedure PngImageAssignToBitmap(Bitmap: TBitmap; PngImage: TPngImage; IsPremultipledBitmap: Boolean = True);
+procedure DrawBitmapHighQuality(Handle: THandle; ARect: TRect; Bitmap: TBitmap; Opacity: Byte = 255;
+HighQality: Boolean = False; EgdeFill: Boolean = False);
 
 implementation
 

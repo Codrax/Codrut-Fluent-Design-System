@@ -26,100 +26,100 @@ uses
   DateUtils,
   CFX.Linker;
 
-  type
-    // Theme Manager
-    FXThemeManager = class
-    private
-      FRegistryMonitor: TTimer;
+type
+  // Theme Manager
+  FXThemeManager = class
+  private
+    FRegistryMonitor: TTimer;
 
-      FDarkTheme: boolean;
-      FDarkThemeMode: FXDarkSetting;
+    FDarkTheme: boolean;
+    FDarkThemeMode: FXDarkSetting;
 
-      FFormFont,
-      FIconFont: string;
-      FFormFontHeight: integer;
-      FLargeFontHeight: integer;
+    FFormFont,
+    FIconFont: string;
+    FFormFontHeight: integer;
+    FLargeFontHeight: integer;
 
-      FAccentColor: TColor;
-      FAutoAccentColor: boolean;
+    FAccentColor: TColor;
+    FAutoAccentColor: boolean;
 
-      FLegacyFontColor: boolean;
+    FLegacyFontColor: boolean;
 
-      LastUpdate: TTime;
-      FDesigning: boolean;
+    LastUpdate: TTime;
+    FDesigning: boolean;
 
-      // Private Declarations
-      procedure RegMonitorProc(Sender: TObject);
-      procedure SetDarkTheme(const Value: boolean);
-      procedure SetDarkMode(const Value: FXDarkSetting);
-      procedure UpdateAccentColor;
-      function LoadAccentColor: TColor;
-      procedure SaveAccentColor(const Value: TColor);
-      procedure SetAutoAccent(const Value: boolean);
+    // Private Declarations
+    procedure RegMonitorProc(Sender: TObject);
+    procedure SetDarkTheme(const Value: boolean);
+    procedure SetDarkMode(const Value: FXDarkSetting);
+    procedure UpdateAccentColor;
+    function LoadAccentColor: TColor;
+    procedure SaveAccentColor(const Value: TColor);
+    procedure SetAutoAccent(const Value: boolean);
 
-    published
-      (* Theme Settings *)
-      property DarkTheme: boolean read FDarkTheme write SetDarkTheme;
-      property DarkThemeMode: FXDarkSetting read FDarkThemeMode write SetDarkMode;
+  published
+    (* Theme Settings *)
+    property DarkTheme: boolean read FDarkTheme write SetDarkTheme;
+    property DarkThemeMode: FXDarkSetting read FDarkThemeMode write SetDarkMode;
 
-      (* Global Font Settings *)
-      property FormFont: string read FFormFont write FFormFont;
-      property FormFontHeight: integer read FFormFontHeight write FFormFontHeight;
-      property LargeFontHeight: integer read FLargeFontHeight write FLargeFontHeight;
-      property IconFont: string read FIconFont write FIconFont;
+    (* Global Font Settings *)
+    property FormFont: string read FFormFont write FFormFont;
+    property FormFontHeight: integer read FFormFontHeight write FFormFontHeight;
+    property LargeFontHeight: integer read FLargeFontHeight write FLargeFontHeight;
+    property IconFont: string read FIconFont write FIconFont;
 
-      (* Accent Color *)
-      property AccentColor: TColor read LoadAccentColor write SaveAccentColor;
-      property AutoAccentColor: boolean read FAutoAccentColor write SetAutoAccent;
+    (* Accent Color *)
+    property AccentColor: TColor read LoadAccentColor write SaveAccentColor;
+    property AutoAccentColor: boolean read FAutoAccentColor write SetAutoAccent;
 
-      (* Utils *)
-      property Designing: boolean read FDesigning;
+    (* Utils *)
+    property Designing: boolean read FDesigning;
 
-    public
-      constructor Create;
-      destructor Destroy; override;
+  public
+    constructor Create;
+    destructor Destroy; override;
 
-      (* Global Colors *)
-      var
-      SystemColorSet: FXCompleteColorSets;
-      SystemColor: FXCompleteColorSet;
-      SystemGrayControl: FXSingleColorStateSets;
-      SystemAccentInteractStates: FXSingleColorStateSet;
+    (* Global Colors *)
+    var
+    SystemColorSet: FXCompleteColorSets;
+    SystemColor: FXCompleteColorSet;
+    SystemGrayControl: FXSingleColorStateSets;
+    SystemAccentInteractStates: FXSingleColorStateSet;
 
-      (* Tool Tip *)
-      FSystemToolTip: FXCompleteColorSets;
+    (* Tool Tip *)
+    FSystemToolTip: FXCompleteColorSets;
 
-      (* Load Colors *)
-      procedure LoadColorSet(var ColorSet: FXColorSet); overload;
-      procedure LoadColorSet(var ColorSet: FXColorSets); overload;
-      procedure LoadColorSet(var ColorSet: FXCompleteColorSet); overload;
-      procedure LoadColorSet(var ColorSet: FXCompleteColorSets); overload;
+    (* Load Colors *)
+    procedure LoadColorSet(var ColorSet: FXColorSet); overload;
+    procedure LoadColorSet(var ColorSet: FXColorSets); overload;
+    procedure LoadColorSet(var ColorSet: FXCompleteColorSet); overload;
+    procedure LoadColorSet(var ColorSet: FXCompleteColorSets); overload;
 
-      (* Functions *)
-      function GetThemePrimaryColor: TColor;
+    (* Functions *)
+    function GetThemePrimaryColor: TColor;
 
-      procedure LoadFontSettings;
+    procedure LoadFontSettings;
 
-      procedure UpdateThemeInformation;
+    procedure UpdateThemeInformation;
 
-      procedure UpdateColors;
-      procedure UpdateSettings;
+    procedure UpdateColors;
+    procedure UpdateSettings;
 
-      (* Notify *)
-      procedure NotifyUpdate;
+    (* Notify *)
+    procedure NotifyUpdate;
 
-      (* Time Limited *)
-      procedure MeasuredUpdateSettings;
-    end;
+    (* Time Limited *)
+    procedure MeasuredUpdateSettings;
+  end;
 
-  // Functions
-  function IsDesigning: boolean;
+// Functions
+function IsDesigning: boolean;
 
-  function ExtractColor(ColorSet: FXColorSet; ClrType: FXColorType): TColor; overload;
-  function ExtractColor(ColorSet: FXColorSets; ClrType: FXColorType): TColor; overload;
+function ExtractColor(ColorSet: FXColorSet; ClrType: FXColorType): TColor; overload;
+function ExtractColor(ColorSet: FXColorSets; ClrType: FXColorType): TColor; overload;
 
-  var
-    ThemeManager: FXThemeManager;
+var
+  ThemeManager: FXThemeManager;
 
 implementation
 
