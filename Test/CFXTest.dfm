@@ -340,10 +340,12 @@ object Form1: TForm1
     TabOrder = 4
     ParentColor = False
     UseManualColor = False
+    Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
     ImageLayout = cpLeft
     ActionText = 'Working'
+    ActionImage.IconType = None
     ActionImage.SelectSegoe = #59188
     ActionImage.SelectImageIndex = 0
     ActionToggle = False
@@ -378,10 +380,10 @@ object Form1: TForm1
     State = mbsLeave
     FlatButton = False
     FlatComplete = False
-    Colors.Enter = 15035380
-    Colors.Leave = 14048485
-    Colors.Down = 12403660
-    Colors.BLine = 11416765
+    Colors.Enter = 3436031
+    Colors.Leave = 2449136
+    Colors.Down = 804311
+    Colors.BLine = 14024
     UnderLine.Enable = True
     UnderLine.UnderLineRound = True
     UnderLine.UnderLineThicknes = 6
@@ -437,11 +439,13 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clLime
     CustomButtonColors.DarkForeGroundPress = clRed
     Text = 'Rainbow Button'
+    Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
     ImageScale = 1.250000000000000000
     LineWidth = 3.000000000000000000
     StateText = 'Wooo!'
+    StateImage.IconType = None
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
     AutoStateToggle = True
@@ -489,12 +493,14 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Toggle me'
+    Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
     ImageScale = 1.250000000000000000
     ButtonKind = Toggle
     LineWidth = 3.000000000000000000
     StateText = 'You toggled me'
+    StateImage.IconType = None
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
     StateDuration = 0
@@ -544,6 +550,7 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Online topics'
+    Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
     ImageScale = 1.250000000000000000
@@ -551,6 +558,7 @@ object Form1: TForm1
     HyperLinkURL = 'www.codrutsoft.com'
     LineWidth = 3.000000000000000000
     StateText = 'Success'
+    StateImage.IconType = None
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
     Font.Charset = DEFAULT_CHARSET
@@ -668,10 +676,12 @@ object Form1: TForm1
     TabOrder = 9
     ParentColor = False
     UseManualColor = False
+    Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
     ImageLayout = cpLeft
     ActionText = 'Working'
+    ActionImage.IconType = None
     ActionImage.SelectSegoe = #59188
     ActionImage.SelectImageIndex = 0
     ActionToggle = False
@@ -707,10 +717,10 @@ object Form1: TForm1
     State = mbsLeave
     FlatButton = False
     FlatComplete = False
-    Colors.Enter = 15035380
-    Colors.Leave = 14048485
-    Colors.Down = 12403660
-    Colors.BLine = 11416765
+    Colors.Enter = 3436031
+    Colors.Leave = 2449136
+    Colors.Down = 804311
+    Colors.BLine = 14024
     UnderLine.Enable = True
     UnderLine.UnderLineRound = True
     UnderLine.UnderLineThicknes = 6
@@ -766,6 +776,7 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Round'
+    Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
     ImageScale = 1.250000000000000000
@@ -773,6 +784,7 @@ object Form1: TForm1
     Roundness = 35
     LineWidth = 3.000000000000000000
     StateText = 'Success'
+    StateImage.IconType = None
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
     Font.Charset = DEFAULT_CHARSET
@@ -819,12 +831,14 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Press & hold'
+    Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
     ImageScale = 1.250000000000000000
     RepeatWhenPressed = True
     LineWidth = 3.000000000000000000
     StateText = 'Success'
+    StateImage.IconType = None
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
     AutoStateToggle = True
@@ -932,6 +946,7 @@ object Form1: TForm1
     AutomaticCursorPointer = False
     Text = 'Fluent Checkbox'
     WordWrap = False
+    Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
     ImageScale = 1.250000000000000000
@@ -943,7 +958,7 @@ object Form1: TForm1
     TabOrder = 14
   end
   object FXButton4: FXButton
-    Left = 232
+    Left = 231
     Top = 80
     Width = 130
     Height = 35
@@ -955,7 +970,7 @@ object Form1: TForm1
     PopupMenu = FXPopupMenu1
     Size.X = 130
     Size.Y = 35
-    Position.X = 232
+    Position.X = 231
     Position.Y = 80
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
@@ -980,12 +995,14 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Open dialog'
+    Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
     ImageScale = 1.250000000000000000
     ButtonKind = Accent
     LineWidth = 3.000000000000000000
     StateText = 'Success'
+    StateImage.IconType = None
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
     Font.Charset = DEFAULT_CHARSET
@@ -1032,11 +1049,13 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Change theme'
+    Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
     ImageScale = 1.250000000000000000
     LineWidth = 3.000000000000000000
     StateText = 'Success'
+    StateImage.IconType = None
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
     Font.Charset = DEFAULT_CHARSET
@@ -1218,6 +1237,7 @@ object Form1: TForm1
     ImageScale = 1.250000000000000000
     LineWidth = 3.000000000000000000
     StateText = 'Success'
+    StateImage.IconType = None
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
     Font.Charset = DEFAULT_CHARSET
@@ -1271,6 +1291,7 @@ object Form1: TForm1
     ImageScale = 1.250000000000000000
     LineWidth = 3.000000000000000000
     StateText = 'Success'
+    StateImage.IconType = None
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
     Font.Charset = DEFAULT_CHARSET
@@ -1473,6 +1494,7 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Options'
+    Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
     ImageScale = 1.250000000000000000
@@ -1480,6 +1502,7 @@ object Form1: TForm1
     DropDown = FXPopupMenu1
     LineWidth = 3.000000000000000000
     StateText = 'Success'
+    StateImage.IconType = None
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
     Font.Charset = DEFAULT_CHARSET
@@ -1564,12 +1587,14 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Open dialog with smoke effect'
+    Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
     ImageScale = 1.250000000000000000
     ButtonKind = Accent
     LineWidth = 3.000000000000000000
     StateText = 'Success'
+    StateImage.IconType = None
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
     Font.Charset = DEFAULT_CHARSET
@@ -1605,41 +1630,6 @@ object Form1: TForm1
     Animation = True
     CustomScrollbarSize = 0
     TabOrder = 33
-  end
-  object FXScrollText3: FXScrollText
-    Left = 568
-    Top = 304
-    Width = 137
-    Height = 30
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 0
-    Opacity = 100.000000000000000000
-    TabStop = False
-    Size.X = 137
-    Size.Y = 30
-    Position.X = 568
-    Position.Y = 304
-    CustomColors.Enabled = False
-    CustomColors.Accent = 13924352
-    CustomColors.LightBackGround = 15987699
-    CustomColors.LightForeGround = 1776410
-    CustomColors.DarkBackGround = 2105376
-    CustomColors.DarkForeGround = clWhite
-    Text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
-    SpacePercent = 75.000000000000000000
-    Image.SelectSegoe = #59188
-    Image.SelectImageIndex = 0
-    ImageScale = 1.000000000000000000
-    AnimationDelay = 150
-    AnimationSpeed = 1
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = 22
-    Font.Name = 'Segoe UI'
-    Font.Style = []
-    TabOrder = 34
   end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False

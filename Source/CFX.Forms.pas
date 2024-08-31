@@ -34,7 +34,7 @@ type
   FXThemeType = CFX.Types.FXThemeType;
 
   // Form
-  FXForm = class(TForm, FXControl)
+  FXForm = class(TForm, IFXComponent, IFXControl)
   private
     FCustomColors: FXColorSets;
     FDrawColors: FXColorSet;
@@ -136,6 +136,9 @@ type
     function IsResizable: Boolean;
 
     function GetTitlebarHeight: integer;
+
+    // Draw
+    procedure Redraw;
 
     // Interface
     function IsContainer: Boolean;
@@ -348,6 +351,11 @@ begin
   Broadcast(AMsg);
 end;
 
+procedure FXForm.Redraw;
+begin
+  Invalidate;
+end;
+
 procedure FXForm.Resize;
 begin
   inherited;
@@ -493,8 +501,8 @@ begin
     if IsContainer and UpdateChildren then
       begin
         for var I := 0 to ComponentCount -1 do
-          if Supports(Components[I], FXControl) then
-            (Components[I] as FXControl).UpdateTheme(UpdateChildren);
+          if Supports(Components[I], IFXComponent) then
+            (Components[I] as IFXComponent).UpdateTheme(UpdateChildren);
       end;
   end;
 

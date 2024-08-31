@@ -35,7 +35,7 @@ uses
   Vcl.Imaging.jpeg;
 
 type
-  FXBlurMaterial = class(FXWindowsControl, FXControl)
+  FXBlurMaterial = class(FXWindowsControl)
   private
     FRefreshMode: FXGlassRefreshMode;
     Tick: TTimer;

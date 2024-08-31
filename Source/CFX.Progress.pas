@@ -26,7 +26,7 @@ uses
   CFX.Controls;
 
 type
-  FXProgress = class(FXWindowsControl, FXControl)
+  FXProgress = class(FXWindowsControl)
   private
     const
       MAX_ANIM = 25;

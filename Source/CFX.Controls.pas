@@ -59,7 +59,7 @@ type
   end;
 
   // Control
-  FXWindowsControl = class(FXCustomControl, FXControl)
+  FXWindowsControl = class(FXCustomControl, IFXComponent, IFXControl)
   private
     FPopupMenu: FXPopupMenu;
     FBufferedComponent: boolean;
@@ -306,9 +306,12 @@ type
     procedure AllocateHandles;
 
     // Redraw
-    procedure Redraw(RedrawAbove: boolean=true);
-    procedure RedrawChildren;
-    procedure RedrawControlsAbove;
+    procedure Redraw; overload;
+    procedure Redraw(RedrawAbove: boolean); overload; virtual;
+
+    procedure Redraw(Flags: FXRedrawFlags); overload; virtual;
+    procedure RedrawChildren; virtual;
+    procedure RedrawControlsAbove; virtual;
 
     // Interface
     function IsContainer: Boolean; virtual;
@@ -317,15 +320,33 @@ type
     procedure UpdateTheme(const UpdateChildren: Boolean); virtual;
   end;
 
+  FXContainerWindowsControl = class(FXWindowsControl)
+  protected
+    // Size
+    procedure BoundsUpdated; override;
+
+  public
+    // Draw
+    procedure Redraw(RedrawAbove: boolean); overload; override;
+
+    // Constructors
+    constructor Create(aOwner: TComponent); override;
+  end;
+
 // Utilities
 function GetParentBackgroundColorEx(Control: TControl; Default: TColor): TColor;
+
+// Const
+const
+  DEFAULT_CONTROL_REDRAW_FLAGS = [FXRedrawFlag.RedrawBuffer, FXRedrawFlag.Paint,
+    FXRedrawFlag.UpdateChildren, FXRedrawFlag.UpdateAbove];
 
 implementation
 
 function GetParentBackgroundColorEx(Control: TControl; Default: TColor): TColor;
 begin
-  if (Control.Parent <> nil) and Supports(Control.Parent, FXControl) then
-    Result := (Control.Parent as FXControl).Background
+  if (Control.Parent <> nil) and Supports(Control.Parent, IFXControl) then
+    Result := (Control.Parent as IFXControl).Background
       else
         Result := Default;
 end;
@@ -388,9 +409,9 @@ procedure FXWindowsControl.CMEnabledChanged(var Message: TMessage);
 begin
   inherited;
   SetState( FXControlState.None );
-  if BufferedComponent and Supports(Self, FXControl) then
+  if BufferedComponent and Supports(Self, IFXComponent) then
     begin
-      (Self as FXControl).UpdateTheme(false);
+      (Self as IFXComponent).UpdateTheme(false);
       Redraw;
     end;
 end;
@@ -1005,30 +1026,59 @@ begin
   Broadcast(AMsg);
 end;
 
-procedure FXWindowsControl.Redraw(RedrawAbove: boolean);
+procedure FXWindowsControl.Redraw;
 begin
-  if not BufferedComponent or (Parent = nil) or IsReading or not HandleAllocated then
-    Exit;
+  Redraw(true);
+end;
 
-  // Draw
-  ResizeBuffer;
-  SolidifyBuffer;
-  PaintBuffer;
+procedure FXWindowsControl.Redraw(Flags: FXRedrawFlags);
+begin
+  // Quit conditions
+  if not (FXRedrawFlag.Force in Flags) then
+    if not BufferedComponent or (Parent = nil) or IsReading or not HandleAllocated then
+      Exit;
 
-  // Switch to new buffer
-  SwitchBuffer;
+  // Redraw buffer
+  if FXRedrawFlag.RedrawBuffer in Flags then begin
+    // Draw
+    ResizeBuffer;
+    SolidifyBuffer;
+    PaintBuffer;
 
-  // Draw new buffer
-  DoPaint;
+    // Switch to new buffer
+    SwitchBuffer;
+  end;
 
-  // Draw children (always need to be redraw)
-  RedrawChildren;
+  // Paint buffer
+  if FXRedrawFlag.Paint in Flags then
+    DoPaint;
+
+  // Invalidate buffer
+  if FXRedrawFlag.Invalidate in Flags then
+    Invalidate;
+
+  // Draw children
+  if FXRedrawFlag.UpdateChildren in Flags then
+    RedrawChildren;
 
   // Draw controls above
-  if RedrawAbove then
+  if FXRedrawFlag.UpdateAbove in Flags then
     RedrawControlsAbove;
 
+  // Last draw (unused)
   LastDraw := Now;
+end;
+
+procedure FXWindowsControl.Redraw(RedrawAbove: boolean);
+var
+  Flags: FXRedrawFlags;
+begin
+  Flags := DEFAULT_CONTROL_REDRAW_FLAGS;
+
+  if not RedrawAbove then
+    Flags := Flags - [FXRedrawFlag.UpdateAbove];
+
+  Redraw(Flags);
 end;
 
 procedure FXWindowsControl.RedrawAndSortControls(AControls: TArray<TControl>);
@@ -1365,6 +1415,42 @@ end;
 procedure FXControlPosition.SetY(const Value: integer);
 begin
   FParent.Top := Value;
+end;
+
+{ FXContainerWindowsControl }
+
+procedure FXContainerWindowsControl.BoundsUpdated;
+begin
+  // Fix stupid design mode visual bug, the children do not get updated for some reason
+  if IsDesigning then
+    Exit;
+
+  inherited;
+end;
+
+constructor FXContainerWindowsControl.Create(aOwner: TComponent);
+begin
+  inherited;
+  ControlStyle := ControlStyle + [csAcceptsControls];
+  Transparent := false;
+end;
+
+procedure FXContainerWindowsControl.Redraw(RedrawAbove: boolean);
+var
+  Flags: FXRedrawFlags;
+begin
+  ///  Fix another stupid design mode visual bug, this one generally when the control
+  ///  is redrawn, the controls do not get invalidate. So se use the Invalidate flag instead
+  if IsDesigning then begin
+    Flags := DEFAULT_CONTROL_REDRAW_FLAGS - [FXRedrawFlag.Paint] + [FXRedrawFlag.Invalidate];
+
+    if not RedrawAbove then
+      Flags := Flags - [FXRedrawFlag.UpdateAbove];
+
+    Redraw(Flags);
+  end
+  else
+    inherited;
 end;
 
 end.

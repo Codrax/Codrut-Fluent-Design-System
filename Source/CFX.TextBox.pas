@@ -23,12 +23,13 @@ uses
   CFX.Controls;
 
 type
-  FXCustomTextBox = class(FXWindowsControl, FXControl)
+  FXCustomTextBox = class(FXWindowsControl)
   private
     var TextRect: TRect;
 
     FCustomColors: FXColorSets;
     FDrawColors: FXCompleteColorSet;
+    FUseAccentAsForeground: boolean;
 
     FText: string;
     FVertLayout: FXLayout;
@@ -42,6 +43,9 @@ type
 
     FDrawOffset: TPoint;
 
+    // Internal
+    procedure PaddingUpdated(Sender: TObject);
+
     // Set properties
     procedure SetText(const Value: string);
     procedure SetHorzLayout(const Value: FXLayout);
@@ -51,9 +55,7 @@ type
     procedure SetWordWrap(const Value: boolean);
     procedure SetAutoSizeEx(const Value: boolean);
     procedure SetShowAccelChar(const Value: boolean);
-
-    // Size
-    procedure PaddingUpdated(Sender: TObject);
+    procedure SetUseAccentAsForeground(const Value: boolean);
 
   protected
     procedure PaintBuffer; override;
@@ -75,6 +77,8 @@ type
     // Properties
     //property Caption: string read FText write SetText;
     property Text: string read FText write SetText;
+
+    property UseAccentAsForeground: boolean read FUseAccentAsForeground write SetUseAccentAsForeground default false;
 
     property LayoutHorizontal: FXLayout read FHorzLayout write SetHorzLayout default FXLayout.Beginning;
     property LayoutVertical: FXLayout read FVertLayout write SetVertLayout default FXLayout.Center;
@@ -135,6 +139,8 @@ type
   published
     property Text;
 
+    property UseAccentAsForeground;
+
     property LayoutHorizontal;
     property LayoutVertical;
 
@@ -160,6 +166,8 @@ type
     procedure SetValueName(const Value: string);
 
   published
+    property UseAccentAsForeground;
+
     property LayoutHorizontal;
     property LayoutVertical;
 
@@ -207,6 +215,8 @@ type
     procedure ItemsOnChange(Sender: TObject);
 
   published
+    property UseAccentAsForeground;
+
     property LayoutHorizontal;
     property LayoutVertical;
 
@@ -367,6 +377,14 @@ begin
   StandardUpdateLayout;
 end;
 
+procedure FXCustomTextBox.SetUseAccentAsForeground(const Value: boolean);
+begin
+  FUseAccentAsForeground := Value;
+
+  // Update
+  StandardUpdateDraw;
+end;
+
 procedure FXCustomTextBox.SetVertLayout(const Value: FXLayout);
 begin
   if FVertLayout = Value then
@@ -495,7 +513,10 @@ begin
   with Buffer do
     begin
       Font.Assign(Self.Font);
-      Font.Color := FDrawColors.ForeGround;
+      if UseAccentAsForeground then
+        Font.Color := FDrawColors.Accent
+      else
+        Font.Color := FDrawColors.ForeGround;
       Brush.Style := bsClear;
     end;
 

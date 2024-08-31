@@ -25,7 +25,7 @@ uses
   CFX.Controls;
 
 type
-  FXCustomEdit = class(FXWindowsControl, FXControl)
+  FXCustomEdit = class(FXWindowsControl)
   private
     var DrawRect, LineRect, TxtRect: TRect;
     FCustomColors: FXCompleteColorSets;

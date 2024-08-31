@@ -203,38 +203,49 @@ type
   // Icon
   FXIconSelect = class(FXPersistent)
   private
-    FEnabled: boolean;
-
     FType: FXIconType;
     FPicture: TPicture;
     FBitMap: TBitMap;
     FSegoeText: string;
     FImageIndex: integer;
 
+    FActiveType: FXIconType;
+
+    FOnChange: TNotifyEvent;
+
+    // Internal
+    procedure PictureUpdated(Sender: TObject);
+    procedure BitmapUpdated(Sender: TObject);
+
     // Settters
     procedure SetBitMap(const Value: TBitMap);
     procedure SetPicture(const Value: TPicture);
     procedure SetImageIndex(const Value: integer);
     procedure SetSegoe(const Value: string);
+    procedure SetEnabled(const Value: boolean);
+    procedure SetIconType(const Value: FXIconType);
 
     // Update
-    procedure UpdateParent;
+    procedure Updated;
+    function GetEnabled: boolean;
 
   published
-    property Enabled: boolean read FEnabled write FEnabled default False;
-    property IconType: FXIconType read FType write FType default FXIconType.SegoeIcon;
+    property Enabled: boolean read GetEnabled write SetEnabled default False;
+    property IconType: FXIconType read FType write SetIconType default FXIconType.SegoeIcon;
 
     property SelectPicture: TPicture read FPicture write SetPicture;
     property SelectBitmap: TBitMap read FBitMap write SetBitMap;
     property SelectSegoe: string read FSegoeText write SetSegoe;
     property SelectImageIndex: integer read FImageIndex write SetImageIndex default -1;
 
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+
   public
     // Quick Set
     procedure SetTo(AType: FXIconType; AEnabled: boolean = true);
 
     // Assign
-    procedure Assign(Source: TPersistent); override;
+    procedure AssignTo(Destination: TPersistent); override;
 
     // External
     procedure DrawIcon(Canvas: TCanvas; ARectangle: TRect);
@@ -251,30 +262,38 @@ implementation
 
 { FXIconSelect }
 
-procedure FXIconSelect.Assign(Source: TPersistent);
+procedure FXIconSelect.AssignTo(Destination: TPersistent);
 begin
-  with FXIconSelect(Source) do
+  with FXIconSelect(Destination) do
     begin
-      Self.FEnabled := FEnabled;
+      FType := Self.FType;
 
-      Self.FType := FType;
+      FPicture.Assign(Self.FPicture);
+      FBitMap.Assign(Self.FBitMap);
+      FSegoeText := Self.FSegoeText;
+      FImageIndex := Self.FImageIndex;
 
-      Self.FPicture.Assign(FPicture);
-      Self.FBitMap.Assign(FBitMap);
-      Self.FSegoeText := FSegoeText;
-      Self.FImageIndex := FImageIndex;
+      Updated;
     end;
+end;
+
+procedure FXIconSelect.BitmapUpdated(Sender: TObject);
+begin
+  if FType = FXIconType.BitMap then
+    Updated;
 end;
 
 constructor FXIconSelect.Create(AOwner : TPersistent);
 begin
   inherited;
-  Enabled := false;
+  IconType := FXIconType.None;
+  FActiveType := FXIconType.SegoeIcon; // the type before the item got disabled
 
   FPicture := TPicture.Create;
+  FPicture.OnChange := PictureUpdated;
   FBitMap := TBitMap.Create;
+  FBitMap.OnChange := BitmapUpdated;
 
-  IconType := FXIconType.SegoeIcon;
   FSegoeText := SEGOE_UI_STAR;
 end;
 
@@ -293,9 +312,16 @@ var
   I: integer;
 begin
   case IconType of
-    FXIconType.Image: DrawImageInRect( Canvas, ARectangle, SelectPicture.Graphic, FXDrawMode.CenterFit );
-    FXIconType.BitMap: DrawImageInRect( Canvas, ARectangle, SelectBitmap, FXDrawMode.CenterFit );
+    FXIconType.Image:
+    if SelectPicture.Graphic <> nil then
+      DrawImageInRect( Canvas, ARectangle, SelectPicture.Graphic, FXDrawMode.CenterFit );
+
+    FXIconType.BitMap:
+    if SelectBitmap <> nil then
+      DrawImageInRect( Canvas, ARectangle, SelectBitmap, FXDrawMode.CenterFit );
+
     FXIconType.ImageList: (* Work In Progress;*);
+
     FXIconType.SegoeIcon: begin
       with Canvas do
         begin
@@ -330,6 +356,17 @@ begin
     FBitMap.Free;
 end;
 
+function FXIconSelect.GetEnabled: boolean;
+begin
+  Result := IconType <> FXIconType.None;
+end;
+
+procedure FXIconSelect.PictureUpdated(Sender: TObject);
+begin
+  if FType = FXIconType.Image then
+    Updated;
+end;
+
 procedure FXIconSelect.SetBitMap(const Value: TBitMap);
 begin
   if FBitmap = nil then
@@ -339,7 +376,30 @@ begin
 
   // Update
   if IconType = FXIconType.BitMap then
-    UpdateParent;
+    Updated;
+end;
+
+procedure FXIconSelect.SetEnabled(const Value: boolean);
+begin
+  if GetEnabled = Value then
+    Exit;
+
+  if Value then
+    FType := FActiveType
+  else begin
+    FActiveType := FType;
+    FType := FXIconType.None;
+  end;
+  Updated;
+end;
+
+procedure FXIconSelect.SetIconType(const Value: FXIconType);
+begin
+  if FType = Value then
+    Exit;
+
+  FType := Value;
+  Updated;
 end;
 
 procedure FXIconSelect.SetImageIndex(const Value: integer);
@@ -348,7 +408,7 @@ begin
 
   // Update
   if IconType = FXIconType.ImageList then
-    UpdateParent;
+    Updated;
 end;
 
 procedure FXIconSelect.SetPicture(const Value: TPicture);
@@ -360,7 +420,7 @@ begin
 
   // Update
   if IconType = FXIconType.Image then
-    UpdateParent;
+    Updated;
 end;
 
 procedure FXIconSelect.SetSegoe(const Value: string);
@@ -369,7 +429,7 @@ begin
 
   // Update
   if IconType = FXIconType.SegoeIcon then
-    UpdateParent;
+    Updated;
 end;
 
 procedure FXIconSelect.SetTo(AType: FXIconType; AEnabled: boolean);
@@ -378,10 +438,10 @@ begin
   Enabled := AEnabled;
 end;
 
-procedure FXIconSelect.UpdateParent;
+procedure FXIconSelect.Updated;
 begin
-  if Owner is TControl then
-    TControl(Owner).Invalidate;
+  if Assigned(FOnChange) then
+    FOnChange(Self);
 end;
 
 { FXPersistent }
@@ -645,8 +705,8 @@ end;
 
 procedure FXControlSideValues.Updated;
 begin
-  if (Owner <> nil) and Supports(Owner, FXControl) and not (csReading in TComponent(Owner).ComponentState) then
-    (TComponent(Owner) as FXControl).UpdateTheme(true);
+  if (Owner <> nil) and Supports(Owner, IFXComponent) and not (csReading in TComponent(Owner).ComponentState) then
+    (TComponent(Owner) as IFXComponent).UpdateTheme(true);
 
   inherited;
 end;

@@ -22,12 +22,21 @@ uses
   CFX.ThemeManager;
 
 type
-  FXPanelBase = class(TPanel)
+  FXPanelBase = class(TPanel, IFXComponent, IFXControl)
   protected
     procedure WndProc(var Msg: TMessage); override;
+
+  public
+    // Draw
+    procedure Redraw; virtual;
+
+    // Interfaced
+    function IsContainer: Boolean; virtual;
+    procedure UpdateTheme(const UpdateChildren: Boolean); virtual;
+    function Background: TColor; virtual;
   end;
 
-  FXPanel = class(FXPanelBase, FXControl)
+  FXPanel = class(FXPanelBase)
   private
     FCustomColors: FXCompleteColorSets;
 
@@ -69,13 +78,13 @@ type
     procedure DrawAccentLine; virtual;
 
     // Interface
-    function IsContainer: Boolean;
-    procedure UpdateTheme(const UpdateChildren: Boolean);
+    function IsContainer: Boolean; override;
+    procedure UpdateTheme(const UpdateChildren: Boolean); override;
 
-    function Background: TColor;
+    function Background: TColor; override;
   end;
 
-  FXMinimisePanel = class(FXPanelBase, FXControl)
+  FXMinimisePanel = class(FXPanelBase)
   private
     var
     FCustomColors: FXCompleteColorSets;
@@ -183,10 +192,10 @@ type
     procedure ChangeMinimised(Minimised: boolean);
 
     // Interface
-    function IsContainer: Boolean;
-    procedure UpdateTheme(const UpdateChildren: Boolean);
+    function IsContainer: Boolean; override;
+    procedure UpdateTheme(const UpdateChildren: Boolean); override;
 
-    function Background: TColor;
+    function Background: TColor; override;
   end;
 
 implementation
@@ -666,23 +675,11 @@ begin
 end;
 
 procedure FXMinimisePanel.UpdateTheme(const UpdateChildren: Boolean);
-var
-  I: integer;
 begin
   UpdateColors;
 
-  // Draw
-  Invalidate;
-
-  // Update Children
-  if IsContainer and UpdateChildren then
-    begin
-      LockDrawing;
-      for i := 0 to ControlCount - 1 do
-        if Supports(Controls[i], FXControl) then
-          (Controls[i] as FXControl).UpdateTheme(UpdateChildren);
-      UnlockDrawing;
-    end;
+  // Inherit
+  inherited;
 end;
 
 { FXPanel }
@@ -812,24 +809,42 @@ begin
 end;
 
 procedure FXPanel.UpdateTheme(const UpdateChildren: Boolean);
-var
-  I: integer;
 begin
   UpdateColors;
 
-  // Draw
+  inherited;
+end;
+
+{ FXPanelBase }
+
+function FXPanelBase.Background: TColor;
+begin
+  Result := Color;
+end;
+
+function FXPanelBase.IsContainer: Boolean;
+begin
+  Result := true;
+end;
+
+procedure FXPanelBase.Redraw;
+begin
+  Invalidate;
+end;
+
+procedure FXPanelBase.UpdateTheme(const UpdateChildren: Boolean);
+begin
+  // Update Self
   Invalidate;
 
   // Update Children
   if IsContainer and UpdateChildren then
     begin
-      for i := 0 to ControlCount - 1 do
-        if Supports(Controls[i], FXControl) then
-          (Controls[i] as FXControl).UpdateTheme(UpdateChildren);
+      for var I := 0 to ControlCount - 1 do
+        if Supports(Controls[i], IFXComponent) then
+          (Controls[i] as IFXComponent).UpdateTheme(UpdateChildren);
     end;
 end;
-
-{ FXPanelBase }
 
 procedure FXPanelBase.WndProc(var Msg: TMessage);
 begin

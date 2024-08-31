@@ -23,7 +23,7 @@ uses
   CFX.Controls;
 
 type
-  FXScrollText = class(FXWindowsControl, FXControl)
+  FXScrollText = class(FXWindowsControl)
   private
     var DrawRect, ImageRect, TextRect: TRect;
 

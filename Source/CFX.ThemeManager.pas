@@ -298,8 +298,8 @@ var
 begin
   for I := 0 to Screen.FormCount - 1 do
     if Screen.Forms[i] <> nil then
-      if Supports(Screen.Forms[i], FXControl) then
-        (Screen.Forms[i] as FXControl).UpdateTheme(true);
+      if Supports(Screen.Forms[i], IFXComponent) then
+        (Screen.Forms[i] as IFXComponent).UpdateTheme(true);
 end;
 
 procedure FXThemeManager.RegMonitorProc(Sender: TObject);

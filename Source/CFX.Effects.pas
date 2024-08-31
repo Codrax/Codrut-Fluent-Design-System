@@ -25,7 +25,7 @@ uses
   CFX.Controls;
 
 type
-  FXEffect = class(FXWindowsControl, FXControl)
+  FXEffect = class(FXWindowsControl)
   private
     FDrawColors: FXCompleteColorSet;
     FCustomColors: FXColorSets;

@@ -22,7 +22,7 @@ uses
   CFX.Controls;
 
 type
-  FXRatingControl = class(FXWindowsControl, FXControl)
+  FXRatingControl = class(FXWindowsControl)
   private
     var DrawRect: TRect;
     FDrawColors: FXCompleteColorSet;

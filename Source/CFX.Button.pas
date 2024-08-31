@@ -30,7 +30,7 @@ uses
 type
   FXBeforeModalResult = procedure(Sender: TObject; var SendModal: boolean) of object;
 
-  FXButton = class(FXWindowsControl, FXControl)
+  FXButton = class(FXWindowsControl)
   private
     const
       KEY_PRESS_KEYS = [13, 32];
@@ -80,6 +80,21 @@ type
     FArrowOffset: integer;
     FAutomaticCheck: boolean;
 
+    // Draw
+    function GetTextH: integer;
+    function GetTextW: integer;
+
+    // State
+    function GetText: string;
+    function GetImage: FXIconSelect;
+
+    // Timers
+    procedure TimerRepeat(Sender: TObject);
+    procedure StateStop(Sender: TObject);
+
+    // Update
+    procedure ImageUpdated(Sender: TObject);
+
     // Set properties
     procedure SetText(const Value: string);
     procedure SetWordWrap(const Value: boolean);
@@ -101,18 +116,6 @@ type
     procedure SetMargin(const Value: integer);
     procedure SetLineWidth(const Value: real);
     procedure SetShowText(const Value: boolean);
-
-    // Draw
-    function GetTextH: integer;
-    function GetTextW: integer;
-
-    // State
-    function GetText: string;
-    function GetImage: FXIconSelect;
-
-    // Timers
-    procedure TimerRepeat(Sender: TObject);
-    procedure StateStop(Sender: TObject);
 
     // Get properties
     function GetChecked: Boolean;
@@ -449,6 +452,11 @@ begin
     end
 end;
 
+procedure FXButton.ImageUpdated(Sender: TObject);
+begin
+  StandardUpdateLayout;
+end;
+
 procedure FXButton.UpdateRects;
 var
   AMargin, ATextHeight, ATextWidth, ATextLinesCount, ASize: integer;
@@ -701,7 +709,7 @@ begin
     Exit;
 
   FButtonKind := Value;
-  StandardUpdateLayout;
+  StandardUpdateComplete;
 end;
 
 procedure FXButton.SetCancel(const Value: boolean);
@@ -958,7 +966,9 @@ begin
 
   // Icon
   FImage := FXIconSelect.Create(Self);
+  FImage.OnChange := ImageUpdated;
   FStateImage := FXIconSelect.Create(Self);
+  FImage.OnChange := ImageUpdated;
 
   // Custom Color
   FCustomColors := FXCompleteColorSets.Create(Self);

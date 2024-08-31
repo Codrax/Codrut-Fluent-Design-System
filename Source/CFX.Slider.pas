@@ -27,7 +27,7 @@ type
 
   FXSliderOnHint = procedure(Sender: FXSlider; var Hint: string) of object;
 
-  FXSlider = class(FXWindowsControl, FXControl)
+  FXSlider = class(FXWindowsControl)
   private
     var DrawRect, IconRect, SliderRect, SliderFull: TRect;
     FHint: FXHintPopup;

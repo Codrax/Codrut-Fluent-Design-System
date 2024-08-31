@@ -151,7 +151,7 @@ type
   end;
 
   // General Component
-  FXPopupComponent = class(FXPopupContainer, FXControl)
+  FXPopupComponent = class(FXPopupContainer, IFXComponent)
   private
     // Animation
     FAnim: TIntAni;
@@ -283,7 +283,7 @@ type
   end;
 
   // Popup Menu
-  FXPopupMenu = class(FXPopupComponent, FXControl)
+  FXPopupMenu = class(FXPopupComponent, IFXComponent)
   private
     FOnPopup: TNotifyEvent;
     FOnBeforePopup: TOnBeforePopup;
@@ -1347,8 +1347,8 @@ begin
     if IsContainer and UpdateChildren then
       begin
         for I := 0 to Items.Count-1 do
-          if Supports(Items[I], FXControl) then
-            (Items[I] as FXControl).UpdateTheme(UpdateChildren);
+          if Supports(Items[I], IFXComponent) then
+            (Items[I] as IFXComponent).UpdateTheme(UpdateChildren);
       end;
 end;
 

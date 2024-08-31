@@ -27,7 +27,7 @@ uses
 type
   FXScrollbar = class;
 
-  FXScrollbar = class(FXWindowsControl, FXControl)
+  FXScrollbar = class(FXWindowsControl)
   private
     var DrawRect, SliderRect, Button1, Button2: TRect;
     FOnChange: TNotifyEvent;

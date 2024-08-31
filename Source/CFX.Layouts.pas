@@ -28,7 +28,7 @@ uses
   CFX.Controls;
 
 type
-  FXCustomLayout = class(FXWindowsControl, FXControl)
+  FXCustomLayout = class(FXContainerWindowsControl)
   private
     var DrawRect: TRect;
     FDrawColors: FXCompleteColorSet;
@@ -223,9 +223,6 @@ end;
 constructor FXCustomLayout.Create(aOwner: TComponent);
 begin
   inherited;
-  ControlStyle := ControlStyle + [csAcceptsControls];
-  AlignWithMargins := true;
-  Transparent := false;
   FKeepSolid := false;
 
   // Custom Color
@@ -249,7 +246,6 @@ end;
 procedure FXCustomLayout.InteractionStateChanged(AState: FXControlState);
 begin
   inherited;
-  Redraw;
 end;
 
 function FXCustomLayout.IsContainer: Boolean;

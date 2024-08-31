@@ -38,7 +38,7 @@ uses
   CFX.Internet;
 
 type
-  FXFillForm = class(TForm, FXControl)
+  FXFillForm = class(TForm)
   private
     FCustomColors: FXColorSets;
     FDrawColors: FXColorSet;
@@ -500,8 +500,8 @@ begin
     begin
       LockWindowUpdate(Handle);
       for i := 0 to ComponentCount -1 do
-        if Supports(Components[i], FXControl) then
-          (Components[i] as FXControl).UpdateTheme(UpdateChildren);
+        if Supports(Components[i], IFXComponent) then
+          (Components[i] as IFXComponent).UpdateTheme(UpdateChildren);
       LockWindowUpdate(0);
     end;
 end;

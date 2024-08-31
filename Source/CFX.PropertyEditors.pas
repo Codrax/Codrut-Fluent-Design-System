@@ -335,10 +335,7 @@ procedure TFXIconSelectProperty.ButtonSelect(Sender: TObject);
 var
   I: integer;
 begin
-  Item.Enabled := FXButtonDesign(Sender).Tag <> 1;
-
-  if Item.Enabled then
-    Item.IconType := FXIconType(FXButtonDesign(Sender).Tag-2);
+  Item.IconType := FXIconType(FXButtonDesign(Sender).Tag);
 
   for I := 0 to FXButtonDesign(Sender).Parent.ControlCount - 1 do
     if FXButtonDesign(Sender).Parent.Controls[I] is FXButtonDesign then
@@ -346,7 +343,7 @@ begin
 
   FXButtonDesign(Sender).FlatButton := true;
 
-  ShowPanel( FXButtonDesign(Sender).Tag - 1 );
+  ShowPanel( FXButtonDesign(Sender).Tag );
 end;
 
 procedure TFXIconSelectProperty.Edit;
@@ -395,7 +392,7 @@ begin
 
             Image.SelectSegoe := #$E711;
             Text := 'None';
-            Tag := 1;
+            Tag := 0;
           end;
 
         with FXButtonDesign.Create(ListPanel) do
@@ -405,7 +402,7 @@ begin
 
             Image.SelectSegoe := #$EB9F;
             Text := 'Picture';
-            Tag := 2;
+            Tag := 1;
           end;
 
         with FXButtonDesign.Create(ListPanel) do
@@ -415,7 +412,7 @@ begin
 
             Image.SelectSegoe := #$E8BA;
             Text := 'Bitmap';
-            Tag := 3;
+            Tag := 2;
           end;
 
         with FXButtonDesign.Create(ListPanel) do
@@ -425,7 +422,7 @@ begin
 
             Image.SelectSegoe := #$E8B9;
             Text := 'Image List';
-            Tag := 4;
+            Tag := 3;
           end;
 
         with FXButtonDesign.Create(ListPanel) do
@@ -435,7 +432,7 @@ begin
 
             Image.SelectSegoe := #$F714;
             Text := 'Font Icon';
-            Tag := 5;
+            Tag := 4;
           end;
 
           // Create Panels
@@ -781,11 +778,10 @@ begin
 
                 OnClick := ButtonSelect;
 
-                FlatButton := ((Tag = 1) and (not Item.Enabled)) or
-                              (Item.Enabled and (Tag - 2 = integer(Item.IconType)));
+                FlatButton := (Tag = integer(Item.IconType));
 
                 if FlatButton then
-                  ShowPanel( Tag - 1 );
+                  ShowPanel( Tag );
               end;
 
       end;
@@ -1234,7 +1230,7 @@ begin
       Color := StrToIntDef('$' + Value.Remove(0, 1), 0);
 
       if Length(Value) = 6 + 1{#} then
-        Color.SetA(255);
+        Color.SetAlpha(255);
     end
   else
   { Name }

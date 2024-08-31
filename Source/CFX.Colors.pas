@@ -625,8 +625,8 @@ end;
 
 procedure FXPersistentColor.Updated;
 begin
-  if (Owner <> nil) and Supports(Owner, FXControl) and not (csReading in TComponent(Owner).ComponentState) then
-    (TComponent(Owner) as FXControl).UpdateTheme(true);
+  if (Owner <> nil) and Supports(Owner, IFXComponent) and not (csReading in TComponent(Owner).ComponentState) then
+    (TComponent(Owner) as IFXComponent).UpdateTheme(true);
 end;
 
 { FXColorStateSet }

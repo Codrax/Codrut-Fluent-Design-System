@@ -121,7 +121,7 @@ type
       property AltPressColor : TColor read FCPenDown write FCPenDown stored Paint;
   end;
 
-  FXButtonDesign = class(FXWindowsControl, FXControl)
+  FXButtonDesign = class(FXWindowsControl)
   private
     FAuthor, FSite, FVersion: string;
     FonStateChange: FXButtonDesignStateChange;

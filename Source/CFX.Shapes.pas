@@ -73,7 +73,7 @@ type
     destructor Destroy; override;
   end;
 
-  FXShape = class(FXWindowsControl, FXControl)
+  FXShape = class(FXWindowsControl)
   private
     FDrawColors: FXCompleteColorSet;
     FCustomColors: FXColorSets;

@@ -24,7 +24,7 @@ uses
   Windows;
 
 type
-  FXStandardIcon = class(FXWindowsControl, FXControl)
+  FXStandardIcon = class(FXWindowsControl)
   private
     var DrawRect: TRect;
     FIcon : FXStandardIconType;

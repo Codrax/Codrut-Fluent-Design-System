@@ -22,7 +22,7 @@ uses
   CFX.Controls;
 
 type
-  FXIconView = class(FXWindowsControl, FXControl)
+  FXIconView = class(FXWindowsControl)
   private
     var DrawRect, IconRect: TRect;
     FDrawColors: FXCompleteColorSet;
@@ -31,6 +31,9 @@ type
     FImage: FXIconSelect;
     FVertLayout: FXLayout;
     FHorizLayout: FXLayout;
+
+    // Internal
+    procedure ImageUpdated(Sender: TObject);
 
     // Getters
 
@@ -117,6 +120,7 @@ begin
   FScale := 1;
   FImage := FXIconSelect.Create(Self);
   FImage.Enabled := true;
+  FImage.OnChange := ImageUpdated;
 
   FHorizLayout := FXLayout.Center;
   FVertLayout := FXLayout.Center;
@@ -154,14 +158,6 @@ begin
   // Draw
   with Buffer do
     begin
-      // Fill
-      if not Transparent then
-        begin
-          Brush.Color := FDrawColors.Background;
-          Pen.Style := psClear;
-          FillRect(ClipRect);
-        end;
-
       // Write
       Brush.Style := bsClear;
       Font.Color := FDrawColors.ForeGround;
@@ -183,6 +179,11 @@ begin
     if FCustomColors.Enabled then
       // Custom Colors
       FDrawColors.LoadFrom(FCustomColors, ThemeManager.DarkTheme);
+end;
+
+procedure FXIconView.ImageUpdated(Sender: TObject);
+begin
+  StandardUpdateLayout;
 end;
 
 procedure FXIconView.UpdateRects;

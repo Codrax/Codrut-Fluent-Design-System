@@ -19,7 +19,7 @@ uses
   CFX.Controls;
 
 type
-  FXRadioButton = class(FXWindowsControl, FXControl)
+  FXRadioButton = class(FXWindowsControl)
   private
     var DrawRect, IconRect, TextRect, ImageRect: TRect;
     FIconFont: TFont;
@@ -37,6 +37,15 @@ type
     FLayout: FXDrawLayout;
     FTextLayout: FXLayout;
 
+    // Internal
+    procedure ImageUpdated(Sender: TObject);
+
+    // Draw functions
+    function GetTextHeight: integer;
+
+    // Checked
+    procedure SetToChecked;
+
     // Set properties
     procedure SetText(const Value: string);
     procedure SetWordWrap(const Value: boolean);
@@ -45,12 +54,6 @@ type
     procedure SetImage(const Value: FXIconSelect);
     procedure SetLayout(const Value: FXDrawLayout);
     procedure SetImageScale(const Value: single);
-
-    // Draw functions
-    function GetTextHeight: integer;
-
-    // Checked
-    procedure SetToChecked;
 
     // Get properties
     function GetChecked: Boolean;
@@ -172,6 +175,11 @@ begin
                               ChangeColorLight(FDrawColors.Accent, ACCENT_DIFFERENTIATE_CONST),
                               ChangeColorLight(FDrawColors.Accent, -ACCENT_DIFFERENTIATE_CONST));
     end;
+end;
+
+procedure FXRadioButton.ImageUpdated(Sender: TObject);
+begin
+  StandardUpdateLayout;
 end;
 
 procedure FXRadioButton.UpdateRects;
@@ -404,6 +412,7 @@ begin
   // Icon
   FImage := FXIconSelect.Create(Self);
   FImageScale := GENERAL_IMAGE_SCALE;
+  FImage.OnChange := ImageUpdated;
 
   // Custom Color
   FCustomColors := FXColorSets.Create(Self);

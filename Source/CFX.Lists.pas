@@ -33,14 +33,14 @@ uses
 
 type
   // Scrollbox Scrollbar
-  FXDrawListScrollBar = class(FXScrollbar, FXControl)
+  FXDrawListScrollBar = class(FXScrollbar)
   protected
     procedure PaintBuffer; override;
   end;
 
   FXDrawListOnDraw = procedure(Sender: TObject; AIndex: integer; ARect: TRect; Canvas: TCanvas) of object;
 
-  FXDrawList = class(FXWindowsControl, FXControl)
+  FXDrawList = class(FXWindowsControl)
   private
     procedure SetOpacityHover(const Value: byte);
     procedure SetOpacitySelected(const Value: byte);
@@ -295,7 +295,7 @@ type
   end;
 
   // Container
-  FXControlContainer = class(FXWindowsControl, FXControl)
+  FXControlContainer = class(FXWindowsControl)
   private
     FList: FXDrawList;
     FBackgroundColor: TColor;

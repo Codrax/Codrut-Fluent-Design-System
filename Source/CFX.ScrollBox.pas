@@ -33,14 +33,14 @@ type
   TScrollPrefer = (Vertical, Horizontal, None);
 
   // Scrollbox Scrollbar
-  FXScrollBoxScrollBar = class(FXScrollbar, FXControl)
+  FXScrollBoxScrollBar = class(FXScrollbar)
   protected
     procedure PaintBuffer; override;
   public
     procedure CalcAutoRange;
   end;
 
-  FXScrollBox = class(TScrollBox, FXControl)
+  FXScrollBox = class(TScrollBox, IFXComponent, IFXControl)
   private
     FCustomColors: FXCompleteColorSets;
     FDrawColors: FXCompleteColorSet;
@@ -124,6 +124,9 @@ type
   public
     constructor Create(aOwner: TComponent); override;
     destructor Destroy; override;
+
+    // Draw
+    procedure Redraw;
 
     // Interface
     function IsContainer: Boolean;
@@ -390,6 +393,11 @@ begin
     ResetScrollBars;
 end;
 
+procedure FXScrollBox.Redraw;
+begin
+  Invalidate;
+end;
+
 procedure FXScrollBox.ResetScrollBars;
 begin
   FHorzScroll.BringToFront;
@@ -541,8 +549,8 @@ begin
   if IsContainer and UpdateChildren then
     begin
       for i := 0 to ControlCount - 1 do
-        if Supports(Controls[i], FXControl) then
-          (Controls[i] as FXControl).UpdateTheme(UpdateChildren);
+        if Supports(Controls[i], IFXComponent) then
+          (Controls[i] as IFXComponent).UpdateTheme(UpdateChildren);
     end;
 end;
 

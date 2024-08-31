@@ -25,7 +25,7 @@ uses
   CFX.Controls;
 
 type
-  FXTitleBarPanel = class(TCustomTitleBarPanel, FXControl)
+  FXTitleBarPanel = class(TCustomTitleBarPanel, IFXComponent, IFXControl)
   private
     var DrawRect: TRect;
     FDrawColors: FXCompleteColorSet;
@@ -51,6 +51,9 @@ type
   public
     constructor Create(aOwner: TComponent); override;
     destructor Destroy; override;
+
+    // Draw
+    procedure Redraw;
 
     // Interface
     function IsContainer: Boolean;
@@ -92,6 +95,11 @@ begin
   Result := true;
 end;
 
+procedure FXTitleBarPanel.Redraw;
+begin
+  Invalidate;
+end;
+
 procedure FXTitleBarPanel.UpdateColors;
 begin
   // Access theme manager
@@ -120,8 +128,8 @@ begin
   // Update children
   if UpdateChildren then
     for var I := 0 to ControlCount-1 do
-      if Supports(Controls[I], FXControl) then
-        (Controls[I] as FXControl).UpdateTheme(UpdateChildren);
+      if Supports(Controls[I], IFXComponent) then
+        (Controls[I] as IFXComponent).UpdateTheme(UpdateChildren);
 end;
 
 procedure FXTitleBarPanel.WndProc(var Message: TMessage);

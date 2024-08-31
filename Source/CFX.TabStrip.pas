@@ -22,7 +22,7 @@ uses
   CFX.Controls;
 
 type
-  FXTabStrip = class(FXWindowsControl, FXControl)
+  FXTabStrip = class(FXWindowsControl)
   private
     var DrawRect: TRect;
     FDrawColors: FXCompleteColorSet;

@@ -21,7 +21,7 @@ uses
   CFX.Controls;
 
 type
-  FXSelector = class(FXWindowsControl, FXControl)
+  FXSelector = class(FXWindowsControl)
   private
     var DrawRect: TRect;
     ItemRects: TArray<TRect>;

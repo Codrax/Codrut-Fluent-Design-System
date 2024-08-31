@@ -15,8 +15,12 @@ type
     Zip, GZip, Zip7, Cabinet, TAR, RAR, LZIP, ISO,
     PDF, HLP, CHM);
 
+  // Control Redraw
+  FXRedrawFlag = (RedrawBuffer, Paint, Invalidate, UpdateChildren, UpdateAbove, Force);
+  FXRedrawFlags = set of FXRedrawFlag;
+
   // Icon Type
-  FXIconType = (Image, BitMap, ImageList, SegoeIcon);
+  FXIconType = (None, Image, BitMap, ImageList, SegoeIcon);
 
   // Color
   FXColorType = (Accent, Foreground, Background, Content, Custom);
@@ -123,9 +127,7 @@ type
 
   // FXColor Helper
   FXColorHelper = record helper for FXColor
-    class function Create(R, G, B: Byte; A: Byte = 255): FXColor; overload; static;
-    class function Create(AColor: TColor; A: Byte = 255): FXColor; overload; static;
-    class function Create(AString: string): FXColor; overload; static;
+  private
 
   public
     // Change value
@@ -134,12 +136,23 @@ type
     function GetG: byte;
     function GetB: byte;
 
-    procedure SetA(Value: byte);
+    procedure SetAlpha(Value: byte);
     procedure SetR(Value: byte);
     procedure SetG(Value: byte);
     procedure SetB(Value: byte);
 
-    // Byte Shift
+    // Props
+    property Alpha: byte read GetAlpha write SetAlpha;
+    property R: byte read GetR write SetR;
+    property G: byte read GetR write SetG;
+    property B: byte read GetR write SetB;
+
+    // Utilities
+    function ColorGrayscale(ToneDown: integer = 3): FXColor;
+    function ColorInvert: FXColor;
+    function ChangeSaturation(ByIncrement: integer): FXColor;
+    function Blend(WithColor: FXColor; BlendAmoung: byte): FXColor;
+    function GetLightValue: byte;
 
     // GDI
     function MakeGDIBrush: TGPSolidBrush;
@@ -148,6 +161,12 @@ type
     // Convert
     function ToVclColor: TColor;
     function ToString: string;
+
+    // Constructors
+    class function Create(R, G, B: Byte; A: Byte = 255): FXColor; overload; static;
+    class function Create(AColor: TColor; A: Byte = 255): FXColor; overload; static;
+    class function Create(AString: string): FXColor; overload; static;
+    class function RandomColor(RandomAlpha: boolean=false): FXColor; static;
   end;
 
   // Helper for percentage
@@ -1160,6 +1179,34 @@ begin
   Result := (B or (G shl 8) or (R shl 16) or (A shl 24));
 end;
 
+function FXColorHelper.Blend(WithColor: FXColor; BlendAmoung: byte): FXColor;
+begin
+  Result := Create(
+    R + (WithColor.R - R) * BlendAmoung div 255,
+    G + (WithColor.G - G) * BlendAmoung div 255,
+    B + (WithColor.B - B) * BlendAmoung div 255,
+  Alpha);
+end;
+
+function FXColorHelper.ChangeSaturation(ByIncrement: integer): FXColor;
+begin
+  Result := Create(EnsureRange(R+ByIncrement, 0, 255),
+    EnsureRange(G+ByIncrement, 0, 255),
+    EnsureRange(B+ByIncrement, 0, 255), Alpha);
+end;
+
+function FXColorHelper.ColorGrayscale(ToneDown: integer = 3): FXColor;
+begin
+  const Val = (R + G + B) div ToneDown;
+
+  Result := FXColor.Create(Val, Val, Val, Alpha);
+end;
+
+function FXColorHelper.ColorInvert: FXColor;
+begin
+  Result := Create(255-R, 255-G, 255-B, Alpha);
+end;
+
 class function FXColorHelper.Create(AString: string): FXColor;
 begin
   if AString[1] = '#' then
@@ -1188,9 +1235,22 @@ begin
   Result := TGPPen.Create( Self, Width );
 end;
 
+class function FXColorHelper.RandomColor(RandomAlpha: boolean): FXColor;
+begin
+  if RandomAlpha then
+    Result := Create(Random(256), Random(256), Random(256), Random(256))
+  else
+    Result := Create(Random(256), Random(256), Random(256), 255);
+end;
+
 function FXColorHelper.GetG: byte;
 begin
   Result := (Self and $0000FF00) shr 8;
+end;
+
+function FXColorHelper.GetLightValue: byte;
+begin
+  Result := (R + B + G) div 3;
 end;
 
 function FXColorHelper.GetB: byte;
@@ -1198,7 +1258,7 @@ begin
   Result := (Self and $000000FF);
 end;
 
-procedure FXColorHelper.SetA(Value: byte);
+procedure FXColorHelper.SetAlpha(Value: byte);
 begin                              // Typecast value to larger bit size, $00*4
   Self := (Self and $00FFFFFF) or (FXColor(Value) shl 24);
 end;

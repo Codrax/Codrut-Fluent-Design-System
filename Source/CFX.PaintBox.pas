@@ -17,7 +17,7 @@ uses
   CFX.Linker;
 
 type
-  FXPaintBox = class(FXWindowsControl, FXControl)
+  FXPaintBox = class(FXWindowsControl)
   private
     FDarkTintOpacity,
     FWhiteTintOpacity: integer;

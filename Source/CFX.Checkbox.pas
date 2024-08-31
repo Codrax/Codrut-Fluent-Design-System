@@ -22,7 +22,7 @@ uses
   CFX.Controls;
 
 type
-  FXCheckBox = class(FXWindowsControl, FXControl)
+  FXCheckBox = class(FXWindowsControl)
   private
     var DrawRect, IconRect, TextRect, ImageRect: TRect;
     FIconFont: TFont;
@@ -45,6 +45,18 @@ type
     FLayout: FXDrawLayout;
     FTextLayout: FXLayout;
 
+    // Internal
+    procedure ImageUpdated(Sender: TObject);
+
+    // State
+    procedure ProgressState;
+
+    // Draw functions
+    function GetTextHeight: integer;
+
+    // Animation
+    procedure AnimationProgress(Sender: TObject);
+
     // Set properties
     procedure SetText(const Value: string);
     procedure SetWordWrap(const Value: boolean);
@@ -56,17 +68,8 @@ type
     procedure SetLayout(const Value: FXDrawLayout);
     procedure SetImageScale(const Value: single);
 
-    // State
-    procedure ProgressState;
-
-    // Draw functions
-    function GetTextHeight: integer;
-
     // Get properties
     function GetChecked: Boolean;
-
-    // Animation
-    procedure AnimationProgress(Sender: TObject);
 
   protected
     procedure PaintBuffer; override;
@@ -185,6 +188,11 @@ begin
                               ChangeColorLight(FDrawColors.Accent, ACCENT_DIFFERENTIATE_CONST),
                               ChangeColorLight(FDrawColors.Accent, -ACCENT_DIFFERENTIATE_CONST));
     end;
+end;
+
+procedure FXCheckBox.ImageUpdated(Sender: TObject);
+begin
+  StandardUpdateLayout;
 end;
 
 procedure FXCheckBox.UpdateRects;
@@ -427,6 +435,7 @@ begin
   // Icon
   FImage := FXIconSelect.Create(Self);
   FImageScale := GENERAL_IMAGE_SCALE;
+  FImage.OnChange := ImageUpdated;
 
   // Custom Color
   FCustomColors := FXColorSets.Create(Self);
