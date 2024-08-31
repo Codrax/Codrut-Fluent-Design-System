@@ -1641,31 +1641,6 @@ object Form1: TForm1
     Font.Style = []
     TabOrder = 34
   end
-  object FXShapeSquare1: FXShapeSquare
-    Left = 592
-    Top = 240
-    Width = 137
-    Height = 121
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 0
-    Opacity = 50.000000000000000000
-    Size.X = 137
-    Size.Y = 121
-    Position.X = 592
-    Position.Y = 240
-    CustomColors.Enabled = False
-    CustomColors.Accent = 13924352
-    CustomColors.LightBackGround = 15987699
-    CustomColors.LightForeGround = 1776410
-    CustomColors.DarkBackGround = 2105376
-    CustomColors.DarkForeGround = clWhite
-    Drawing.ColorPen = -16776961
-    Drawing.ColorBrush = -5383962
-    Drawing.PenSize = 1.000000000000000000
-    TabOrder = 35
-  end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352

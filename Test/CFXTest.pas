@@ -64,7 +64,6 @@ type
     FXButton13: FXButton;
     FXScrollbar1: FXScrollbar;
     FXScrollText3: FXScrollText;
-    FXShapeSquare1: FXShapeSquare;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButton13Click(Sender: TObject);

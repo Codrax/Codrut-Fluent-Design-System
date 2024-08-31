@@ -10,6 +10,7 @@ uses
   Vcl.Graphics,
   Vcl.ExtCtrls,
   Types,
+  Math,
   CFX.Colors,
   CFX.ThemeManager,
   CFX.Graphics,
@@ -179,6 +180,27 @@ type
   protected
     // Shape building
     procedure BuildPoints; override;
+  end;
+
+  FXShapeRoundedSquare = class(FXShape)
+  private
+    FCornerRadius: FXCornerSettings;
+
+    procedure CornerRadiusesUpdated(Sender: TObject);
+
+  protected
+    procedure CreatePath; override;
+
+    // Shape building
+    procedure BuildPoints; override;
+
+  published
+    property CornerRadius: FXCornerSettings read FCornerRadius write FCornerRadius;
+
+  public
+    // Constructors
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
   end;
 
   FXShapeCircle = class(FXShape)
@@ -513,7 +535,6 @@ begin
     DrawRect.BottomRight,
     Point(DrawRect.Left, DrawRect.Bottom)
   ];
-  TArrayUtils<TPoint>.AddValues([Points[0], Points[1]], Points);
 end;
 
 { FXShapeTriangle }
@@ -526,7 +547,6 @@ begin
     Point(DrawRect.Left, DrawRect.Bottom-1),
     Point(DrawRect.CenterPoint.X, DrawRect.Top)
   ];
-  TArrayUtils<TPoint>.AddValues([Points[0], Points[1]], Points);
 end;
 
 { FXShapeLines }
@@ -537,6 +557,8 @@ begin
 
   for var I := 0 to High(Points)-1 do
     FPath.AddLine( Points[I].X, Points[I].Y, Points[I+1].X, Points[I+1].Y );
+
+  FPath.CloseFigure;
 end;
 
 { FXShapeTriangleCorner }
@@ -549,7 +571,56 @@ begin
     Point(DrawRect.Right, DrawRect.Top),
     Point(DrawRect.Left, DrawRect.Bottom)
   ];
-  TArrayUtils<TPoint>.AddValues([Points[0], Points[1]], Points);
+end;
+
+{ FXShapeRoundedSquare }
+
+procedure FXShapeRoundedSquare.BuildPoints;
+begin
+  inherited;
+
+  Points := [
+    DrawRect.TopLeft,
+    Point(DrawRect.Right, DrawRect.Top),
+    DrawRect.BottomRight,
+    Point(DrawRect.Left, DrawRect.Bottom)
+  ];
+end;
+
+procedure FXShapeRoundedSquare.CornerRadiusesUpdated(Sender: TObject);
+begin
+  StandardUpdateComplete;
+end;
+
+constructor FXShapeRoundedSquare.Create(aOwner: TComponent);
+begin
+  inherited;
+  FCornerRadius := FXCornerSettings.Create( Self );
+  FCornerRadius.OnChange := CornerRadiusesUpdated;
+end;
+
+procedure FXShapeRoundedSquare.CreatePath;
+begin
+  inherited;
+
+  const MinRound = Min(DrawRect.Height, DrawRect.Width);
+
+  const RoundTL = EnsureRange(CornerRadius.AbsoluteTopLeft, 1, MinRound);
+  const RoundTR = EnsureRange(CornerRadius.AbsoluteTopRight, 1, MinRound);
+  const RoundBR = EnsureRange(CornerRadius.AbsoluteBottomRight, 1, MinRound);
+  const RoundBL = EnsureRange(CornerRadius.AbsoluteBottomLeft, 1, MinRound);
+
+  FPath.AddArc(Points[0].X, Points[0].Y, RoundTL, RoundTL, 180+Rotation, 90); // topleft
+  FPath.AddArc(Points[1].X - RoundTR, Points[1].Y, RoundTR, RoundTR, 270+Rotation, 90); // topright
+  FPath.AddArc(Points[2].X - RoundBR, Points[2].Y - RoundBR, RoundBR, RoundBR, 0+Rotation, 90); // bottomright
+  FPath.AddArc(Points[3].X, Points[3].Y - RoundBL, RoundBL, RoundBL, 90+Rotation, 90); // bottomleft
+  FPath.CloseFigure();
+end;
+
+destructor FXShapeRoundedSquare.Destroy;
+begin
+  FreeAndNil( FCornerRadius );
+  inherited;
 end;
 
 end.

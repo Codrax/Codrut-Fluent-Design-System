@@ -888,6 +888,8 @@ begin
       if Item.HasSubItems and not Item.IsOpen then
         OpenItem( FHoverOver );
     end;
+
+  (FGlassBlur as FXWindowsControl).Redraw(false);
 end;
 
 procedure FXPopupComponent.GlassUp(Sender: TObject; Button: TMouseButton;

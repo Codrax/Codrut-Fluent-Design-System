@@ -60,6 +60,7 @@ begin
   RegisterComponents(REGISTER_CLASS_SHAPES,
     [
     FXShapeSquare,
+    FXShapeRoundedSquare,
     FXShapeCircle,
     FXShapeTriangle,
     FXShapeTriangleCorner

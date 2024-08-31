@@ -150,6 +150,7 @@ type
     function ToString: string;
   end;
 
+  // Helper for percentage
   FXPercentHelper = record helper for FXPercent
     public
       function Percentage: real;

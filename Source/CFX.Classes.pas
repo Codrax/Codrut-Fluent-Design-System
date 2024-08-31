@@ -23,6 +23,58 @@ type
     procedure Assign(Source: TPersistent); override;
   end;
 
+  // Corner settings
+  FXCornerSettings = class(FXPersistent)
+  private
+    FTopLeft,
+    FTopRight,
+    FBottomRight,
+    FBottomLeft,
+    FAround,
+    FDiagonalPrimary,
+    FDiagonalSecondary: single;
+
+    FOnChange: TNotifyEvent;
+
+    // Setters
+    procedure SetTopLeft(const Value: single);
+    procedure SetTopRight(const Value: single);
+    procedure SetBottomRight(const Value: single);
+    procedure SetBottomLeft(const Value: single);
+    procedure SetAround(const Value: single);
+    procedure SetDiagonalPrimary(const Value: single);
+    procedure SetDiagonalSecondary(const Value: single);
+
+  protected
+    procedure Updated; virtual;
+
+  published
+    property TopLeft: single read FTopLeft write SetTopLeft;
+    property TopRight: single read FTopRight write SetTopRight;
+    property BottomRight: single read FBottomRight write SetBottomRight;
+    property BottomLeft: single read FBottomLeft write SetBottomLeft;
+
+    property Around: single read FAround write SetAround;
+    property DiagonalPrimary: single read FDiagonalPrimary write SetDiagonalPrimary;
+    property DiagonalSecondary: single read FDiagonalSecondary write SetDiagonalSecondary;
+
+    // Events
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    procedure ScaleChanged(Scaling: single);
+
+  public
+    constructor Create(AOwner : TPersistent); override;
+
+    // Assignment
+    procedure AssignTo(Dest: TPersistent); override;
+
+    // Data
+    function AbsoluteTopLeft: single;
+    function AbsoluteTopRight: single;
+    function AbsoluteBottomRight: single;
+    function AbsoluteBottomLeft: single;
+  end;
+
   // Side values
   FXSideValues = class(FXPersistent)
   private
@@ -37,10 +89,10 @@ type
     FOnChange: TNotifyEvent;
 
     // Setters
+    procedure SetTop(const Value: integer);
     procedure SetLeft(const Value: integer);
     procedure SetBottom(const Value: integer);
     procedure SetRight(const Value: integer);
-    procedure SetTop(const Value: integer);
     procedure SetAround(const Value: integer);
     procedure SetHorizontal(const Value: integer);
     procedure SetVertical(const Value: integer);
@@ -49,10 +101,10 @@ type
     procedure Updated; virtual;
 
   published
-    property Left: integer read FLeft write SetLeft default 0;
     property Top: integer read FTop write SetTop default 0;
-    property Right: integer read FRight write SetRight default 0;
+    property Left: integer read FLeft write SetLeft default 0;
     property Bottom: integer read FBottom write SetBottom default 0;
+    property Right: integer read FRight write SetRight default 0;
 
     property Around: integer read FAround write SetAround default 0;
     property Horizontal: integer read FHorizontal write SetHorizontal default 0;
@@ -69,11 +121,11 @@ type
     procedure AssignTo(Dest: TPersistent); override;
 
     // Data
+    function AbsoluteTop: integer;
     function AbsoluteLeft: integer;
+    function AbsoluteBottom: integer;
     function AbsoluteRight: integer;
     function AbsoluteHorizontal: integer;
-    function AbsoluteTop: integer;
-    function AbsoluteBottom: integer;
     function AbsoluteVertical: integer;
 
     // Utils
@@ -178,14 +230,21 @@ type
     property SelectImageIndex: integer read FImageIndex write SetImageIndex default -1;
 
   public
-    constructor Create(AOwner : TPersistent); override;
-    destructor Destroy; override;
+    // Quick Set
+    procedure SetTo(AType: FXIconType; AEnabled: boolean = true);
 
+    // Assign
     procedure Assign(Source: TPersistent); override;
 
+    // External
     procedure DrawIcon(Canvas: TCanvas; ARectangle: TRect);
 
+    // Memory
     procedure FreeUnusedAssets;
+
+    // Constructors
+    constructor Create(AOwner : TPersistent); override;
+    destructor Destroy; override;
   end;
 
 implementation
@@ -313,6 +372,12 @@ begin
     UpdateParent;
 end;
 
+procedure FXIconSelect.SetTo(AType: FXIconType; AEnabled: boolean);
+begin
+  IconType := AType;
+  Enabled := AEnabled;
+end;
+
 procedure FXIconSelect.UpdateParent;
 begin
   if Owner is TControl then
@@ -356,14 +421,9 @@ end;
 
 { FXSideValues }
 
-function FXSideValues.AbsoluteBottom: integer;
+function FXSideValues.AbsoluteTop: integer;
 begin
-  Result := FBottom + FVertical + FAround;
-end;
-
-function FXSideValues.AbsoluteHorizontal: integer;
-begin
-  Result := FLeft + FRight + FHorizontal + FAround;
+  Result := FTop + FVertical + FAround;
 end;
 
 function FXSideValues.AbsoluteLeft: integer;
@@ -371,14 +431,19 @@ begin
   Result := FLeft + FHorizontal + FAround;
 end;
 
+function FXSideValues.AbsoluteBottom: integer;
+begin
+  Result := FBottom + FVertical + FAround;
+end;
+
 function FXSideValues.AbsoluteRight: integer;
 begin
   Result := FRight + FHorizontal + FAround;
 end;
 
-function FXSideValues.AbsoluteTop: integer;
+function FXSideValues.AbsoluteHorizontal: integer;
 begin
-  Result := FTop + FVertical + FAround;
+  Result := FLeft + FRight + FHorizontal + FAround;
 end;
 
 function FXSideValues.AbsoluteVertical: integer;
@@ -401,7 +466,7 @@ begin
     Destination.FVertical := FVertical;
 
     // Notify
-    Updated;
+    Destination.Updated;
   end
   else
     inherited Assign(Dest);
@@ -442,32 +507,17 @@ begin
   FAround := trunc(FAround * Scaling);
   FHorizontal := trunc(FHorizontal * Scaling);
   FVertical := trunc(FVertical * Scaling);
-end;
 
-procedure FXSideValues.SetAround(const Value: integer);
-begin
-  if FAround = Value then
-    Exit;
-
-  FAround := Value;
+  // Notify
   Updated;
 end;
 
-procedure FXSideValues.SetBottom(const Value: integer);
+procedure FXSideValues.SetTop(const Value: integer);
 begin
-  if FBottom = Value then
+  if FTop = Value then
     Exit;
 
-  FBottom := Value;
-  Updated;
-end;
-
-procedure FXSideValues.SetHorizontal(const Value: integer);
-begin
-  if FHorizontal = Value then
-    Exit;
-
-  FHorizontal := Value;
+  FTop := Value;
   Updated;
 end;
 
@@ -480,6 +530,15 @@ begin
   Updated;
 end;
 
+procedure FXSideValues.SetBottom(const Value: integer);
+begin
+  if FBottom = Value then
+    Exit;
+
+  FBottom := Value;
+  Updated;
+end;
+
 procedure FXSideValues.SetRight(const Value: integer);
 begin
   if FRight = Value then
@@ -489,12 +548,21 @@ begin
   Updated;
 end;
 
-procedure FXSideValues.SetTop(const Value: integer);
+procedure FXSideValues.SetAround(const Value: integer);
 begin
-  if FTop = Value then
+  if FAround = Value then
     Exit;
 
-  FTop := Value;
+  FAround := Value;
+  Updated;
+end;
+
+procedure FXSideValues.SetHorizontal(const Value: integer);
+begin
+  if FHorizontal = Value then
+    Exit;
+
+  FHorizontal := Value;
   Updated;
 end;
 
@@ -581,6 +649,139 @@ begin
     (TComponent(Owner) as FXControl).UpdateTheme(true);
 
   inherited;
+end;
+
+{ FXCornerSettings }
+
+function FXCornerSettings.AbsoluteTopLeft: single;
+begin
+  Result := FTopLeft + FDiagonalPrimary + FAround;
+end;
+
+function FXCornerSettings.AbsoluteTopRight: single;
+begin
+  Result := FTopRight + FDiagonalSecondary + FAround;
+end;
+
+function FXCornerSettings.AbsoluteBottomRight: single;
+begin
+  Result := FBottomRight + FDiagonalSecondary + FAround;
+end;
+
+function FXCornerSettings.AbsoluteBottomLeft: single;
+begin
+  Result := FBottomLeft + FDiagonalPrimary + FAround;
+end;
+
+procedure FXCornerSettings.AssignTo(Dest: TPersistent);
+begin
+  if Dest is FXCornerSettings then
+  begin
+    const Destination = FXCornerSettings(Dest);
+
+    Destination.FTopLeft := FTopLeft;
+    Destination.FTopRight := FTopRight;
+    Destination.FBottomRight := FBottomRight;
+    Destination.BottomLeft := BottomLeft;
+    Destination.FAround := FAround;
+    Destination.FDiagonalPrimary := FDiagonalPrimary;
+    Destination.FDiagonalSecondary := FDiagonalSecondary;
+
+    // Notify
+    Destination.Updated;
+  end
+  else
+    inherited Assign(Dest);
+end;
+
+constructor FXCornerSettings.Create(AOwner: TPersistent);
+begin
+  inherited;
+
+end;
+
+procedure FXCornerSettings.ScaleChanged(Scaling: single);
+begin
+  FTopLeft := trunc(FTopLeft * Scaling);
+  FTopRight := trunc(FTopRight * Scaling);
+  FBottomRight := trunc(FBottomRight * Scaling);
+  FBottomLeft := trunc(FBottomLeft * Scaling);
+
+  FAround := trunc(FAround * Scaling);
+  FDiagonalPrimary := trunc(FDiagonalPrimary * Scaling);
+  FDiagonalSecondary := trunc(FDiagonalSecondary * Scaling);
+
+  // Notify
+  Updated;
+end;
+
+procedure FXCornerSettings.SetTopLeft(const Value: single);
+begin
+  if FTopLeft = Value then
+    Exit;
+
+  FTopLeft := Value;
+  Updated;
+end;
+
+procedure FXCornerSettings.SetTopRight(const Value: single);
+begin
+  if FTopRight = Value then
+    Exit;
+
+  FTopRight := Value;
+  Updated;
+end;
+
+procedure FXCornerSettings.SetBottomRight(const Value: single);
+begin
+  if FBottomRight = Value then
+    Exit;
+
+  FBottomRight := Value;
+  Updated;
+end;
+
+procedure FXCornerSettings.SetBottomLeft(const Value: single);
+begin
+  if FBottomLeft = Value then
+    Exit;
+
+  FBottomLeft := Value;
+  Updated;
+end;
+
+procedure FXCornerSettings.SetAround(const Value: single);
+begin
+  if FAround = Value then
+    Exit;
+
+  FAround := Value;
+  Updated;
+end;
+
+procedure FXCornerSettings.SetDiagonalPrimary(const Value: single);
+begin
+  if FDiagonalPrimary = Value then
+    Exit;
+
+  FDiagonalPrimary := Value;
+  Updated;
+end;
+
+procedure FXCornerSettings.SetDiagonalSecondary(const Value: single);
+begin
+  if FDiagonalSecondary = Value then
+    Exit;
+
+  FDiagonalSecondary := Value;
+  Updated;
+end;
+
+procedure FXCornerSettings.Updated;
+begin
+  if Assigned(FOnChange) then
+    FOnChange(Self);
 end;
 
 end.
