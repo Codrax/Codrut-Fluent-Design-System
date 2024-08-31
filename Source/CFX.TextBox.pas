@@ -379,6 +379,9 @@ end;
 
 procedure FXCustomTextBox.SetUseAccentAsForeground(const Value: boolean);
 begin
+  if FUseAccentAsForeground = Value then
+    Exit;
+
   FUseAccentAsForeground := Value;
 
   // Update

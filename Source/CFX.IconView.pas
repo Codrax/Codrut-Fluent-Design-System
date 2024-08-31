@@ -27,6 +27,7 @@ type
     var DrawRect, IconRect: TRect;
     FDrawColors: FXCompleteColorSet;
     FCustomColors: FXColorSets;
+    FUseAccentAsForeground: boolean;
     FScale: real;
     FImage: FXIconSelect;
     FVertLayout: FXLayout;
@@ -42,6 +43,7 @@ type
     procedure SetImage(const Value: FXIconSelect);
     procedure SetScale(const Value: real);
     procedure SetVertLayout(const Value: FXLayout);
+    procedure SetUseAccentAsForeground(const Value: boolean);
 
   protected
     procedure PaintBuffer; override;
@@ -59,6 +61,9 @@ type
   published
     // Custom Colors
     property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
+
+    // Style
+    property UseAccentAsForeground: boolean read FUseAccentAsForeground write SetUseAccentAsForeground default false;
 
     // Props
     property Image: FXIconSelect read FImage write SetImage;
@@ -160,7 +165,10 @@ begin
     begin
       // Write
       Brush.Style := bsClear;
-      Font.Color := FDrawColors.ForeGround;
+      if UseAccentAsForeground then
+        Font.Color := FDrawColors.Accent
+      else
+        Font.Color := FDrawColors.ForeGround;
       FImage.DrawIcon(Buffer, IconRect);
     end;
 
@@ -248,6 +256,17 @@ begin
 
   FScale := Value;
   StandardUpdateLayout;
+end;
+
+procedure FXIconView.SetUseAccentAsForeground(const Value: boolean);
+begin
+  if FUseAccentAsForeground = Value then
+    Exit;
+
+  FUseAccentAsForeground := Value;
+
+  // Update
+  StandardUpdateDraw;
 end;
 
 procedure FXIconView.SetVertLayout(const Value: FXLayout);

@@ -321,9 +321,6 @@ type
   end;
 
   FXContainerWindowsControl = class(FXWindowsControl)
-  protected
-    // Size
-
   public
     // Draw
     procedure Redraw(RedrawAbove: boolean); overload; override;
