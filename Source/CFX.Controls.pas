@@ -323,7 +323,6 @@ type
   FXContainerWindowsControl = class(FXWindowsControl)
   protected
     // Size
-    procedure BoundsUpdated; override;
 
   public
     // Draw
@@ -1147,7 +1146,10 @@ end;
 
 procedure FXWindowsControl.SetBounds(ALeft, ATop, AWidth, AHeight: Integer);
 begin
-  if not IsReading then begin
+  // Check for changes
+  const BoundsChanged = (ALeft <> Left) or (ATop <> Top) or (AWidth <> Width) or (AHeight <> Height);
+
+  if not IsReading and BoundsChanged then begin
     // Get controls before bounds change
     const AControls = GetControlsAbove;
 
@@ -1159,7 +1161,9 @@ begin
   end else
     inherited;
 
-  BoundsUpdated;
+  // Notify
+  if BoundsChanged then
+    BoundsUpdated;
 end;
 
 procedure FXWindowsControl.SetHeight(const Value: integer);
@@ -1418,15 +1422,6 @@ begin
 end;
 
 { FXContainerWindowsControl }
-
-procedure FXContainerWindowsControl.BoundsUpdated;
-begin
-  // Fix stupid design mode visual bug, the children do not get updated for some reason
-  if IsDesigning then
-    Exit;
-
-  inherited;
-end;
 
 constructor FXContainerWindowsControl.Create(aOwner: TComponent);
 begin
