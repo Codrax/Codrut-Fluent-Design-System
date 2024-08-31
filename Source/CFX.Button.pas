@@ -30,7 +30,7 @@ uses
 type
   FXBeforeModalResult = procedure(Sender: TObject; var SendModal: boolean) of object;
 
-  FXButton = class(FXWindowsControl)
+  FXCustomButton = class(FXWindowsControl)
   private
     const
       KEY_PRESS_KEYS = [13, 32];
@@ -144,14 +144,10 @@ type
     procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
     procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
 
-  published
-    property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
-    property CustomButtonColors: FXColorStateSets read FCustomButtonColors write FCustomButtonColors stored true;
+    // Properties
     property Checked: Boolean read GetChecked write SetChecked default false;
 
     property ShowText: boolean read FShowText write SetShowText default true;
-    property Text: string read FText write SetText;
-    property WordWrap: boolean read FWordWrap write SetWordWrap default true;
     property Image: FXIconSelect read FImage write SetImage;
     property ImageScale: real read FImageScale write SetImageScale;
     property ImageLayout: FXDrawLayout read FImageLayout write SetImageLayout default FXDrawLayout.Left;
@@ -159,14 +155,11 @@ type
     property LayoutVertical: FXLayout read FVertLayout write SetVertLayout default FXLayout.Center;
     property ButtonKind: FXButtonKind read FButtonKind write SetButtonKind default FXButtonKind.Normal;
     property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default true;
-    property Roundness: integer read FRoundness write SetRoundness default BUTTON_ROUNDNESS;
+
     property HyperLinkURL: string read FHyperLinkURL write FHyperLinkURL;
     property DropDown: FXPopupMenu read FDropDown write FDropDown;
     property Margin: integer read FMargin write SetMargin default 0;
     property RepeatWhenPressed: boolean read FRepeatWhenPressed write FRepeatWhenPressed default false;
-    property Animation: boolean read FAnimation write FAnimation default true;
-    property Detail: FXDetailType read FDetail write SetDetail default FXDetailType.None;
-    property LineWidth: real read FLineWidth write SetLineWidth;
     property AutomaticCheck: boolean read FAutomaticCheck write FAutomaticCheck default true;
 
     property StateText: string read FStateText write SetStateText;
@@ -184,6 +177,19 @@ type
     property Default: boolean read FDefault write SetDefault default false;
     property Cancel: boolean read FCancel write SetCancel default false;
     property ModalResult: TModalResult read FModalResult write FModalResult default mrNone;
+
+  published
+    // Public props
+    property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
+    property CustomButtonColors: FXColorStateSets read FCustomButtonColors write FCustomButtonColors stored true;
+
+    property Text: string read FText write SetText;
+    property WordWrap: boolean read FWordWrap write SetWordWrap default true;
+
+    property Roundness: integer read FRoundness write SetRoundness default BUTTON_ROUNDNESS;
+    property Animation: boolean read FAnimation write FAnimation default true;
+    property Detail: FXDetailType read FDetail write SetDetail default FXDetailType.None;
+    property LineWidth: real read FLineWidth write SetLineWidth;
 
     // Properties
     property Align;
@@ -228,9 +234,44 @@ type
     function Background: TColor; override;
   end;
 
+  FXButton = class(FXCustomButton)
+  published
+    property Checked;
+
+    property ShowText;
+    property Image;
+    property ImageScale;
+    property ImageLayout;
+    property LayoutHorizontal;
+    property LayoutVertical;
+    property ButtonKind;
+    property AutomaticCursorPointer;
+
+    property HyperLinkURL;
+    property DropDown;
+    property Margin;
+    property RepeatWhenPressed;
+    property AutomaticCheck;
+
+    property StateText;
+    property StateImage;
+    property StateEnabled;
+    property StateDuration;
+    property AutoStateToggle;
+
+    property OnCheck;
+    property OnOpenLink;
+    property OnDropDown;
+    property OnBeforeModalResult;
+
+    property Default;
+    property Cancel;
+    property ModalResult;
+  end;
+
 implementation
 
-procedure FXButton.InteractionStateChanged(AState: FXControlState);
+procedure FXCustomButton.InteractionStateChanged(AState: FXControlState);
 var
   FAnim: TIntAni;
 begin
@@ -283,14 +324,14 @@ begin
     end;
 end;
 
-procedure FXButton.KeyDown(var Key: Word; Shift: TShiftState);
+procedure FXCustomButton.KeyDown(var Key: Word; Shift: TShiftState);
 begin
   inherited;
   if Key in KEY_PRESS_KEYS then
     SetNewInteractionState(FXControlState.Press, false, false);
 end;
 
-procedure FXButton.KeyPress(var Key: Char);
+procedure FXCustomButton.KeyPress(var Key: Char);
 begin
   inherited;
   if (Key = #13) or (Key = #32) then
@@ -299,14 +340,14 @@ begin
     end;
 end;
 
-procedure FXButton.KeyUp(var Key: Word; Shift: TShiftState);
+procedure FXCustomButton.KeyUp(var Key: Word; Shift: TShiftState);
 begin
   inherited;
   if Key in KEY_PRESS_KEYS then
     SetNewInteractionState(FXControlState.None, true, false);
 end;
 
-procedure FXButton.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
+procedure FXCustomButton.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
   Y: integer);
 begin
   inherited;
@@ -317,12 +358,12 @@ begin
     end;
 end;
 
-procedure FXButton.MouseMove(Shift: TShiftState; X, Y: Integer);
+procedure FXCustomButton.MouseMove(Shift: TShiftState; X, Y: Integer);
 begin
   inherited;
 end;
 
-procedure FXButton.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
+procedure FXCustomButton.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
   Y: integer);
 begin
   inherited;
@@ -330,7 +371,7 @@ begin
     FAutoRepeat.Enabled := false;
 end;
 
-procedure FXButton.UpdateColors;
+procedure FXCustomButton.UpdateColors;
 var
   LoadPreset: FXButtonKind;
   AOffset, ASmallOffset: integer;
@@ -452,12 +493,12 @@ begin
     end
 end;
 
-procedure FXButton.ImageUpdated(Sender: TObject);
+procedure FXCustomButton.ImageUpdated(Sender: TObject);
 begin
   StandardUpdateLayout;
 end;
 
-procedure FXButton.UpdateRects;
+procedure FXCustomButton.UpdateRects;
 var
   AMargin, ATextHeight, ATextWidth, ATextLinesCount, ASize: integer;
   ALeft, ATop: integer;
@@ -649,7 +690,7 @@ begin
     end;
 end;
 
-procedure FXButton.SetText(const Value: string);
+procedure FXCustomButton.SetText(const Value: string);
 begin
   if FText = Value then
     Exit;
@@ -658,7 +699,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXButton.SetVertLayout(const Value: FXLayout);
+procedure FXCustomButton.SetVertLayout(const Value: FXLayout);
 begin
   if FVertLayout = Value then
     Exit;
@@ -667,7 +708,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXButton.SetWordWrap(const Value: boolean);
+procedure FXCustomButton.SetWordWrap(const Value: boolean);
 begin
   if FWordWrap = Value then
     Exit;
@@ -676,13 +717,13 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXButton.StateStop(Sender: TObject);
+procedure FXCustomButton.StateStop(Sender: TObject);
 begin
   StateEnabled := false;
   FAutoStopState.Enabled := false;
 end;
 
-procedure FXButton.TimerRepeat(Sender: TObject);
+procedure FXCustomButton.TimerRepeat(Sender: TObject);
 begin
   Click;
   FAutoRepeat.Interval := HOLD_REPEAT_INTERVAL;
@@ -693,7 +734,7 @@ begin
   Redraw;
 end;
 
-procedure FXButton.ScaleChanged(Scaler: single);
+procedure FXCustomButton.ScaleChanged(Scaler: single);
 begin
   FImageScale := FImageScale * Scaler;
   FLineWidth := FLineWidth * Scaler;
@@ -703,7 +744,7 @@ begin
   inherited;
 end;
 
-procedure FXButton.SetButtonKind(const Value: FXButtonKind);
+procedure FXCustomButton.SetButtonKind(const Value: FXButtonKind);
 begin
   if FButtonKind = Value then
     Exit;
@@ -712,12 +753,12 @@ begin
   StandardUpdateComplete;
 end;
 
-procedure FXButton.SetCancel(const Value: boolean);
+procedure FXCustomButton.SetCancel(const Value: boolean);
 begin
   FCancel := Value;
 end;
 
-procedure FXButton.SetChecked(const Value: Boolean);
+procedure FXCustomButton.SetChecked(const Value: Boolean);
 begin
   if Value <> FChecked then
     begin
@@ -728,12 +769,12 @@ begin
     end;
 end;
 
-procedure FXButton.SetDefault(const Value: boolean);
+procedure FXCustomButton.SetDefault(const Value: boolean);
 begin
   FDefault := Value;
 end;
 
-procedure FXButton.SetDetail(const Value: FXDetailType);
+procedure FXCustomButton.SetDetail(const Value: FXDetailType);
 begin
   if FDetail = Value then
     Exit;
@@ -742,7 +783,7 @@ begin
   StandardUpdateDraw;
 end;
 
-procedure FXButton.SetHorizLayout(const Value: FXLayout);
+procedure FXCustomButton.SetHorizLayout(const Value: FXLayout);
 begin
   if FHorizLayout = Value then
     Exit;
@@ -751,7 +792,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXButton.SetImage(const Value: FXIconSelect);
+procedure FXCustomButton.SetImage(const Value: FXIconSelect);
 begin
   if FImage = Value then
     Exit;
@@ -760,7 +801,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXButton.SetImageLayout(const Value: FXDrawLayout);
+procedure FXCustomButton.SetImageLayout(const Value: FXDrawLayout);
 begin
   if FImageLayout = Value then
     Exit;
@@ -769,7 +810,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXButton.SetImageScale(const Value: real);
+procedure FXCustomButton.SetImageScale(const Value: real);
 begin
   if FImageScale = Value then
     Exit;
@@ -778,7 +819,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXButton.SetLineWidth(const Value: real);
+procedure FXCustomButton.SetLineWidth(const Value: real);
 begin
   if FLineWidth = Value then
     Exit;
@@ -787,7 +828,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXButton.SetMargin(const Value: integer);
+procedure FXCustomButton.SetMargin(const Value: integer);
 begin
   if FMargin = Value then
     Exit;
@@ -796,7 +837,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXButton.SetRoundness(const Value: integer);
+procedure FXCustomButton.SetRoundness(const Value: integer);
 begin
   if FRoundness = Value then
     Exit;
@@ -805,7 +846,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXButton.SetShowText(const Value: boolean);
+procedure FXCustomButton.SetShowText(const Value: boolean);
 begin
   if FShowText = Value then
     Exit;
@@ -814,7 +855,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXButton.SetStateDuration(const Value: integer);
+procedure FXCustomButton.SetStateDuration(const Value: integer);
 begin
   if FStateDuration = Value then
     Exit;
@@ -823,7 +864,7 @@ begin
   FAutoStopState.Interval := Value;
 end;
 
-procedure FXButton.SetStateEnabled(const Value: boolean);
+procedure FXCustomButton.SetStateEnabled(const Value: boolean);
 begin
   if FStateEnabled = Value then begin
     // Reset
@@ -843,7 +884,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXButton.SetStateImage(const Value: FXIconSelect);
+procedure FXCustomButton.SetStateImage(const Value: FXIconSelect);
 begin
   if FStateImage = Value then
     Exit;
@@ -852,7 +893,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXButton.SetStateText(const Value: string);
+procedure FXCustomButton.SetStateText(const Value: string);
 begin
   if FStateText = Value then
     Exit;
@@ -861,12 +902,12 @@ begin
   StandardUpdateLayout;
 end;
 
-function FXButton.GetChecked;
+function FXCustomButton.GetChecked;
 begin
   Result := FChecked;
 end;
 
-function FXButton.GetCheckedTag: integer;
+function FXCustomButton.GetCheckedTag: integer;
 var
   I: Integer;
 begin
@@ -875,13 +916,13 @@ begin
   if Assigned(Parent) then
     begin
       for I := 0 to Parent.ControlCount-1 do
-        if Parent.Controls[I] is FXButton then
-            if (Parent.Controls[I] as FXButton).Checked then
-              Exit( (Parent.Controls[I] as FXButton).Tag );
+        if Parent.Controls[I] is FXCustomButton then
+            if (Parent.Controls[I] as FXCustomButton).Checked then
+              Exit( (Parent.Controls[I] as FXCustomButton).Tag );
     end;
 end;
 
-function FXButton.GetImage: FXIconSelect;
+function FXCustomButton.GetImage: FXIconSelect;
 begin
   if StateEnabled then
     Result := StateImage
@@ -889,7 +930,7 @@ begin
     Result := Image;
 end;
 
-function FXButton.GetText: string;
+function FXCustomButton.GetText: string;
 begin
   if StateEnabled then
     Result := StateText
@@ -897,7 +938,7 @@ begin
     Result := Text;
 end;
 
-function FXButton.GetTextH: integer;
+function FXCustomButton.GetTextH: integer;
 begin
   with Buffer do
     begin
@@ -907,7 +948,7 @@ begin
     end;
 end;
 
-function FXButton.GetTextW: integer;
+function FXCustomButton.GetTextW: integer;
 begin
   with Buffer do
     begin
@@ -920,7 +961,7 @@ begin
     end;
 end;
 
-constructor FXButton.Create(aOwner: TComponent);
+constructor FXCustomButton.Create(aOwner: TComponent);
 begin
   inherited;
   FShowText := true;
@@ -985,7 +1026,7 @@ begin
   Width := 140;
 end;
 
-destructor FXButton.Destroy;
+destructor FXCustomButton.Destroy;
 begin
   FreeAndNil( FCustomColors );
   FreeAndNil( FCustomButtonColors );
@@ -999,12 +1040,12 @@ begin
   inherited;
 end;
 
-function FXButton.Background: TColor;
+function FXCustomButton.Background: TColor;
 begin
   Result := FDrawColors.Background;
 end;
 
-procedure FXButton.Click;
+procedure FXCustomButton.Click;
 var
   Form: TCustomForm;
   AllowModal: boolean;
@@ -1063,7 +1104,7 @@ begin
   inherited;
 end;
 
-procedure FXButton.PaintBuffer;
+procedure FXCustomButton.PaintBuffer;
 var
   AText: string;
   FBackground, FForeground: TColor;

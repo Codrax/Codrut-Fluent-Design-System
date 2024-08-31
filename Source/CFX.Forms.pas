@@ -105,6 +105,10 @@ type
     // Do
     procedure DoShow; override;
 
+    // Initialization
+    procedure InitForm; virtual;
+
+    // Override
     procedure InitializeNewForm; override;
 
   published
@@ -123,11 +127,6 @@ type
     property OnThemeChange: FXThemeChange read FThemeChange write FThemeChange;
 
   public
-    constructor Create(aOwner: TComponent); override;
-    constructor CreateNew(aOwner: TComponent; Dummy: Integer = 0); override;
-    destructor Destroy; override;
-
-    procedure InitForm;
 
     // Procedures
     procedure SetBoundsRect(Bounds: TRect);
@@ -145,6 +144,32 @@ type
     procedure UpdateTheme(const UpdateChildren: Boolean);
 
     function Background: TColor;
+
+    // Constructors
+    constructor Create(aOwner: TComponent); override;
+    constructor CreateNew(aOwner: TComponent; Dummy: Integer = 0); override;
+    destructor Destroy; override;
+  end;
+
+  FXDialogForm = class(FXForm)
+  private
+    FAutoCenter: boolean;
+    FAutoSmoke: boolean;
+
+  protected
+    // Initialization (after form creation)
+    procedure InitForm; override;
+
+    // Do
+    procedure DoShow; override;
+
+  public
+    // Props
+    property AutoCenter: boolean read FAutoCenter write FAutoCenter;
+    property AutoSmoke: boolean read FAutoSmoke write FAutoSmoke;
+
+    // Modal
+    function ShowModal: Integer; override;
   end;
 
 implementation
@@ -623,6 +648,43 @@ procedure FXForm.WM_SysCommand(var Msg: TWMSysCommand);
 begin
   inherited;
 
+end;
+
+{ FXDialogForm }
+
+procedure FXDialogForm.DoShow;
+begin
+  inherited;
+end;
+
+procedure FXDialogForm.InitForm;
+begin
+  FAutoCenter := true;
+  FAutoSmoke := true;
+
+  inherited;
+end;
+
+function FXDialogForm.ShowModal: Integer;
+begin
+  const CanChangeSmoke = AutoSmoke and (Owner is FXForm);
+
+  // Center
+  if FAutoCenter then
+    Position := poOwnerFormCenter;
+
+  // Smoke
+  if CanChangeSmoke then
+    (Owner as FXForm).SmokeEffect := true;
+  
+  try
+    // Modal
+    Result := inherited;
+  finally
+    // Smoke
+  if CanChangeSmoke then
+    (Owner as FXForm).SmokeEffect := false;
+  end;
 end;
 
 end.

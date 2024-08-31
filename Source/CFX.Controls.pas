@@ -1329,8 +1329,17 @@ begin
   UpdateColors;
   UpdateRects;
 
-  // Re-paint
-  Redraw;
+  // Re-paint, do not redraw children
+  Redraw(false);
+
+  // Children
+  if UpdateChildren then begin
+    const Children = GetChildControls;
+    for var I := 0 to High(Children) do
+    if Supports(Children[I], IFXComponent) then
+      (Children[I] as IFXComponent).UpdateTheme(UpdateChildren);
+  end;
+
 end;
 
 procedure FXWindowsControl.WMMove(var Message: TWMMove);

@@ -44,7 +44,7 @@ type
       FScreenCenter: boolean;
 
       // Inherited Creation
-      Form: FXForm;
+      Form: FXDialogForm;
       MainPrompt,
       Prompt: FXTextBox;
       ButtonFooter: FXPanel;
@@ -464,7 +464,10 @@ begin
     FFormColor := TStyleManager.ActiveStyle.GetSystemColor(clBtnFace);
 
   // Default
-  Form   := FXForm.CreateNew(Application);
+  if Assigned(ParentForm) then
+    Form := FXDialogForm.CreateNew(ParentForm)
+  else
+    Form := FXDialogForm.CreateNew(Application);
   with Form do
     begin
       // Form Settings
@@ -653,41 +656,18 @@ begin
   Form.Constraints.MaxHeight := Form.Height;
 
   // Position
-  if not ScreenCenter then
+  Form.AutoCenter := not ScreenCenter;
+  if not ScreenCenter and not Assigned(ParentForm) and (Application.MainForm <> nil) then
     begin
-      Form.Position := poDesigned;
-
-      if Assigned(ParentForm) then
-        begin
-          Form.Left := ParentForm.Left + ParentForm.Width div 2 - Form.Width div 2;
-          Form.Top := ParentForm.Top + ParentForm.Height div 2 - Form.Height div 2;
-        end
-      else
-        if Application.MainForm <> nil then
-          begin
-            Form.Left := Application.MainForm.Left + Application.MainForm.Width div 2 - Form.Width div 2;
-            Form.Top := Application.MainForm.Top + Application.MainForm.Height div 2 - Form.Height div 2;
-          end
-            else
-              begin
-                Form.Left := Screen.Width div 2 - Form.Width div 2;
-                Form.Top := Screen.Height div 2 - Form.Height div 2;
-              end;
+      Form.Left := Application.MainForm.Left + Application.MainForm.Width div 2 - Form.Width div 2;
+      Form.Top := Application.MainForm.Top + Application.MainForm.Height div 2 - Form.Height div 2;
     end;
 
   // Execute Modal & Return value
   try
-    // Smoke On
-    if Assigned(ParentForm) and (ParentForm is FXForm) then
-      FXForm(ParentForm).SmokeEffect := true;
-
     // Modal
     Result := Form.ShowModal;
   finally
-    // Smoke Off
-    if Assigned(ParentForm) and (ParentForm is FXForm) then
-      FXForm(ParentForm).SmokeEffect := false;
-
     // Free Memory
     if FreeForm then
       Form.Free;

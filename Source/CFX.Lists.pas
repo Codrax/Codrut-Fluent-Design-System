@@ -183,8 +183,8 @@ type
     property OnItemHover: TNotifyEvent read FOnItemHover write FOnItemHover;
     property OnItemSelect: TNotifyEvent read FOnItemSelect write FOnItemSelect;
 
-    property OpacityHover: byte read FOpacityHover write SetOpacityHover;
-    property OpacitySelected: byte read FOpacitySelected write SetOpacitySelected;
+    property OpacityHover: byte read FOpacityHover write SetOpacityHover default LIST_ITEM_OPACITY_HOVER;
+    property OpacitySelected: byte read FOpacitySelected write SetOpacitySelected default LIST_ITEM_OPACITY_SELECTED;
 
     property OnMouseWheel;
     property OnMouseWheelUp;
@@ -428,8 +428,8 @@ begin
   FMultiSelect := false;
 
   // Style
-  FOpacityHover := 35;
-  FOpacitySelected := 75;
+  FOpacityHover := LIST_ITEM_OPACITY_HOVER;
+  FOpacitySelected := LIST_ITEM_OPACITY_SELECTED;
 
   // Statuses
   FItemIndex := -1;
@@ -629,10 +629,10 @@ end;
 function FXDrawList.GetItemBackgroundColor(Index: integer): TColor;
 begin
   if ItemSelected[Index] then
-    Result := ColorBlend(Brush.Color, FDrawColors.Accent, OpacitySelected)
+    Result := ColorBlend(FDrawColors.BackGroundInterior, FDrawColors.Accent, OpacitySelected)
   else
   if ItemIndexHover = Index then
-    Result := ColorBlend(Brush.Color, FDrawColors.Accent, OpacityHover)
+    Result := ColorBlend(FDrawColors.BackGroundInterior, FDrawColors.Accent, OpacityHover)
   else
     Result := FDrawColors.BackGroundInterior;
 end;

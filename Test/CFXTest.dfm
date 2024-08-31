@@ -217,24 +217,24 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Login'
-    Image.Enabled = True
-    Image.SelectSegoe = #59182
-    Image.SelectImageIndex = 0
-    ImageScale = 1.250000000000000000
-    LayoutHorizontal = Beginning
-    Margin = 10
     LineWidth = 3.000000000000000000
-    StateText = 'Login success'
-    StateImage.Enabled = True
-    StateImage.SelectSegoe = #59269
-    StateImage.SelectImageIndex = 0
-    AutoStateToggle = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
     TabOrder = 2
+    Image.Enabled = True
+    Image.SelectSegoe = #59182
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    LayoutHorizontal = Beginning
+    Margin = 10
+    StateText = 'Login success'
+    StateImage.Enabled = True
+    StateImage.SelectSegoe = #59269
+    StateImage.SelectImageIndex = 0
+    AutoStateToggle = True
   end
   object FXButtonDesign3: FXButtonDesign
     Left = 1038
@@ -439,22 +439,22 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clLime
     CustomButtonColors.DarkForeGroundPress = clRed
     Text = 'Rainbow Button'
-    Image.IconType = None
-    Image.SelectSegoe = #59188
-    Image.SelectImageIndex = 0
-    ImageScale = 1.250000000000000000
     LineWidth = 3.000000000000000000
-    StateText = 'Wooo!'
-    StateImage.IconType = None
-    StateImage.SelectSegoe = #59188
-    StateImage.SelectImageIndex = 0
-    AutoStateToggle = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
     TabOrder = 5
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    StateText = 'Wooo!'
+    StateImage.IconType = None
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
+    AutoStateToggle = True
   end
   object FXButton7: FXButton
     Left = 1038
@@ -493,24 +493,24 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Toggle me'
-    Image.IconType = None
-    Image.SelectSegoe = #59188
-    Image.SelectImageIndex = 0
-    ImageScale = 1.250000000000000000
-    ButtonKind = Toggle
     LineWidth = 3.000000000000000000
-    StateText = 'You toggled me'
-    StateImage.IconType = None
-    StateImage.SelectSegoe = #59188
-    StateImage.SelectImageIndex = 0
-    StateDuration = 0
-    AutoStateToggle = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
     TabOrder = 6
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    ButtonKind = Toggle
+    StateText = 'You toggled me'
+    StateImage.IconType = None
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
+    StateDuration = 0
+    AutoStateToggle = True
   end
   object FXButton8: FXButton
     Left = 886
@@ -550,23 +550,23 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Online topics'
-    Image.IconType = None
-    Image.SelectSegoe = #59188
-    Image.SelectImageIndex = 0
-    ImageScale = 1.250000000000000000
-    ButtonKind = Link
-    HyperLinkURL = 'www.codrutsoft.com'
     LineWidth = 3.000000000000000000
-    StateText = 'Success'
-    StateImage.IconType = None
-    StateImage.SelectSegoe = #59188
-    StateImage.SelectImageIndex = 0
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
     TabOrder = 7
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    ButtonKind = Link
+    HyperLinkURL = 'www.codrutsoft.com'
+    StateText = 'Success'
+    StateImage.IconType = None
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
   end
   object FXButtonDesign2: FXButtonDesign
     Left = 1038
@@ -776,23 +776,23 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Round'
-    Image.IconType = None
-    Image.SelectSegoe = #59188
-    Image.SelectImageIndex = 0
-    ImageScale = 1.250000000000000000
-    ButtonKind = Accent
     Roundness = 35
     LineWidth = 3.000000000000000000
-    StateText = 'Success'
-    StateImage.IconType = None
-    StateImage.SelectSegoe = #59188
-    StateImage.SelectImageIndex = 0
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
     TabOrder = 10
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    ButtonKind = Accent
+    StateText = 'Success'
+    StateImage.IconType = None
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
   end
   object FXButton12: FXButton
     Left = 885
@@ -831,17 +831,7 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Press & hold'
-    Image.IconType = None
-    Image.SelectSegoe = #59188
-    Image.SelectImageIndex = 0
-    ImageScale = 1.250000000000000000
-    RepeatWhenPressed = True
     LineWidth = 3.000000000000000000
-    StateText = 'Success'
-    StateImage.IconType = None
-    StateImage.SelectSegoe = #59188
-    StateImage.SelectImageIndex = 0
-    AutoStateToggle = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = 21
@@ -849,6 +839,16 @@ object Form1: TForm1
     Font.Style = []
     TabOrder = 11
     OnClick = FXButton12Click
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    RepeatWhenPressed = True
+    StateText = 'Success'
+    StateImage.IconType = None
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
+    AutoStateToggle = True
   end
   object FXScrollText2: FXScrollText
     Left = 15
@@ -995,22 +995,22 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Open dialog'
-    Image.IconType = None
-    Image.SelectSegoe = #59188
-    Image.SelectImageIndex = 0
-    ImageScale = 1.250000000000000000
-    ButtonKind = Accent
     LineWidth = 3.000000000000000000
-    StateText = 'Success'
-    StateImage.IconType = None
-    StateImage.SelectSegoe = #59188
-    StateImage.SelectImageIndex = 0
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
     TabOrder = 16
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    ButtonKind = Accent
+    StateText = 'Success'
+    StateImage.IconType = None
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
   end
   object FXButton5: FXButton
     Left = 368
@@ -1049,15 +1049,7 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Change theme'
-    Image.IconType = None
-    Image.SelectSegoe = #59188
-    Image.SelectImageIndex = 0
-    ImageScale = 1.250000000000000000
     LineWidth = 3.000000000000000000
-    StateText = 'Success'
-    StateImage.IconType = None
-    StateImage.SelectSegoe = #59188
-    StateImage.SelectImageIndex = 0
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = 21
@@ -1065,6 +1057,14 @@ object Form1: TForm1
     Font.Style = []
     TabOrder = 17
     OnClick = FXButton5Click
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    StateText = 'Success'
+    StateImage.IconType = None
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
   end
   object FXTextBox2: FXTextBox
     Left = 237
@@ -1231,15 +1231,7 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Update'
-    Image.Enabled = True
-    Image.SelectSegoe = #60371
-    Image.SelectImageIndex = 0
-    ImageScale = 1.250000000000000000
     LineWidth = 3.000000000000000000
-    StateText = 'Success'
-    StateImage.IconType = None
-    StateImage.SelectSegoe = #59188
-    StateImage.SelectImageIndex = 0
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
@@ -1247,6 +1239,14 @@ object Form1: TForm1
     Font.Style = []
     TabOrder = 22
     OnClick = FXButton14Click
+    Image.Enabled = True
+    Image.SelectSegoe = #60371
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    StateText = 'Success'
+    StateImage.IconType = None
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
   end
   object FXButton16: FXButton
     Left = 1038
@@ -1285,15 +1285,7 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Full-Dialog'
-    Image.Enabled = True
-    Image.SelectSegoe = #60412
-    Image.SelectImageIndex = 0
-    ImageScale = 1.250000000000000000
     LineWidth = 3.000000000000000000
-    StateText = 'Success'
-    StateImage.IconType = None
-    StateImage.SelectSegoe = #59188
-    StateImage.SelectImageIndex = 0
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -16
@@ -1301,6 +1293,14 @@ object Form1: TForm1
     Font.Style = []
     TabOrder = 23
     OnClick = FXButton16Click
+    Image.Enabled = True
+    Image.SelectSegoe = #60412
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    StateText = 'Success'
+    StateImage.IconType = None
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
   end
   object FXTextBox8: FXTextBox
     Left = 1038
@@ -1494,23 +1494,23 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Options'
-    Image.IconType = None
-    Image.SelectSegoe = #59188
-    Image.SelectImageIndex = 0
-    ImageScale = 1.250000000000000000
-    ButtonKind = Dropdown
-    DropDown = FXPopupMenu1
     LineWidth = 3.000000000000000000
-    StateText = 'Success'
-    StateImage.IconType = None
-    StateImage.SelectSegoe = #59188
-    StateImage.SelectImageIndex = 0
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
     TabOrder = 29
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    ButtonKind = Dropdown
+    DropDown = FXPopupMenu1
+    StateText = 'Success'
+    StateImage.IconType = None
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
   end
   object FXScrollText1: FXScrollText
     Left = 237
@@ -1587,16 +1587,7 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
     Text = 'Open dialog with smoke effect'
-    Image.IconType = None
-    Image.SelectSegoe = #59188
-    Image.SelectImageIndex = 0
-    ImageScale = 1.250000000000000000
-    ButtonKind = Accent
     LineWidth = 3.000000000000000000
-    StateText = 'Success'
-    StateImage.IconType = None
-    StateImage.SelectSegoe = #59188
-    StateImage.SelectImageIndex = 0
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = 21
@@ -1604,6 +1595,15 @@ object Form1: TForm1
     Font.Style = []
     TabOrder = 32
     OnClick = FXButton13Click
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    ButtonKind = Accent
+    StateText = 'Success'
+    StateImage.IconType = None
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
   end
   object FXScrollbar1: FXScrollbar
     Left = 231

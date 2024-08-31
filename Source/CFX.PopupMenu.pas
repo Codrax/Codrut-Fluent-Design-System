@@ -17,6 +17,7 @@ uses
   Vcl.Menus,
   CFX.Graphics,
   CFX.VarHelpers,
+  CFX.ArrayHelpers,
   Vcl.Forms,
   DateUtils,
   IOUtils,
@@ -349,7 +350,7 @@ var
 begin
   FreeAndNil(FImage);
   // Free items
-  for I := 0 to Items.Count-1 do
+  for I := Items.Count-1 downto 0 do
     Items.Delete(I);
 
   inherited;
@@ -1377,10 +1378,8 @@ var
   I: Integer;
 begin
   if AndFree then
-    for I := 0 to High(FItems) do
-      FItems[I].Free;
-
-  SetLength(FItems, 0);
+    for I := High(FItems) downto 0 do
+      Delete(I);
 end;
 
 function FXPopupItems.Count: integer;
@@ -1404,11 +1403,13 @@ procedure FXPopupItems.Delete(Index: integer; AndFree: boolean = true);
 var
   I: Integer;
 begin
+  // Free item
   if AndFree then
-    FItems[Index].Free;
+    if FItems[Index] <> nil then
+      FItems[Index].Free;
 
-  for I := Index to High(FItems) - 1 do
-    FItems[Index] := FItems[Index + 1];
+  // Remove from index
+  TArrayUtils<FXPopupItem>.Delete(Index, FItems);
 end;
 
 destructor FXPopupItems.Destroy;
