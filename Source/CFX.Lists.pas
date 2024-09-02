@@ -42,9 +42,6 @@ type
 
   FXDrawList = class(FXWindowsControl)
   private
-    procedure SetOpacityHover(const Value: byte);
-    procedure SetOpacitySelected(const Value: byte);
-    procedure SetDefaultDraw(const Value: boolean);
     type TRectSet = record
       Index: integer;
       Rectangle: TRect;
@@ -55,6 +52,9 @@ type
     FCustomColors: FXColorSets;
     FNoOutOfBoundsDraw: boolean;
     FVisibleList: TArray<TRectSet>;
+
+    FBackground,
+    FBackgroundItems: FXBackgroundColor;
 
     FItemIndex,
     FItemIndexHover: integer;
@@ -117,6 +117,11 @@ type
     procedure SetItemSelected(Index: integer; const Value: boolean);
     procedure SetItemIndex(const Value: integer);
     procedure SetItemIndexHover(const Value: integer);
+    procedure SetOpacityHover(const Value: byte);
+    procedure SetOpacitySelected(const Value: byte);
+    procedure SetDefaultDraw(const Value: boolean);
+    procedure SetBackground(const Value: FXBackgroundColor);
+    procedure SetBackgroundItems(const Value: FXBackgroundColor);
 
   protected
     procedure PaintBuffer; override;
@@ -167,6 +172,9 @@ type
   published
     // Custom Colors
     property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
+
+    property BackgroundColor: FXBackgroundColor read FBackground write SetBackground default FXBackgroundColor.Background;
+    property BackgroundColorItems: FXBackgroundColor read FBackgroundItems write SetBackgroundItems default FXBackgroundColor.Content;
 
     // Props
     property ShowScrollbars: boolean read FShowScrollbars write SetShowScrollbars default true;
@@ -413,6 +421,9 @@ begin
   // Custom Color
   FCustomColors := FXColorSets.Create(Self);
 
+  FBackground := FXBackgroundColor.Background;
+  FBackgroundItems := FXBackgroundColor.Content;
+
   FDrawColors := FXCompleteColorSet.Create;
 
   FKeyboardNavigation := true;
@@ -627,14 +638,22 @@ begin
 end;
 
 function FXDrawList.GetItemBackgroundColor(Index: integer): TColor;
+var
+  Interior: TColor;
 begin
+  case FBackgroundItems of
+    FXBackgroundColor.Background: Interior := FDrawColors.BackGround;
+    FXBackgroundColor.Content: Interior := FDrawColors.BackGroundInterior;
+    else Interior := 0;
+  end;
+
   if ItemSelected[Index] then
-    Result := ColorBlend(FDrawColors.BackGroundInterior, FDrawColors.Accent, OpacitySelected)
+    Result := ColorBlend(Interior, FDrawColors.Accent, OpacitySelected)
   else
   if ItemIndexHover = Index then
-    Result := ColorBlend(FDrawColors.BackGroundInterior, FDrawColors.Accent, OpacityHover)
+    Result := ColorBlend(Interior, FDrawColors.Accent, OpacityHover)
   else
-    Result := FDrawColors.BackGroundInterior;
+    Result := Interior;
 end;
 
 function FXDrawList.GetItemCount: integer;
@@ -767,7 +786,10 @@ var
   I: Integer;
 begin
   // Background
-  Color := FDrawColors.BackGround;
+  case FBackground of
+    FXBackgroundColor.Background: Color := FDrawColors.BackGround;
+    FXBackgroundColor.Content: Color := FDrawColors.BackGroundInterior;
+  end;
   PaintBackground;
 
   // Draw
@@ -903,6 +925,24 @@ procedure FXDrawList.ScaleChanged(Scaler: single);
 begin
   inherited;
   // update scale
+end;
+
+procedure FXDrawList.SetBackground(const Value: FXBackgroundColor);
+begin
+  if FBackground = Value then
+    Exit;
+
+  FBackground := Value;
+  Redraw;
+end;
+
+procedure FXDrawList.SetBackgroundItems(const Value: FXBackgroundColor);
+begin
+  if FBackgroundItems = Value then
+    Exit;
+
+  FBackgroundItems := Value;
+  Redraw;
 end;
 
 procedure FXDrawList.SetDefaultDraw(const Value: boolean);

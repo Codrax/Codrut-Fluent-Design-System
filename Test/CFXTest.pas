@@ -21,7 +21,8 @@ uses
   // VCL COMPONENTS
   Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage, Vcl.ControlList,
   Vcl.ExtDlgs, System.ImageList, UITypes, Vcl.ComCtrls, Vcl.Mask,
-  Vcl.Themes, System.Generics.Collections, CFX.Layouts, CFX.TitlebarPanel;
+  Vcl.Themes, System.Generics.Collections, CFX.Layouts, CFX.TitlebarPanel,
+  Vcl.NumberBox;
 
 type
   TForm1 = class(FXForm)
@@ -63,6 +64,7 @@ type
     FXScrollText1: FXScrollText;
     FXButton13: FXButton;
     FXScrollbar1: FXScrollbar;
+    FXLinearDrawList1: FXLinearDrawList;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButton13Click(Sender: TObject);
@@ -74,6 +76,7 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FXAppManager1UpdateChecked(Sender: TObject);
     procedure FXPaintBox1Draw(Sender: TObject);
+    procedure FXNumberEdit1NumberChanged(Sender: TObject);
   private
     { Private declarations }
   public
@@ -216,6 +219,11 @@ begin
     finally
       Free;
     end;
+end;
+
+procedure TForm1.FXNumberEdit1NumberChanged(Sender: TObject);
+begin
+  FXTextBox7.Text := FXNumberEdit(Sender).Value.ToString;
 end;
 
 procedure TForm1.FXPaintBox1Draw(Sender: TObject);

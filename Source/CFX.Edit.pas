@@ -82,7 +82,7 @@ type
     procedure PopupItemClick(Sender: TObject; Item: FXPopupComponent; Index: integer);
 
     // Text
-    procedure ChangeText(AText: string);
+    procedure ChangeText(AText: string); virtual;
     procedure DeleteChar(Index: integer);
 
     procedure ScrollForCursor; overload;
@@ -99,7 +99,6 @@ type
     function GetValue: int64;
 
     // Setters
-    procedure SetText(const Value: string);
     procedure SetAutoSizing(const Value: boolean);
     procedure SetLineSize(const Value: integer);
     procedure SetRoundness(const Value: integer);
@@ -121,6 +120,10 @@ type
   protected
     procedure PaintBuffer; override;
 
+    // Text
+    procedure SetText(const Value: string); virtual;
+    function GetText: string; virtual;
+
     //  Internal
     procedure UpdateColors; override;
     procedure UpdateRects; override;
@@ -138,6 +141,7 @@ type
     function CanEdit: boolean;
 
     // Key Presses
+    procedure EnterPressed; virtual;
     procedure HandleKeyDown(var CanHandle: boolean; Key: integer; ShiftState: TShiftState); override;
     procedure KeyPress(var Key: Char); override;
 
@@ -151,7 +155,7 @@ type
     procedure DoExit; override;
 
     // Text
-    property Text: string read FText write SetText;
+    property Text: string read GetText write SetText;
     property PasswordChar: char read FPassChar write SetPasswordChar;
 
     property Value: int64 read GetValue write SetValue;
@@ -281,13 +285,98 @@ type
     destructor Destroy; override;
   end;
 
+  // Number box
+  FXNumberEdit = class(FXCustomEdit)
+  private
+    FValue: Extended;
+    FNumberType: FXNumberType;
+    FDecimals: integer;
+    FRange: FNumberRange;
+
+    FOnNumberChanged: TNotifyEvent;
+
+    // Updated
+    procedure RangeUpdated(Sender: TObject);
+
+    // Internal
+    procedure UpdateTextValue;
+    procedure TextUpdated;
+
+    // Getters
+    function GetValueInt: int64;
+    function GetValueCurrency: currency;
+    function GetValueExtended: extended;
+
+    // Setters
+    procedure SetValue(Value: extended);
+    procedure SetValueEx(Value: Extended; Update: boolean);
+    procedure SetValueInt(Value: int64);
+    procedure SetValueCurrency(Value: currency);
+    procedure SetValueExtended(Value: extended);
+    procedure SetDecimals(const Value: integer);
+    procedure SetNumberType(const Value: FXNumberType);
+
+  protected
+    // Focus
+    procedure DoExit; override;
+
+    // Key
+    procedure EnterPressed; override;
+
+    // Text
+    procedure SetText(const Value: string); override;
+    procedure ChangeText(AText: string); override;
+
+  published
+    property Text stored false;
+
+    property OnNumberChanged: TNotifyEvent read FOnNumberChanged write FOnNumberChanged;
+
+    property Range: FNumberRange read FRange write FRange;
+
+    property NumberType: FXNumberType read FNumberType write SetNumberType default FXNumberType.Integer;
+    property Decimals: integer read FDecimals write SetDecimals default 2;
+    property Value: extended read FValue write SetValue stored true;
+
+    property Position;
+    property SelectionLength;
+    property Layout default FXLayout.Center;
+    property LayoutHorizontal default FXLayout.Beginning;
+
+    // Settings
+    property TextHint;
+    property ClearSelectionOnExit;
+    property CanUndo;
+    property CharCase;
+    property ReadOnly;
+    property EnableSelection;
+    property AutoSize;
+    property LineSize;
+    property Roundness;
+    property TextMarginX;
+    property TextMarginY;
+    property Detail;
+  public
+    property ValueInt: int64 read GetValueInt write SetValueInt;
+    property ValueExtended: extended read GetValueExtended write SetValueExtended;
+    property ValueCurrency: currency read GetValueCurrency write SetValueCurrency;
+
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
+  end;
+
 implementation
 
 procedure FXCustomEdit.KeyPress(var Key: Char);
 begin
   inherited;
+  if Key = #13 then begin
+    EnterPressed;
+    Exit;
+  end;
+
   // Invalid
-  if CharInSet(Key, [#8, #13, #27]) then
+  if CharInSet(Key, [#8, #27]) then
     Exit;
 
   // Special keys
@@ -357,6 +446,11 @@ begin
     FDefaultMenu.PopupAtPoint(ClientToScreen(Point(X, Y)))
   else
     inherited;
+end;
+
+function FXCustomEdit.GetText: string;
+begin
+  Result := FText;
 end;
 
 function FXCustomEdit.GetValue: int64;
@@ -617,6 +711,11 @@ begin
   else
     for I := 1 to Length(Text) do
       Result := Result + PasswordChar;
+end;
+
+procedure FXCustomEdit.EnterPressed;
+begin
+  //
 end;
 
 function FXCustomEdit.ExtendsBounds: boolean;
@@ -1511,6 +1610,203 @@ destructor FXEdit.Destroy;
 begin
   // inherit
   inherited;
+end;
+
+{ FXNumberEdit }
+
+procedure FXNumberEdit.ChangeText(AText: string);
+begin
+  inherited;
+
+  // Test if valid
+  TextUpdated;
+end;
+
+constructor FXNumberEdit.Create(aOwner: TComponent);
+begin
+  inherited;
+  FNumberType := FXNumberType.Integer;
+  Decimals := 2;
+  FText := '0';
+
+  FRange := FNumberRange.Create(Self);
+  FRange.OnChange := RangeUpdated;
+end;
+
+destructor FXNumberEdit.Destroy;
+begin
+  FreeAndNil( FRange );
+  inherited;
+end;
+
+procedure FXNumberEdit.DoExit;
+begin
+  inherited;
+  UpdateTextValue;
+end;
+
+procedure FXNumberEdit.EnterPressed;
+begin
+  UpdateTextValue;
+end;
+
+function FXNumberEdit.GetValueCurrency: currency;
+begin
+  Result := FValue;
+end;
+
+function FXNumberEdit.GetValueExtended: extended;
+begin
+  Result := FValue;
+end;
+
+function FXNumberEdit.GetValueInt: int64;
+begin
+  Result := Trunc(FValue);
+end;
+
+procedure FXNumberEdit.RangeUpdated(Sender: TObject);
+begin
+  if FRange.Enabled then
+    Value := FRange.EnsureRange(FValue);
+end;
+
+procedure FXNumberEdit.SetDecimals(const Value: integer);
+begin
+  if FDecimals = Value then
+    Exit;
+
+  FDecimals := Value;
+  if not IsReading then
+    UpdateTextValue;
+end;
+
+procedure FXNumberEdit.SetNumberType(const Value: FXNumberType);
+begin
+  if FNumberType = Value then
+    Exit;
+
+  FNumberType := Value;
+  if not IsReading then
+    UpdateTextValue;
+end;
+
+procedure FXNumberEdit.SetText(const Value: string);
+begin
+  // Inherit
+  inherited;
+
+  // Test if valid
+  TextUpdated;
+
+  if not IsReading then
+    UpdateTextValue;
+end;
+
+procedure FXNumberEdit.SetValueInt(Value: int64);
+begin
+  // Range
+  if FRange.Enabled then
+    Value := trunc(FRange.EnsureRange(Value));
+
+  // Set
+  Self.Value := Value;
+end;
+
+procedure FXNumberEdit.TextUpdated;
+var
+  Number: string;
+  I: Int64;
+  New: Extended;
+begin
+  try
+    Number := Text;
+
+    case FNumberType of
+      FXNumberType.Integer: begin
+        if not TryStrToInt64(Number, I) then
+          Exit;
+        New := I;
+      end;
+      FXNumberType.Extended: begin
+        if not TryStrToFloat(Number, New) then
+          Exit;
+      end;
+      FXNumberType.Currency: begin
+        if not TryStrToFloat(Number, New) then
+          Exit;
+      end;
+    end;
+
+    SetValueEx(New, false);
+  except
+  end;
+end;
+
+procedure FXNumberEdit.UpdateTextValue;
+var
+  Number: string;
+begin
+  // Set
+  case FNumberType of
+    FXNumberType.Integer: Number := ValueInt.ToString;
+    FXNumberType.Extended,
+    FXNumberType.Currency:
+      if Decimals > 0 then
+        Number := Format('%.2f', [Value])
+      else
+        Number := Value.ToString;
+  end;
+
+  // Update
+  if Number <> Text then
+    inherited ChangeText(Number);
+end;
+
+procedure FXNumberEdit.SetValue(Value: extended);
+begin
+  SetValueEx(Value, true);
+end;
+
+procedure FXNumberEdit.SetValueCurrency(Value: currency);
+begin
+  // Range
+  if FRange.Enabled then
+    Value := FRange.EnsureRange(Value);
+
+  Self.Value := Value;
+end;
+
+procedure FXNumberEdit.SetValueEx(Value: Extended; Update: boolean);
+begin
+  // Range
+  if FRange.Enabled then
+    Value := FRange.EnsureRange(Value);
+
+  // Same value?
+  if FValue = Value then
+    Exit;
+    
+  // Set
+  FValue := Value;
+
+  // Update text
+  if Update then
+    UpdateTextValue;
+
+  // Set
+  if not IsReading and Assigned(OnNumberChanged) then
+    OnNumberChanged(Self);
+end;
+
+procedure FXNumberEdit.SetValueExtended(Value: extended);
+begin
+  // Range
+  if FRange.Enabled then
+    Value := FRange.EnsureRange(Value);
+
+  // Set
+  Self.Value := Value;
 end;
 
 end.

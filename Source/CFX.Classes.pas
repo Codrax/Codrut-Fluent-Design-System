@@ -4,7 +4,7 @@ interface
 uses
   Vcl.Graphics, Classes, Types, CFX.Types, CFX.Constants, SysUtils,
   CFX.Graphics, CFX.VarHelpers, CFX.ThemeManager, Vcl.Controls,
-  TypInfo, CFX.Linker, CFX.Colors;
+  TypInfo, CFX.Linker, CFX.Colors, Math;
 
 type
   // Base Clases
@@ -141,6 +141,39 @@ type
 
   FXPadding = FXSideValues;
   FXMargins = FXSideValues;
+
+  // Number range
+  FNumberRange = class(FXPersistent)
+  private
+    FEnabled: boolean;
+    FMin: Extended;
+    FMax: Extended;
+
+    FOnChange: TNotifyEvent;
+
+    procedure SetEnabled(const Value: boolean);
+    procedure SetMax(const Value: Extended);
+    procedure SetMin(const Value: Extended);
+
+    // Setters
+
+  protected
+    procedure Updated; virtual;
+
+  published
+    property Enabled: boolean read FEnabled write SetEnabled default false;
+    property Min: Extended read FMin write SetMin;
+    property Max: Extended read FMax write SetMax;
+
+    // Events
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+
+  public
+    function EnsureRange(Value: Extended): Extended;
+
+    // Constructors
+    constructor Create(AOwner : TPersistent); override;
+  end;
 
   // Size class
   FXPointGeneric = class(FXAssignPersistent)
@@ -839,6 +872,54 @@ begin
 end;
 
 procedure FXCornerSettings.Updated;
+begin
+  if Assigned(FOnChange) then
+    FOnChange(Self);
+end;
+
+{ FNumberRange }
+
+constructor FNumberRange.Create(AOwner: TPersistent);
+begin
+  inherited;
+  FEnabled := false;
+  FMin := 0;
+  FMax := 0;
+end;
+
+function FNumberRange.EnsureRange(Value: Extended): Extended;
+begin
+  Result := Math.EnsureRange(Value, FMin, FMax);
+end;
+
+procedure FNumberRange.SetEnabled(const Value: boolean);
+begin
+  FEnabled := Value;
+
+  Updated;
+end;
+
+procedure FNumberRange.SetMax(const Value: Extended);
+begin
+  FMax := Value;
+
+  if FMax < FMin then
+    FMin := FMax;
+
+  Updated;
+end;
+
+procedure FNumberRange.SetMin(const Value: Extended);
+begin
+  FMin := Value;
+
+  if FMax < FMin then
+    FMax := FMin;
+
+  Updated;
+end;
+
+procedure FNumberRange.Updated;
 begin
   if Assigned(FOnChange) then
     FOnChange(Self);

@@ -183,6 +183,7 @@ type
     procedure HandleKeyDown(var CanHandle: boolean; Key: integer; ShiftState: TShiftState); virtual;
 
     // Focus Line and Events
+    procedure FocusChanged(Focused: boolean); virtual;
     procedure DoEnter; override;
     procedure DoExit; override;
 
@@ -537,21 +538,13 @@ end;
 procedure FXWindowsControl.DoEnter;
 begin
   inherited;
-  if AutoFocusLine and (InteractionState <> FXControlState.Press) then
-    begin
-      FHasEnteredTab := true;
-      Invalidate; // do not redraw
-    end;
+  FocusChanged(true);
 end;
 
 procedure FXWindowsControl.DoExit;
 begin
   inherited;
-  if AutoFocusLine then
-    begin
-      FHasEnteredTab := false;
-      Invalidate; // do not redraw
-    end;
+  FocusChanged(false);
 end;
 
 procedure FXWindowsControl.DoPaint;
@@ -742,6 +735,14 @@ end;
 procedure FXWindowsControl.DrawTo(ACanvas: TCanvas; Destination: TRect);
 begin
   DrawTo(ClientRect, ACanvas, Destination);
+end;
+
+procedure FXWindowsControl.FocusChanged(Focused: boolean);
+begin
+  if AutoFocusLine then begin
+    FHasEnteredTab := false;
+    Invalidate; // do not redraw
+  end;
 end;
 
 procedure FXWindowsControl.FontNotifyUpdate(Sender: TObject);
@@ -1440,17 +1441,7 @@ procedure FXContainerWindowsControl.Redraw(RedrawAbove: boolean);
 var
   Flags: FXRedrawFlags;
 begin
-  ///  Fix another stupid design mode visual bug, this one generally when the control
-  ///  is redrawn, the controls do not get invalidate. So se use the Invalidate flag instead
-  if IsDesigning then begin
-    Flags := DEFAULT_CONTROL_REDRAW_FLAGS - [FXRedrawFlag.Paint] + [FXRedrawFlag.Invalidate];
 
-    if not RedrawAbove then
-      Flags := Flags - [FXRedrawFlag.UpdateAbove];
-
-    Redraw(Flags);
-  end
-  else
     inherited;
 end;
 

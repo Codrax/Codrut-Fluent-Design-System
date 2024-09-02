@@ -798,10 +798,15 @@ begin
       FControl := FXScrollLayout(Parent);
 
       // Size
-      if Orientation = FXOrientation.Vertical then
-        ControlSize := FControl.Height - Width
-      else
-        ControlSize := FControl.Width - Height;
+      if Orientation = FXOrientation.Vertical then begin
+        ControlSize := FControl.Height;
+        if FControl.EnableHorizontal and FControl.FHorzScroll.Visible then
+          Dec(ControlSize, Width);
+      end else begin
+        ControlSize := FControl.Width;
+        if FControl.EnableHorizontal and FControl.FHorzScroll.Visible then
+          Dec(ControlSize, Height);
+      end;
 
       // Range
       NewRange := 0;

@@ -39,6 +39,7 @@ begin
     FXScrollbar,
     FXSelector,
     FXEdit,
+    FXNumberEdit,
     FXIconView,
     FXProgress,
     FXRatingControl

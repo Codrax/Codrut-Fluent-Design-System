@@ -38,6 +38,9 @@ type
   FXAnimationKind = (Linear, Exponential, ReverseExpo, Random, Spring, Sinus,
     SinusArc, Wobbly, Pulse);
 
+  // Number
+  FXNumberType = (Integer, Extended, Currency);
+
   // Detail
   FXDetailType = (None, Underline, Outline);
 
