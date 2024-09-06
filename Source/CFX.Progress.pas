@@ -484,11 +484,11 @@ begin
                 end);
 
               // Sleep
-              for var I := 1 to 10 do begin
-                if (FAnimateThread = nil) or FAnimateThread.CheckTerminated then
+              if (FAnimateThread = nil) or FAnimateThread.CheckTerminated then
                   Exit;
-                Sleep(1);
-              end;
+              Sleep(10);
+              if (FAnimateThread = nil) or FAnimateThread.CheckTerminated then
+                  Exit;
             end;
 
           // Done

@@ -1631,35 +1631,6 @@ object Form1: TForm1
     CustomScrollbarSize = 0
     TabOrder = 33
   end
-  object FXLinearDrawList1: FXLinearDrawList
-    Left = 528
-    Top = 368
-    Width = 350
-    Height = 250
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 0
-    Opacity = 100.000000000000000000
-    Size.X = 350
-    Size.Y = 250
-    Position.X = 528
-    Position.Y = 368
-    CustomColors.Enabled = False
-    CustomColors.Accent = 13924352
-    CustomColors.LightBackGround = 15987699
-    CustomColors.LightForeGround = 1776410
-    CustomColors.DarkBackGround = 2105376
-    CustomColors.DarkForeGround = clWhite
-    NoOutOfBoundsDraw = True
-    TabOrder = 34
-    ItemCount = 3
-    ItemWidth = 150
-    ItemHeight = 100
-    Wrap = True
-    SpacingRow = 8
-    SpacingColumn = 8
-  end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
