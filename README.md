@@ -36,7 +36,7 @@ The component package is not at a state where it can be considered finished with
  - Codrut Printing - https://github.com/Codrax/Codrut-Printing
  - File Sync Manager - (work in progress)
 
-## Creatng a CFX Visual Application
+## Creating a CFX Visual Application
 1) Create a new VCL Application in Delphi
 <img src="https://github.com/user-attachments/assets/56ffe547-242d-49c9-a9b0-daa59dff726d" width="300">
 
