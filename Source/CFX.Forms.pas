@@ -63,6 +63,10 @@ type
     TTlCtrl: TCustomTitleBarpanel;
     FDisableTitlebarAlign: boolean;
 
+    // Mica
+    FPostMicaBlend: boolean;
+    FPostMicaBlendValue: byte;
+
     // Smoke
     Smoke: TForm;
     SmokeAnimation: TIntAni;
@@ -155,6 +159,7 @@ type
   private
     FAutoCenter: boolean;
     FAutoSmoke: boolean;
+    FParentForm: TForm;
 
   protected
     // Initialization (after form creation)
@@ -164,6 +169,8 @@ type
     procedure DoShow; override;
 
   public
+    property ParentForm: TForm read FParentForm write FParentForm;
+
     // Props
     property AutoCenter: boolean read FAutoCenter write FAutoCenter;
     property AutoSmoke: boolean read FAutoSmoke write FAutoSmoke;
@@ -420,16 +427,19 @@ procedure FXForm.SetMicaEffect(const Value: boolean);
 begin
   FMicaEffect := Value;
 
-  if Value then
-    begin
-      AlphaBlend := true;
+  if Value then begin
+      // Save
+      FPostMicaBlendValue := AlphaBlendValue;
+      FPostMicaBlend := AlphaBlend;
 
-      AlphaBlendValue := 251;
-    end
-      else
-    begin
-      AlphaBlend := false;
-    end;
+      // Update
+      AlphaBlend := true;
+      AlphaBlendValue := FORM_MICA_EFFECT_BLEND_VALUE;
+  end else begin
+    // Load
+    AlphaBlendValue := FPostMicaBlendValue;
+    AlphaBlend := FPostMicaBlend;
+  end;
 end;
 
 procedure FXForm.SetSmokeEffect(const Value: boolean);
@@ -655,10 +665,19 @@ end;
 procedure FXDialogForm.DoShow;
 begin
   inherited;
+
+  // Center
+  if FAutoCenter and (FParentForm is TForm) and (Position = poDesigned) then begin
+    Left := FParentForm.Left + (FParentForm.Width - Width) div 2;
+    Top := FParentForm.Top + (FParentForm.Height - Height) div 2;
+  end;
 end;
 
 procedure FXDialogForm.InitForm;
 begin
+  if (FParentForm = nil) and (Owner is TForm) then
+    FParentForm := TForm(Owner);
+
   FAutoCenter := true;
   FAutoSmoke := true;
 
@@ -667,15 +686,15 @@ end;
 
 function FXDialogForm.ShowModal: Integer;
 begin
-  const CanChangeSmoke = AutoSmoke and (Owner is FXForm);
+  const CanChangeSmoke = AutoSmoke and (FParentForm is FXForm);
 
   // Center
   if FAutoCenter then
-    Position := poOwnerFormCenter;
+    Position := poDesigned;
 
   // Smoke
   if CanChangeSmoke then
-    (Owner as FXForm).SmokeEffect := true;
+    (FParentForm as FXForm).SmokeEffect := true;
   
   try
     // Modal
@@ -683,7 +702,7 @@ begin
   finally
     // Smoke
   if CanChangeSmoke then
-    (Owner as FXForm).SmokeEffect := false;
+    (FParentForm as FXForm).SmokeEffect := false;
   end;
 end;
 

@@ -206,8 +206,10 @@ begin
   SystemGrayControl := FXSingleColorStateSets.Create;
   SystemAccentInteractStates := FXSingleColorStateSet.Create(SystemGrayControl, DarkTheme);
 
+  // Update colors
   UpdateColors;
 
+  // Create color sets for tool tip
   FSystemToolTip := FXCompleteColorSets.Create;
 
   { IGNORE IF IDE MODE! }
@@ -227,16 +229,21 @@ end;
 
 destructor FXThemeManager.Destroy;
 begin
+  // Registry monitor
   if FRegistryMonitor <> nil then
     begin
       FRegistryMonitor.Enabled := false;
       FreeAndNil( FRegistryMonitor );
     end;
 
+  // Tool tip data
   FreeAndNil( FSystemToolTip );
-  FreeAndNil( SystemColor );
+
+  // Color classess
   FreeAndNil( SystemColorSet );
+  FreeAndNil( SystemColor );
   FreeAndNil( SystemGrayControl );
+  FreeAndNil( SystemAccentInteractStates );
 end;
 
 function FXThemeManager.LoadAccentColor: TColor;
@@ -360,9 +367,8 @@ end;
 
 procedure FXThemeManager.UpdateColors;
 begin
-  if SystemColor <> nil then
-    SystemColor.Free;
-  SystemColor := FXCompleteColorSet.Create(SystemColorSet, FDarkTheme);
+  // Update system color
+  SystemColor.LoadFrom(SystemColorSet, FDarkTheme);
 
   // Update Accent
   UpdateAccentColor;
@@ -373,9 +379,9 @@ begin
   // Create System Defaults
   SystemColorSet.Accent := AccentColor;
   SystemGrayControl.Accent := AccentColor;
-  SystemAccentInteractStates := FXSingleColorStateSet.Create(AccentColor,
-                                                      ChangeColorLight(AccentColor, ACCENT_DIFFERENTIATE_CONST),
-                                                      ChangeColorLight(AccentColor, -ACCENT_DIFFERENTIATE_CONST));
+  SystemAccentInteractStates.LoadColors(AccentColor,
+      ChangeColorLight(AccentColor, ACCENT_DIFFERENTIATE_CONST),
+      ChangeColorLight(AccentColor, -ACCENT_DIFFERENTIATE_CONST));
 end;
 
 procedure FXThemeManager.UpdateSettings;

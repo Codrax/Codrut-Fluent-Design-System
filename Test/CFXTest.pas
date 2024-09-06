@@ -76,7 +76,6 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FXAppManager1UpdateChecked(Sender: TObject);
     procedure FXPaintBox1Draw(Sender: TObject);
-    procedure FXNumberEdit1NumberChanged(Sender: TObject);
   private
     { Private declarations }
   public
@@ -219,11 +218,6 @@ begin
     finally
       Free;
     end;
-end;
-
-procedure TForm1.FXNumberEdit1NumberChanged(Sender: TObject);
-begin
-  FXTextBox7.Text := FXNumberEdit(Sender).Value.ToString;
 end;
 
 procedure TForm1.FXPaintBox1Draw(Sender: TObject);
