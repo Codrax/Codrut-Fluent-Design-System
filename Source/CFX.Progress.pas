@@ -57,16 +57,16 @@ type
 
     FProgressKind: FXProgressKind;
 
-    FProgressHeight: integer;
-    FProgressLineHeight: integer;
+    FProgressActiveLineSize: integer;
+    FProgressLineSize: integer;
 
     // Thread
     procedure SetAnimationThread(Enabled: boolean);
     procedure AnimateValue(From: single);
 
     // Setters
-    procedure SetProgressHeight(const Value: integer);
-    procedure SetProgressLineHeight(const Value: integer);
+    procedure SetProgressActiveLineSize(const Value: integer);
+    procedure SetProgressLineSize(const Value: integer);
     procedure SetProgressKind(const Value: FXProgressKind);
     procedure SetValue(const Value: FXPercent);
     procedure SetOrientation(const Value: FXOrientation);
@@ -100,8 +100,8 @@ type
     property Orientation: FXOrientation read FOrientation write SetOrientation default FXOrientation.Horizontal;
 
     property ProgressKind: FXProgressKind read FProgressKind write SetProgressKind default FXProgressKind.Normal;
-    property ProgressHeight: integer read FProgressHeight write SetProgressHeight default PROGRESS_HEIGHT;
-    property ProgressLineHeight: integer read FProgressLineHeight write SetProgressLineHeight default PROGRESS_LINE_HEIGHT;
+    property ProgressActiveLineSize: integer read FProgressActiveLineSize write SetProgressActiveLineSize default PROGRESS_ACTIVELINE_SIZE;
+    property ProgressLineSize: integer read FProgressLineSize write SetProgressLineSize default PROGRESS_LINE_SIZE;
 
     // Utils
     procedure Reset; (* reset to 0 without animation *)
@@ -234,8 +234,8 @@ begin
   Value := 0;
   FAnimations := true;
 
-  FProgressHeight := PROGRESS_HEIGHT;
-  FProgressLineHeight := PROGRESS_LINE_HEIGHT;
+  FProgressActiveLineSize := PROGRESS_ACTIVELINE_SIZE;
+  FProgressLineSize := PROGRESS_LINE_SIZE;
 
   FCustomColors := FXCompleteColorSets.Create(Self);
   FCustomOtherColors := FXColorSets.Create(Self);
@@ -310,7 +310,7 @@ begin
       if ProgressKind <> FXProgressKind.Intermediate then
         begin
           ARectRound.Rect := LineRect;
-          ARectRound.SetRoundness(LineRect.Height);
+          ARectRound.SetRoundness(Min(LineRect.Width, LineRect.Height));
 
           AColor := FDrawColors.BackGroundInterior;
 
@@ -319,7 +319,7 @@ begin
 
       // Draw Main
       ARectRound.Rect := FilledRect;
-      ARectRound.SetRoundness(FilledRect.Height);
+      ARectRound.SetRoundness(Min(FilledRect.Width, FilledRect.Height));
 
       AColor := GetFrontColor;
 
@@ -392,24 +392,57 @@ begin
 
   // Fill
   FilledRect := DrawRect;
-  FilledRect.Height := ProgressHeight;
-  FilledRect.Width := FilledRect.Width - 1;
-  FilledRect.Offset(0, (DrawRect.Height-ProgressHeight) div 2);
+  case Orientation of
+    FXOrientation.Horizontal: begin
+      FilledRect.Height := ProgressActiveLineSize;
+      FilledRect.Width := FilledRect.Width-1;
 
-  FilledRect.Width := round((Value++FValueAdd) / 100 * FilledRect.Width);
+      // Center
+      FilledRect.Offset(0, (DrawRect.Height-ProgressActiveLineSize) div 2);
+
+      // Value
+      FilledRect.Width := round((Value++FValueAdd) / 100 * FilledRect.Width);
+    end;
+    FXOrientation.Vertical: begin
+      FilledRect.Width := ProgressActiveLineSize;
+      FilledRect.Height := FilledRect.Height-1;
+
+      // Center
+      FilledRect.Offset((DrawRect.Width-ProgressActiveLineSize) div 2, 0);
+
+      // Height
+      FilledRect.Height := round((Value++FValueAdd) / 100 * FilledRect.Height);
+    end;
+  end;
 
   // Line
   LineRect := DrawRect;
-  LineRect.Height := ProgressLineHeight;
-  LineRect.Width := LineRect.Width - 1;
-  LineRect.Offset(0, (DrawRect.Height-ProgressLineHeight) div 2);
+  case Orientation of
+    FXOrientation.Horizontal: begin
+      LineRect.Height := ProgressLineSize;
+
+      LineRect.Offset(0, (DrawRect.Height-ProgressLineSize) div 2);
+    end;
+    FXOrientation.Vertical: begin
+      LineRect.Width := ProgressLineSize;
+
+      LineRect.Offset((DrawRect.Width-ProgressLineSize) div 2, 0);
+    end;
+  end;
 
   // State
   if ProgressKind = FXProgressKind.Intermediate then
     begin
-      FilledRect.OffSet(FOffset, 0);
-
-      FilledRect.Width := FInterSize;
+      case Orientation of
+        FXOrientation.Horizontal: begin
+          FilledRect.OffSet(FOffset, 0);
+          FilledRect.Width := FInterSize;
+        end;
+        FXOrientation.Vertical: begin
+          FilledRect.OffSet(0, FOffset);
+          FilledRect.Height := FInterSize;
+        end;
+      end;
     end;
 end;
 
@@ -420,6 +453,8 @@ begin
 end;
 
 procedure FXProgress.SetAnimationThread(Enabled: boolean);
+var
+  MaximumSize: integer;
 begin
   if Enabled = FThreadActive then
     Exit;
@@ -445,14 +480,20 @@ begin
               var Passed: boolean;
               Passed := false;
 
-              // Increase
-              case FLengthState of
-                0: Inc(FOffset, ceil(DrawRect.Width div 30));
-                1: Inc(FOffset, ceil(DrawRect.Width div 20));
-                else Inc(FOffset, ceil(DrawRect.Width div 25));
+              // Get maximum line size
+              case Orientation of
+                FXOrientation.Horizontal: MaximumSize := DrawRect.Width;
+                FXOrientation.Vertical: MaximumSize := DrawRect.Height;
               end;
 
-              if FOffset >= DrawRect.Width then
+              // Increase
+              case FLengthState of
+                0: Inc(FOffset, ceil(MaximumSize div 30));
+                1: Inc(FOffset, ceil(MaximumSize div 20));
+                else Inc(FOffset, ceil(MaximumSize div 25));
+              end;
+
+              if FOffset >= MaximumSize then
                 begin
                   Passed := true;
 
@@ -463,10 +504,10 @@ begin
 
               // Size
               case FLengthState of
-                0: FInterSize := ceil(DrawRect.Width / 3);
-                1: FInterSize := ceil(DrawRect.Width / 2.2);
+                0: FInterSize := ceil(MaximumSize / 3);
+                1: FInterSize := ceil(MaximumSize / 2.2);
                 else
-                  FInterSize := DrawRect.Width;
+                  FInterSize := MaximumSize;
               end;
 
               // Offset
@@ -528,12 +569,12 @@ begin
     SetBounds(Left, Top, Height, Width);  // this will also invoke UpdateRects() in Sized();
 end;
 
-procedure FXProgress.SetProgressHeight(const Value: integer);
+procedure FXProgress.SetProgressActiveLineSize(const Value: integer);
 begin
-  if FProgressHeight = Value then
+  if FProgressActiveLineSize = Value then
     Exit;
 
-  FProgressHeight := Value;
+  FProgressActiveLineSize := Value;
   StandardUpdateLayout;
 end;
 
@@ -549,12 +590,12 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXProgress.SetProgressLineHeight(const Value: integer);
+procedure FXProgress.SetProgressLineSize(const Value: integer);
 begin
-  if FProgressLineHeight = Value then
+  if FProgressLineSize = Value then
     Exit;
 
-  FProgressLineHeight := Value;
+  FProgressLineSize := Value;
   StandardUpdateLayout;
 end;
 

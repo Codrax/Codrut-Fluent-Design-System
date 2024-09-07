@@ -65,6 +65,7 @@ type
     FXButton13: FXButton;
     FXScrollbar1: FXScrollbar;
     FXProgress1: FXProgress;
+    FXProgress2: FXProgress;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButton13Click(Sender: TObject);

@@ -1598,8 +1598,8 @@ object Form1: TForm1
     TabOrder = 33
   end
   object FXProgress1: FXProgress
-    Left = 552
-    Top = 167
+    Left = 584
+    Top = 224
     Width = 200
     Height = 20
     Margins.Left = 0
@@ -1608,8 +1608,8 @@ object Form1: TForm1
     Margins.Bottom = 0
     Size.X = 200
     Size.Y = 20
-    Position.X = 552
-    Position.Y = 167
+    Position.X = 584
+    Position.Y = 224
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1624,6 +1624,7 @@ object Form1: TForm1
     CustomOtherColors.LightForeGround = 1776410
     CustomOtherColors.DarkBackGround = 2105376
     CustomOtherColors.DarkForeGround = clWhite
+    Value = 50.000000000000000000
     Animations = True
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -1631,6 +1632,43 @@ object Form1: TForm1
     Font.Name = 'Segoe UI'
     Font.Style = []
     TabOrder = 34
+  end
+  object FXProgress2: FXProgress
+    Left = 552
+    Top = 288
+    Width = 129
+    Height = 200
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Size.X = 129
+    Size.Y = 200
+    Position.X = 552
+    Position.Y = 288
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    CustomColors.LightBackGroundInterior = 16514043
+    CustomColors.DarkBackGroundInterior = 2829099
+    CustomOtherColors.Enabled = False
+    CustomOtherColors.Accent = 13924352
+    CustomOtherColors.LightBackGround = 15987699
+    CustomOtherColors.LightForeGround = 1776410
+    CustomOtherColors.DarkBackGround = 2105376
+    CustomOtherColors.DarkForeGround = clWhite
+    Value = 50.000000000000000000
+    Animations = True
+    Orientation = Vertical
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 22
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    TabOrder = 35
   end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False
