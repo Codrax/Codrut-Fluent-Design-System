@@ -334,14 +334,15 @@ type
     procedure StringsChanged(Sender: TObject);
     procedure MarginsChanged(Sender: TObject);
 
-    // Draw
-    procedure DrawItem(Index: integer; ARect: TRect; Canvas: TCanvas); override;
-
     // Getters
     function GetItemCountEx: integer;
 
     // Setters
     procedure SetStrings(const Value: TStringList);
+
+  protected
+    // Draw
+    procedure DrawItem(Index: integer; ARect: TRect; Canvas: TCanvas); override;
 
   published
     // Props
@@ -482,6 +483,7 @@ end;
 
 procedure FXDrawList.ClearSelection;
 begin
+  FItemIndex := -1;
   ClearSelectedInternal;
 
   StandardUpdateDraw;
@@ -818,6 +820,10 @@ end;
 
 procedure FXDrawList.InteractionStateChanged(AState: FXControlState);
 begin
+  if AState = FXControlState.None then
+    if FItemIndexHover <> -1 then
+      FItemIndexHover := -1;
+
   inherited;
 end;
 
@@ -832,7 +838,7 @@ begin
   inherited;
 
   // Select item
-  if ItemIndexHover <> -1 then begin
+  if (ItemIndexHover <> -1) or FCanDeselect then begin
     if (ssCtrl in Shift) and MultiSelect then
       ItemSelected[ItemIndexHover] := not ItemSelected[ItemIndexHover]
     else
@@ -840,9 +846,7 @@ begin
 
     if Assigned(FOnItemSelect) then
       FOnItemSelect(Self);
-  end else
-    if FCanDeselect then
-      ClearSelection;
+  end;
 end;
 
 procedure FXDrawList.MouseMove(Shift: TShiftState; X, Y: integer);
