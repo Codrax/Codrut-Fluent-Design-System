@@ -200,7 +200,7 @@ type
 
     // Default props
     property Align;
-    property PaddingFill;
+    //property PaddingFill;
     property Constraints;
     property Anchors;
     property Hint;
@@ -328,9 +328,11 @@ type
   private
     FContainer: FXControlContainer;
 
-    // Padding basically
+    // Padding and margins
     function GetItemPaddding: FXMargins;
     procedure SetItemPaddding(const Value: FXMargins);
+    function GetItemInnerMarginsFill: FXMargins;
+    procedure SetItemInnerMarginsFill(const Value: FXMargins);
 
   protected
     // Draw
@@ -353,6 +355,7 @@ type
     property Container: FXControlContainer read FContainer write FContainer stored true;
 
     property ItemPaddding: FXMargins read GetItemPaddding write SetItemPaddding;
+    property ItemInnerMarginsFill: FXMargins read GetItemInnerMarginsFill write SetItemInnerMarginsFill;
 
   public
     constructor Create(aOwner: TComponent); override;
@@ -884,6 +887,7 @@ procedure FXDrawList.UpdateScrollbars;
 begin
   if IsReading then
     Exit;
+
   // Update Scrollbars
   with FVertScroll do
     begin
@@ -1380,6 +1384,11 @@ begin
   FContainer.GetChildren(Proc, Root);
 end;
 
+function FXLinearControlList.GetItemInnerMarginsFill: FXMargins;
+begin
+  Result := FContainer.InnerMarginsFill;
+end;
+
 function FXLinearControlList.GetItemPaddding: FXMargins;
 begin
   Result := FContainer.PaddingFill;
@@ -1411,6 +1420,11 @@ begin
     FContainer.Width := FActualSize.X;
     FContainer.Height := FActualSize.Y;
   end;
+end;
+
+procedure FXLinearControlList.SetItemInnerMarginsFill(const Value: FXMargins);
+begin
+  FContainer.InnerMarginsFill.Assign(Value);
 end;
 
 procedure FXLinearControlList.SetItemPaddding(const Value: FXMargins);

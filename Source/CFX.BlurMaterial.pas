@@ -73,7 +73,6 @@ type
 
   published
     property Align;
-    property PaddingFill;
     property Anchors;
     property AutoSize;
     property Constraints;

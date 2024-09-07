@@ -64,7 +64,6 @@ type
 
     // Default props
     property Align;
-    property PaddingFill;
     property Constraints;
     property Anchors;
     property OnEnter;

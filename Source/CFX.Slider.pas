@@ -44,6 +44,7 @@ type
     FEnablePositionHint: boolean;
     FOnHint: FXSliderOnHint;
     FAlwaysSnap: boolean;
+    FDrawSliderFilling: boolean;
 
     FPositionDraw: integer;
 
@@ -58,15 +59,6 @@ type
     // Timer Proc
     procedure FillTickChange(Sender: TObject);
 
-    // Set
-    procedure SetOrientation(const Value: FXOrientation);
-    procedure SetMax(const Value: int64);
-    procedure SetMin(const Value: int64);
-    procedure SetPosition(const Value: int64);
-    procedure SetPositionEx(const Value: int64; ARedraw: boolean; UserExecuted: boolean = true);
-    procedure SetSliderHeight(const Value: integer);
-    procedure SetIconSize(const Value: integer);
-
     // Hint
     procedure ShowPositionHint;
 
@@ -75,14 +67,22 @@ type
     // Fill Animation
     procedure AnimateToFill;
 
-    // Data
+    // Getters
     function GetSliderBegin: integer;
     function GetSliderSize: integer;
     procedure UpdateSliderPosition;
 
-    // Messages
+    // Setters
+    procedure SetOrientation(const Value: FXOrientation);
+    procedure SetMax(const Value: int64);
+    procedure SetMin(const Value: int64);
+    procedure SetPosition(const Value: int64);
+    procedure SetPositionEx(const Value: int64; ARedraw: boolean; UserExecuted: boolean = true);
+    procedure SetSliderHeight(const Value: integer);
+    procedure SetIconSize(const Value: integer);
     procedure SetSmallChange(const Value: integer);
     procedure SetTicks(const Value: integer);
+    procedure SetDrawSliderFilling(const Value: boolean);
 
   protected
     procedure PaintBuffer; override;
@@ -119,6 +119,7 @@ type
     property Max: int64 read FMax write SetMax default 100;
     property TotalTicks: integer read FTotalTicks write SetTicks default 0;
     property AlwaysSnap: boolean read FAlwaysSnap write FAlwaysSnap default false;
+    property DrawSliderFilling: boolean read FDrawSliderFilling write SetDrawSliderFilling default true;
     property EnablePositionHint: boolean read FEnablePositionHint write FEnablePositionHint default true;
     property OnHint: FXSliderOnHint read FOnHint write FOnHint;
 
@@ -128,7 +129,6 @@ type
     property Align;
     property Transparent;
     property Opacity;
-    property PaddingFill;
     property Constraints;
     property Anchors;
     property Hint;
@@ -419,6 +419,7 @@ begin
   FSmallChange := 1;
   FTotalTicks := 0;
   FEnablePositionHint := true;
+  FDrawSliderFilling := true;
 
   ShowHint := true;
 
@@ -574,9 +575,11 @@ begin
       RoundRect(SliderRect, FRoundness, FRoundness);
 
       // Full
-      Brush.Color := FDrawColors.Accent;
+      if FDrawSliderFilling then begin
+        Brush.Color := FDrawColors.Accent;
 
-      RoundRect(SliderFull, FRoundness, FRoundness);
+        RoundRect(SliderFull, FRoundness, FRoundness);
+      end;
     end;
 
   // Ticks
@@ -663,6 +666,17 @@ begin
   inherited;
   FSliderHeight := round(FSliderHeight * Scaler);
   FIconSize := round(FIconSize * Scaler);
+end;
+
+procedure FXSlider.SetDrawSliderFilling(const Value: boolean);
+begin
+  if FDrawSliderFilling = Value then
+    Exit;
+
+  FDrawSliderFilling := Value;
+
+  // Update
+  StandardUpdateDraw;
 end;
 
 procedure FXSlider.SetIconSize(const Value: integer);

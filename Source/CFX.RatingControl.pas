@@ -55,7 +55,6 @@ type
     property Align;
     property Transparent;
     property Opacity;
-    property PaddingFill;
     property Constraints;
     property Anchors;
     property Hint;

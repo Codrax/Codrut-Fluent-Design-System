@@ -78,8 +78,10 @@ type
     FHitTest: boolean;
     FTransparent: boolean;
 
-    FPadding: FXPadding;
+    //FPadding: FXPadding;
+    FInnerMargins: FXPadding;
     FMargins: FXMargins;
+    FPadding: FXPadding;
 
     FSize: FXControlSize;
     FPosition: FXControlPosition;
@@ -108,11 +110,18 @@ type
     // Object Notify Events
     procedure FontNotifyUpdate(Sender: TObject);
 
+    // Align
+    procedure AlignControls(AControl: TControl; var Rect: TRect); override;
+
+    // Stored
+    function IsOpacityStored: Boolean;
+
     // Get
     function GetLeft: integer;
     function GetTop: integer;
     function GetHeight: integer;
     function GetWidth: integer;
+    function GetInvisibile: boolean;
 
     // Set
     procedure SetState(const Value: FXControlState);
@@ -124,6 +133,7 @@ type
     procedure SetTop(const Value: integer);
     procedure SetHeight(const Value: integer);
     procedure SetWidth(const Value: integer);
+    procedure SetInvisibile(const Value: boolean);
 
   protected
     // Paint
@@ -155,7 +165,7 @@ type
     procedure Resize; override;
     procedure Sized; virtual;
     procedure Moved; virtual;
-    procedure ApplyPadding; virtual;
+    procedure ApplyInnerMargins; virtual;
     procedure BoundsUpdated; virtual; // move, size or either one
 
     // Utils
@@ -189,6 +199,7 @@ type
 
     // Size
     function GetClientRect: TRect; override;
+    function GetContentRect: TRect; virtual;
 
     // Created
     procedure CreateWnd; override;
@@ -207,8 +218,9 @@ type
     procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
     procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
 
-    procedure PaddingUpdated(Sender: TObject);
+    procedure InnerMarginsUpdated(Sender: TObject);
     procedure MarginsUpdated(Sender: TObject);
+    procedure PaddingUpdated(Sender: TObject);
 
     // Interaction
     procedure InteractionStateChanged(AState: FXControlState); virtual;
@@ -248,12 +260,18 @@ type
 
   published
     property Transparent: boolean read FTransparent write SetTransparent default true;
-    property Opacity: FXPercent read FOpacity write SetOpacity;
+    property Invisible: boolean read GetInvisibile write SetInvisibile stored true default false; // helps FOpacity
+    property Opacity: FXPercent read FOpacity write SetOpacity stored IsOpacityStored;
+
+    // System
+    property ClientRect;
+    property ContentRect: TRect read GetContentRect;
 
     // Popup Menu
     property PopupMenu: FXPopupMenu read FPopupMenu write FPopupMenu;
 
     // Client
+    property InnerMarginsFill: FXPadding read FInnerMargins write FInnerMargins;
     property MarginsFill: FXMargins read FMargins write FMargins;
 
     // Defaults
@@ -322,6 +340,9 @@ type
   end;
 
   FXContainerWindowsControl = class(FXWindowsControl)
+  published
+    property PaddingFill;
+
   public
     // Draw
     procedure Redraw(RedrawAbove: boolean); overload; override;
@@ -348,6 +369,15 @@ begin
         Result := Default;
 end;
 
+procedure FXWindowsControl.AlignControls(AControl: TControl; var Rect: TRect);
+begin
+  // Adjust align rectange
+  Rect := FPadding.RectangleInflate(Rect);
+
+  // Inherit
+  inherited;
+end;
+
 procedure FXWindowsControl.AllocateHandles;
 begin
   HandleNeeded; // allocate self
@@ -359,7 +389,7 @@ begin
       (AControls[I] as FXWindowsControl).AllocateHandles;
 end;
 
-procedure FXWindowsControl.ApplyPadding;
+procedure FXWindowsControl.ApplyInnerMargins;
 begin
   Resize;
   UpdateRects;
@@ -451,6 +481,9 @@ begin
   // Update colors when first created
   UpdateColors;
 
+  // Update rects
+  UpdateRects;
+
   // First draw
   Redraw;
 end;
@@ -462,7 +495,7 @@ begin
   FCreated := false;
   FBufferedComponent := true;
   FAutoFocusLine := false;
-  FOpacity := 100;
+  FOpacity := DEFAULT_OPACITY;
   FTransparent := true;
   FHitTest := true;
 
@@ -472,10 +505,12 @@ begin
   Margins.Right := 0;
   Margins.Bottom := 0;
 
-  FPadding := FXPadding.Create(Self);
-  FPadding.OnChange := PaddingUpdated;
+  FInnerMargins := FXPadding.Create(Self);
+  FInnerMargins.OnChange := InnerMarginsUpdated;
   FMargins := FXMargins.Create(Self);
   FMargins.OnChange := MarginsUpdated;
+  FPadding := FXPadding.Create(Self);
+  FPadding.OnChange := PaddingUpdated;
 
   // Font
   FTextFont := TFont.Create;
@@ -518,8 +553,9 @@ destructor FXWindowsControl.Destroy;
 begin
   FreeAndNil(FTextFont);
 
-  FreeAndNil(FPadding);
+  FreeAndNil(FInnerMargins);
   FreeAndNil(FMargins);
+  FreeAndNil(FPadding);
 
   FreeAndNil(FSize);
   FreeAndNil(FPosition);
@@ -792,7 +828,12 @@ end;
 function FXWindowsControl.GetClientRect: TRect;
 begin
   // Apply padding
-  Result := FPadding.RectangleInflate( Rect(0, 0, Width, Height) );
+  Result := FInnerMargins.RectangleInflate( Rect(0, 0, Width, Height) );
+end;
+
+function FXWindowsControl.GetContentRect: TRect;
+begin
+  Result := FPadding.RectangleInflate( GetClientRect );
 end;
 
 function FXWindowsControl.GetControlsAbove: TArray<TControl>;
@@ -834,6 +875,11 @@ begin
   else
     // Ute It's static transparency for controls
     Result := (Parent as FXWindowsControl).Opacity.Percentage * FOpacity
+end;
+
+function FXWindowsControl.GetInvisibile: boolean;
+begin
+  Result := FOpacity = 0;
 end;
 
 function FXWindowsControl.GetLeft: integer;
@@ -916,6 +962,11 @@ begin
   Result := csDestroying in ComponentState;
 end;
 
+function FXWindowsControl.IsOpacityStored: Boolean;
+begin
+  Result := FOpacity <> 100;
+end;
+
 function FXWindowsControl.IsReading: boolean;
 begin
   Result := csReading in ComponentState;
@@ -983,12 +1034,24 @@ begin
     FPopupMenu.PopupAtPoint( ClientToScreen(Point(X,Y)) );
 end;
 
-procedure FXWindowsControl.PaddingUpdated(Sender: TObject);
+procedure FXWindowsControl.InnerMarginsUpdated(Sender: TObject);
 begin
   Realign;
 
-  ApplyPadding;
+  ApplyInnerMargins;
 
+  Redraw;
+end;
+
+procedure FXWindowsControl.PaddingUpdated(Sender: TObject);
+begin
+  Realign;
+  Resize;
+
+  // Rects
+  UpdateRects;
+
+  // Draw
   Redraw;
 end;
 
@@ -1034,6 +1097,8 @@ begin
   if not (FXRedrawFlag.Force in Flags) then
     if not BufferedComponent or (Parent = nil) or IsReading or not HandleAllocated then
       Exit;
+
+  GetInvisibile;
 
   // Redraw buffer
   if FXRedrawFlag.RedrawBuffer in Flags then begin
@@ -1135,8 +1200,9 @@ procedure FXWindowsControl.ScaleChanged(Scaler: single);
 begin
   FTextFont.Height := round(FTextFont.Height * Scaler);
 
-  FPadding.ScaleChanged(Scaler);
+  FInnerMargins.ScaleChanged(Scaler);
   FMargins.ScaleChanged(Scaler);
+  FPadding.ScaleChanged(Scaler);
 
   // Rects
   UpdateRects;
@@ -1169,6 +1235,20 @@ begin
   if Height = Value then
     Exit;
   inherited Height := Value;
+end;
+
+procedure FXWindowsControl.SetInvisibile(const Value: boolean);
+begin
+  if Invisible = Value then
+    Exit;
+
+  if Value then
+    FOpacity := 0
+  else
+    FOpacity := 100;
+
+  // Draw
+  StandardUpdateDraw;
 end;
 
 procedure FXWindowsControl.SetLeft(const Value: integer);
@@ -1438,11 +1518,8 @@ begin
 end;
 
 procedure FXContainerWindowsControl.Redraw(RedrawAbove: boolean);
-var
-  Flags: FXRedrawFlags;
 begin
-
-    inherited;
+  inherited;
 end;
 
 end.

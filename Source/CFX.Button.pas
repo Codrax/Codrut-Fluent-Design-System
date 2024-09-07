@@ -35,7 +35,7 @@ type
     const
       KEY_PRESS_KEYS = [13, 32];
 
-    var DrawRect, CaptionRect, IndicatorRect, ImageRect, TheTextRect: TRect;
+    var DrawRect, MainRect, CaptionRect, IndicatorRect, ImageRect, TheTextRect: TRect;
     FCustomColors: FXCompleteColorSets;
     FCustomButtonColors: FXColorStateSets;
     FDrawColors: FXCompleteColorSet;
@@ -505,7 +505,8 @@ var
 begin
   inherited;
 
-  DrawRect := GetClientRect;
+  DrawRect := ClientRect;
+  MainRect := ContentRect;
 
   // Get Data
   ATextHeight := GetTextH;
@@ -516,13 +517,13 @@ begin
   case ButtonKind of
     FXButtonKind.Normal, FXButtonKind.Accent, FXButtonKind.Toggle, FXButtonKind.FlatToggle, FXButtonKind.Link, FXButtonKind.Flat:
       begin
-        CaptionRect := DrawRect;
+        CaptionRect := MainRect;
         CaptionRect.Inflate(AMargin, AMargin);
       end;
 
     FXButtonKind.Dropdown:
       begin
-        CaptionRect := DrawRect;
+        CaptionRect := MainRect;
         CaptionRect.Inflate(AMargin, AMargin);
         IndicatorRect := CaptionRect;
 

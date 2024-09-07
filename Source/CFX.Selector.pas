@@ -8,6 +8,7 @@ uses
   Vcl.Controls,
   Vcl.Graphics,
   Types,
+  Math,
   CFX.Colors,
   CFX.ThemeManager,
   CFX.Graphics,
@@ -23,7 +24,7 @@ uses
 type
   FXSelector = class(FXWindowsControl)
   private
-    var DrawRect: TRect;
+    var DrawRect, MainRect: TRect;
     ItemRects: TArray<TRect>;
     ItemWidth: integer;
     FOnChange: TNotifyEvent;
@@ -48,7 +49,7 @@ type
     procedure AnimationDoStep(Sender: TObject; Step, TotalSteps: integer);
 
     // Paint
-    function GetRoundness: integer;
+    function GetRoundness(OfItems: boolean): integer; // OfItemss -> in contentrect, else clientrect
     procedure AnimateToPosition;
 
     // Setters
@@ -151,7 +152,7 @@ end;
 
 function FXSelector.MakeDrawPositionRect: TRect;
 begin
-  Result := Rect(FDrawPosition, DrawRect.Top, FDrawPosition + ItemWidth, DrawRect.Bottom)
+  Result := Rect(FDrawPosition, MainRect.Top, FDrawPosition + ItemWidth, MainRect.Bottom)
 end;
 
 procedure FXSelector.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
@@ -230,10 +231,11 @@ var
   I: Integer;
 begin
   // Rect
-  DrawRect := GetClientRect;
+  DrawRect := ClientRect;
+  MainRect := ContentRect;
 
   // Width
-  ItemWidth := trunc(DrawRect.Width / FItems.Count);
+  ItemWidth := trunc(MainRect.Width / FItems.Count);
 
   // Individual Rects
   SetLength(ItemRects, FItems.Count);
@@ -241,11 +243,11 @@ begin
     begin
       with ItemRects[I] do
         begin
-          Left := DrawRect.Left + ItemWidth * I;
-          Right := DrawRect.Left + ItemWidth * (I+1);
+          Left := MainRect.Left + ItemWidth * I;
+          Right := MainRect.Left + ItemWidth * (I+1);
 
-          Top := DrawRect.Top;
-          Bottom := DrawRect.Bottom;
+          Top := MainRect.Top;
+          Bottom := MainRect.Bottom;
         end;
     end;
 
@@ -304,12 +306,12 @@ begin
   inherited;
 end;
 
-function FXSelector.GetRoundness: integer;
+function FXSelector.GetRoundness(OfItems: boolean): integer;
 begin
-  if ItemWidth < Height then
-    Result := ItemWidth
+  if OfItems then
+    Result := Min(ItemWidth, MainRect.Height)
   else
-    Result := Height;
+    Result := Min(ItemWidth, DrawRect.Height)
 end;
 
 procedure FXSelector.HandleKeyDown(var CanHandle: boolean; Key: integer;
@@ -368,10 +370,10 @@ begin
   with Buffer do
     begin
       // Main Rectangle
-      ARound := GetRoundness;
-      GDIRoundRect(MakeRoundRect(DrawRect, ARound), GetRGB(FDrawColors.BackGroundInterior).MakeGDIBrush, nil);
+      GDIRoundRect(MakeRoundRect(DrawRect, GetRoundness(false)), GetRGB(FDrawColors.BackGroundInterior).MakeGDIBrush, nil);
 
       // Draw Backgrounds
+      ARound := GetRoundness(true);
       for I := 0 to High(ItemRects) do
         begin
           DrawBackground := (FHoverOver = I);

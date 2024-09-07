@@ -70,7 +70,6 @@ type
     // Default props
     property Align;
     property Transparent default false;
-    property PaddingFill;
     property Constraints;
     property Anchors;
     property Hint;

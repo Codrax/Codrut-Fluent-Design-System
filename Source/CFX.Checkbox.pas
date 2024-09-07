@@ -113,7 +113,6 @@ type
     property Font;
     property Transparent;
     property Opacity;
-    property PaddingFill;
     property Constraints;
     property Anchors;
     property Hint;

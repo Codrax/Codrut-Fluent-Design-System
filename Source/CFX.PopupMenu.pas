@@ -1400,8 +1400,6 @@ begin
 end;
 
 procedure FXPopupItems.Delete(Index: integer; AndFree: boolean = true);
-var
-  I: Integer;
 begin
   // Free item
   if AndFree then

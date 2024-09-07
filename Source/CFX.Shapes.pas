@@ -134,7 +134,6 @@ type
     // Default props
     property Align;
     property Transparent;
-    property PaddingFill;
     property Constraints;
     property Anchors;
     property Hint;

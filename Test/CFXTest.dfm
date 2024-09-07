@@ -53,7 +53,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 215
     Size.Y = 631
     Position.X = 0
@@ -75,7 +74,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 37
     Size.Y = 37
     Position.X = 15
@@ -99,7 +97,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 125
     Size.Y = 33
     Position = 0
@@ -144,7 +141,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 125
     Size.Y = 33
     Position = 0
@@ -189,7 +185,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 125
     Size.Y = 76
     Position.X = 237
@@ -245,7 +240,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 140
     Size.Y = 40
     Position.X = 1038
@@ -328,7 +322,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 140
     Size.Y = 40
     Position.X = 886
@@ -411,7 +404,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 147
     Size.Y = 35
     Position.X = 885
@@ -465,7 +457,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 140
     Size.Y = 35
     Position.X = 1038
@@ -522,7 +513,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 139
     Size.Y = 35
     Position.X = 886
@@ -577,7 +567,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 140
     Size.Y = 75
     Position.X = 1038
@@ -663,7 +652,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 147
     Size.Y = 75
     Position.X = 885
@@ -748,7 +736,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 140
     Size.Y = 35
     Position.X = 1038
@@ -803,7 +790,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 140
     Size.Y = 35
     Position.X = 885
@@ -859,7 +845,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     TabStop = False
     Size.X = 186
     Size.Y = 50
@@ -896,7 +881,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 234
     Size.Y = 49
     Position = 12
@@ -924,7 +908,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 180
     Size.Y = 30
     Position.X = 232
@@ -966,7 +949,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     PopupMenu = FXPopupMenu1
     Size.X = 130
     Size.Y = 35
@@ -1021,7 +1003,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 130
     Size.Y = 35
     Position.X = 368
@@ -1075,7 +1056,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     TabStop = True
     Size.X = 67
     Size.Y = 21
@@ -1107,7 +1087,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     TabStop = True
     Size.X = 71
     Size.Y = 21
@@ -1139,7 +1118,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     TabStop = True
     Size.X = 52
     Size.Y = 42
@@ -1171,7 +1149,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     TabStop = True
     Size.X = 101
     Size.Y = 37
@@ -1203,7 +1180,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 146
     Size.Y = 35
     Position.X = 886
@@ -1257,7 +1233,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 140
     Size.Y = 35
     Position.X = 1038
@@ -1311,7 +1286,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     TabStop = True
     Size.X = 138
     Size.Y = 70
@@ -1344,7 +1318,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 116
     Size.Y = 60
     Position.X = 49
@@ -1375,7 +1348,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 232
     Size.Y = 30
     Position.X = 232
@@ -1409,7 +1381,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 300
     Size.Y = 40
     Position.X = 878
@@ -1443,7 +1414,6 @@ object Form1: TForm1
       Margins.Top = 0
       Margins.Right = 0
       Margins.Bottom = 0
-      Opacity = 100.000000000000000000
       Size.X = 215
       Size.Y = 30
       Position.X = 0
@@ -1466,7 +1436,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 140
     Size.Y = 35
     Position.X = 1038
@@ -1521,7 +1490,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     TabStop = False
     Size.X = 125
     Size.Y = 68
@@ -1559,7 +1527,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 266
     Size.Y = 35
     Position.X = 232
@@ -1614,7 +1581,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Opacity = 100.000000000000000000
     Size.X = 233
     Size.Y = 13
     Position = 0
@@ -1630,6 +1596,41 @@ object Form1: TForm1
     Animation = True
     CustomScrollbarSize = 0
     TabOrder = 33
+  end
+  object FXProgress1: FXProgress
+    Left = 552
+    Top = 167
+    Width = 200
+    Height = 20
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Size.X = 200
+    Size.Y = 20
+    Position.X = 552
+    Position.Y = 167
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    CustomColors.LightBackGroundInterior = 16514043
+    CustomColors.DarkBackGroundInterior = 2829099
+    CustomOtherColors.Enabled = False
+    CustomOtherColors.Accent = 13924352
+    CustomOtherColors.LightBackGround = 15987699
+    CustomOtherColors.LightForeGround = 1776410
+    CustomOtherColors.DarkBackGround = 2105376
+    CustomOtherColors.DarkForeGround = clWhite
+    Animations = True
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 22
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    TabOrder = 34
   end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False

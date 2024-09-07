@@ -39,6 +39,7 @@ type
 
     FAnimations: boolean;
 
+    FOrientation: FXOrientation;
     FOffset: integer; // the offset position for the marquee animation
     FInterSize: integer; // the internal size of the drawing width
     FLengthState: integer;
@@ -68,6 +69,7 @@ type
     procedure SetProgressLineHeight(const Value: integer);
     procedure SetProgressKind(const Value: FXProgressKind);
     procedure SetValue(const Value: FXPercent);
+    procedure SetOrientation(const Value: FXOrientation);
 
     // Colors
     function GetFrontColor: TColor;
@@ -95,6 +97,8 @@ type
 
     property Animations: boolean read FAnimations write FAnimations;
 
+    property Orientation: FXOrientation read FOrientation write SetOrientation default FXOrientation.Horizontal;
+
     property ProgressKind: FXProgressKind read FProgressKind write SetProgressKind default FXProgressKind.Normal;
     property ProgressHeight: integer read FProgressHeight write SetProgressHeight default PROGRESS_HEIGHT;
     property ProgressLineHeight: integer read FProgressLineHeight write SetProgressLineHeight default PROGRESS_LINE_HEIGHT;
@@ -107,7 +111,6 @@ type
     property Font;
     property Transparent;
     property Opacity;
-    property PaddingFill;
     property Constraints;
     property Anchors;
     property Hint;
@@ -512,6 +515,17 @@ begin
         FAnimateThread.Terminate;
         FThreadFinishedEvent.WaitFor(FIFTH_SECOND)
       end;
+end;
+
+procedure FXProgress.SetOrientation(const Value: FXOrientation);
+begin
+  if (FOrientation = Value) then
+    Exit;
+
+  FOrientation := Value;
+
+  if CanUpdate then
+    SetBounds(Left, Top, Height, Width);  // this will also invoke UpdateRects() in Sized();
 end;
 
 procedure FXProgress.SetProgressHeight(const Value: integer);

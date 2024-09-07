@@ -263,8 +263,10 @@ begin
         AFlags := BuildFlags;
         ARect := GetTextRect(Canvas, Self.TextRect, FText, AFlags, FInnerMargin);
 
-        AWidth := ARect.Width + PaddingFill.AbsoluteHorizontal;
-        AHeight := ARect.Height + PaddingFill.AbsoluteVertical;
+        AWidth := ARect.Width;
+        AHeight := ARect.Height;
+        {Inc(AWidth, PaddingFill.AbsoluteHorizontal);
+        Inc(AHeight, PaddingFill.AbsoluteVertical}
 
         if (Width <> AWidth) or (Height <> AHeight) then
           Self.SetBounds(Left, Top, AWidth, AHeight);
@@ -275,8 +277,8 @@ begin
         AWidth := TextWidth(FText);
         AHeight := TextHeight(FText);
 
-        AWidth := AWidth + PaddingFill.AbsoluteHorizontal;
-        AHeight := AHeight + PaddingFill.AbsoluteVertical;
+        {Inc(AWidth, PaddingFill.AbsoluteHorizontal);
+        Inc(AHeight, PaddingFill.AbsoluteVertical}
 
         if (Width <> AWidth) or (Height <> AHeight) then
           Self.SetBounds(Left, Top, AWidth, AHeight);
@@ -430,10 +432,10 @@ begin
   FAutoSize := true;
 
   // Padding
-  with PaddingFill do
+  {with PaddingFill do
     begin
       OnChange := PaddingUpdated;
-    end;
+    end;}
 
   // Custom Color
   FCustomColors := FXColorSets.Create(Self);

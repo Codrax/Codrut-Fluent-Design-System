@@ -26,7 +26,7 @@ uses
 type
   FXStandardIcon = class(FXWindowsControl)
   private
-    var DrawRect: TRect;
+    var DrawRect, MainRect: TRect;
     FIcon : FXStandardIconType;
     FPenWidth: integer;
     FDrawColors: FXColorSet;
@@ -192,17 +192,17 @@ end;
 procedure FXStandardIcon.PaintBuffer;
 procedure Move(X, Y: real); overload;
 begin
-  Buffer.MoveTo( trunc(DrawRect.Left+X), trunc(DrawRect.Top+Y) );
+  Buffer.MoveTo( trunc(ContentRect.Left+X), trunc(ContentRect.Top+Y) );
 end;
 procedure Line(X, Y: real); overload;
 begin
-  Buffer.LineTo( trunc(DrawRect.Left+X), trunc(DrawRect.Top+Y) );
+  Buffer.LineTo( trunc(ContentRect.Left+X), trunc(ContentRect.Top+Y) );
 end;
 procedure Text(AStr: string);
 begin
   with Buffer do
-    TextOut( DrawRect.Width div 2-TextWidth('i') div 2 ,
-      DrawRect.Height div 2-TextHeight('i') div 2 ,
+    TextOut( ContentRect.Width div 2-TextWidth('i') div 2 ,
+      ContentRect.Height div 2-TextHeight('i') div 2 ,
       'i');
 end;
 var
@@ -230,11 +230,11 @@ begin
 
     // Circle
     Pen.Style := psClear;
-    GDICircle(ClientRect, GetRGB(Brush.Color).MakeGDIBrush, nil);
+    GDICircle(DrawRect, GetRGB(Brush.Color).MakeGDIBrush, nil);
 
     // Data
-    AWidth := DrawRect.Width;
-    AHeight := DrawRect.Height;
+    AWidth := ContentRect.Width;
+    AHeight := ContentRect.Height;
 
     // Brush
     Brush.Style := bsClear;
@@ -254,9 +254,9 @@ begin
     case FIcon of
       // Checkmark
       FXStandardIconType.Checkmark: begin
-        Move( AWidth / 4.9, DrawRect.Height / 1.9 );
-        Line( AWidth / 2.5, DrawRect.Height / 1.4 );
-        Line( AWidth / 1.35, DrawRect.Height / 3.6 );
+        Move( AWidth / 4.9, ContentRect.Height / 1.9 );
+        Line( AWidth / 2.5, ContentRect.Height / 1.4 );
+        Line( AWidth / 1.35, ContentRect.Height / 3.6 );
       end;
 
       // Error
@@ -358,6 +358,7 @@ end;
 procedure FXStandardIcon.UpdateRects;
 begin
   DrawRect := ClientRect;
+  MainRect := ContentRect;
 end;
 
 end.

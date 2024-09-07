@@ -27,7 +27,7 @@ uses
 type
   FXCustomEdit = class(FXWindowsControl)
   private
-    var DrawRect, LineRect, TxtRect: TRect;
+    var DrawRect, MainRect, LineRect, TxtRect: TRect;
     FCustomColors: FXCompleteColorSets;
     FCustomEditColors: FXSingleColorStateSets;
     FEditColors: FXSingleColorStateSet;
@@ -543,13 +543,14 @@ end;
 procedure FXCustomEdit.UpdateRects;
 begin
   DrawRect := ClientRect;
+  MainRect := ContentRect;
 
   // Rects
-  LineRect := DrawRect;
+  LineRect := MainRect;
   LineRect.Top := Height - LineSize;
 
   // Pos
-  TxtRect := DrawRect;
+  TxtRect := MainRect;
   TxtRect.Inflate(-TextMarginX, -TextMarginY);
 
   TxtRect.Bottom := TxtRect.Bottom - LineSize;
