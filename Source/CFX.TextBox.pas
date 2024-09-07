@@ -43,9 +43,6 @@ type
 
     FDrawOffset: TPoint;
 
-    // Internal
-    procedure PaddingUpdated(Sender: TObject);
-
     // Set properties
     procedure SetText(const Value: string);
     procedure SetHorzLayout(const Value: FXLayout);
@@ -59,6 +56,10 @@ type
 
   protected
     procedure PaintBuffer; override;
+
+    // Override
+    procedure ApplyInnerMargins; override;
+    procedure ApplyPadding; override;
 
     // Internal
     procedure UpdateColors; override;
@@ -257,16 +258,19 @@ begin
   with Canvas do begin
     Font.Assign( Self.Font );
 
+    const Absolute = GetAbsoluteRect;
+    const Content = GetContentRect;
+    const PadWidth = Absolute.Width - Content.Width;
+    const PadHeight = Absolute.Height - Content.Height;
+
     if WordWrap then
       // Word Wrap
       begin
         AFlags := BuildFlags;
         ARect := GetTextRect(Canvas, Self.TextRect, FText, AFlags, FInnerMargin);
 
-        AWidth := ARect.Width;
-        AHeight := ARect.Height;
-        {Inc(AWidth, PaddingFill.AbsoluteHorizontal);
-        Inc(AHeight, PaddingFill.AbsoluteVertical}
+        AWidth := ARect.Width + PadWidth;
+        AHeight := ARect.Height + PadHeight;
 
         if (Width <> AWidth) or (Height <> AHeight) then
           Self.SetBounds(Left, Top, AWidth, AHeight);
@@ -274,11 +278,8 @@ begin
     else
       // Single Line
       begin
-        AWidth := TextWidth(FText);
-        AHeight := TextHeight(FText);
-
-        {Inc(AWidth, PaddingFill.AbsoluteHorizontal);
-        Inc(AHeight, PaddingFill.AbsoluteVertical}
+        AWidth := TextWidth(FText) + PadWidth;
+        AHeight := TextHeight(FText) + PadHeight;
 
         if (Width <> AWidth) or (Height <> AHeight) then
           Self.SetBounds(Left, Top, AWidth, AHeight);
@@ -431,12 +432,6 @@ begin
   FWordWrap := false;
   FAutoSize := true;
 
-  // Padding
-  {with PaddingFill do
-    begin
-      OnChange := PaddingUpdated;
-    end;}
-
   // Custom Color
   FCustomColors := FXColorSets.Create(Self);
 
@@ -466,6 +461,20 @@ begin
   Redraw;
 end;
 
+procedure FXCustomTextBox.ApplyInnerMargins;
+begin
+  inherited;
+  if AutoSize then
+    UpdateAutoSize;
+end;
+
+procedure FXCustomTextBox.ApplyPadding;
+begin
+  inherited;
+  if AutoSize then
+    UpdateAutoSize;
+end;
+
 function FXCustomTextBox.Background: TColor;
 begin
   Result := FDrawColors.Background;
@@ -493,13 +502,6 @@ begin
     FXLayout.Center: Result := Result + [FXTextFlag.VerticalCenter];
     FXLayout.Ending: Result := Result + [FXTextFlag.Bottom];
   end;
-end;
-
-procedure FXCustomTextBox.PaddingUpdated(Sender: TObject);
-begin
-  UpdateRects;
-  if AutoSize then
-    UpdateAutoSize;
 end;
 
 procedure FXCustomTextBox.PaintBuffer;

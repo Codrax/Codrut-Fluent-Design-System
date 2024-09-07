@@ -110,9 +110,6 @@ type
     // Object Notify Events
     procedure FontNotifyUpdate(Sender: TObject);
 
-    // Align
-    procedure AlignControls(AControl: TControl; var Rect: TRect); override;
-
     // Stored
     function IsOpacityStored: Boolean;
 
@@ -152,6 +149,9 @@ type
     procedure StandardUpdateDraw;
     procedure StandardUpdateComplete;
 
+    // Align
+    procedure AlignControls(AControl: TControl; var Rect: TRect); override;
+
     // Messages
     procedure WMSize(var Message: TWMSize); message WM_SIZE;
     procedure WMMove(var Message: TWMMove); message WM_MOVE;
@@ -166,6 +166,7 @@ type
     procedure Sized; virtual;
     procedure Moved; virtual;
     procedure ApplyInnerMargins; virtual;
+    procedure ApplyPadding; virtual;
     procedure BoundsUpdated; virtual; // move, size or either one
 
     // Utils
@@ -198,6 +199,7 @@ type
     procedure DoExit; override;
 
     // Size
+    function GetAbsoluteRect: TRect;
     function GetClientRect: TRect; override;
     function GetContentRect: TRect; virtual;
 
@@ -264,6 +266,7 @@ type
     property Opacity: FXPercent read FOpacity write SetOpacity stored IsOpacityStored;
 
     // System
+    property AbsoluteRect: TRect read GetAbsoluteRect;
     property ClientRect;
     property ContentRect: TRect read GetContentRect;
 
@@ -393,6 +396,18 @@ procedure FXWindowsControl.ApplyInnerMargins;
 begin
   Resize;
   UpdateRects;
+
+  // Draw
+  StandardUpdateDraw;
+end;
+
+procedure FXWindowsControl.ApplyPadding;
+begin
+  Resize;
+  UpdateRects;
+
+  // Draw
+  StandardUpdateDraw;
 end;
 
 function FXWindowsControl.Background: TColor;
@@ -792,6 +807,11 @@ begin
   Redraw;
 end;
 
+function FXWindowsControl.GetAbsoluteRect: TRect;
+begin
+  Result := Rect(0, 0, Width, Height);
+end;
+
 function FXWindowsControl.GetActiveBuffer: TBitMap;
 begin
   if BufferSecondary then
@@ -828,7 +848,7 @@ end;
 function FXWindowsControl.GetClientRect: TRect;
 begin
   // Apply padding
-  Result := FInnerMargins.RectangleInflate( Rect(0, 0, Width, Height) );
+  Result := FInnerMargins.RectangleInflate( GetAbsoluteRect );
 end;
 
 function FXWindowsControl.GetContentRect: TRect;
@@ -1038,21 +1058,16 @@ procedure FXWindowsControl.InnerMarginsUpdated(Sender: TObject);
 begin
   Realign;
 
+  // Apply
   ApplyInnerMargins;
-
-  Redraw;
 end;
 
 procedure FXWindowsControl.PaddingUpdated(Sender: TObject);
 begin
   Realign;
-  Resize;
 
   // Rects
-  UpdateRects;
-
-  // Draw
-  Redraw;
+  ApplyPadding;
 end;
 
 procedure FXWindowsControl.Paint;
