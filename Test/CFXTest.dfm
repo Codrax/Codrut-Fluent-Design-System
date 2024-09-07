@@ -64,6 +64,8 @@ object Form1: TForm1
     CustomColors.LightForeGround = 1776410
     CustomColors.DarkBackGround = clBlack
     CustomColors.DarkForeGround = clWhite
+    ExplicitTop = 281
+    ExplicitHeight = 380
   end
   object FXStandardIcon1: FXStandardIcon
     Left = 15
@@ -1596,37 +1598,6 @@ object Form1: TForm1
     Animation = True
     CustomScrollbarSize = 0
     TabOrder = 33
-  end
-  object FXTextBox1: FXTextBox
-    Left = 568
-    Top = 319
-    Width = 97
-    Height = 63
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 0
-    Size.X = 97
-    Size.Y = 63
-    Position.X = 568
-    Position.Y = 319
-    CustomColors.Enabled = False
-    CustomColors.Accent = 13924352
-    CustomColors.LightBackGround = 15987699
-    CustomColors.LightForeGround = 1776410
-    CustomColors.DarkBackGround = 2105376
-    CustomColors.DarkForeGround = clWhite
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = 22
-    Font.Name = 'Segoe UI'
-    Font.Style = []
-    TabOrder = 34
-    Text = 'Hello World is this very cool'
-    AutoSize = True
-    WordWrap = True
-    Elipsis = False
-    InnerMargin = 0
   end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False

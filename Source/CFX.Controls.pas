@@ -151,6 +151,7 @@ type
 
     // Align
     procedure AlignControls(AControl: TControl; var Rect: TRect); override;
+    function GetControlExtents: TRect; override;
 
     // Messages
     procedure WMSize(var Message: TWMSize); message WM_SIZE;
@@ -854,6 +855,14 @@ end;
 function FXWindowsControl.GetContentRect: TRect;
 begin
   Result := FPadding.RectangleInflate( GetClientRect );
+end;
+
+function FXWindowsControl.GetControlExtents: TRect;
+begin
+  Result := inherited;
+
+  // Add padding
+  Result := FPadding.RectangleExpand(Result);
 end;
 
 function FXWindowsControl.GetControlsAbove: TArray<TControl>;
