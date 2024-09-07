@@ -60,6 +60,7 @@ type
     FItemIndexHover: integer;
 
     FMultiSelect: boolean;
+    FCanDeselect: boolean;
     FDefaultDraw: boolean;
 
     // Scroll
@@ -185,6 +186,7 @@ type
     property DefaultDraw: boolean read FDefaultDraw write SetDefaultDraw default true;
 
     property MultiSelect: boolean read FMultiSelect write FMultiSelect default false;
+    property CanDeselect: boolean read FCanDeselect write FCanDeselect default false;
 
     property OnItemClick: TNotifyEvent read FOnItemClick write FOnItemClick;
     property OnItemDoubleClick: TNotifyEvent read FOnItemDoubleClick write FOnItemDoubleClick;
@@ -248,7 +250,7 @@ type
     function Background: TColor; override;
   end;
 
-  FXLinearDrawList = class(FXDrawList)
+  FXCustomLinearDrawList = class(FXDrawList)
   private
     FOrientation: FXOrientation;
 
@@ -278,7 +280,6 @@ type
     // Internal
     procedure UpdateRects; override;
 
-  published
     // Props
     property OnDrawItem;
     property OnBeforeDrawItem;
@@ -295,11 +296,81 @@ type
     property SpacingRow: integer read FSpacingRow write SetSpacingRow;
     property SpacingColumn: integer read FSpacingColumn write SetSpacingColumn;
 
+  published
     property ActualSize: TPoint read FActualSize;
 
   public
     // Constructors
     constructor Create(aOwner: TComponent); override;
+  end;
+
+  FXLinearDrawList = class(FXCustomLinearDrawList)
+  published
+    property OnDrawItem;
+    property OnBeforeDrawItem;
+
+    property Orientation;
+    property JustifyContent;
+
+    property ItemCount;
+    property ItemWidth;
+    property ItemHeight;
+
+    property FullLine;
+    property Wrap;
+    property SpacingRow;
+    property SpacingColumn;
+  end;
+
+  FXLinearStringsList = class(FXCustomLinearDrawList)
+  private
+    FStrings: TStringList;
+    FItemMargins: FXMargins;
+
+    // Utils
+    procedure UpdateCount;
+
+    // Notify
+    procedure StringsChanged(Sender: TObject);
+    procedure MarginsChanged(Sender: TObject);
+
+    // Draw
+    procedure DrawItem(Index: integer; ARect: TRect; Canvas: TCanvas); override;
+
+    // Getters
+    function GetItemCountEx: integer;
+
+    // Setters
+    procedure SetStrings(const Value: TStringList);
+
+  published
+    // Props
+    property Items: TStringList read FStrings write SetStrings;
+    property ItemMargins: FXMargins read FItemMargins write FItemMargins;
+
+    property Font;
+
+    property OnDrawItem;
+    property OnBeforeDrawItem;
+
+    property Orientation;
+    property JustifyContent;
+
+    property ItemWidth;
+    property ItemHeight default 40;
+
+    property FullLine;
+    property Wrap;
+    property SpacingRow;
+    property SpacingColumn;
+
+  public
+    // Public props
+    property ItemCount: integer read GetItemCountEx;
+
+    // Constructor
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
   end;
 
   // Container
@@ -324,7 +395,7 @@ type
     function Background: TColor; override;
   end;
 
-  FXLinearControlList = class(FXLinearDrawList)
+  FXLinearControlList = class(FXCustomLinearDrawList)
   private
     FContainer: FXControlContainer;
 
@@ -352,6 +423,21 @@ type
     function GetChildParent: TComponent; override; // set the loaded children parent
 
   published
+    property OnDrawItem;
+    property OnBeforeDrawItem;
+
+    property Orientation;
+    property JustifyContent;
+
+    property ItemCount;
+    property ItemWidth;
+    property ItemHeight;
+
+    property FullLine;
+    property Wrap;
+    property SpacingRow;
+    property SpacingColumn;
+
     property Container: FXControlContainer read FContainer write FContainer stored true;
 
     property ItemPaddding: FXMargins read GetItemPaddding write SetItemPaddding;
@@ -754,7 +840,9 @@ begin
 
     if Assigned(FOnItemSelect) then
       FOnItemSelect(Self);
-  end;
+  end else
+    if FCanDeselect then
+      ClearSelection;
 end;
 
 procedure FXDrawList.MouseMove(Shift: TShiftState; X, Y: integer);
@@ -981,7 +1069,17 @@ begin
   if ItemCount = Value then
     Exit;
 
-  FItemIndex := -1;
+  // Selected
+  if FItemIndex <> -1 then begin
+    FItemIndex := -1;
+    ClearSelectedInternal;
+
+    // Update select procedure
+    if Assigned(FOnItemSelect) then
+      FOnItemSelect(Self);
+  end;
+
+  // Hover
   FItemIndexHover := -1;
 
   SetLength(FItemRects, Value);
@@ -1075,9 +1173,9 @@ begin
   inherited;
 end;
 
-{ FXLinearDrawList }
+{ FXCustomLinearDrawList }
 
-constructor FXLinearDrawList.Create(aOwner: TComponent);
+constructor FXCustomLinearDrawList.Create(aOwner: TComponent);
 begin
   inherited;
   FOrientation := FXOrientation.Vertical;
@@ -1092,7 +1190,7 @@ begin
   FSpacingColumn := 8;
 end;
 
-procedure FXLinearDrawList.RecalculateRects;
+procedure FXCustomLinearDrawList.RecalculateRects;
 var
   Pos: TPoint;
 
@@ -1205,7 +1303,7 @@ begin
     end;
 end;
 
-procedure FXLinearDrawList.SetFullLine(const Value: boolean);
+procedure FXCustomLinearDrawList.SetFullLine(const Value: boolean);
 begin
   if FFullLine = Value then
     Exit;
@@ -1215,7 +1313,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXLinearDrawList.SetItemHeight(const Value: integer);
+procedure FXCustomLinearDrawList.SetItemHeight(const Value: integer);
 begin
   if (FItemHeight = Value) or (Value <= 0) then
     Exit;
@@ -1226,7 +1324,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXLinearDrawList.SetItemWidth(const Value: integer);
+procedure FXCustomLinearDrawList.SetItemWidth(const Value: integer);
 begin
   if (FItemWidth = Value) or (Value <= 0) then
     Exit;
@@ -1235,7 +1333,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXLinearDrawList.SetJustifyContent(const Value: FXContentJustify);
+procedure FXCustomLinearDrawList.SetJustifyContent(const Value: FXContentJustify);
 begin
   if FJustifyContent = Value then
     Exit;
@@ -1244,7 +1342,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXLinearDrawList.SetOrientation(const Value: FXOrientation);
+procedure FXCustomLinearDrawList.SetOrientation(const Value: FXOrientation);
 begin
   if FOrientation = Value then
     Exit;
@@ -1253,7 +1351,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXLinearDrawList.SetSpacingColumn(const Value: integer);
+procedure FXCustomLinearDrawList.SetSpacingColumn(const Value: integer);
 begin
   if FSpacingColumn = Value then
     Exit;
@@ -1262,7 +1360,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXLinearDrawList.SetSpacingRow(const Value: integer);
+procedure FXCustomLinearDrawList.SetSpacingRow(const Value: integer);
 begin
   if FSpacingRow = Value then
     Exit;
@@ -1271,7 +1369,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXLinearDrawList.SetWrap(const Value: boolean);
+procedure FXCustomLinearDrawList.SetWrap(const Value: boolean);
 begin
   if FWrap = Value then
     Exit;
@@ -1280,7 +1378,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXLinearDrawList.UpdateRects;
+procedure FXCustomLinearDrawList.UpdateRects;
 begin
   FActualSize := Point(FItemWidth, FItemHeight);
 
@@ -1489,6 +1587,79 @@ begin
     Brush.Color := FBackgroundColor;
     FillRect( ClipRect );
   end;
+end;
+
+{ FXLinearStringsList }
+
+constructor FXLinearStringsList.Create(aOwner: TComponent);
+begin
+  inherited;
+  FStrings := TStringList.Create;
+  FullLine := true;
+  ItemHeight := 40;
+
+  FStrings.OnChange := StringsChanged;
+
+  FItemMargins := FXMargins.Create(Self);
+  FItemMargins.OnChange := MarginsChanged;
+
+  // Count
+  UpdateCount;
+end;
+
+destructor FXLinearStringsList.Destroy;
+begin
+  FreeAndNil(FStrings);
+  FreeAndNil(FItemMargins);
+  inherited;
+end;
+
+procedure FXLinearStringsList.DrawItem(Index: integer; ARect: TRect;
+  Canvas: TCanvas);
+var
+  S: string;
+begin
+  inherited;
+
+  with Canvas do begin
+    Font.Assign( Self.Font );
+
+    // Margins
+    ARect:= FItemMargins.RectangleInflate(ARect);
+
+    // Text
+    S := Items[Index];
+
+    // Draw
+    TextRect(ARect, S, [tfSingleLine, tfVerticalCenter]);
+  end;
+end;
+
+function FXLinearStringsList.GetItemCountEx: integer;
+begin
+  Result := inherited ItemCount;
+end;
+
+procedure FXLinearStringsList.MarginsChanged(Sender: TObject);
+begin
+  StandardUpdateDraw;
+end;
+
+procedure FXLinearStringsList.SetStrings(const Value: TStringList);
+begin
+  FStrings.Assign( Value );
+
+  UpdateCount;
+end;
+
+procedure FXLinearStringsList.StringsChanged(Sender: TObject);
+begin
+  UpdateCount;
+end;
+
+procedure FXLinearStringsList.UpdateCount;
+begin
+  inherited ItemCount := Items.Count;
 end;
 
 end.

@@ -53,6 +53,7 @@ begin
     FXScrollLayout,
 
     FXLinearDrawList,
+    FXLinearStringsList,
     FXLinearControlList
     ]
   );

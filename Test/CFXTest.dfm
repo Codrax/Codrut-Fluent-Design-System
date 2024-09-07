@@ -64,8 +64,6 @@ object Form1: TForm1
     CustomColors.LightForeGround = 1776410
     CustomColors.DarkBackGround = clBlack
     CustomColors.DarkForeGround = clWhite
-    ExplicitTop = 281
-    ExplicitHeight = 380
   end
   object FXStandardIcon1: FXStandardIcon
     Left = 15
@@ -1598,6 +1596,47 @@ object Form1: TForm1
     Animation = True
     CustomScrollbarSize = 0
     TabOrder = 33
+  end
+  object FXLinearStringsList1: FXLinearStringsList
+    Left = 512
+    Top = 320
+    Width = 350
+    Height = 250
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Size.X = 350
+    Size.Y = 250
+    Position.X = 512
+    Position.Y = 320
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    NoOutOfBoundsDraw = True
+    MultiSelect = True
+    CanDeselect = True
+    TabOrder = 34
+    Items.Strings = (
+      'Cat'
+      'Cat2'
+      'Dog'
+      'Wolf'
+      'Amongius'
+      'Mc')
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 22
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    ItemWidth = 150
+    FullLine = True
+    Wrap = True
+    SpacingRow = 8
+    SpacingColumn = 8
   end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False
