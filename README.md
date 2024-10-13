@@ -2,7 +2,7 @@
 Codrut Fluent Design System is a suite of components made to mimic the Interface of Windows 11, the Fluent Design System, This is not to be confused with CodrutsVisualLibrary, as that is ajust a suite of independent components
 
 ## Notice: Under Construction!!
-The component package is not at a state where it can be considered finished without encountering bugs. This package has advanced to Its **Alpha** Stage.
+The component package is not at a state where it can be considered finished without encountering bugs. This package has advanced to Its **Beta** Stage.
 
 ## Components
 - Minimise Panel, a Panel that is able to minimise itself with a optional animation, works best with DoubleBuffered and for more panels, use Align.alTop
