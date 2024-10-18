@@ -421,14 +421,14 @@ begin
       if FXTextFlag.VerticalCenter in Flags then
         begin
           for I := 0 to High(Lines) do
-            Top := Top + Canvas.TextHeight(Lines[I]);
+            Top := Top + WordWrapGetLineHeight(Canvas, Lines[I]);
 
           Top := round( ARect.Height / 2 - Top / 2 );
         end;
       if FXTextFlag.Bottom in Flags then
         begin
           for I := 0 to High(Lines) do
-            Top := Top + Canvas.TextHeight(Lines[I]);
+            Top := Top + WordWrapGetLineHeight(Canvas, Lines[I]);
 
           Top := ARect.Height - Top;
         end;
