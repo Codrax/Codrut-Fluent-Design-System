@@ -95,6 +95,9 @@ type
 
     function NewVersion: boolean;
 
+    // Utils
+    procedure RestartApplicationProcess;
+
     // Constructors
     constructor Create;
     destructor Destroy; override;
@@ -614,6 +617,14 @@ end;
 function FXAppManagerClass.NewVersion: boolean;
 begin
   Result := FUpdateResult = GreaterThanValue;
+end;
+
+procedure FXAppManagerClass.RestartApplicationProcess;
+begin
+  Application.MainForm.Close;
+
+  // Start
+  ShellRun( ParamStr(0), '');
 end;
 
 procedure FXAppManagerClass.SaveFormData(Form: TForm; Closing: boolean);

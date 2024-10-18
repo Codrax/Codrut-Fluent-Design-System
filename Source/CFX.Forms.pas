@@ -62,6 +62,7 @@ type
     FEnableTitlebar: boolean;
     TTlCtrl: TCustomTitleBarpanel;
     FDisableTitlebarAlign: boolean;
+    FBackground: FXBackgroundColor;
 
     // Mica
     FPostMicaBlend: boolean;
@@ -85,10 +86,11 @@ type
 
     procedure QuickBroadcast(MessageID: integer);
 
-    // Procedures
+    // Setters
     procedure SetMicaEffect(const Value: boolean);
     procedure SetSmokeEffect(const Value: boolean);
     procedure SetWindowUpdateLock(const Value: boolean);
+    procedure SetBackgroundColor(const Value: FXBackgroundColor);
 
     // Utilities
     procedure FormCloseIgnore(Sender: TObject; var CanClose: Boolean);
@@ -108,6 +110,7 @@ type
 
     // Do
     procedure DoShow; override;
+    procedure DoMove; virtual;
 
     // Initialization
     procedure InitForm; virtual;
@@ -123,6 +126,7 @@ type
     property FullScreen: Boolean read FFullScreen write SetFullScreen default false;
     property WindowUpdateLocked: boolean read FWindowUpdateLock write SetWindowUpdateLock;
     property DisableTitlebarAlign: boolean read FDisableTitlebarAlign write FDisableTitlebarAlign default false;
+    property BackgroundColor: FXBackgroundColor read FBackground write SetBackgroundColor;
 
     // On Change...
     property OnMove: FXFormProcedure read FOnMove write FOnMove;
@@ -159,13 +163,17 @@ type
   private
     FAutoCenter: boolean;
     FAutoSmoke: boolean;
+    FAutoMoveParent: boolean;
     FParentForm: TForm;
+
+    FCanMoveParent: boolean;
 
   protected
     // Initialization (after form creation)
     procedure InitForm; override;
 
     // Do
+    procedure DoMove; override;
     procedure DoShow; override;
 
   public
@@ -174,6 +182,7 @@ type
     // Props
     property AutoCenter: boolean read FAutoCenter write FAutoCenter;
     property AutoSmoke: boolean read FAutoSmoke write FAutoSmoke;
+    property AutoMoveParent: boolean read FAutoMoveParent write FAutoMoveParent;
 
     // Modal
     function ShowModal: Integer; override;
@@ -247,26 +256,32 @@ begin
   inherited;
 end;
 
+procedure FXForm.DoMove;
+begin
+  if Assigned(FOnMove) then
+    FOnMove(Self);
+end;
+
 procedure FXForm.DoShow;
 begin
   inherited;
-    if not FTitlebarInitialized then
-      with Self.CustomTitleBar do
-        begin
-          Enabled := true;
+  if not FTitlebarInitialized then
+    with Self.CustomTitleBar do
+      begin
+        Enabled := true;
 
-          SystemButtons := false;
-          SystemColors := false;
-          SystemHeight := false;
+        SystemButtons := false;
+        SystemColors := false;
+        SystemHeight := false;
 
-          Height := TTlCtrl.Height;
+        Height := TTlCtrl.Height;
 
-          Control := TTlCtrl;
+        Control := TTlCtrl;
 
-          FTitlebarInitialized := true;
+        FTitlebarInitialized := true;
 
-          UpdateTheme(false);
-        end;
+        UpdateTheme(false);
+      end;
 end;
 
 procedure FXForm.InitForm;
@@ -317,6 +332,9 @@ begin
   // Title Bar End
   skip_titlebar:
 
+  // Needs custom title bar
+  CustomTitleBar.Enabled := true;
+
   // Update Theme
   UpdateTheme(false);
 end;
@@ -351,13 +369,15 @@ begin
 end;
 
 function FXForm.GetTitlebarHeight: integer;
-var
-  I: Integer;
 begin
-  Result := 0;
+  if CustomTitleBar.Enabled then
+    Result := CustomTitleBar.Height
+  else
+    Result := 0;
+  {Result := 0;
   for I := 0 to ControlCount - 1 do
     if Controls[I] is TCustomTitleBarPanel then
-      Result := TCustomTitleBarPanel(Controls[I]).Height;
+      Result := TCustomTitleBarPanel(Controls[I]).Height; }
 end;
 
 function FXForm.HasActiveCustomTitleBar: boolean;
@@ -392,6 +412,20 @@ procedure FXForm.Resize;
 begin
   inherited;
 
+end;
+
+procedure FXForm.SetBackgroundColor(const Value: FXBackgroundColor);
+begin
+  if FBackground = Value then
+    Exit;
+
+  // Set
+  FBackground := Value;
+
+  // Draw
+  Invalidate;
+
+  UpdateTheme(true);
 end;
 
 procedure FXForm.SetBoundsRect(Bounds: TRect);
@@ -500,19 +534,24 @@ procedure FXForm.UpdateTheme(const UpdateChildren: Boolean);
 var
   PrevColor: TColor;
   ThemeReason: FXThemeType;
+  BackgroundSelect: FXColorType;
 begin
   LockWindowUpdate(Handle);
+
+  BackgroundSelect := FXColorType.Background;
+  if BackgroundColor = FXBackgroundColor.Content then
+    BackgroundSelect := FXColorType.Content;
 
   // Update Colors
   if CustomColors.Enabled then
     begin
-      FDrawColors.Background := ExtractColor( CustomColors, FXColorType.BackGround );
+      FDrawColors.Background := ExtractColor( CustomColors, BackgroundSelect );
       FDrawColors.Foreground := ExtractColor( CustomColors, FXColorType.Foreground );
     end
   else
     begin
-      FDrawColors.Background := ThemeManager.SystemColor.BackGround;
-      FDrawColors.Foreground := ThemeManager.SystemColor.ForeGround;
+      FDrawColors.Background := ExtractColor(ThemeManager.SystemColor, BackgroundSelect);
+      FDrawColors.Foreground := ExtractColor(ThemeManager.SystemColor, FXColorType.Foreground);
     end;
 
   // Transizion Animation
@@ -639,8 +678,7 @@ end;
 procedure FXForm.WM_MOVE(var Msg: Tmessage);
 begin
   inherited;
-  if Assigned(FOnMove) then
-    FOnMove(Self);
+  DoMove;
 
   // Broadcast
   QuickBroadcast(WM_WINDOW_MOVE);
@@ -662,15 +700,38 @@ end;
 
 { FXDialogForm }
 
+procedure FXDialogForm.DoMove;
+begin
+  inherited;
+
+  if not Visible or not FCanMoveParent then
+    Exit;
+
+  if (FAutoCenter) and (FParentForm <> nil) then begin
+      const ACenter = BoundsRect.CenterPoint;
+      with FParentForm do begin
+        const NewP = Point(ACenter.X - Width div 2, ACenter.Y - Height div 2);
+
+        if Left <> NewP.X then
+          Left := NewP.X;
+        if Top <> NewP.Y then
+          Top := NewP.Y;
+      end;
+    end;
+end;
+
 procedure FXDialogForm.DoShow;
 begin
   inherited;
 
   // Center
-  if FAutoCenter and (FParentForm is TForm) and (Position = poDesigned) then begin
+  if FAutoCenter and (FParentForm <> nil) and (Position = poDesigned) then begin
     Left := FParentForm.Left + (FParentForm.Width - Width) div 2;
     Top := FParentForm.Top + (FParentForm.Height - Height) div 2;
   end;
+
+  // Settings
+  FCanMoveParent := true;
 end;
 
 procedure FXDialogForm.InitForm;
@@ -680,6 +741,7 @@ begin
 
   FAutoCenter := true;
   FAutoSmoke := true;
+  FAutoMoveParent := true;
 
   inherited;
 end;
@@ -701,8 +763,8 @@ begin
     Result := inherited;
   finally
     // Smoke
-  if CanChangeSmoke then
-    (FParentForm as FXForm).SmokeEffect := false;
+    if CanChangeSmoke then
+      (FParentForm as FXForm).SmokeEffect := false;
   end;
 end;
 

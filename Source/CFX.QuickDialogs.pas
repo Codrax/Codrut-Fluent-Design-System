@@ -9,6 +9,8 @@ procedure OpenMessage(AText: string); overload;
 procedure OpenMessage(ATitle, AText: string); overload;
 function OpenDialog(AText: string; AButtons: TMsgDlgButtons): TModalResult; overload;
 function OpenDialog(ATitle, AText: string; AButtons: TMsgDlgButtons): TModalResult; overload;
+function OpenDialog(AText: string; AKind: FXDialogType; AButtons: TMsgDlgButtons): TModalResult; overload;
+function OpenDialog(ATitle, AText: string; AKind: FXDialogType; AButtons: TMsgDlgButtons): TModalResult; overload;
 function OpenInput(ATitle, AText: string; var AValue: string): boolean; overload;
 function OpenInput(ATitle, AText: string; var AValue: integer; DefaultValue: integer=0): boolean; overload;
 
@@ -38,7 +40,7 @@ procedure OpenMessage(ATitle, AText: string);
 begin
   with FXMessageBox.Create do
     try
-      ParentForm := GetActiveForm;
+      Parent := GetActiveForm;
 
       Title := ATitle;
       Text := AText;
@@ -56,12 +58,46 @@ end;
 
 function OpenDialog(ATitle, AText: string; AButtons: TMsgDlgButtons): TModalResult;
 begin
-  with FXDialog.Create do
+  with FXModalDialog.Create do
     try
-      ParentForm := GetActiveForm;
+      Parent := GetActiveForm;
 
       Title := ATitle;
       Text := AText;
+
+      Buttons := AButtons;
+
+      Result := Execute;
+    finally
+      Free;
+    end;
+end;
+
+function OpenDialog(AText: string; AKind: FXDialogType; AButtons: TMsgDlgButtons): TModalResult;
+var
+  ATitle: string;
+begin
+  ATitle := '';
+  case AKind of
+    FXDialogType.Information: ATitle := 'Information';
+    FXDialogType.Error: ATitle := 'Error';
+    FXDialogType.Question: ATitle := 'Confirmation';
+    FXDialogType.Sucess: ATitle := 'Sucess';
+    FXDialogType.Warning: ATitle := 'Warning';
+    FXDialogType.Star: ATitle := 'Attention';
+  end;
+  OpenDialog(ATitle, AText, AKind, AButtons);
+end;
+
+function OpenDialog(ATitle, AText: string; AKind: FXDialogType; AButtons: TMsgDlgButtons): TModalResult;
+begin
+  with FXModalIconDialog.Create do
+    try
+      Parent := GetActiveForm;
+
+      Title := ATitle;
+      Text := AText;
+      Kind := AKind;
 
       Buttons := AButtons;
 
@@ -75,7 +111,7 @@ function OpenInput(ATitle, AText: string; var AValue: string): boolean;
 begin
   with FXInputBox.Create do
     try
-      ParentForm := GetActiveForm;
+      Parent := GetActiveForm;
 
       Title := ATitle;
       Text := AText;
@@ -95,7 +131,7 @@ function OpenInput(ATitle, AText: string; var AValue: integer; DefaultValue: int
 begin
   with FXInputBox.Create do
     try
-      ParentForm := GetActiveForm;
+      Parent := GetActiveForm;
 
       NumbersOnly := true;
 

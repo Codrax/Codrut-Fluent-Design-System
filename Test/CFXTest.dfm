@@ -873,8 +873,8 @@ object Form1: TForm1
     TabOrder = 12
   end
   object FXSlider1: FXSlider
-    Left = 237
-    Top = 203
+    Left = 236
+    Top = 171
     Width = 234
     Height = 49
     Margins.Left = 0
@@ -900,8 +900,8 @@ object Form1: TForm1
     TabOrder = 13
   end
   object FXCheckBox1: FXCheckBox
-    Left = 232
-    Top = 167
+    Left = 231
+    Top = 135
     Width = 180
     Height = 30
     Margins.Left = 0
@@ -910,8 +910,8 @@ object Form1: TForm1
     Margins.Bottom = 0
     Size.X = 180
     Size.Y = 30
-    Position.X = 232
-    Position.Y = 167
+    Position.X = 231
+    Position.Y = 135
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -984,6 +984,7 @@ object Form1: TForm1
     Font.Name = 'Segoe UI'
     Font.Style = []
     TabOrder = 16
+    OnClick = FXButton4Click
     Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
@@ -1340,8 +1341,8 @@ object Form1: TForm1
     TabOrder = 25
   end
   object FXSelector1: FXSelector
-    Left = 232
-    Top = 305
+    Left = 231
+    Top = 273
     Width = 232
     Height = 30
     Margins.Left = 0
@@ -1350,8 +1351,8 @@ object Form1: TForm1
     Margins.Bottom = 0
     Size.X = 232
     Size.Y = 30
-    Position.X = 232
-    Position.Y = 305
+    Position.X = 231
+    Position.Y = 273
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1518,19 +1519,44 @@ object Form1: TForm1
     Font.Style = []
     TabOrder = 30
   end
-  object FXButton13: FXButton
-    Left = 232
-    Top = 126
-    Width = 266
+  object FXScrollbar1: FXScrollbar
+    Left = 230
+    Top = 239
+    Width = 233
+    Height = 13
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Size.X = 233
+    Size.Y = 13
+    Position = 0
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    CustomColors.LightBackGroundInterior = 16514043
+    CustomColors.DarkBackGroundInterior = 2829099
+    Orientation = Horizontal
+    Animation = True
+    CustomScrollbarSize = 0
+    TabOrder = 32
+  end
+  object FXButton2: FXButton
+    Left = 440
+    Top = 335
+    Width = 81
     Height = 35
     Margins.Left = 0
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Size.X = 266
+    Size.X = 81
     Size.Y = 35
-    Position.X = 232
-    Position.Y = 126
+    Position.X = 440
+    Position.Y = 335
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1553,90 +1579,22 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundNone = clBlack
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
-    Text = 'Open dialog with smoke effect'
+    Text = 'Button'
     LineWidth = 3.000000000000000000
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = 21
-    Font.Name = 'Segoe UI'
-    Font.Style = []
-    TabOrder = 32
-    OnClick = FXButton13Click
-    Image.IconType = None
-    Image.SelectSegoe = #59188
-    Image.SelectImageIndex = 0
-    ImageScale = 1.250000000000000000
-    ButtonKind = Accent
-    StateText = 'Success'
-    StateImage.IconType = None
-    StateImage.SelectSegoe = #59188
-    StateImage.SelectImageIndex = 0
-  end
-  object FXScrollbar1: FXScrollbar
-    Left = 231
-    Top = 271
-    Width = 233
-    Height = 13
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 0
-    Size.X = 233
-    Size.Y = 13
-    Position = 0
-    CustomColors.Enabled = False
-    CustomColors.Accent = 13924352
-    CustomColors.LightBackGround = 15987699
-    CustomColors.LightForeGround = 1776410
-    CustomColors.DarkBackGround = 2105376
-    CustomColors.DarkForeGround = clWhite
-    CustomColors.LightBackGroundInterior = 16514043
-    CustomColors.DarkBackGroundInterior = 2829099
-    Orientation = Horizontal
-    Animation = True
-    CustomScrollbarSize = 0
-    TabOrder = 33
-  end
-  object FXLinearStringsList1: FXLinearStringsList
-    Left = 512
-    Top = 320
-    Width = 350
-    Height = 250
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 0
-    Size.X = 350
-    Size.Y = 250
-    Position.X = 512
-    Position.Y = 320
-    CustomColors.Enabled = False
-    CustomColors.Accent = 13924352
-    CustomColors.LightBackGround = 15987699
-    CustomColors.LightForeGround = 1776410
-    CustomColors.DarkBackGround = 2105376
-    CustomColors.DarkForeGround = clWhite
-    NoOutOfBoundsDraw = True
-    MultiSelect = True
-    CanDeselect = True
-    TabOrder = 34
-    Items.Strings = (
-      'Cat'
-      'Cat2'
-      'Dog'
-      'Wolf'
-      'Amongius'
-      'Mc')
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = 22
     Font.Name = 'Segoe UI'
     Font.Style = []
-    ItemWidth = 150
-    FullLine = True
-    Wrap = True
-    SpacingRow = 8
-    SpacingColumn = 8
+    TabOrder = 33
+    OnClick = FXButton2Click
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    StateImage.IconType = None
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
   end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False
@@ -1675,7 +1633,6 @@ object Form1: TForm1
   object FXAppManager1: FXAppManager
     ApplicationIdentifier = 'fluentdesigntest'
     AppVersion = '1.0.0.0'
-    SingleInstance = True
     ApplicationName = 'Codrut Fluent Design Test'
     HasAppData = True
     OnUpdateChecked = FXAppManager1UpdateChecked
@@ -1686,5 +1643,13 @@ object Form1: TForm1
     UserUpdateWaitDelay = 0
     Left = 824
     Top = 133
+  end
+  object NewAnimation1: TIntAnim
+    Duration = 2.000000000000000000
+    Kind = Linear
+    PropertyName = 'ItemCount'
+    StartValue = 0
+    EndValue = 0
+    CurrentValue = 0
   end
 end

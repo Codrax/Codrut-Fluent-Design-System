@@ -688,6 +688,11 @@ begin
 
         // Copy colliding (draw from system cache)
         CopyRect(Local, FControl.GetCacheBuffer.Canvas, Host);
+      end else
+      // Copy background color
+      if Supports(Parent, IFXControl) then begin
+        Brush.Color := (Parent as IFXControl).Background;
+        FillRect(ClipRect);
       end;
 
       // Copy child controls
@@ -792,7 +797,7 @@ end;
 procedure FXWindowsControl.FocusChanged(Focused: boolean);
 begin
   if AutoFocusLine then begin
-    FHasEnteredTab := false;
+    FHasEnteredTab := Focused;
     Invalidate; // do not redraw
   end;
 end;

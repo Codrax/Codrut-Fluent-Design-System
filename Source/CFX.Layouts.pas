@@ -244,7 +244,7 @@ end;
 
 procedure FXCustomLayout.InteractionStateChanged(AState: FXControlState);
 begin
-  inherited;
+  //inherited;
 end;
 
 function FXCustomLayout.IsContainer: Boolean;

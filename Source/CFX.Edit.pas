@@ -617,8 +617,8 @@ begin
   FEditColors := FXSingleColorStateSet.Create;
 
   // Sizing
-  Height := 35;
-  Width := 150;
+  Height := EDIT_DEFAULT_HEIGHT;
+  Width := EDIT_DEFAULT_WIDTH;
 
   Font.Color := 255;
 

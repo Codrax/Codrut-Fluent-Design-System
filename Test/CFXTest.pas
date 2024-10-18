@@ -22,7 +22,7 @@ uses
   Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage, Vcl.ControlList,
   Vcl.ExtDlgs, System.ImageList, UITypes, Vcl.ComCtrls, Vcl.Mask,
   Vcl.Themes, System.Generics.Collections, CFX.Layouts, CFX.TitlebarPanel,
-  Vcl.NumberBox;
+  Vcl.NumberBox, Cod.Animation.Component;
 
 type
   TForm1 = class(FXForm)
@@ -62,12 +62,11 @@ type
     FXBlurMaterial2: FXBlurMaterial;
     FXButton9: FXButton;
     FXScrollText1: FXScrollText;
-    FXButton13: FXButton;
     FXScrollbar1: FXScrollbar;
-    FXLinearStringsList1: FXLinearStringsList;
+    NewAnimation1: TIntAnim;
+    FXButton2: FXButton;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
-    procedure FXButton13Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);
     procedure FXButton14Click(Sender: TObject);
     procedure FXButton16Click(Sender: TObject);
@@ -76,6 +75,8 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FXAppManager1UpdateChecked(Sender: TObject);
     procedure FXPaintBox1Draw(Sender: TObject);
+    procedure FXButton2Click(Sender: TObject);
+    procedure FXButton4Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -109,27 +110,6 @@ procedure TForm1.FXButton12Click(Sender: TObject);
 begin
   FXButton(Sender).Tag := FXButton(Sender).Tag + 1;
   FXButton(Sender).StateText := FXButton(Sender).Tag.ToString;
-end;
-
-procedure TForm1.FXButton13Click(Sender: TObject);
-var
-  A: FXDialog;
-begin
-  A := FXDialog.Create;
-
-  with A do
-    try
-      Title := 'Hello World!';
-      Text := 'This is a fluent dialog box! Here you can press any of the buttons below!';
-
-      Kind := FXMessageType.Warning;
-      Buttons := [mbOk, mbCancel];
-      ParentForm := Self;
-
-      Execute;
-    finally
-      Free;
-    end;
 end;
 
 procedure TForm1.FXButton14Click(Sender: TObject);
@@ -174,6 +154,32 @@ begin
     end;
 end;
 
+procedure TForm1.FXButton2Click(Sender: TObject);
+begin
+  OpenDialog('Would you like to download the software?', FXDialogType.Information, [mbYes, mbNo]);
+end;
+
+procedure TForm1.FXButton4Click(Sender: TObject);
+var
+  A: FXModalDialog;
+begin
+  A := FXModalDialog.Create;
+
+  with A do
+    try
+      Title := 'Hello World!';
+      Text := 'This is a fluent dialog box! Here you can press any of the buttons below!';
+
+      //Kind := FXMessageType.Warning;
+      Buttons := [mbOk, mbCancel];
+      Parent := Self;
+
+      Execute;
+    finally
+      Free;
+    end;
+end;
+
 procedure TForm1.FXButton5Click(Sender: TObject);
 begin
   if ThemeManager.DarkTheme then
@@ -186,30 +192,32 @@ end;
 
 procedure TForm1.FXButtonDesign4Click(Sender: TObject);
 var
-  A: FXInputBox;
-  D: FXDialog;
   S: string;
 begin
-  A := FXInputBox.Create;
-
-  with A do
+  with FXInputBox.Create do
     try
       Title := 'Search';
       Text := 'Enter the search query to begin searching';
 
-      ParentForm := Self;
+      Parent := Self;
       Value := '';
       TextHint := 'Type here';
 
-      S := Execute;
+      SelectAll := true;
+      Value := 'Example';
+      if Execute then
+        S := Value
+      else
+        Exit;
 
-      D := FXDialog.Create;
-      with D do
+      with FXModalDialog.Create do
         try
           Title := 'Search Query';
           Text := Format('Your search for "%S" returned no results.', [S]);
 
-          ParentForm := Self;
+          Buttons := [mbOk, mbCancel];
+
+          Parent := Self;
 
           Execute;
         finally

@@ -42,6 +42,7 @@ type
 
   FXDrawList = class(FXWindowsControl)
   private
+    procedure SetNoItemsOutputText(const Value: string);
     type TRectSet = record
       Index: integer;
       Rectangle: TRect;
@@ -62,6 +63,9 @@ type
     FMultiSelect: boolean;
     FCanDeselect: boolean;
     FDefaultDraw: boolean;
+
+    // Utils
+    FNoItemsOutputText: string;
 
     // Scroll
     FVertScroll,
@@ -137,6 +141,7 @@ type
     // Draw
     function GetItemBackgroundColor(Index: integer): TColor; virtual;
     procedure DrawItem(Index: integer; ARect: TRect; Canvas: TCanvas); virtual;
+    procedure DrawNoItemsText; virtual;
 
     // Animation
     procedure AnimationStep(Sender: TObject; Step, TotalSteps: integer);
@@ -177,6 +182,8 @@ type
     property BackgroundColor: FXBackgroundColor read FBackground write SetBackground default FXBackgroundColor.Background;
     property BackgroundColorItems: FXBackgroundColor read FBackgroundItems write SetBackgroundItems default FXBackgroundColor.Content;
 
+    property NoItemsOutputText: string read FNoItemsOutputText write SetNoItemsOutputText;
+
     // Props
     property ShowScrollbars: boolean read FShowScrollbars write SetShowScrollbars default true;
     property NoOutOfBoundsDraw: boolean read FNoOutOfBoundsDraw write SetNoOutOfBoundsDraw;
@@ -202,6 +209,7 @@ type
 
     // Default props
     property Align;
+    property Font;
     //property PaddingFill;
     property Constraints;
     property Anchors;
@@ -420,6 +428,7 @@ type
     procedure UpdateRects; override;
 
     procedure DrawItem(Index: integer; ARect: TRect; Canvas: TCanvas); override;
+    procedure DrawNoItemsText; override;
 
     function GetChildParent: TComponent; override; // set the loaded children parent
 
@@ -511,6 +520,7 @@ begin
   inherited;
   // Custom Color
   FCustomColors := FXColorSets.Create(Self);
+  FNoItemsOutputText := '';
 
   FBackground := FXBackgroundColor.Background;
   FBackgroundItems := FXBackgroundColor.Content;
@@ -683,6 +693,13 @@ begin
 
   if Assigned(OnDrawItem) then
     OnDrawItem(Self, Index, ARect, Canvas);
+end;
+
+procedure FXDrawList.DrawNoItemsText;
+begin
+  Buffer.Font.Assign( Self.Font );
+  Buffer.Brush.Style := bsClear;
+  DrawTextRect(Buffer, DrawRect, FNoItemsOutputText, [FXTextFlag.WordWrap, FXTextFlag.Center, FXTextFlag.VerticalCenter])
 end;
 
 procedure FXDrawList.EnsureIndexVisible;
@@ -906,6 +923,10 @@ begin
       OnAfterDrawItem(Self, I, Display, Canvas);
   end;
 
+  // No items
+  if (Length(FItemRects) = 0) and (FNoItemsOutputText <> '') then
+    DrawNoItemsText;
+
   // Inherit
   inherited;
 end;
@@ -1126,6 +1147,16 @@ begin
   FItemSelected[Index] := Value;
 
   StandardUpdateDraw;
+end;
+
+procedure FXDrawList.SetNoItemsOutputText(const Value: string);
+begin
+  if FNoItemsOutputText = Value then
+    Exit;
+
+  FNoItemsOutputText := Value;
+  if ItemCount = 0 then
+    StandardUpdateDraw;
 end;
 
 procedure FXDrawList.SetNoOutOfBoundsDraw(const Value: boolean);
@@ -1475,6 +1506,12 @@ begin
   FContainer.DrawTo(Buffer, ARect);
 end;
 
+procedure FXLinearControlList.DrawNoItemsText;
+begin
+  if not IsDesigning then
+    inherited;
+end;
+
 function FXLinearControlList.GetChildParent: TComponent;
 begin
   Result := FContainer;
@@ -1627,6 +1664,7 @@ begin
 
   with Canvas do begin
     Font.Assign( Self.Font );
+    Font.Color := FDrawColors.ForeGround;
 
     // Margins
     ARect:= FItemMargins.RectangleInflate(ARect);

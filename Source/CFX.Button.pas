@@ -737,7 +737,7 @@ end;
 
 procedure FXCustomButton.ScaleChanged(Scaler: single);
 begin
-  FImageScale := FImageScale * Scaler;
+  //FImageScale := FImageScale * Scaler; // the image scale does NOT need to be changed!
   FLineWidth := FLineWidth * Scaler;
   FMargin := round(FMargin * Scaler);
   FBorderWidth := FBorderWidth * Scaler;
@@ -1023,8 +1023,8 @@ begin
   //FStateText := BUTTON_STATE_TEXT;
 
   // Sizing
-  Height := 35;
-  Width := 140;
+  Height := BUTTON_DEFAULT_HEIGHT;
+  Width := BUTTON_DEFAULT_WIDTH;
 end;
 
 destructor FXCustomButton.Destroy;
