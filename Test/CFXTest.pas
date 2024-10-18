@@ -12,7 +12,7 @@ uses
   CFX.StandardIcons, CFX.Dialogs, CFX.BlurMaterial, CFX.Selector,
   CFX.Classes, CFX.PopupMenu, CFX.Constants, CFX.Types, CFX.ToolTip, CFX.Hint,
   CFX.Slider, CFX.ImageList, CFX.Controls, CFX.Test, CFX.TextBox, CFX.RadioButton,
-  CFX.Scrollbar, CFX.ScrollBox, CFX.Edit, Cod.Graphics, CFX.Button,
+  CFX.Scrollbar, CFX.ScrollBox, CFX.Edit, CFX.Button,
   CFX.PopupConnector, Vcl.Buttons, CFX.IconView, CFX.ScrollText, CFX.FormClasses,
   CFX.Messages, CFX.VarHelpers, CFX.Graphics, CFX.RatingControl, CFX.Effects,
   CFX.Progress, CFX.GDI, CFX.Utilities, CFX.QuickDialogs, CFX.Instances,
@@ -22,7 +22,7 @@ uses
   Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage, Vcl.ControlList,
   Vcl.ExtDlgs, System.ImageList, UITypes, Vcl.ComCtrls, Vcl.Mask,
   Vcl.Themes, System.Generics.Collections, CFX.Layouts, CFX.TitlebarPanel,
-  Vcl.NumberBox, Cod.Animation.Component;
+  Vcl.NumberBox;
 
 type
   TForm1 = class(FXForm)
@@ -63,7 +63,6 @@ type
     FXButton9: FXButton;
     FXScrollText1: FXScrollText;
     FXScrollbar1: FXScrollbar;
-    NewAnimation1: TIntAnim;
     FXButton2: FXButton;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
@@ -156,7 +155,7 @@ end;
 
 procedure TForm1.FXButton2Click(Sender: TObject);
 begin
-  OpenDialog('Would you like to download the software?', FXDialogType.Information, [mbYes, mbNo]);
+  OpenDialog('Would you like to download the software?', FXDialogKind.Information, [mbYes, mbNo]);
 end;
 
 procedure TForm1.FXButton4Click(Sender: TObject);

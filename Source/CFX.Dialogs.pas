@@ -13,7 +13,7 @@ uses
   CFX.ArrayHelpers, CFX.Graphics, CFX.StandardIcons;
 
 type
-  FXDialogType = (None, Information, Error, Question, Sucess, Warning, Star);
+  FXDialogKind = (None, Information, Error, Question, Sucess, Warning, Star);
   FXInputBoxResult = (Cancel, Ok);
   FXDialogFlag = (ParentCenter, ParentSmoke, AllowMove, MoveParent, ScreenCenter, GetParentActive, GetParentMain);
   FXDialogFlags = set of FXDialogFlag;
@@ -283,7 +283,7 @@ type
   strict private
     const SPACING_RIGHT = 10;
     var
-    FKind: FXDialogType;
+    FKind: FXDialogKind;
     FIconSize: integer;
 
   protected
@@ -316,7 +316,7 @@ type
     property TextFont;
 
     // Props
-    property Kind: FXDialogType read FKind write FKind;
+    property Kind: FXDialogKind read FKind write FKind;
     property IconSize: integer read FIconSize write FIconSize;
 
     function Execute: integer;
@@ -582,25 +582,25 @@ end;
 constructor FXIconDialog.Create;
 begin
   inherited;
-  FKind := FXDialogType.Information;
-  FIconSize := 75;
+  FKind := FXDialogKind.Information;
+  FIconSize := 50;
 end;
 
 procedure FXIconDialog.CreateDialog;
 begin
   inherited;
-  if Kind <> FXDialogType.None then
+  if Kind <> FXDialogKind.None then
     with FXStandardIcon.Create(FForm) do begin
       Parent := FForm;
 
       // Data
       case Self.Kind of
-        FXDialogType.Information: SelectedIcon := FXStandardIconType.Information;
-        FXDialogType.Error: SelectedIcon := FXStandardIconType.Error;
-        FXDialogType.Question: SelectedIcon := FXStandardIconType.Question;
-        FXDialogType.Sucess: SelectedIcon := FXStandardIconType.Checkmark;
-        FXDialogType.Warning: SelectedIcon := FXStandardIconType.Warning;
-        FXDialogType.Star: SelectedIcon := FXStandardIconType.Star;
+        FXDialogKind.Information: SelectedIcon := FXStandardIconType.Information;
+        FXDialogKind.Error: SelectedIcon := FXStandardIconType.Error;
+        FXDialogKind.Question: SelectedIcon := FXStandardIconType.Question;
+        FXDialogKind.Sucess: SelectedIcon := FXStandardIconType.Checkmark;
+        FXDialogKind.Warning: SelectedIcon := FXStandardIconType.Warning;
+        FXDialogKind.Star: SelectedIcon := FXStandardIconType.Star;
       end;
 
       // Pos
@@ -621,7 +621,7 @@ end;
 function FXIconDialog.GetContainerClient: TRect;
 begin
   Result := inherited;
-  if Kind = FXDialogType.None then
+  if Kind = FXDialogKind.None then
     Exit;
 
   Result.Offset(FIconSize+SPACING_RIGHT, 0);
@@ -630,7 +630,7 @@ end;
 function FXIconDialog.GetContentSize: TSize;
 begin
   Result := inherited;
-  if Kind = FXDialogType.None then
+  if Kind = FXDialogKind.None then
     Exit;
 
   // Add width

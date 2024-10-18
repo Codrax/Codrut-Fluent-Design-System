@@ -1644,12 +1644,4 @@ object Form1: TForm1
     Left = 824
     Top = 133
   end
-  object NewAnimation1: TIntAnim
-    Duration = 2.000000000000000000
-    Kind = Linear
-    PropertyName = 'ItemCount'
-    StartValue = 0
-    EndValue = 0
-    CurrentValue = 0
-  end
 end

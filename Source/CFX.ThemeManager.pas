@@ -44,6 +44,7 @@ type
     FAutoAccentColor: boolean;
 
     FLegacyFontColor: boolean;
+    FHandleApplicationExceptions: boolean;
 
     LastUpdate: TTime;
     FDesigning: boolean;
@@ -57,10 +58,16 @@ type
     procedure SaveAccentColor(const Value: TColor);
     procedure SetAutoAccent(const Value: boolean);
 
+  protected
+    procedure HandleApplicationError(Sender: TObject; E: Exception);
+
   published
     (* Theme Settings *)
     property DarkTheme: boolean read FDarkTheme write SetDarkTheme;
     property DarkThemeMode: FXDarkSetting read FDarkThemeMode write SetDarkMode;
+
+    (* System *)
+    property HandleApplicationExceptions: boolean read FHandleApplicationExceptions write FHandleApplicationExceptions;
 
     (* Global Font Settings *)
     property FormFont: string read FFormFont write FFormFont;
@@ -122,6 +129,9 @@ var
   ThemeManager: FXThemeManager;
 
 implementation
+
+uses
+  CFX.QuickDialogs, CFX.Dialogs;
 
 // In Design Mode
 function IsDesigning: boolean;
@@ -194,6 +204,8 @@ begin
   FAutoAccentColor := true;
   FLegacyFontColor := false;
 
+  FHandleApplicationExceptions := true;
+
   // Update Time
   LastUpdate := Now;
 
@@ -225,6 +237,9 @@ begin
           OnTimer := RegMonitorProc;
         end;
     end;
+
+  // Exception handler
+  Application.OnException := HandleApplicationError;
 end;
 
 destructor FXThemeManager.Destroy;
@@ -244,6 +259,9 @@ begin
   FreeAndNil( SystemColor );
   FreeAndNil( SystemGrayControl );
   FreeAndNil( SystemAccentInteractStates );
+
+  // Exception handlee
+  Application.OnException := nil;
 end;
 
 function FXThemeManager.LoadAccentColor: TColor;
@@ -277,6 +295,21 @@ begin
     Result := 0
   else
     Result := TColors.White;
+end;
+
+procedure FXThemeManager.HandleApplicationError(Sender: TObject; E: Exception);
+begin
+  if FHandleApplicationExceptions then begin
+    MessageBeep( MB_ICONERROR );
+    try
+      OpenDialog(E.ToString, FXDialogKind.Error, [mbOk]);
+    except
+      on E: Exception do
+        Application.ShowException(Exception.Create('Could not display error.'#13 + E.ToString));
+    end;
+  end
+  else
+    Application.ShowException(E);
 end;
 
 procedure FXThemeManager.LoadFontSettings;

@@ -9,8 +9,8 @@ procedure OpenMessage(AText: string); overload;
 procedure OpenMessage(ATitle, AText: string); overload;
 function OpenDialog(AText: string; AButtons: TMsgDlgButtons): TModalResult; overload;
 function OpenDialog(ATitle, AText: string; AButtons: TMsgDlgButtons): TModalResult; overload;
-function OpenDialog(AText: string; AKind: FXDialogType; AButtons: TMsgDlgButtons): TModalResult; overload;
-function OpenDialog(ATitle, AText: string; AKind: FXDialogType; AButtons: TMsgDlgButtons): TModalResult; overload;
+function OpenDialog(AText: string; AKind: FXDialogKind; AButtons: TMsgDlgButtons): TModalResult; overload;
+function OpenDialog(ATitle, AText: string; AKind: FXDialogKind; AButtons: TMsgDlgButtons): TModalResult; overload;
 function OpenInput(ATitle, AText: string; var AValue: string): boolean; overload;
 function OpenInput(ATitle, AText: string; var AValue: integer; DefaultValue: integer=0): boolean; overload;
 
@@ -73,23 +73,23 @@ begin
     end;
 end;
 
-function OpenDialog(AText: string; AKind: FXDialogType; AButtons: TMsgDlgButtons): TModalResult;
+function OpenDialog(AText: string; AKind: FXDialogKind; AButtons: TMsgDlgButtons): TModalResult;
 var
   ATitle: string;
 begin
   ATitle := '';
   case AKind of
-    FXDialogType.Information: ATitle := 'Information';
-    FXDialogType.Error: ATitle := 'Error';
-    FXDialogType.Question: ATitle := 'Confirmation';
-    FXDialogType.Sucess: ATitle := 'Sucess';
-    FXDialogType.Warning: ATitle := 'Warning';
-    FXDialogType.Star: ATitle := 'Attention';
+    FXDialogKind.Information: ATitle := 'Information';
+    FXDialogKind.Error: ATitle := 'Error';
+    FXDialogKind.Question: ATitle := 'Confirmation';
+    FXDialogKind.Sucess: ATitle := 'Sucess';
+    FXDialogKind.Warning: ATitle := 'Warning';
+    FXDialogKind.Star: ATitle := 'Attention';
   end;
   OpenDialog(ATitle, AText, AKind, AButtons);
 end;
 
-function OpenDialog(ATitle, AText: string; AKind: FXDialogType; AButtons: TMsgDlgButtons): TModalResult;
+function OpenDialog(ATitle, AText: string; AKind: FXDialogKind; AButtons: TMsgDlgButtons): TModalResult;
 begin
   with FXModalIconDialog.Create do
     try
