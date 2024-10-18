@@ -6,6 +6,7 @@ uses
   SysUtils,
   Classes,
   Windows,
+  Types,
   CFX.ToolTip,
   Vcl.Forms,
   Vcl.Controls,

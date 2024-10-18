@@ -17,11 +17,12 @@ uses
   CFX.Messages, CFX.VarHelpers, CFX.Graphics, CFX.RatingControl, CFX.Effects,
   CFX.Progress, CFX.GDI, CFX.Utilities, CFX.QuickDialogs, CFX.Instances,
   CFX.PaintBox, CFX.Lists, CFX.TabStrip, CFX.AppManager, CFX.Shapes,
+  CFX.Layouts, CFX.TitlebarPanel,
 
   // VCL COMPONENTS
   Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage, Vcl.ControlList,
   Vcl.ExtDlgs, System.ImageList, UITypes, Vcl.ComCtrls, Vcl.Mask,
-  Vcl.Themes, System.Generics.Collections, CFX.Layouts, CFX.TitlebarPanel,
+  Vcl.Themes, System.Generics.Collections,
   Vcl.NumberBox;
 
 type
@@ -155,7 +156,7 @@ end;
 
 procedure TForm1.FXButton2Click(Sender: TObject);
 begin
-  OpenDialog('Would you like to download the software?', FXDialogKind.Information, [mbYes, mbNo]);
+  OpenDialog('Would you like to download the software?', FXDialogKind.Question, [mbYes, mbNo]);
 end;
 
 procedure TForm1.FXButton4Click(Sender: TObject);

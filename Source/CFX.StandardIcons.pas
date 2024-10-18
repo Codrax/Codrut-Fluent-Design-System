@@ -201,9 +201,9 @@ end;
 procedure Text(AStr: string);
 begin
   with Buffer do
-    TextOut( ContentRect.Width div 2-TextWidth('i') div 2 ,
-      ContentRect.Height div 2-TextHeight('i') div 2 ,
-      'i');
+    TextOut( ContentRect.Width div 2-TextWidth(AStr) div 2 ,
+      ContentRect.Height div 2-TextHeight(AStr) div 2 ,
+      AStr);
 end;
 var
   AWidth, AHeight: integer;

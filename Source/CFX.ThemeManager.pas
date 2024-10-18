@@ -11,6 +11,7 @@ uses
   Win.Registry,
   System.UITypes,
   Types,
+  Vcl.Clipbrd,
   Vcl.Graphics,
   CFX.Colors,
   CFX.Utilities,
@@ -45,6 +46,7 @@ type
 
     FLegacyFontColor: boolean;
     FHandleApplicationExceptions: boolean;
+    FExceptionDisplayHalt: boolean;
 
     LastUpdate: TTime;
     FDesigning: boolean;
@@ -68,6 +70,7 @@ type
 
     (* System *)
     property HandleApplicationExceptions: boolean read FHandleApplicationExceptions write FHandleApplicationExceptions;
+    property ExceptionDisplayHalt: boolean read FExceptionDisplayHalt write FExceptionDisplayHalt;
 
     (* Global Font Settings *)
     property FormFont: string read FFormFont write FFormFont;
@@ -108,6 +111,8 @@ type
     procedure LoadFontSettings;
 
     procedure UpdateThemeInformation;
+
+    procedure ShowException(E: Exception);
 
     procedure UpdateColors;
     procedure UpdateSettings;
@@ -205,6 +210,7 @@ begin
   FLegacyFontColor := false;
 
   FHandleApplicationExceptions := true;
+  ExceptionDisplayHalt := true;
 
   // Update Time
   LastUpdate := Now;
@@ -299,15 +305,8 @@ end;
 
 procedure FXThemeManager.HandleApplicationError(Sender: TObject; E: Exception);
 begin
-  if FHandleApplicationExceptions then begin
-    MessageBeep( MB_ICONERROR );
-    try
-      OpenDialog(E.ToString, FXDialogKind.Error, [mbOk]);
-    except
-      on E: Exception do
-        Application.ShowException(Exception.Create('Could not display error.'#13 + E.ToString));
-    end;
-  end
+  if FHandleApplicationExceptions then
+    ShowException(E)
   else
     Application.ShowException(E);
 end;
@@ -395,6 +394,39 @@ begin
     FDarkTheme := Value;
 
     UpdateSettings;
+  end;
+end;
+
+procedure FXThemeManager.ShowException(E: Exception);
+var
+  Dialog: FXIconDialog;
+begin
+  Dialog := FXIconDialog.Create;
+  try
+    Dialog.Title := 'Application error';
+    Dialog.Text := E.ToString;
+    Dialog.Kind := FXDialogKind.Error;
+
+    Dialog.AddButton('Close', '', true);
+    Dialog.AddButton('Copy', #$E8C8, false);
+    if ExceptionDisplayHalt then
+      Dialog.AddButton('Halt', #$ECE4, false);
+
+    MessageBeep( MB_ICONERROR );
+    try
+      case Dialog.Execute of
+        1: Clipboard.AsText := E.ToString;
+        2: begin
+          if OpenDialog('Are you sure?', 'Are you sure you want to halt the application? Data may be lost or corrupted.', [mbYes, mbNo]) = mrYes then
+            Halt;
+        end;
+      end;
+    except
+      on E: Exception do
+        Application.ShowException(Exception.Create('Could not display error.'#13 + E.ToString));
+    end;
+  finally
+    Dialog.Free;
   end;
 end;
 

@@ -1545,18 +1545,18 @@ object Form1: TForm1
     TabOrder = 32
   end
   object FXButton2: FXButton
-    Left = 440
-    Top = 335
-    Width = 81
+    Left = 512
+    Top = 80
+    Width = 129
     Height = 35
     Margins.Left = 0
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Size.X = 81
+    Size.X = 129
     Size.Y = 35
-    Position.X = 440
-    Position.Y = 335
+    Position.X = 512
+    Position.Y = 80
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1579,7 +1579,7 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundNone = clBlack
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
-    Text = 'Button'
+    Text = 'Icon dialog'
     LineWidth = 3.000000000000000000
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText

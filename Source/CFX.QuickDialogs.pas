@@ -82,11 +82,11 @@ begin
     FXDialogKind.Information: ATitle := 'Information';
     FXDialogKind.Error: ATitle := 'Error';
     FXDialogKind.Question: ATitle := 'Confirmation';
-    FXDialogKind.Sucess: ATitle := 'Sucess';
+    FXDialogKind.Success: ATitle := 'Sucess';
     FXDialogKind.Warning: ATitle := 'Warning';
     FXDialogKind.Star: ATitle := 'Attention';
   end;
-  OpenDialog(ATitle, AText, AKind, AButtons);
+  Result := OpenDialog(ATitle, AText, AKind, AButtons);
 end;
 
 function OpenDialog(ATitle, AText: string; AKind: FXDialogKind; AButtons: TMsgDlgButtons): TModalResult;

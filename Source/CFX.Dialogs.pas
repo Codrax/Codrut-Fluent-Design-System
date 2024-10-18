@@ -13,7 +13,7 @@ uses
   CFX.ArrayHelpers, CFX.Graphics, CFX.StandardIcons;
 
 type
-  FXDialogKind = (None, Information, Error, Question, Sucess, Warning, Star);
+  FXDialogKind = (None, Information, Error, Question, Success, Warning, Star);
   FXInputBoxResult = (Cancel, Ok);
   FXDialogFlag = (ParentCenter, ParentSmoke, AllowMove, MoveParent, ScreenCenter, GetParentActive, GetParentMain);
   FXDialogFlags = set of FXDialogFlag;
@@ -598,7 +598,7 @@ begin
         FXDialogKind.Information: SelectedIcon := FXStandardIconType.Information;
         FXDialogKind.Error: SelectedIcon := FXStandardIconType.Error;
         FXDialogKind.Question: SelectedIcon := FXStandardIconType.Question;
-        FXDialogKind.Sucess: SelectedIcon := FXStandardIconType.Checkmark;
+        FXDialogKind.Success: SelectedIcon := FXStandardIconType.Checkmark;
         FXDialogKind.Warning: SelectedIcon := FXStandardIconType.Warning;
         FXDialogKind.Star: SelectedIcon := FXStandardIconType.Star;
       end;
@@ -1129,7 +1129,7 @@ begin
   ExecuteDialog;
 
   // Data
-  ButtonToModal( TMsgDlgBtn(FClickedButtonTag) );
+  Result := ButtonToModal( TMsgDlgBtn(FClickedButtonTag) );
 end;
 
 { FXModalIconDialog }
@@ -1168,7 +1168,7 @@ begin
   ExecuteDialog;
 
   // Data
-  ButtonToModal( TMsgDlgBtn(FClickedButtonTag) );
+  Result := ButtonToModal( TMsgDlgBtn(FClickedButtonTag) );
 end;
 
 end.
