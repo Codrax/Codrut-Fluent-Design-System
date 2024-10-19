@@ -82,7 +82,7 @@ type
     procedure WM_DWMColorizationColorChanged(var Msg: TMessage); message WM_DWMCOLORIZATIONCOLORCHANGED;
     procedure WM_Activate(var Msg: TWMActivate); message WM_ACTIVATE;
     procedure WM_MOVE(var Msg: Tmessage); message WM_MOVE;
-    procedure WM_SIZE(var Msg: Tmessage); message WM_SIZE;
+    procedure WM_SIZE(var Msg: TWMSize); message WM_SIZE;
     procedure WM_GETMINMAXINFO(var Msg: TMessage); message WM_GETMINMAXINFO;
 
     procedure QuickBroadcast(MessageID: integer);
@@ -112,6 +112,7 @@ type
     // Do
     procedure DoShow; override;
     procedure DoMove; virtual;
+    procedure DoSize(var AWidth, AHeight: word); virtual;
 
     // Initialization
     procedure InitForm; virtual;
@@ -169,13 +170,17 @@ type
 
     FCanMoveParent: boolean;
 
+    // Utils
+    procedure CenterDialogInParentForm;
+
   protected
     // Initialization (after form creation)
     procedure InitForm; override;
 
     // Do
-    procedure DoMove; override;
     procedure DoShow; override;
+    procedure DoMove; override;
+    function CanResize(var NewWidth, NewHeight: Integer): Boolean; override;
 
   public
     property ParentForm: TForm read FParentForm write FParentForm;
@@ -283,6 +288,11 @@ begin
 
         UpdateTheme(false);
       end;
+end;
+
+procedure FXForm.DoSize(var AWidth, AHeight: word);
+begin
+  //
 end;
 
 procedure FXForm.InitForm;
@@ -412,7 +422,6 @@ end;
 procedure FXForm.Resize;
 begin
   inherited;
-
 end;
 
 procedure FXForm.SetBackgroundColor(const Value: FXBackgroundColor);
@@ -685,8 +694,11 @@ begin
   QuickBroadcast(WM_WINDOW_MOVE);
 end;
 
-procedure FXForm.WM_SIZE(var Msg: Tmessage);
+procedure FXForm.WM_SIZE(var Msg: TWMSize);
 begin
+  DoSize(Msg.Width, Msg.Height);
+
+  // Inherit
   inherited;
 
   // Broadcast
@@ -701,24 +713,37 @@ end;
 
 { FXDialogForm }
 
+function FXDialogForm.CanResize(var NewWidth, NewHeight: Integer): Boolean;
+begin
+  Result := inherited CanResize(NewWidth, NewHeight);
+
+  // Offset self position in parent
+  if Visible and FCanMoveParent and FAutoCenter and (FParentForm <> nil) then
+    CenterDialogInParentForm;
+end;
+
+procedure FXDialogForm.CenterDialogInParentForm;
+begin
+  Left := FParentForm.Left + (FParentForm.Width - Width) div 2;
+  Top := FParentForm.Top + (FParentForm.Height - Height) div 2;
+end;
+
 procedure FXDialogForm.DoMove;
 begin
   inherited;
 
-  if not Visible or not FCanMoveParent then
-    Exit;
+  if Visible and FCanMoveParent and FAutoCenter and (FParentForm <> nil) then begin
+    // Center parent around
+    const ACenter = BoundsRect.CenterPoint;
+    with FParentForm do begin
+      const NewP = Point(ACenter.X - Width div 2, ACenter.Y - Height div 2);
 
-  if (FAutoCenter) and (FParentForm <> nil) then begin
-      const ACenter = BoundsRect.CenterPoint;
-      with FParentForm do begin
-        const NewP = Point(ACenter.X - Width div 2, ACenter.Y - Height div 2);
-
-        if Left <> NewP.X then
-          Left := NewP.X;
-        if Top <> NewP.Y then
-          Top := NewP.Y;
-      end;
+      if Left <> NewP.X then
+        Left := NewP.X;
+      if Top <> NewP.Y then
+        Top := NewP.Y;
     end;
+  end;
 end;
 
 procedure FXDialogForm.DoShow;
@@ -726,10 +751,8 @@ begin
   inherited;
 
   // Center
-  if FAutoCenter and (FParentForm <> nil) and (Position = poDesigned) then begin
-    Left := FParentForm.Left + (FParentForm.Width - Width) div 2;
-    Top := FParentForm.Top + (FParentForm.Height - Height) div 2;
-  end;
+  if FAutoCenter and (FParentForm <> nil) and (Position = poDesigned) then
+    CenterDialogInParentForm;
 
   // Settings
   FCanMoveParent := true;
