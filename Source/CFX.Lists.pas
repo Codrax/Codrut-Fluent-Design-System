@@ -251,6 +251,8 @@ type
     property ItemRect[Index: integer]: TRect read GetItemRect;
     property ItemDisplayRect[Index: integer]: TRect read GetItemDisplayRect;
 
+    function SelectedItemCount: integer;
+    function GetSelectedItems: TArray<integer>;
     procedure ClearSelection;
 
     // Interface
@@ -786,6 +788,14 @@ begin
   Result := FItemSelected[Index];
 end;
 
+function FXDrawList.GetSelectedItems: TArray<integer>;
+begin
+  Result := [];
+  for var I := 0 to High(FItemSelected) do
+    if FItemSelected[I] then
+      TArrayUtils<integer>.AddValue(I, Result);
+end;
+
 procedure FXDrawList.HandleKeyDown(var CanHandle: boolean; Key: integer;
   Shift: TShiftState);
 var
@@ -1042,6 +1052,14 @@ procedure FXDrawList.ScaleChanged(Scaler: single);
 begin
   inherited;
   // update scale
+end;
+
+function FXDrawList.SelectedItemCount: integer;
+begin
+  Result := 0;
+  for var I := 0 to High(FItemSelected) do
+    if FItemSelected[I] then
+      Inc(Result);
 end;
 
 procedure FXDrawList.SetBackground(const Value: FXBackgroundColor);

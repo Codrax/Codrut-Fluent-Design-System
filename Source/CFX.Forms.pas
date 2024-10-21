@@ -177,6 +177,9 @@ type
     // Initialization (after form creation)
     procedure InitForm; override;
 
+    // CM Messages
+    procedure CMShowingChanged(var Message: TMessage); message CM_SHOWINGCHANGED;
+
     // Do
     procedure DoShow; override;
     procedure DoMove; override;
@@ -718,7 +721,7 @@ begin
   Result := inherited CanResize(NewWidth, NewHeight);
 
   // Offset self position in parent
-  if Visible and FCanMoveParent and FAutoCenter and (FParentForm <> nil) then
+  if Visible and FAutoMoveParent and FCanMoveParent and FAutoCenter and (FParentForm <> nil) then
     CenterDialogInParentForm;
 end;
 
@@ -728,11 +731,19 @@ begin
   Top := FParentForm.Top + (FParentForm.Height - Height) div 2;
 end;
 
+procedure FXDialogForm.CMShowingChanged(var Message: TMessage);
+begin
+  inherited;
+
+  // Settings
+  FCanMoveParent := Visible;
+end;
+
 procedure FXDialogForm.DoMove;
 begin
   inherited;
 
-  if Visible and FCanMoveParent and FAutoCenter and (FParentForm <> nil) then begin
+  if Visible and FAutoMoveParent and FCanMoveParent and FAutoCenter and (FParentForm <> nil) then begin
     // Center parent around
     const ACenter = BoundsRect.CenterPoint;
     with FParentForm do begin
@@ -753,9 +764,6 @@ begin
   // Center
   if FAutoCenter and (FParentForm <> nil) and (Position = poDesigned) then
     CenterDialogInParentForm;
-
-  // Settings
-  FCanMoveParent := true;
 end;
 
 procedure FXDialogForm.InitForm;
@@ -776,7 +784,10 @@ begin
 
   // Center
   if FAutoCenter then
-    Position := poDesigned;
+    if FParentForm = nil then
+      Position := poScreenCenter
+    else
+      Position := poDesigned;
 
   // Smoke
   if CanChangeSmoke then
