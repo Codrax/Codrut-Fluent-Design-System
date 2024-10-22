@@ -381,8 +381,6 @@ type
     function GetContentSize: TSize; override;
 
   public
-    DialogResult: FXInputBoxResult;
-
     // Props
     property ContentPadding;
     property TitlebarIcon;
@@ -487,8 +485,6 @@ begin
   AddButton('Cancel', '', false);
   ButtonDefault := 0;
   ButtonCancel := 1;
-
-  DialogResult := FXInputBoxResult.Cancel;
 
   FPasswordChar := #0;
   FNumbersOnly := false;

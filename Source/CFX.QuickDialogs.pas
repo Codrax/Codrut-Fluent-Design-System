@@ -118,8 +118,8 @@ begin
 
       Value := AValue;
 
-      Execute;
-      Result := DialogResult = FXInputBoxResult.Ok;
+      // Run
+      Result := Execute;
       if Result then
         AValue := Value;
     finally
@@ -140,8 +140,8 @@ begin
 
       Value := AValue.ToString;
 
-      Execute;
-      Result := DialogResult = FXInputBoxResult.Ok;
+      // Run
+      Result := Execute;
       if Result then begin
         if Value = '' then
           AValue := DefaultValue
