@@ -758,7 +758,7 @@ begin
     else Interior := 0;
   end;
 
-  if ItemSelected[Index] then
+  if FItemSelected[Index] then
     Result := ColorBlend(Interior, FDrawColors.Accent, OpacitySelected)
   else
   if ItemIndexHover = Index then
@@ -813,7 +813,7 @@ begin
           if Value < 0 then
             Exit;
 
-          if ItemSelected[Value] then
+          if FItemSelected[Value] then
             ItemSelected[FItemIndex] := false
           else
             ItemSelected[Value] := true;
@@ -833,7 +833,7 @@ begin
           if Value >= ItemCount then
             Exit;
 
-          if ItemSelected[Value] then
+          if FItemSelected[Value] then
             ItemSelected[FItemIndex] := false
           else
             ItemSelected[Value] := true;
@@ -867,13 +867,27 @@ begin
 
   // Select item
   if (ItemIndexHover <> -1) or FCanDeselect then begin
-    if (ssCtrl in Shift) and MultiSelect then
-      ItemSelected[ItemIndexHover] := not ItemSelected[ItemIndexHover]
-    else
+    const LastIndex = ItemIndex;
+
+    // Set new
+    if (ssCtrl in Shift) and MultiSelect and (ItemIndexHover <> -1) then begin
+      FItemIndex := ItemIndexHover;
+
+      // Set selection
+      ItemSelected[ItemIndexHover] := not ItemSelected[ItemIndexHover];
+
+      // Notify
+      if Assigned(FOnItemSelect) then
+        FOnItemSelect(Self);
+    end
+    else begin
       ItemIndex := ItemIndexHover;
 
-    if Assigned(FOnItemSelect) then
-      FOnItemSelect(Self);
+      // Changed
+      if LastIndex <> ItemIndex then
+        if Assigned(FOnItemSelect) then
+          FOnItemSelect(Self);
+    end;
   end;
 end;
 
@@ -1124,7 +1138,13 @@ begin
   end;
 
   // Hover
-  FItemIndexHover := -1;
+  if FItemIndexHover <> -1 then  begin
+    FItemIndexHover := -1;
+
+    // Update hober procedure
+    if Assigned(FOnItemHover) then
+      FOnItemHover(Self);
+  end;
 
   SetLength(FItemRects, Value);
   SetLength(FItemSelected, Value);
