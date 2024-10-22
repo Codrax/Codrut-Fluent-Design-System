@@ -74,10 +74,10 @@ type
     property OnMouseDown;
     property OnMouseEnter;
     property OnMouseLeave;
-    property OnMouseMove;
     property OnMouseUp;
     property OnStartDock;
     property OnStartDrag;
+    property OnMouseMove;
 
   public
     constructor Create(AOwner: TComponent); override;

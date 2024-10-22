@@ -95,7 +95,7 @@ type
     // Props
     property Value: FXPercent read FValue write SetValue;
 
-    property Animations: boolean read FAnimations write FAnimations;
+    property Animations: boolean read FAnimations write FAnimations default true;
 
     property Orientation: FXOrientation read FOrientation write SetOrientation default FXOrientation.Horizontal;
 
@@ -136,6 +136,7 @@ type
     property OnMouseDown;
     property OnMouseEnter;
     property OnMouseLeave;
+    property OnMouseMove;
 
   public
     constructor Create(aOwner: TComponent); override;

@@ -242,6 +242,7 @@ type
     property OnMouseDown;
     property OnMouseEnter;
     property OnMouseLeave;
+    property OnMouseMove;
 
     //  Modify default props
     property ParentColor default true;

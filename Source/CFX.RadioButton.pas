@@ -121,6 +121,7 @@ type
     property OnMouseDown;
     property OnMouseEnter;
     property OnMouseLeave;
+    property OnMouseMove;
 
     // Checked Tag
     function GetCheckedTag: integer;

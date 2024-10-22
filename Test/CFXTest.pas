@@ -68,6 +68,7 @@ type
     FXScrollText1: FXScrollText;
     FXScrollbar1: FXScrollbar;
     FXButton2: FXButton;
+    Button1: TButton;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);

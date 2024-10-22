@@ -245,7 +245,8 @@ begin
     end;
 
   // Exception handler
-  Application.OnException := HandleApplicationError;
+  if not FDesigning then
+    Application.OnException := HandleApplicationError;
 end;
 
 destructor FXThemeManager.Destroy;
