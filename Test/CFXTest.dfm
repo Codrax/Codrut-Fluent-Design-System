@@ -31,7 +31,7 @@ object Form1: TForm1
   Font.Name = 'Segoe UI'
   Font.Style = []
   GlassFrame.Top = 30
-  Position = poScreenCenter
+  Position = poDesigned
   OnCreate = FormCreate
   DesignSize = (
     1184
@@ -1643,7 +1643,6 @@ object Form1: TForm1
     AppVersion = '1.0.0.0'
     ApplicationName = 'Codrut Fluent Design Test'
     HasAppData = True
-    OnUpdateChecked = FXAppManager1UpdateChecked
     AppDataStructure.Strings = (
       'data'
       'cache'

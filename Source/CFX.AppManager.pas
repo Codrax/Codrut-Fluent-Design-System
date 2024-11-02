@@ -134,7 +134,7 @@ type
     FUserUpdateWaitDelay: cardinal;
 
     FApplicationName: string;
-    FAppDataCompany: TCaption;
+    FPublisherName: TCaption;
 
     // Background
     procedure AppCheckUpdates;
@@ -171,8 +171,8 @@ type
     property SingleInstance: boolean read FSingleInstance write FSingleInstance default false;
 
     property ApplicationName: string read FApplicationName write SetApplicationName;
+    property PublisherName: TCaption read FPublisherName write FPublisherName stored IsAppDataStored;
     property HasAppData: boolean read FHasAppData write SetHasAppData default false;
-    property AppDataCompany: TCaption read FAppDataCompany write FAppDataCompany stored IsAppDataStored;
 
     property UpdateCheckUserInitiated: boolean read FUpdateCheckUserInitiated;
     property OnUpdateChecked: TNotifyEvent read FOnUpdateChecked write FOnUpdateChecked;
@@ -199,6 +199,45 @@ type
 
     // Utils
     procedure InitiateUserUpdateCheck;
+
+    // Constructors
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+  end;
+
+  { App Manager Form - Assist secondary forms }
+  FXAppManagerFormAssist = class(TComponent)
+  private
+    const
+    DEFAULT_TASKS = [FXAppFormAssistTask.WindowLoadForm, FXAppFormAssistTask.WindowSaveForm];
+    var
+    ParentForm: TForm;
+
+    // Props
+    FTasks: FXAppFormAssistTasks;
+
+    // Getters
+    function GetAppData: string;
+    function GetApplicationName: string;
+    function GetPublisherName: TCaption;
+
+  protected
+    // Loaded
+    procedure Loaded; override;
+
+  published
+    // Props
+    property AutomaticTasks: FXAppFormAssistTasks read FTasks write FTasks default DEFAULT_TASKS;
+
+    // Read
+    property ApplicationName: string read GetApplicationName;
+    property PublisherName: TCaption read GetPublisherName;
+    property AppData: string read GetAppData;
+
+  public
+    // Executed for Main Form
+    procedure FormClosing;
+    procedure FormOpening;
 
     // Constructors
     constructor Create(AOwner: TComponent); override;
@@ -321,9 +360,6 @@ end;
 
 constructor FXAppManager.Create(AOwner: TComponent);
 begin
-  // Count
-  Inc(AppMgrCount);
-
   // Is Form
   if (AOwner = nil) or not (AOwner is TForm) then
     begin
@@ -333,7 +369,7 @@ begin
     end;
 
   // Check
-  if AppMgrCount > 1 then
+  if AppMgrCount >= 1 then
     begin
       OpenMessage('Application Manager GUI',
         'Hey! The Application may only have one App Manager.'#13#13'Please place It on the main form.');
@@ -341,6 +377,7 @@ begin
     end;
 
   // Primary instance
+  Inc(AppMgrCount);
   AppManagerInstance := Self;
 
   // Type
@@ -352,7 +389,7 @@ begin
   FAPIEndpoint := DEFAULT_API;
   FAppVersion.Parse('1.0.0.0');
   FHasAppData := false;
-  FAppDataCompany := DEFAULT_COMPANY;
+  FPublisherName := DEFAULT_COMPANY;
   FTasks := DEFAULT_TASKS;
   FAppDataStructure := TStringList.Create;
   FUserUpdateWaitDelay := DEFAULT_USER_UPDATE_DELAY;
@@ -363,8 +400,8 @@ end;
 destructor FXAppManager.Destroy;
 begin
   // Count
-  Dec(AppMgrCount);
-  AppMgrCount := Max(AppMgrCount, 0);
+  AppMgrCount := Max(AppMgrCount-1, 0);
+  AppManagerInstance := nil;
   FAppDataStructure.Free;
 
   // Close
@@ -390,8 +427,8 @@ function FXAppManager.GetAppData: string;
 begin
   Result := AppManager.AppData;
 
-  if FAppDataCompany <> '' then
-    Result := Format('%S%S\', [Result, FAppDataCompany]);
+  if FPublisherName <> '' then
+    Result := Format('%S%S\', [Result, FPublisherName]);
 
   if ApplicationName <> '' then
     Result := Format('%S%S\', [Result, ApplicationName]);
@@ -417,7 +454,7 @@ end;
 
 function FXAppManager.IsAppDataStored: Boolean;
 begin
-  Result := FAppDataCompany <> DEFAULT_COMPANY;
+  Result := FPublisherName <> DEFAULT_COMPANY;
 end;
 
 function FXAppManager.IsEndpointStored: Boolean;
@@ -587,11 +624,28 @@ begin
 
           Position := poDesigned;
 
-          Left := ReadInteger(Category, 'Left', Left);
-          Top := ReadInteger(Category, 'Top', Top);
-          Width := ReadInteger(Category, 'Width', Width);
-          Height := ReadInteger(Category, 'Height', Height);
+          // Load position
+          var Bounds: TRect;
+          Bounds.Left := ReadInteger(Category, 'Left', Left);
+          Bounds.Top := ReadInteger(Category, 'Top', Top);
+          Bounds.Width := ReadInteger(Category, 'Width', Width);
+          Bounds.Height := ReadInteger(Category, 'Height', Height);
 
+          // Fix bounds
+          const Client = Screen.WorkAreaRect;
+          if Bounds.Left < Client.Left then
+            Bounds.Offset( Client.Left - Bounds.Left, 0 );
+          if Bounds.Right > Client.Right then
+            Bounds.Offset( Client.Right - Bounds.Right, 0 );
+          if Bounds.Top < Client.Top then
+            Bounds.Offset( 0, Client.Top - Bounds.Top );
+          if Bounds.Bottom > Client.Bottom then
+            Bounds.Offset( 0, Client.Bottom - Bounds.Bottom );
+
+          // Set position
+          SetBounds(Bounds.Left, Bounds.Top, Bounds.Width, Bounds.Height);
+
+          // Load window state
           WindowState := TWindowState(ReadInteger(Category, 'State', integer(WindowState)));
           if WindowState = wsMinimized then
             WindowState := wsNormal;
@@ -722,6 +776,69 @@ begin
   // Check pack
   if not TDirectory.Exists(FAppSelfFolder) then
     TDirectory.CreateDirectory(FAppSelfFolder);
+end;
+
+{ FXAppManagerFormAssist }
+
+constructor FXAppManagerFormAssist.Create(AOwner: TComponent);
+begin
+  inherited;
+
+  // Form
+  ParentForm := AOwner as TForm;
+
+  // Defaults
+  FTasks := DEFAULT_TASKS;
+end;
+
+destructor FXAppManagerFormAssist.Destroy;
+begin
+  // Form is closed
+  if FXAppFormAssistTask.WindowSaveForm in FTasks then
+    FormClosing;
+
+  inherited;
+end;
+
+procedure FXAppManagerFormAssist.FormClosing;
+begin
+  // Save
+  AppManager.SaveFormData(ParentForm, true);
+end;
+
+procedure FXAppManagerFormAssist.FormOpening;
+begin
+  // Open
+  AppManager.LoadFormData(ParentForm);
+end;
+
+function FXAppManagerFormAssist.GetAppData: string;
+begin
+  Result := '';
+  if AppManagerInstance <> nil then
+    Result := AppManagerInstance.AppData;
+end;
+
+function FXAppManagerFormAssist.GetApplicationName: string;
+begin
+  Result := '';
+  if AppManagerInstance <> nil then
+    Result := AppManagerInstance.ApplicationName;
+end;
+
+function FXAppManagerFormAssist.GetPublisherName: TCaption;
+begin
+  Result := '';
+  if AppManagerInstance <> nil then
+    Result := AppManagerInstance.PublisherName;
+end;
+
+procedure FXAppManagerFormAssist.Loaded;
+begin
+  inherited;
+  // Form is created
+  if FXAppFormAssistTask.WindowLoadForm in FTasks then
+    FormOpening;
 end;
 
 initialization

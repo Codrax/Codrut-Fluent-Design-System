@@ -60,7 +60,6 @@ type
     PaintBox1: TPaintBox;
     FXTextBox8: FXTextBox;
     FXIconView1: FXIconView;
-    FXAppManager1: FXAppManager;
     FXTabStrip1: FXTabStrip;
     FXTitleBarPanel1: FXTitleBarPanel;
     FXBlurMaterial2: FXBlurMaterial;
@@ -69,6 +68,7 @@ type
     FXScrollbar1: FXScrollbar;
     FXButton2: FXButton;
     Button1: TButton;
+    FXAppManager1: FXAppManager;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);

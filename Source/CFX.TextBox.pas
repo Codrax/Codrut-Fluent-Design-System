@@ -540,7 +540,9 @@ end;
 
 function FXAnimatedTextBox.Count: integer;
 begin
-  Result := FItems.Count;
+  Result := 0;
+  if (FItems <> nil) and Assigned(FItems) then
+    Result := FItems.Count;
 end;
 
 constructor FXAnimatedTextBox.Create(aOwner: TComponent);

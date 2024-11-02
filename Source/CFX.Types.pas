@@ -62,6 +62,8 @@ type
   // FXAppManager
   FXAppTask = (UpdatePrompt, UpdateForce, UpdateShowUserScreen, WindowSaveForm, WindowLoadForm);
   FXAppTasks = set of FXAppTask;
+  FXAppFormAssistTask = (WindowSaveForm, WindowLoadForm);
+  FXAppFormAssistTasks = set of FXAppFormAssistTask;
 
   // FXBlurMaterial
   FXGlassRefreshMode = (Automatic, Manual, Timer);
