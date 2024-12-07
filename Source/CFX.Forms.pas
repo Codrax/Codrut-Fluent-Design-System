@@ -350,7 +350,7 @@ begin
   CustomTitleBar.Enabled := true;
 
   // Update Theme
-  UpdateTheme(false);
+  UpdateTheme(true); // also update children
 end;
 
 procedure FXForm.InitializeNewForm;

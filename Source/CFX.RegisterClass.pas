@@ -1,14 +1,14 @@
 unit CFX.RegisterClass;
 
 interface
-  uses Classes, CFX.Classes, CFX.Constants, CFX.Controls,
-       CFX.Button, CFX.ButtonDesign, CFX.Checkbox, CFX.Panels,
-       CFX.StandardIcons, CFX.Slider, CFX.BlurMaterial, CFX.PopupMenu,
-       CFX.ImageList, CFX.TextBox, CFX.RadioButton, CFX.Scrollbar,
-       CFX.ScrollBox, CFX.Selector, CFX.Edit, CFX.PopupConnector,
-       CFX.IconView, CFX.ScrollText, CFX.Progress, CFX.RatingControl,
-       CFX.Effects, CFX.AppManager, CFX.PaintBox, CFX.TabStrip, CFX.Lists,
-       CFX.Animation.Component, CFX.Layouts, CFX.Shapes, CFX.TitlebarPanel;
+uses Classes, CFX.Classes, CFX.Constants, CFX.Controls,
+     CFX.Button, CFX.ButtonDesign, CFX.Checkbox, CFX.Panels,
+     CFX.StandardIcons, CFX.Slider, CFX.BlurMaterial, CFX.PopupMenu,
+     CFX.ImageList, CFX.TextBox, CFX.RadioButton, CFX.Scrollbar,
+     CFX.ScrollBox, CFX.Selector, CFX.Edit, CFX.PopupConnector,
+     CFX.IconView, CFX.ScrollText, CFX.Progress, CFX.RatingControl,
+     CFX.Effects, CFX.AppManager, CFX.PaintBox, CFX.TabStrip, CFX.Lists,
+     CFX.Animation.Component, CFX.Layouts, CFX.Shapes, CFX.TitlebarPanel;
 
 procedure Register;
 

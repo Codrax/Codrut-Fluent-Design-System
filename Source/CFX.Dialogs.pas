@@ -252,6 +252,7 @@ type
   FXModalDialog = class(FXHeaderedDialog)
   private
     FButtons: TMsgDlgButtons;
+    FButtonLabels: TButtonLabelsArray;
 
   public
     // Props
@@ -272,6 +273,7 @@ type
 
     // Props
     property Buttons: TMsgDlgButtons read FButtons write FButtons;
+    property ButtonLabels: TButtonLabelsArray read FButtonLabels write FButtonLabels;
 
     function Execute: TModalResult; overload;
 
@@ -328,6 +330,7 @@ type
   FXModalIconDialog = class(FXIconDialog)
   private
     FButtons: TMsgDlgButtons;
+    FButtonLabels: TButtonLabelsArray;
 
   public
     // Props
@@ -348,6 +351,7 @@ type
 
     // Props
     property Buttons: TMsgDlgButtons read FButtons write FButtons;
+    property ButtonLabels: TButtonLabelsArray read FButtonLabels write FButtonLabels;
 
     function Execute: TModalResult; overload;
 
@@ -1095,6 +1099,7 @@ constructor FXModalDialog.Create;
 begin
   inherited;
   FButtons := [mbOk];
+  FButtonLabels := GlobalButtonLabels;
 end;
 
 function FXModalDialog.Execute: TModalResult;
@@ -1119,7 +1124,7 @@ begin
 
   // Return
   for var B in Buttons do
-    AddButton( GlobalButtonLabels[B], '', B = Active, integer(B) );
+    AddButton( FButtonLabels[B], '', B = Active, integer(B) );
 
   // Exec
   ExecuteDialog;
@@ -1134,6 +1139,7 @@ constructor FXModalIconDialog.Create;
 begin
   inherited;
   Buttons := [mbOk];
+  FButtonLabels := GlobalButtonLabels;
 end;
 
 function FXModalIconDialog.Execute: TModalResult;
@@ -1158,7 +1164,7 @@ begin
 
   // Return
   for var B in Buttons do
-    AddButton( GlobalButtonLabels[B], '', B = Active, integer(B) );
+    AddButton( FButtonLabels[B], '', B = Active, integer(B) );
 
   // Exec
   ExecuteDialog;

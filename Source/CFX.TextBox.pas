@@ -263,6 +263,7 @@ begin
     const PadWidth = Absolute.Width - Content.Width;
     const PadHeight = Absolute.Height - Content.Height;
 
+    // Calculate sizing
     if WordWrap then
       // Word Wrap
       begin
@@ -271,19 +272,24 @@ begin
 
         AWidth := ARect.Width + PadWidth;
         AHeight := ARect.Height + PadHeight;
-
-        if (Width <> AWidth) or (Height <> AHeight) then
-          Self.SetBounds(Left, Top, AWidth, AHeight);
       end
     else
       // Single Line
       begin
         AWidth := TextWidth(FText) + PadWidth;
         AHeight := TextHeight(FText) + PadHeight;
-
-        if (Width <> AWidth) or (Height <> AHeight) then
-          Self.SetBounds(Left, Top, AWidth, AHeight);
       end;
+
+    // Alignment
+    case Align of
+      alTop, alBottom: AWidth := Width;
+      alLeft, alRight: AHeight := Height;
+      alClient: Exit;
+    end;
+
+    // Set
+    if (Width <> AWidth) or (Height <> AHeight) then
+      Self.SetBounds(Left, Top, AWidth, AHeight);
   end;
 end;
 
