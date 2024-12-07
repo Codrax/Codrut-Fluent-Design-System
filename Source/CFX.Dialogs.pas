@@ -10,7 +10,7 @@ uses
   Vcl.Controls, CFX.Colors, SysUtils, Vcl.ExtCtrls, Vcl.ComCtrls,
   Vcl.TitleBarCtrls, Math, CFX.Math, Vcl.StdCtrls, CFX.Forms, CFX.Constants,
   UITypes, CFX.Edit, CFX.TextBox, CFX.Panels, CFX.TitlebarPanel,
-  CFX.ArrayHelpers, CFX.Graphics, CFX.StandardIcons;
+  CFX.ArrayHelpers, CFX.Graphics, CFX.StandardIcons, CFX.ThemeManager;
 
 type
   FXDialogKind = (None, Information, Error, Question, Success, Warning, Star);
@@ -108,6 +108,7 @@ type
     FButtonWidth,
     FButtonHeight: integer;
     FButtonAlignment: FXLayout;
+    FButtonDynamicSizing: boolean;
 
     FPanelOfButtons: FXPanel;
 
@@ -132,6 +133,9 @@ type
     // Do
     procedure DoButtonClick(Index: integer); virtual;
 
+    // Buttons
+    function ComputeButtonSize(Index: integer): integer;
+
     // Form preparation
     procedure CreateDialog; override;
 
@@ -149,6 +153,7 @@ type
     property ButtonWidth: integer read FButtonWidth write FButtonWidth;
     property ButtonHeight: integer read FButtonHeight write FButtonHeight;
     property ButtonAlignment: FXLayout read FButtonAlignment write FButtonAlignment;
+    property ButtonDynamicSizing: boolean read FButtonDynamicSizing write FButtonDynamicSizing;
 
   public
     property ClickedButton: integer read FClickedButton;
@@ -192,6 +197,7 @@ type
     property ButtonWidth;
     property ButtonHeight;
     property ButtonAlignment;
+    property ButtonDynamicSizing;
 
     property Title: string read FTitle write FTitle;
     property Text: string read FText write FText;
@@ -212,6 +218,7 @@ type
     property ButtonWidth;
     property ButtonHeight;
     property ButtonAlignment;
+    property ButtonDynamicSizing;
 
     property Title;
     property Text;
@@ -240,6 +247,7 @@ type
     property ButtonWidth;
     property ButtonHeight;
     property ButtonAlignment;
+    property ButtonDynamicSizing;
 
     property Title;
     property Text;
@@ -265,6 +273,7 @@ type
     property ButtonWidth;
     property ButtonHeight;
     property ButtonAlignment;
+    property ButtonDynamicSizing;
 
     property Title;
     property Text;
@@ -311,6 +320,7 @@ type
     property ButtonWidth;
     property ButtonHeight;
     property ButtonAlignment;
+    property ButtonDynamicSizing;
 
     property Title;
     property Text;
@@ -343,6 +353,7 @@ type
     property ButtonWidth;
     property ButtonHeight;
     property ButtonAlignment;
+    property ButtonDynamicSizing;
 
     property Title;
     property Text;
@@ -395,6 +406,7 @@ type
     property ButtonWidth;
     property ButtonHeight;
     property ButtonAlignment;
+    property ButtonDynamicSizing;
 
     property Title;
     property Text;
@@ -792,6 +804,27 @@ begin
   FButtons := [];
 end;
 
+function FXButtonedDialog.ComputeButtonSize(Index: integer): integer;
+begin
+  // Compute
+  with FForm.Canvas do begin
+    Font.Name := ThemeManager.FormFont;
+    Font.Height := ThemeManager.FormFontHeight;
+    Font.Style := [];
+
+    // Main text
+    Result := BUTTON_MARGIN * 4 + TextWidth(FButtons[Index].Text);
+
+    // Icon
+    if FButtons[Index].FontIcon <> '' then
+      Result := Result + BUTTON_MARGIN + round(TextHeight('Aa.') * BUTTON_IMAGE_SCALE);
+  end;
+
+  // Min
+  if Result < ButtonWidth then
+    Result := ButtonWidth;
+end;
+
 constructor FXButtonedDialog.Create;
 begin
   inherited;
@@ -862,7 +895,10 @@ begin
         Align := alRight;
         Left := 0;
       end;
-      Width := ButtonWidth;
+      if ButtonDynamicSizing then
+        Width := ComputeButtonSize(I)
+      else
+        Width := ButtonWidth;
 
       // Event
       Tag := I;
@@ -885,7 +921,14 @@ end;
 
 function FXButtonedDialog.GetButtonBarWidth: integer;
 begin
-  Result := ButtonCount * (ButtonWidth+ButtonSpacing) + ButtonSpacing;
+  if not ButtonDynamicSizing then
+    Exit(
+      ButtonCount * (ButtonWidth+ButtonSpacing) + ButtonSpacing );
+
+  // Dyn Btn Size
+  Result := 0;
+  for var I := 0 to ButtonCount-1 do
+    Inc(Result, ComputeButtonSize(I) + ButtonSpacing);
 end;
 
 function FXButtonedDialog.GetButtonCount: integer;

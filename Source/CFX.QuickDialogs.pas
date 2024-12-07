@@ -11,6 +11,8 @@ function OpenDialog(AText: string; AButtons: TMsgDlgButtons): TModalResult; over
 function OpenDialog(ATitle, AText: string; AButtons: TMsgDlgButtons): TModalResult; overload;
 function OpenDialog(AText: string; AKind: FXDialogKind; AButtons: TMsgDlgButtons): TModalResult; overload;
 function OpenDialog(ATitle, AText: string; AKind: FXDialogKind; AButtons: TMsgDlgButtons): TModalResult; overload;
+function OpenDialog(ATitle, AText: string; AButtons: TArray<string>): integer; overload;
+function OpenDialog(ATitle, AText: string; AKind: FXDialogKind; AButtons: TArray<string>): integer; overload;
 function OpenInput(ATitle, AText: string; var AValue: string): boolean; overload;
 function OpenInput(ATitle, AText: string; var AValue: integer; DefaultValue: integer=0): boolean; overload;
 
@@ -100,6 +102,31 @@ begin
       Kind := AKind;
 
       Buttons := AButtons;
+
+      Result := Execute;
+    finally
+      Free;
+    end;
+end;
+
+function OpenDialog(ATitle, AText: string; AButtons: TArray<string>): integer; overload;
+begin
+  Result := OpenDialog(ATitle, AText, FXDialogKind.None, AButtons);
+end;
+
+function OpenDialog(ATitle, AText: string; AKind: FXDialogKind; AButtons: TArray<string>): integer; overload;
+begin
+  with FXDialog.Create do
+    try
+      Parent := GetActiveForm;
+
+      Title := ATitle;
+      Text := AText;
+
+      ButtonDynamicSizing := true;
+
+      for var I := 0 to High(AButtons) do
+        AddButton(AButtons[I], '');
 
       Result := Execute;
     finally
