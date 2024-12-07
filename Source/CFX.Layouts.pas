@@ -95,6 +95,7 @@ type
     property OnMouseEnter;
     property OnMouseLeave;
     property OnMouseMove;
+    property OnResize;
 
   public
     constructor Create(aOwner: TComponent); override;
