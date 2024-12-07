@@ -22,7 +22,7 @@ uses
   CFX.Version,
   CFX.StringUtils,
   CFX.Registry,
-  CFX.FormClasses,
+  CFX.FormTemplates,
   ShellAPI,
   CFX.QuickDialogs,
   CFX.Utilities;

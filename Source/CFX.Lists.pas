@@ -78,6 +78,7 @@ type
 
     // Items
     FItemRects: TArray<TRect>;
+    FItemVisible: TArray<boolean>;
     FItemSelected: TArray<boolean>;
     FItemHoverLocalPosition: TPoint;
 
@@ -99,6 +100,7 @@ type
 
     // Internal
     procedure ClearSelectedInternal;
+    procedure ClearHiddenInternal;
 
     procedure UpdateScrollbars; // update actual position & size of scroll bars!
     procedure CalculateScroll; // update scroll bar values
@@ -110,8 +112,12 @@ type
     procedure ScrollChanged(Sender: TObject); // user
     procedure ScrollChangedValue(Sender: TObject); // any
 
+    // Setter ex
+    procedure SetItemVisibleEx(Index: integer; const Value: boolean);
+
     // Getters
     function GetItemSelected(Index: integer): boolean;
+    function GetItemVisible(Index: integer): boolean;
 
     // Setters
     procedure SetNoOutOfBoundsDraw(const Value: boolean);
@@ -120,6 +126,7 @@ type
     procedure SetShowScrollbars(const Value: boolean);
     procedure SetItemCount(const Value: integer);
     procedure SetItemSelected(Index: integer; const Value: boolean);
+    procedure SetItemVisible(Index: integer; const Value: boolean);
     procedure SetItemIndex(const Value: integer);
     procedure SetItemIndexHover(const Value: integer);
     procedure SetOpacityHover(const Value: byte);
@@ -154,6 +161,9 @@ type
     procedure Click; override;
     procedure DblClick; override;
     procedure HandleKeyDown(var CanHandle: boolean; Key: integer; Shift: TShiftState); override;
+
+    // Status
+    procedure ItemVisibilityChanged; virtual;
 
     // Inner client
     function GetClientRect: TRect; override;
@@ -252,10 +262,14 @@ type
     property ItemInBounds[Index: integer]: boolean read GetInBounds;
     property ItemRect[Index: integer]: TRect read GetItemRect;
     property ItemDisplayRect[Index: integer]: TRect read GetItemDisplayRect;
+    property ItemVisible[Index: integer]: boolean read GetItemVisible write SetItemVisible;
 
     function SelectedItemCount: integer;
     function GetSelectedItems: TArray<integer>;
-    procedure ClearSelection;
+    procedure SetVisibility(Items: TArray<integer>; Visible: boolean);
+    procedure ClearSelection; virtual;
+    procedure ClearHidden; virtual;
+    procedure SelectAll; virtual;
 
     // Interface
     function IsContainer: Boolean; override;
@@ -291,6 +305,9 @@ type
   protected
     // Internal
     procedure UpdateRects; override;
+
+    // Status
+    procedure ItemVisibilityChanged; override;
 
     // Props
     property OnDrawItem;
@@ -372,7 +389,7 @@ type
     property ItemWidth;
     property ItemHeight default 40;
 
-    property FullLine;
+    property FullLine default true;
     property Wrap;
     property SpacingRow;
     property SpacingColumn;
@@ -502,6 +519,20 @@ begin
   StandardUpdateDraw;
 end;
 
+procedure FXDrawList.ClearHidden;
+begin
+  ClearHiddenInternal;
+
+  // Update
+  ItemVisibilityChanged;
+end;
+
+procedure FXDrawList.ClearHiddenInternal;
+begin
+  for var I := 0 to High(FItemVisible) do
+    FItemVisible[I] := true;
+end;
+
 procedure FXDrawList.ClearSelectedInternal;
 begin
   for var I := 0 to ItemCount-1 do
@@ -614,7 +645,7 @@ begin
   inherited;
 
   // Event
-  if (ItemIndex <> -1) and Assigned(FOnItemDoubleClick) then
+  if (ItemIndex <> -1) and (ItemIndex = ItemIndexHover) and Assigned(FOnItemDoubleClick) then
     FOnItemDoubleClick(Self);
 end;
 
@@ -702,6 +733,7 @@ end;
 procedure FXDrawList.DrawNoItemsText;
 begin
   Buffer.Font.Assign( Self.Font );
+  Buffer.Font.Color := FDrawColors.ForeGround;
   Buffer.Brush.Style := bsClear;
   DrawTextRect(Buffer, DrawRect, FNoItemsOutputText, [FXTextFlag.WordWrap, FXTextFlag.Center, FXTextFlag.VerticalCenter])
 end;
@@ -790,6 +822,11 @@ begin
   Result := FItemSelected[Index];
 end;
 
+function FXDrawList.GetItemVisible(Index: integer): boolean;
+begin
+  Result := FItemVisible[Index];
+end;
+
 function FXDrawList.GetSelectedItems: TArray<integer>;
 begin
   Result := [];
@@ -801,7 +838,18 @@ end;
 procedure FXDrawList.HandleKeyDown(var CanHandle: boolean; Key: integer;
   Shift: TShiftState);
 var
-  Value: integer;
+  Value, Next: integer;
+function GetNextVisible(From, Direction: integer): integer;
+begin
+  Result := From;
+  repeat
+    Inc(Result, Direction);
+
+    if not InRange(Result, 0, ItemCount-1) then
+      Exit(From);
+
+  until FItemVisible[Result];
+end;
 begin
   inherited;
   if FKeyboardNavigation then
@@ -809,8 +857,14 @@ begin
       VK_LEFT, VK_UP: begin
         CanHandle := false;
 
-        if ssShift in Shift then begin
-          Value := FItemIndex - 1;
+        // Next
+        Next := GetNextVisible(FItemIndex, - 1);
+        if Next = FItemIndex then
+          Exit;
+
+        // Sel mode
+        if (ssShift in Shift) and MultiSelect then begin
+          Value := Next;
           if Value < 0 then
             Exit;
 
@@ -822,15 +876,22 @@ begin
 
           EnsureIndexVisible;
         end else
+          // Item mode
           if ItemIndex > 0 then
-            ItemIndex := ItemIndex - 1;
+            ItemIndex := Next
       end;
 
       VK_RIGHT, VK_DOWN: begin
         CanHandle := false;
 
-        if ssShift in Shift then begin
-          Value := FItemIndex + 1;
+        // Next
+        Next := GetNextVisible(FItemIndex, 1);
+        if Next = FItemIndex then
+          Exit;
+
+        // Sel mode
+        if (ssShift in Shift) and MultiSelect then begin
+          Value := Next;
           if Value >= ItemCount then
             Exit;
 
@@ -842,8 +903,12 @@ begin
 
           EnsureIndexVisible;
         end else
-          ItemIndex := ItemIndex + 1;
+          // Item mode
+          ItemIndex := Next;
       end;
+
+      Ord('A'): if (ssCtrl in Shift) and MultiSelect then
+        SelectAll;
     end
 end;
 
@@ -861,6 +926,11 @@ begin
   Result := false;
 end;
 
+procedure FXDrawList.ItemVisibilityChanged;
+begin
+  //
+end;
+
 procedure FXDrawList.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
   Y: integer);
 begin
@@ -876,6 +946,28 @@ begin
 
       // Set selection
       ItemSelected[ItemIndexHover] := not ItemSelected[ItemIndexHover];
+
+      // Notify
+      if Assigned(FOnItemSelect) then
+        FOnItemSelect(Self);
+    end
+    else
+    if (ssShift in Shift) and MultiSelect and (ItemIndexHover <> -1) and (ItemIndex <> -1) then begin
+      const AMin = Min(ItemIndex, ItemIndexHover);
+      const AMax = Max(ItemIndex, ItemIndexHover);
+      if AMin = AMax then
+        Exit;
+
+      // Set index to...
+      FItemIndex := ItemIndexHover;
+
+      // Set all selected in-between
+      for var I := AMin to AMax do
+        if ItemVisible[I] then
+          FItemSelected[I] := true;
+
+      // Draw
+      StandardUpdateDraw;
 
       // Notify
       if Assigned(FOnItemSelect) then
@@ -901,7 +993,9 @@ begin
   // Find hover value
   FoundHover := false;
   for var I := 0 to High(FVisibleList) do
-    if FVisibleList[I].Rectangle.Contains(Cursor) then begin
+    if FItemVisible[FVisibleList[I].Index]
+      and FVisibleList[I].Rectangle.Contains(Cursor) then begin
+      // Is the same value
       const Same = ItemIndexHover = FVisibleList[I].Index;
       ItemIndexHover := FVisibleList[I].Index;
 
@@ -933,18 +1027,25 @@ begin
   // Draw
   FVisibleList := [];
   for I := 0 to High(FItemRects) do begin
+    if not FItemVisible[I] then
+      Continue;
+
+    // Data
     const InBounds = GetInBounds(I);
     const Display = GetItemDisplayRect(I);
 
+    // In Bounds
     if InBounds then
       with FVisibleList[TArrayUtils<TRectSet>.AddValue(FVisibleList)] do begin
       Index := I;
       Rectangle := Display;
     end;
 
+    // Draw out of bound?
     if (not FNoOutOfBoundsDraw or InBounds) then
       DrawItem(I, Display, Buffer);
 
+    // Event notifier
     if Assigned(OnAfterDrawItem) then
       OnAfterDrawItem(Self, I, Display, Canvas);
   end;
@@ -972,10 +1073,11 @@ begin
   MaxX := 0;
   MaxY := 0;
 
-  for var I := 0 to High(FItemRects) do begin
-    MaxX := Max( MaxX, FItemRects[I].Right);
-    MaxY := Max( MaxY, FItemRects[I].Bottom);
-  end;
+  for var I := 0 to High(FItemRects) do
+    if FItemVisible[I] then begin
+      MaxX := Max( MaxX, FItemRects[I].Right);
+      MaxY := Max( MaxY, FItemRects[I].Bottom);
+    end;
 
   // Set maxes
   MaxX := Max(0, MaxX-Client.Width);
@@ -1070,6 +1172,23 @@ begin
   // update scale
 end;
 
+procedure FXDrawList.SelectAll;
+begin
+  // Clear selected
+  ClearSelectedInternal; // does not invalidate
+
+  for var I := 0 to ItemCount-1 do
+    FItemSelected[I] := true;
+
+  // Set
+  FItemIndex := ItemCount-1;
+
+  // EnsureIndexVisible; // not necesarry
+
+  // Draw
+  StandardUpdateDraw;
+end;
+
 function FXDrawList.SelectedItemCount: integer;
 begin
   Result := 0;
@@ -1149,6 +1268,9 @@ begin
 
   SetLength(FItemRects, Value);
   SetLength(FItemSelected, Value);
+  SetLength(FItemVisible, Value);
+
+  ClearHiddenInternal;
 
   // Draw
   StandardUpdateLayout;
@@ -1187,6 +1309,33 @@ begin
   FItemSelected[Index] := Value;
 
   StandardUpdateDraw;
+end;
+
+procedure FXDrawList.SetItemVisible(Index: integer; const Value: boolean);
+begin
+  if FItemVisible[Index] = Value then
+    Exit;
+
+  SetItemVisibleEx(Index, Value);
+
+  // Changed
+  ItemVisibilityChanged;
+end;
+
+procedure FXDrawList.SetItemVisibleEx(Index: integer; const Value: boolean);
+begin
+  // Set
+  FItemVisible[Index] := Value;
+
+  // Remove
+  if not Value then begin
+    if FItemSelected[Index] then
+      FItemSelected[Index] := false;
+    if ItemIndexHover = Index then
+      ItemIndexHover := -1;
+    if ItemIndex = Index then
+      ItemIndex := -1;
+  end;
 end;
 
 procedure FXDrawList.SetNoItemsOutputText(const Value: string);
@@ -1235,6 +1384,15 @@ begin
   StandardUpdateLayout;
 end;
 
+procedure FXDrawList.SetVisibility(Items: TArray<integer>; Visible: boolean);
+begin
+  for var I := 0 to High(Items) do
+    SetItemVisibleEx( Items[I], Visible );
+
+  // Changed
+  ItemVisibilityChanged;
+end;
+
 procedure FXDrawList.StopScrollAnimations;
 begin
   FAnimX.Stop;
@@ -1263,6 +1421,14 @@ begin
   FWrap := true;
   FSpacingRow := 8;
   FSpacingColumn := 8;
+end;
+
+procedure FXCustomLinearDrawList.ItemVisibilityChanged;
+begin
+  inherited;
+
+  // Update
+  StandardUpdateLayout;
 end;
 
 procedure FXCustomLinearDrawList.RecalculateRects;
@@ -1350,6 +1516,7 @@ begin
 
   // Calculate all rectanges
   for var I := 0 to High(FItemRects) do
+    if ItemVisible[I] then
     case Orientation of
       FXOrientation.Horizontal: begin
         FItemRects[I] := TRect.Create(Pos, FItemWidth, ItemSize+OffsetSize);

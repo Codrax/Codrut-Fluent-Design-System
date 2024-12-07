@@ -82,7 +82,9 @@ end;
 
 destructor FXHintPopup.Destroy;
 begin
-  FreeAndNil(FHintClass);
+  FreeAndNil( FHintClass );
+  FAutoHideTimer.Enabled := false;
+  FreeAndNil( FAutoHideTimer );
 end;
 
 function FXHintPopup.GetFont: TFont;

@@ -431,7 +431,9 @@ begin
     Result := Format('%S%S\', [Result, FPublisherName]);
 
   if ApplicationName <> '' then
-    Result := Format('%S%S\', [Result, ApplicationName]);
+    Result := Format('%S%S\', [Result, ApplicationName])
+  else
+    Result := Format('%S%S\', [Result, ApplicationIdentifier]);
 end;
 
 function FXAppManager.GetVersion: string;

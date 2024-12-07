@@ -17,7 +17,7 @@ uses
   CFX.Messages, CFX.VarHelpers, CFX.Graphics, CFX.RatingControl, CFX.Effects,
   CFX.Progress, CFX.GDI, CFX.Utilities, CFX.QuickDialogs, CFX.Instances,
   CFX.PaintBox, CFX.Lists, CFX.TabStrip, CFX.AppManager, CFX.Shapes,
-  CFX.Layouts, CFX.TitlebarPanel,
+  CFX.Layouts, CFX.TitlebarPanel, CFX.FormTemplates,
 
   // Cod Windows Runtime
 
@@ -67,7 +67,6 @@ type
     FXScrollText1: FXScrollText;
     FXScrollbar1: FXScrollbar;
     FXButton2: FXButton;
-    Button1: TButton;
     FXAppManager1: FXAppManager;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);

@@ -193,6 +193,7 @@ type
     procedure OpenPopupMenu(X, Y: integer); virtual;
     procedure ScaleChanged(Scaler: single); virtual;
     procedure HandleKeyDown(var CanHandle: boolean; Key: integer; ShiftState: TShiftState); virtual;
+    procedure HandleKeyUp(var CanHandle: boolean; Key: integer; ShiftState: TShiftState); virtual;
 
     // Focus Line and Events
     procedure FocusChanged(Focused: boolean); virtual;
@@ -215,6 +216,7 @@ type
     procedure CMMouseEnter(var Message : TMessage); message CM_MOUSEENTER;
     procedure CMMouseLeave(var Message: TMessage); message CM_MOUSELEAVE;
     procedure CNKeyDown(var Message: TWMKeyDown); message CN_KEYDOWN;
+    procedure CNKeyUp(var Message: TWMKeyUp); message CN_KEYUP;
     procedure CMFontChanged(var Message: TMessage); message CM_FONTCHANGED;
     procedure CMColorChanged(var Message: TMessage); message CM_COLORCHANGED;
 
@@ -487,6 +489,18 @@ begin
   CanContinue := true;
 
   HandleKeyDown(CanContinue, Message.CharCode, KeyDataToShiftState(Message.KeyData));
+
+  if CanContinue then
+    inherited;
+end;
+
+procedure FXWindowsControl.CNKeyUp(var Message: TWMKeyUp);
+var
+  CanContinue: boolean;
+begin
+  CanContinue := true;
+
+  HandleKeyUp(CanContinue, Message.CharCode, KeyDataToShiftState(Message.KeyData));
 
   if CanContinue then
     inherited;
@@ -953,6 +967,12 @@ begin
       VK_DOWN: if FXFocusFlag.CatchDown in FFocusFlags then
         CanHandle := false;
     end;
+end;
+
+procedure FXWindowsControl.HandleKeyUp(var CanHandle: boolean; Key: integer;
+  ShiftState: TShiftState);
+begin
+  //
 end;
 
 procedure FXWindowsControl.Inflate(ALeft, ATop, AWidth, AHeight: Integer);

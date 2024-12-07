@@ -1596,14 +1596,6 @@ object Form1: TForm1
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
   end
-  object Button1: TButton
-    Left = 512
-    Top = 319
-    Width = 75
-    Height = 25
-    Caption = 'Button1'
-    TabOrder = 34
-  end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
