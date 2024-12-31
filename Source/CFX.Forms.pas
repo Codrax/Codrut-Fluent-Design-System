@@ -177,6 +177,9 @@ type
     // Initialization (after form creation)
     procedure InitForm; override;
 
+    // Params
+    procedure CreateParams(var Params: TCreateParams); override;
+
     // CM Messages
     procedure CMShowingChanged(var Message: TMessage); message CM_SHOWINGCHANGED;
 
@@ -737,6 +740,16 @@ begin
 
   // Settings
   FCanMoveParent := Visible;
+end;
+
+procedure FXDialogForm.CreateParams(var Params: TCreateParams);
+begin
+  inherited;
+  //
+  if Owner is TForm then
+    Params.WndParent := TForm(Owner).Handle
+  else
+    Params.WndParent := Screen.ActiveForm.Handle;
 end;
 
 procedure FXDialogForm.DoMove;

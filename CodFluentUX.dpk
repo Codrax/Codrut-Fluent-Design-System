@@ -61,6 +61,7 @@ contains
   CFX.DesignEditors in 'Source\CFX.DesignEditors.pas',
   {$ENDIF}
   CFX.RegisterClass in 'Source\CFX.RegisterClass.pas',
+  CFX.FormTemplates,
   CFX.Colors in 'Source\CFX.Colors.pas',
   CFX.Classes in 'Source\CFX.Classes.pas',
   CFX.VarHelpers in 'Source\CFX.VarHelpers.pas',

@@ -18,7 +18,8 @@ type
     APIResponse: TJsonObject;
 
     // Main
-    constructor Create(AMajor, AMinor, AMaintenance: cardinal; ABuild: cardinal=0);
+    constructor Create(AString: string); overload;
+    constructor Create(AMajor, AMinor, AMaintenance: cardinal; ABuild: cardinal=0); overload;
     procedure Clear;
 
     // Load
@@ -32,6 +33,7 @@ type
     function Empty: boolean;
     function CompareTo(Version: FXVersion): TValueRelationship;
     function NewerThan(Version: FXVersion): boolean;
+    function OlderThan(Version: FXVersion): boolean;
 
     // Utils
     function GetDownloadLink(JSONValue: string = DEFAULT_UPDATE_NAME): string;
@@ -40,6 +42,10 @@ type
     function ToString: string; overload;
     function ToString(IncludeBuild: boolean): string; overload;
     function ToString(Separator: char; IncludeBuild: boolean = false): string; overload;
+
+    // Operators
+    class operator Equal(A, B: FXVersion): Boolean;
+    class operator NotEqual(A, B: FXVersion): Boolean;
   end;
 
   function MakeVersion(Major, Minor, Maintenance: cardinal; Build: cardinal = 0): FXVersion;
@@ -79,6 +85,16 @@ end;
 function FXVersion.NewerThan(Version: FXVersion): boolean;
 begin
   Result := CompareTo(Version) = GreaterThanValue;
+end;
+
+class operator FXVersion.NotEqual(A, B: FXVersion): Boolean;
+begin
+  Result := A.CompareTo(B) <> GreaterThanValue;
+end;
+
+function FXVersion.OlderThan(Version: FXVersion): boolean;
+begin
+  Result := CompareTo(Version) = LessThanValue;
 end;
 
 procedure FXVersion.APILoad(AppName, Endpoint: string);
@@ -158,6 +174,11 @@ begin
   Result := CompareValue(Build, Version.Build);
 end;
 
+constructor FXVersion.Create(AString: string);
+begin
+  Parse(AString);
+end;
+
 constructor FXVersion.Create(AMajor, AMinor, AMaintenance, ABuild: cardinal);
 begin
   Major := AMajor;
@@ -169,6 +190,11 @@ end;
 function FXVersion.Empty: boolean;
 begin
   Result := CompareTo(VERSION_EMPTY) = EqualsValue;
+end;
+
+class operator FXVersion.Equal(A, B: FXVersion): Boolean;
+begin
+  Result := A.CompareTo(B) = EqualsValue;
 end;
 
 function FXVersion.GetDownloadLink(JSONValue: string): string;

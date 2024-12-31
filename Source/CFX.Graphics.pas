@@ -460,6 +460,16 @@ begin
         TextFormat := TextFormat + [tfBottom];
       if FXTextFlag.NoClip in Flags then
         TextFormat := TextFormat + [tfNoClip];
+      if FXTextFlag.NoClip in Flags then
+        TextFormat := TextFormat + [tfNoClip];
+      if FXTextFlag.TrimPath in Flags then
+        TextFormat := TextFormat + [tfPathEllipsis];
+      if FXTextFlag.TrimCutoff in Flags then
+        TextFormat := TextFormat + [tfEndEllipsis];
+      if FXTextFlag.TrimWord in Flags then
+        TextFormat := TextFormat + [tfWordEllipsis];
+      if not (FXTextFlag.ShowAccelChar in Flags) then
+        TextFormat := TextFormat + [tfNoPrefix];
 
       Canvas.TextRect(ARect, Text, TextFormat);
     end;
