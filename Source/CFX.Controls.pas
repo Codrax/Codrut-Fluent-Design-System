@@ -77,6 +77,7 @@ type
     FFocusFlags: FXFocusFlags;
     FHitTest: boolean;
     FTransparent: boolean;
+    FDoubleClickInProgress: boolean;
 
     //FPadding: FXPadding;
     FInnerMargins: FXPadding;
@@ -222,6 +223,7 @@ type
 
     procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
     procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+    procedure DblClick; override;
 
     procedure InnerMarginsUpdated(Sender: TObject);
     procedure MarginsUpdated(Sender: TObject);
@@ -253,6 +255,8 @@ type
 
     // Properties
     property Color;
+
+    property DoubleClickInProgress: boolean read FDoubleClickInProgress;
 
     property FocusRect: TRect read FFocusRect write FFocusRect;
     property AutoFocusLine: boolean read FAutoFocusLine write FAutoFocusLine;
@@ -577,6 +581,13 @@ begin
   // Was created
   FCreated := true;
   ComponentCreated;
+end;
+
+procedure FXWindowsControl.DblClick;
+begin
+  FDoubleClickInProgress := true;
+
+  inherited;
 end;
 
 destructor FXWindowsControl.Destroy;
@@ -1061,6 +1072,8 @@ procedure FXWindowsControl.MouseUp(Button: TMouseButton; Shift: TShiftState;
   X, Y: integer);
 begin
   inherited;
+  FDoubleClickInProgress := false;
+
   if InteractionState = FXControlState.Press then
     SetState( FXControlState.Hover );
 

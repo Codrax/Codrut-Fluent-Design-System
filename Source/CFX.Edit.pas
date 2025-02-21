@@ -89,6 +89,11 @@ type
     procedure ScrollForCursor(ADrawPosition: integer); overload;
 
     function SearchPosition(AX: integer): integer;
+    function AnalizeCharSolid(C: char): boolean;
+    function AnalizeCharSpace(C: char): boolean;
+    function AnalizeCurrentCharSolid: boolean;
+    function AnalizeCurrentCharSpace: boolean;
+    function CurrentCharExists: boolean;
     function FindNext(From: integer; GoesLeft: boolean = false): integer;
     procedure SelectPoints(P1, P2: integer);
 
@@ -411,6 +416,9 @@ var
   PosX, Value: integer;
 begin
   inherited;
+  if DoubleClickInProgress then
+    Exit;
+
   if InteractionState = FXControlState.Press then
     begin
       if (FDownStart <> -1) and EnableSelection then
@@ -627,6 +635,11 @@ begin
   Font.Height := ThemeManager.FormFontHeight;
 end;
 
+function FXCustomEdit.CurrentCharExists: boolean;
+begin
+  Result := Position+1 <= High(FText);
+end;
+
 procedure FXCustomEdit.CutToClipBoard;
 begin
   if PasswordChar <> #0 then
@@ -648,9 +661,17 @@ end;
 procedure FXCustomEdit.DblClick;
 var
   P1, P2: integer;
+  FStart: integer;
 begin
   inherited;
-  P1 := FindNext(Position, true);
+
+  // Start
+  FStart := Position;
+  if not AnalizeCurrentCharSpace then
+    Inc(FStart);
+
+  // Find margins
+  P1 := FindNext(FStart, true);
   P2 := FindNext(Position, false);
 
   SelectPoints(P1, P2);
@@ -726,10 +747,6 @@ begin
 end;
 
 function FXCustomEdit.FindNext(From: integer; GoesLeft: boolean): integer;
-function AnaliseChar(C: char): boolean;
-begin
-  Result := not CharInSet(C, ['A'..'Z', 'a'..'z', '0'..'9']);
-end;
 var
   ATotal: integer;
 begin
@@ -754,7 +771,7 @@ begin
       begin
         Dec(Result);
 
-        if (Result = 0) or AnaliseChar(FText[Result]) then
+        if (Result = 0) or AnalizeCharSpace(FText[Result]){ or not AnalizeCharSolid(FText[Result])} then
           begin
             Exit(Result);
           end;
@@ -764,7 +781,7 @@ begin
       begin
         Inc(Result);
 
-        if AnaliseChar(FText[Result]) then
+        if AnalizeCharSpace(FText[Result]){ or not AnalizeCharSolid(FText[Result])} then
           begin
             Exit(Result);
           end;
@@ -959,6 +976,30 @@ end;
 procedure FXCustomEdit.InteractionStateChanged(AState: FXControlState);
 begin
   inherited;
+end;
+
+function FXCustomEdit.AnalizeCharSolid(C: char): boolean;
+begin
+  Result := CharInSet(C, ['A'..'Z', 'a'..'z', '0'..'9']);
+end;
+
+function FXCustomEdit.AnalizeCharSpace(C: char): boolean;
+begin
+  Result := CharInSet(C, [' ', '_']);
+end;
+
+function FXCustomEdit.AnalizeCurrentCharSolid: boolean;
+begin
+  Result := false;
+  if CurrentCharExists then
+    Result := AnalizeCharSolid( FText[Position+1] );
+end;
+
+function FXCustomEdit.AnalizeCurrentCharSpace: boolean;
+begin
+  Result := false;
+  if CurrentCharExists then
+    Result := AnalizeCharSpace( FText[Position+1] );
 end;
 
 procedure FXCustomEdit.ApplyCharCase;
