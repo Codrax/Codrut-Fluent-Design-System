@@ -112,7 +112,7 @@ begin
   if ParentForm = nil then
     Exit;
 
-  FTitlebarHeight := FXForm(ParentForm).GetTitlebarHeight;
+  FTitlebarHeight := FXCustomForm(ParentForm).GetTitlebarHeight;
 
   case FFillMode of
     FXFormFill.TitleBar: begin

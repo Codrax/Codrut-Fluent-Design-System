@@ -266,7 +266,7 @@ type
 
     function SelectedItemCount: integer;
     function GetSelectedItems: TArray<integer>;
-    procedure SetVisibility(Items: TArray<integer>; Visible: boolean);
+    procedure SetVisibility(Items: TArray<integer>; Visible: boolean; Clear: boolean=false);
     procedure ClearSelection; virtual;
     procedure ClearHidden; virtual;
     procedure SelectAll; virtual;
@@ -1384,8 +1384,13 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXDrawList.SetVisibility(Items: TArray<integer>; Visible: boolean);
+procedure FXDrawList.SetVisibility(Items: TArray<integer>; Visible: boolean; Clear: boolean);
 begin
+  // Clear
+  if Clear then
+    ClearHiddenInternal;
+
+  // Set
   for var I := 0 to High(Items) do
     SetItemVisibleEx( Items[I], Visible );
 

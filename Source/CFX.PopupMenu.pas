@@ -422,7 +422,7 @@ var
 begin
   FChecked := Value;
 
-  if RadioItem then
+  if RadioItem and FChecked then
     if Owner is FXPopupContainer then
       begin
         with FXPopupContainer(Owner) do

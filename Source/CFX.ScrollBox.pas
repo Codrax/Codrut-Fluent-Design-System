@@ -177,9 +177,6 @@ begin
   FVertScroll.Position := FVertScroll.Position + Y;
   FHorzScroll.Position := FHorzScroll.Position + X;
 
-  // Draw
-  Invalidate;
-
   // Max
   if (FVertScroll.Position = 0) or (FVertScroll.Position = FVertScroll.Max) then
     FAnimY := 0;
@@ -273,7 +270,7 @@ begin
 
       Orientation := FXOrientation.Vertical;
       Tag := 0;
-      OnChange := WhenScroll;
+      OnChangeValue := WhenScroll;
 
       Max := 0;
     end;
@@ -285,7 +282,7 @@ begin
       Orientation := FXOrientation.Horizontal;
 
       Tag := 1;
-      OnChange := WhenScroll;
+      OnChangeValue := WhenScroll;
 
       Max := 0;
     end;

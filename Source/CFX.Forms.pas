@@ -35,7 +35,7 @@ type
   FXThemeType = CFX.Types.FXThemeType;
 
   // Form
-  FXForm = class(TForm, IFXComponent, IFXControl)
+  FXCustomForm = class(TForm, IFXComponent, IFXControl)
   private
     FCustomColors: FXColorSets;
     FDrawColors: FXColorSet;
@@ -43,7 +43,6 @@ type
     FWindowUpdateLock: boolean;
 
     // Settings
-    FFullScreen: Boolean;
     FRestoredPosition: TRect;
     FRestoredBorder: TBorderStyle;
 
@@ -73,8 +72,7 @@ type
     Smoke: TForm;
     SmokeAnimation: TIntAni;
 
-    // Functions
-    procedure SetFullScreen(const Value: Boolean);
+    // Prepare
     procedure CreateSmokeSettings;
 
     // Messages
@@ -125,7 +123,6 @@ type
     property SmokeEffect: boolean read FSmokeEffect write SetSmokeEffect default false;
     property CustomColors: FXColorSets read FCustomColors write FCustomColors;
     property AllowThemeChangeAnimation: boolean read FAllowThemeChangeAnim write FAllowThemeChangeAnim default false;
-    property FullScreen: Boolean read FFullScreen write SetFullScreen default false;
     property WindowUpdateLocked: boolean read FWindowUpdateLock write SetWindowUpdateLock;
     property DisableTitlebarAlign: boolean read FDisableTitlebarAlign write FDisableTitlebarAlign default false;
     property BackgroundColor: FXBackgroundColor read FBackground write SetBackgroundColor;
@@ -161,7 +158,30 @@ type
     destructor Destroy; override;
   end;
 
-  FXDialogForm = class(FXForm)
+  { Specialized for Application Windows (MainWindow) }
+  FXForm = class(FXCustomForm)
+  private
+    FFullScreen: Boolean;
+
+    // Defaults
+    FDefaultConstraints: boolean;
+
+    // Setters
+    procedure SetFullscreen(const Value: boolean);
+
+  protected
+    // Initialization
+    procedure InitForm; override;
+
+  published
+    property DefaultConstraints: boolean read FDefaultConstraints write FDefaultConstraints;
+    property FullScreen: Boolean read FFullScreen write SetFullScreen default false;
+
+  public
+  end;
+
+  { Specialized for Dialogs }
+  FXDialogForm = class(FXCustomForm)
   private
     FAutoCenter: boolean;
     FAutoSmoke: boolean;
@@ -202,26 +222,26 @@ type
 
 implementation
 
-{ FXForm }
+{ FXCustomForm }
 
-procedure FXForm.AdjustClientRect(var Rect: TRect);
+procedure FXCustomForm.AdjustClientRect(var Rect: TRect);
 begin
   inherited;
   if DisableTitlebarAlign then
     Dec(Rect.Top, GlassFrame.Top);
 end;
 
-function FXForm.Background: TColor;
+function FXCustomForm.Background: TColor;
 begin
   Result := Color;
 end;
 
-function FXForm.CanAutoSize(var NewWidth, NewHeight: Integer): Boolean;
+function FXCustomForm.CanAutoSize(var NewWidth, NewHeight: Integer): Boolean;
 begin
   Result := inherited;
 end;
 
-constructor FXForm.Create(aOwner: TComponent);
+constructor FXCustomForm.Create(aOwner: TComponent);
 begin
   // Create Form and Components
   inherited;
@@ -230,7 +250,7 @@ begin
   InitForm;
 end;
 
-constructor FXForm.CreateNew(aOwner: TComponent; Dummy: Integer);
+constructor FXCustomForm.CreateNew(aOwner: TComponent; Dummy: Integer);
 begin
   inherited;
 
@@ -238,14 +258,14 @@ begin
   InitForm;
 end;
 
-procedure FXForm.CreateParams(var Params: TCreateParams);
+procedure FXCustomForm.CreateParams(var Params: TCreateParams);
 begin
   inherited;
 
   //Params.Style := Params.Style or 200000;
 end;
 
-procedure FXForm.CreateSmokeSettings;
+procedure FXCustomForm.CreateSmokeSettings;
 begin
   Smoke := TForm.Create(nil);
   Smoke.Position := poDesigned;
@@ -260,7 +280,7 @@ begin
   Smoke.Color := clBlack;
 end;
 
-destructor FXForm.Destroy;
+destructor FXCustomForm.Destroy;
 begin
   FCustomColors.Free;
   FDrawColors.Free;
@@ -268,13 +288,13 @@ begin
   inherited;
 end;
 
-procedure FXForm.DoMove;
+procedure FXCustomForm.DoMove;
 begin
   if Assigned(FOnMove) then
     FOnMove(Self);
 end;
 
-procedure FXForm.DoShow;
+procedure FXCustomForm.DoShow;
 begin
   inherited;
   if not FTitlebarInitialized then
@@ -296,12 +316,12 @@ begin
       end;
 end;
 
-procedure FXForm.DoSize(var AWidth, AHeight: word);
+procedure FXCustomForm.DoSize(var AWidth, AHeight: word);
 begin
   //
 end;
 
-procedure FXForm.InitForm;
+procedure FXCustomForm.InitForm;
 label
   skip_titlebar;
 var
@@ -356,7 +376,7 @@ begin
   UpdateTheme(true); // also update children
 end;
 
-procedure FXForm.InitializeNewForm;
+procedure FXCustomForm.InitializeNewForm;
 begin
   inherited;
   // Create Classes
@@ -364,28 +384,28 @@ begin
   FDrawColors := FXColorSet.Create(ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
 end;
 
-function FXForm.IsContainer: Boolean;
+function FXCustomForm.IsContainer: Boolean;
 begin
   Result := true;
 end;
 
-function FXForm.IsResizable: Boolean;
+function FXCustomForm.IsResizable: Boolean;
 begin
   Result := BorderStyle in [bsSizeable, bsSizeToolWin];
 end;
 
-procedure FXForm.FormCloseIgnore(Sender: TObject; var CanClose: Boolean);
+procedure FXCustomForm.FormCloseIgnore(Sender: TObject; var CanClose: Boolean);
 begin
   if SmokeEffect then
     CanClose := false;
 end;
 
-function FXForm.GetClientRect: TRect;
+function FXCustomForm.GetClientRect: TRect;
 begin
   Result := inherited;
 end;
 
-function FXForm.GetTitlebarHeight: integer;
+function FXCustomForm.GetTitlebarHeight: integer;
 begin
   if CustomTitleBar.Enabled then
     Result := CustomTitleBar.Height
@@ -397,18 +417,18 @@ begin
       Result := TCustomTitleBarPanel(Controls[I]).Height; }
 end;
 
-function FXForm.HasActiveCustomTitleBar: boolean;
+function FXCustomForm.HasActiveCustomTitleBar: boolean;
 begin
   Result := CustomTitleBar.Enabled and (CustomTitleBar.Control <> nil);
 end;
 
-procedure FXForm.Paint;
+procedure FXCustomForm.Paint;
 begin
   inherited;
 
 end;
 
-procedure FXForm.QuickBroadcast(MessageID: integer);
+procedure FXCustomForm.QuickBroadcast(MessageID: integer);
 var
   AMsg: TMessage;
 begin
@@ -420,17 +440,17 @@ begin
   Broadcast(AMsg);
 end;
 
-procedure FXForm.Redraw;
+procedure FXCustomForm.Redraw;
 begin
   Invalidate;
 end;
 
-procedure FXForm.Resize;
+procedure FXCustomForm.Resize;
 begin
   inherited;
 end;
 
-procedure FXForm.SetBackgroundColor(const Value: FXBackgroundColor);
+procedure FXCustomForm.SetBackgroundColor(const Value: FXBackgroundColor);
 begin
   if FBackground = Value then
     Exit;
@@ -444,36 +464,12 @@ begin
   UpdateTheme(true);
 end;
 
-procedure FXForm.SetBoundsRect(Bounds: TRect);
+procedure FXCustomForm.SetBoundsRect(Bounds: TRect);
 begin
   SetBounds(Bounds.Left, Bounds.Top, Bounds.Width, Bounds.Height);
 end;
 
-procedure FXForm.SetFullScreen(const Value: Boolean);
-begin
-  if Value <> FFullScreen then
-    begin
-      FFullScreen := Value;
-
-      if Value then
-        begin
-          FRestoredPosition := BoundsRect;
-          FRestoredBorder := BorderStyle;
-
-          CustomTitleBar.Enabled := false;
-          BorderStyle := bsNone;
-          SetBoundsRect(Monitor.BoundsRect);
-        end
-      else
-        begin
-          CustomTitleBar.Enabled := true;
-          BorderStyle := FRestoredBorder;
-          SetBoundsRect(FRestoredPosition);
-        end;
-    end;
-end;
-
-procedure FXForm.SetMicaEffect(const Value: boolean);
+procedure FXCustomForm.SetMicaEffect(const Value: boolean);
 begin
   FMicaEffect := Value;
 
@@ -492,7 +488,7 @@ begin
   end;
 end;
 
-procedure FXForm.SetSmokeEffect(const Value: boolean);
+procedure FXCustomForm.SetSmokeEffect(const Value: boolean);
 begin
   FSmokeEffect := Value;
 
@@ -533,20 +529,20 @@ begin
     end;
 end;
 
-procedure FXForm.SetWindowUpdateLock(const Value: boolean);
+procedure FXCustomForm.SetWindowUpdateLock(const Value: boolean);
 begin
-  if FWindowUpdateLock <> Value then
-    begin
-      FWindowUpdateLock := Value;
+  if FWindowUpdateLock = Value then
+    Exit;
 
-      if Value then
-        LockWindowUpdate(Handle)
-      else
-        LockWindowUpdate(0);
-    end;
+  FWindowUpdateLock := Value;
+
+  if Value then
+    LockWindowUpdate(Handle)
+  else
+    LockWindowUpdate(0);
 end;
 
-procedure FXForm.UpdateTheme(const UpdateChildren: Boolean);
+procedure FXCustomForm.UpdateTheme(const UpdateChildren: Boolean);
 var
   PrevColor: TColor;
   ThemeReason: FXThemeType;
@@ -656,7 +652,7 @@ begin
   LockWindowUpdate(0);
 end;
 
-procedure FXForm.WM_Activate(var Msg: TWMActivate);
+procedure FXCustomForm.WM_Activate(var Msg: TWMActivate);
 begin
   inherited;
 
@@ -664,14 +660,14 @@ begin
     Smoke.SetFocus;
 end;
 
-procedure FXForm.WM_DWMColorizationColorChanged(var Msg: TMessage);
+procedure FXCustomForm.WM_DWMColorizationColorChanged(var Msg: TMessage);
 begin
   ThemeManager.MeasuredUpdateSettings;
 
   UpdateTheme(true);
 end;
 
-procedure FXForm.WM_GETMINMAXINFO(var Msg: TMessage);
+procedure FXCustomForm.WM_GETMINMAXINFO(var Msg: TMessage);
 begin
   if SmokeEffect then
     begin
@@ -691,7 +687,7 @@ begin
     inherited;
 end;
 
-procedure FXForm.WM_MOVE(var Msg: Tmessage);
+procedure FXCustomForm.WM_MOVE(var Msg: Tmessage);
 begin
   inherited;
   DoMove;
@@ -700,7 +696,7 @@ begin
   QuickBroadcast(WM_WINDOW_MOVE);
 end;
 
-procedure FXForm.WM_SIZE(var Msg: TWMSize);
+procedure FXCustomForm.WM_SIZE(var Msg: TWMSize);
 begin
   DoSize(Msg.Width, Msg.Height);
 
@@ -711,10 +707,9 @@ begin
   QuickBroadcast(WM_WINDOW_RESIZE);
 end;
 
-procedure FXForm.WM_SysCommand(var Msg: TWMSysCommand);
+procedure FXCustomForm.WM_SysCommand(var Msg: TWMSysCommand);
 begin
   inherited;
-
 end;
 
 { FXDialogForm }
@@ -793,7 +788,7 @@ end;
 
 function FXDialogForm.ShowModal: Integer;
 begin
-  const CanChangeSmoke = AutoSmoke and (FParentForm is FXForm);
+  const CanChangeSmoke = AutoSmoke and (FParentForm is FXCustomForm);
 
   // Center
   if FAutoCenter then
@@ -804,7 +799,7 @@ begin
 
   // Smoke
   if CanChangeSmoke then
-    (FParentForm as FXForm).SmokeEffect := true;
+    (FParentForm as FXCustomForm).SmokeEffect := true;
   
   try
     // Modal
@@ -812,8 +807,49 @@ begin
   finally
     // Smoke
     if CanChangeSmoke then
-      (FParentForm as FXForm).SmokeEffect := false;
+      (FParentForm as FXCustomForm).SmokeEffect := false;
   end;
+end;
+
+{ FXForm }
+
+procedure FXForm.InitForm;
+begin
+  FDefaultConstraints := true;
+
+  // Constraints
+  if FDefaultConstraints and
+    ((Constraints.MinWidth = 0) and (Constraints.MinHeight = 0)
+      and (Constraints.MaxWidth = 0) and (Constraints.MaxWidth = 0)) then begin
+    Constraints.MinWidth := 500;
+    Constraints.MinHeight := 325;
+  end;
+
+  // inherit
+  inherited;
+end;
+
+procedure FXForm.SetFullscreen(const Value: boolean);
+begin
+  if Value = FFullScreen then
+    Exit;
+
+  FFullScreen := Value;
+  if Value then
+    begin
+      FRestoredPosition := BoundsRect;
+      FRestoredBorder := BorderStyle;
+
+      CustomTitleBar.Enabled := false;
+      BorderStyle := bsNone;
+      SetBoundsRect(Monitor.BoundsRect);
+    end
+  else
+    begin
+      CustomTitleBar.Enabled := true;
+      BorderStyle := FRestoredBorder;
+      SetBoundsRect(FRestoredPosition);
+    end;
 end;
 
 end.
