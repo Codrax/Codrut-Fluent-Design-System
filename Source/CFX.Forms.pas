@@ -744,7 +744,8 @@ begin
   if Owner is TForm then
     Params.WndParent := TForm(Owner).Handle
   else
-    Params.WndParent := Screen.ActiveForm.Handle;
+    if Screen.ActiveForm <> nil then
+      Params.WndParent := Screen.ActiveForm.Handle;
 end;
 
 procedure FXDialogForm.DoMove;
