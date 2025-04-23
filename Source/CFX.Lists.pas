@@ -4,8 +4,8 @@ interface
 
 uses
   Classes,
-  Messages,
-  Windows,
+  Winapi.Messages,
+  Winapi.Windows,
   Vcl.Controls,
   Vcl.Graphics,
   Vcl.ExtCtrls,
@@ -270,6 +270,8 @@ type
     procedure ClearSelection; virtual;
     procedure ClearHidden; virtual;
     procedure SelectAll; virtual;
+
+    procedure ResetView;
 
     // Interface
     function IsContainer: Boolean; override;
@@ -1056,6 +1058,18 @@ begin
 
   // Inherit
   inherited;
+end;
+
+procedure FXDrawList.ResetView;
+begin
+  // Anims
+  StopScrollAnimations;
+
+  // Set scroll
+  FVertScroll.Position := 0;
+  FHorzScroll.Position := 0;
+
+  // updated by scrollbars
 end;
 
 procedure FXDrawList.Resize;

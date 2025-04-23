@@ -68,6 +68,12 @@ type
     FXScrollbar1: FXScrollbar;
     FXButton2: FXButton;
     FXAppManager1: FXAppManager;
+    FXScrollLayout1: FXScrollLayout;
+    FXButton6: FXButton;
+    FXStandardIcon2: FXStandardIcon;
+    FXSelector2: FXSelector;
+    FXEdit3: FXEdit;
+    FXProgress1: FXProgress;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);

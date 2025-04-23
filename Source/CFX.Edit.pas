@@ -3,8 +3,8 @@ unit CFX.Edit;
 interface
 uses
   Classes,
-  Messages,
-  Windows,
+  Winapi.Messages,
+  Winapi.Windows,
   Vcl.Controls,
   Vcl.Graphics,
   Vcl.Clipbrd,
@@ -88,15 +88,6 @@ type
     procedure ScrollForCursor; overload;
     procedure ScrollForCursor(ADrawPosition: integer); overload;
 
-    function SearchPosition(AX: integer): integer;
-    function AnalizeCharSolid(C: char): boolean;
-    function AnalizeCharSpace(C: char): boolean;
-    function AnalizeCurrentCharSolid: boolean;
-    function AnalizeCurrentCharSpace: boolean;
-    function CurrentCharExists: boolean;
-    function FindNext(From: integer; GoesLeft: boolean = false): integer;
-    procedure SelectPoints(P1, P2: integer);
-
     procedure ApplyCharCase;
     function DrawText: string;
 
@@ -128,6 +119,15 @@ type
     // Text
     procedure SetText(const Value: string); virtual;
     function GetText: string; virtual;
+
+    function SearchPosition(AX: integer): integer;
+    function AnalizeCharSolid(C: char): boolean;
+    function AnalizeCharSpace(C: char): boolean;
+    function AnalizeCurrentCharSolid: boolean;
+    function AnalizeCurrentCharSpace: boolean;
+    function CurrentCharExists: boolean;
+    function FindNext(From: integer; GoesLeft: boolean = false): integer;
+    procedure SelectPoints(P1, P2: integer);
 
     //  Internal
     procedure UpdateColors; override;

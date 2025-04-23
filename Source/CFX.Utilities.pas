@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, Win.Registry, System.UITypes,
-  Types, Vcl.Forms, Vcl.Graphics, CFX.Colors, CFX.Registry, ShellAPI,
+  Types, Vcl.Forms, Vcl.Graphics, CFX.Colors, CFX.Registry, Winapi.ShellAPI,
   CFX.Types, IOUTils, RegularExpressions, CFX.Files, CFX.Constants;
 
 function GetAppsUseDarkTheme: Boolean;

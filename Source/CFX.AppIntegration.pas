@@ -47,7 +47,10 @@ begin
       CloseAction := FXFormCloseAction.Free;
 
       Title := 'Checking for updates';
-      Text := Format('Checking the update server for a new version of "%S". Please stand by...', [AppManager.ApplicationName]);
+      if AppManager.ApplicationName <> '' then
+        Text := Format('Checking the update server for a new version of "%S". Please stand by...', [AppManager.ApplicationName])
+      else
+        Text := Format('Checking the update server for a new version of this software. Please stand by...', [AppManager.ApplicationName]);
       ProgressText := 'Now contacting the update server';
       ShowCancel := false;
 
@@ -111,7 +114,7 @@ begin
       AppName := AppManager.ApplicationName;
 
       DownloadURL := URL;
-      InstallParameters := '-ad';
+      InstallParameters := '-auto-delete -start';
 
       Show;
     finally

@@ -15,7 +15,7 @@ unit CFX.Animation.Main;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Math, CFX.Types, DateUtils;
+  Winapi.Windows, Winapi.Messages, SysUtils, Variants, Classes, Math, CFX.Types, DateUtils;
 
 type
   // Async animations

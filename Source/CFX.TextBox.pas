@@ -4,8 +4,8 @@ interface
 
 uses
   Classes,
-  Messages,
-  Windows,
+  Winapi.Messages,
+  Winapi.Windows,
   Vcl.Controls,
   Vcl.Graphics,
   Vcl.ExtCtrls,
@@ -158,6 +158,7 @@ type
     FValueFormat,
     FValueName,
     FValue: string;
+    FFlipOrder: boolean;
 
     procedure UpdateText(Update: boolean=true);
 
@@ -165,6 +166,7 @@ type
     procedure SetValue(const Value: string);
     procedure SetValueFormat(const Value: string);
     procedure SetValueName(const Value: string);
+    procedure SetFlipOrder(const Value: boolean);
 
   published
     property UseAccentAsForeground;
@@ -182,6 +184,7 @@ type
     property Value: string read FValue write SetValue;
     property ValueName: string read FValueName write SetValueName;
     property ValueFormat: string read FValueFormat write SetValueFormat;
+    property FlipOrder: boolean read FFlipOrder write SetFlipOrder default false;
 
   public
     constructor Create(aOwner: TComponent); override;
@@ -697,8 +700,18 @@ begin
   FValueFormat := '%S: %S';
   FValueName := 'Value';
   FValue := STRING_NONE;
+  FFlipOrder := false;
 
   UpdateText(false);
+end;
+
+procedure FXValueTextBox.SetFlipOrder(const Value: boolean);
+begin
+  if FFlipOrder = Value then
+    Exit;
+
+  FFlipOrder := Value;
+  UpdateText;;
 end;
 
 procedure FXValueTextBox.SetValue(const Value: string);
@@ -732,7 +745,10 @@ procedure FXValueTextBox.UpdateText(Update: boolean);
 var
   NewText: string;
 begin
-  NewText := Format(FValueFormat, [FValueName, FValue]);
+  if FlipOrder then
+    NewText := Format(FValueFormat, [FValue, FValueName])
+  else
+    NewText := Format(FValueFormat, [FValueName, FValue]);
 
   if NewText = FText then
     Exit;

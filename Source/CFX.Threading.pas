@@ -4,8 +4,8 @@ interface
 
 uses
   Classes,
-  Messages,
-  Windows,
+  Winapi.Messages,
+  Winapi.Windows,
   Types,
   Math,
   SysUtils,

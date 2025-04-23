@@ -136,8 +136,10 @@ type
     FEnableVertical,
     FEnableHorizontal: boolean;
 
-    FKeepScrollAlign: boolean;
+    FKeepScrollClientWhenBarHidden: boolean;
     FScrollAnimation: boolean;
+
+    FResetScrollPositionToTopOn: boolean;
 
     LastScroll: TPoint;
 
@@ -178,6 +180,9 @@ type
     // Done
     procedure ComponentCreated; override;
 
+    // Loaded
+    procedure Loaded; override;
+
     // System events
     function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
       MousePos: TPoint): Boolean; override;
@@ -197,8 +202,12 @@ type
     property HandleScrolling: boolean read FHandleScrolling write FHandleScrolling default true;
     property EnableHorizontal: boolean read FEnableHorizontal write SetEnableHorizontal default true;
     property EnableVertical: boolean read FEnableVertical write SetEnableVertical default true;
-    property KeepScrollAlignment: boolean read FKeepScrollAlign write FKeepScrollAlign;
+    (* Keeps the same client rect for aligning even if the scrollbar gets hidden *)
+    property KeepScrollClientWhenBarHidden: boolean read FKeepScrollClientWhenBarHidden write FKeepScrollClientWhenBarHidden default false;
+    (* Scroll smoothly *)
     property ScrollAnimation: boolean read FScrollAnimation write FScrollAnimation default true;
+    (* When the scrollbox is created, reset the position to 0,0 (usefull when editing stuff in design mode) *)
+    property ResetScrollPositionToTopOn: boolean read FResetScrollPositionToTopOn write FResetScrollPositionToTopOn default true;
 
     property PositionX: integer read GetPositionX write SetPositionX;
     property PositionY: integer read GetPositionY write SetPositionY;
@@ -324,10 +333,10 @@ begin
     FVertScroll.Max));
 
   // Remove scrollbars from client
-  if FVertScroll.Visible or (FKeepScrollAlign and FEnableVertical) then
+  if FVertScroll.Visible or (FKeepScrollClientWhenBarHidden and FEnableVertical) then
     Rect.Width := Rect.Width - FVertScroll.Width;
 
-  if FHorzScroll.Visible or (FKeepScrollAlign and FEnableHorizontal) then
+  if FHorzScroll.Visible or (FKeepScrollClientWhenBarHidden and FEnableHorizontal) then
     Rect.Height := Rect.Height - FHorzScroll.Height;
 end;
 
@@ -358,8 +367,9 @@ begin
   FShowScrollbars := true;
   FEnableHorizontal := true;
   FEnableVertical := true;
-  FKeepScrollAlign := false;
+  FKeepScrollClientWhenBarHidden := false;
   FScrollAnimation := true;
+  FResetScrollPositionToTopOn := true;
 
   FExtendX := 100;
   FExtendY := 100;
@@ -520,6 +530,17 @@ end;
 function FXScrollLayout.GetRangeY: integer;
 begin
   Result := FVertScroll.Max;
+end;
+
+procedure FXScrollLayout.Loaded;
+begin
+  inherited;
+
+  // Reset scroll
+  if FResetScrollPositionToTopOn then begin
+    FVertScroll.Position := 0;
+    FHorzScroll.Position := 0;
+  end;
 end;
 
 procedure FXScrollLayout.CalculateRange;

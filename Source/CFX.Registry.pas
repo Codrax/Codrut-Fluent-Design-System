@@ -17,7 +17,7 @@ unit CFX.Registry;
 interface
   uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes,
-  Registry, Vcl.Dialogs;
+  Win.Registry, Vcl.Dialogs;
 
 type
   TRegistryMode = (rmUnloaded, rmWindows32, rmWindows64, rmAutomatic);

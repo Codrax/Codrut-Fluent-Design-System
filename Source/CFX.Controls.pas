@@ -320,6 +320,9 @@ type
     // Buffer
     property Buffer: TCanvas read GetBuffer;
 
+    // Utilities
+    procedure CenterInParent;
+
     // Parent Utilities
     function GetParentBackgroundColor(Default: TColor): TColor;
 
@@ -437,6 +440,14 @@ end;
 function FXWindowsControl.CanUpdate: boolean;
 begin
   Result := not IsReading and (Parent <> nil) and HandleAllocated;
+end;
+
+procedure FXWindowsControl.CenterInParent;
+begin
+  if Parent = nil then
+    Exit;
+
+  SetBounds((Parent.Width - Self.Width) div 2, (Parent.Height - Self.Height) div 2, Self.Width, Self.Height);
 end;
 
 procedure FXWindowsControl.ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF});

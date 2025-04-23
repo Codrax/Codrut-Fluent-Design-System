@@ -5,7 +5,7 @@ unit CFX.UXTheme;
 
 interface
   uses
-    Windows, SysUtils;
+    Winapi.Windows, SysUtils;
 
   type
     TPreferredAppMode = (DefaultMode, AllowDarkMode, ForceDarkMode, ForceLightMode, ModeMax);

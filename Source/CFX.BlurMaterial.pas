@@ -62,6 +62,9 @@ type
   protected
     procedure PaintBuffer; override;
 
+    // Created
+    procedure ComponentCreated; override;
+
     // Internal
     procedure UpdateColors; override;
 
@@ -333,6 +336,12 @@ end;
 function FXBlurMaterial.Background: TColor;
 begin
   Result := FDrawColors.Background;
+end;
+
+procedure FXBlurMaterial.ComponentCreated;
+begin
+  inherited;
+  SyncroniseImage;
 end;
 
 constructor FXBlurMaterial.Create(AOwner: TComponent);

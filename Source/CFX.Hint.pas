@@ -2,9 +2,9 @@ unit CFX.Hint;
 
 interface
 uses
-  Classes, Types, Windows, Messages, Vcl.Controls, Vcl.Graphics, CFX.Constants,
-  SysUtils, CFX.ThemeManager, CFX.Colors, CFX.Graphics, CFX.ToolTip,
-  Vcl.ExtCtrls;
+  Classes, Types, Winapi.Windows, Winapi.Messages, Vcl.Controls, Vcl.Graphics,
+  CFX.Constants, SysUtils, CFX.ThemeManager, CFX.Colors, CFX.Graphics,
+  CFX.ToolTip, Vcl.ExtCtrls;
 
 type
   FXHintPopup = class

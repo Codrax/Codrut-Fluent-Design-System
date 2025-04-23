@@ -21,7 +21,7 @@ uses
   CFX.Linker,
   CFX.VarHelpers,
   UITypes,
-  Windows;
+  Winapi.Windows;
 
 type
   FXStandardIcon = class(FXWindowsControl)

@@ -19,6 +19,8 @@ begin
   try
     // Attempt 1 - IDHTTP
     IdHTTP1 := TIdHTTP.Create(nil);
+    IdHTTP1.HandleRedirects := true;
+
     FileStream := TFileStream.Create(Destination, fmCreate);
     try
       IdHTTP1.Get(Source, FileStream);

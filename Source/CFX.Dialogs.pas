@@ -5,8 +5,8 @@ unit CFX.Dialogs;
 interface
 
 uses
-  Windows, Winapi.Messages, Vcl.Dialogs, CFX.Button, Types, Classes, Variants,
-  Vcl.Forms, Vcl.Themes, Vcl.Styles, Vcl.Graphics, CFX.Types,
+  Winapi.Windows, Winapi.Messages, Vcl.Dialogs, CFX.Button, Types, Classes,
+  Variants, Vcl.Forms, Vcl.Themes, Vcl.Styles, Vcl.Graphics, CFX.Types,
   Vcl.Controls, CFX.Colors, SysUtils, Vcl.ExtCtrls, Vcl.ComCtrls,
   Vcl.TitleBarCtrls, Math, CFX.Math, Vcl.StdCtrls, CFX.Forms, CFX.Constants,
   UITypes, CFX.Edit, CFX.TextBox, CFX.Panels, CFX.TitlebarPanel,

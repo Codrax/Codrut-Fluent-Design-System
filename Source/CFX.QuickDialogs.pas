@@ -2,7 +2,7 @@ unit CFX.QuickDialogs;
 
 interface
   uses
-    Windows, SysUtils, CFX.Dialogs, Vcl.Forms, System.UITypes;
+    Winapi.Windows, SysUtils, CFX.Dialogs, Vcl.Forms, System.UITypes;
 
 // Dialogs
 procedure OpenMessage(AText: string); overload;

@@ -15,8 +15,8 @@ unit CFX.Animation.Component;
 interface
 
 uses
-  Windows, Messages, SysUtils, System.Variants, System.Classes, DateUtils,
-  Vcl.Controls, Vcl.Dialogs, System.Math, TypInfo,
+  Winapi.Windows, Winapi.Messages, SysUtils, System.Variants, System.Classes,
+  DateUtils, Vcl.Controls, Vcl.Dialogs, System.Math, TypInfo,
   CFX.Types, CFX.Animation.Main, CFX.Animation.Utils;
 
 type

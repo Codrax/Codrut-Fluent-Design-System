@@ -24,12 +24,12 @@ uses
   System.Classes,
   Vcl.Graphics,
   IOUtils,
-  ShellAPI,
+  Winapi.ShellAPI,
   Vcl.Forms,
   CFX.Registry,
-  ComObj,
+  Win.ComObj,
   Math,
-  Registry,
+  Win.Registry,
   CFX.Types;
 
 type
