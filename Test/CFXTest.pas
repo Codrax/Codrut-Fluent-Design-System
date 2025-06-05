@@ -74,6 +74,10 @@ type
     FXSelector2: FXSelector;
     FXEdit3: FXEdit;
     FXProgress1: FXProgress;
+    FXButton10: FXButton;
+    FXButton13: FXButton;
+    FXButton15: FXButton;
+    FXButton17: FXButton;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);

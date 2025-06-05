@@ -76,6 +76,7 @@ type
     FAnimation: boolean;
     FLineWidth: real;
     FDetail: FXDetailType;
+    FLeftAccentPill: boolean;
     FShowText: boolean;
     FArrowOffset: integer;
     FAutomaticCheck: boolean;
@@ -189,6 +190,7 @@ type
     property Roundness: integer read FRoundness write SetRoundness default BUTTON_ROUNDNESS;
     property Animation: boolean read FAnimation write FAnimation default true;
     property Detail: FXDetailType read FDetail write SetDetail default FXDetailType.None;
+    property LeftAccentPill: boolean read FLeftAccentPill write FLeftAccentPill default false;
     property LineWidth: real read FLineWidth write SetLineWidth;
 
     // Properties
@@ -1203,6 +1205,17 @@ begin
           Font.Color := FForeground;
           GetImage.DrawIcon(Buffer, ImageRect);
         end;
+
+      // Accemt pill
+      if LeftAccentPill then begin
+        ARect := DrawRect;
+        ARect.Width := 3;
+        ARect.Height := round(0.6* ARect.Height);
+        ARect.Offset(0, (DrawRect.Height-ARect.Height) div 2);
+
+        GDIRoundRect( MakeRoundRect(ARect, 3),
+          GetRGB(FDrawColors.Accent).MakeGDIBrush, nil);
+      end;
     end;
 
   inherited;

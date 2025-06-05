@@ -373,10 +373,10 @@ object Form1: TForm1
     State = mbsLeave
     FlatButton = False
     FlatComplete = False
-    Colors.Enter = 16087267
-    Colors.Leave = 15100372
-    Colors.Down = 13455547
-    Colors.BLine = 12468652
+    Colors.Enter = 16480483
+    Colors.Leave = 15493588
+    Colors.Down = 13848763
+    Colors.BLine = 12861868
     UnderLine.Enable = True
     UnderLine.UnderLineRound = True
     UnderLine.UnderLineThicknes = 6
@@ -705,10 +705,10 @@ object Form1: TForm1
     State = mbsLeave
     FlatButton = False
     FlatComplete = False
-    Colors.Enter = 16087267
-    Colors.Leave = 15100372
-    Colors.Down = 13455547
-    Colors.BLine = 12468652
+    Colors.Enter = 16480483
+    Colors.Leave = 15493588
+    Colors.Down = 13848763
+    Colors.BLine = 12861868
     UnderLine.Enable = True
     UnderLine.UnderLineRound = True
     UnderLine.UnderLineThicknes = 6
@@ -1597,8 +1597,8 @@ object Form1: TForm1
     StateImage.SelectImageIndex = 0
   end
   object FXScrollLayout1: FXScrollLayout
-    Left = 512
-    Top = 456
+    Left = 544
+    Top = 436
     Width = 250
     Height = 200
     Margins.Left = 0
@@ -1607,8 +1607,8 @@ object Form1: TForm1
     Margins.Bottom = 0
     Size.X = 250
     Size.Y = 200
-    Position.X = 512
-    Position.Y = 456
+    Position.X = 544
+    Position.Y = 436
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1617,10 +1617,10 @@ object Form1: TForm1
     CustomColors.DarkForeGround = clWhite
     TabOrder = 34
     PositionX = 0
-    PositionY = 300
+    PositionY = 0
     object FXButton6: FXButton
-      Left = 16
-      Top = -276
+      Left = 24
+      Top = 24
       Width = 140
       Height = 35
       Margins.Left = 0
@@ -1629,8 +1629,8 @@ object Form1: TForm1
       Margins.Bottom = 0
       Size.X = 140
       Size.Y = 35
-      Position.X = 16
-      Position.Y = -276
+      Position.X = 24
+      Position.Y = 24
       CustomColors.Enabled = False
       CustomColors.Accent = 13924352
       CustomColors.LightBackGround = 15987699
@@ -1671,7 +1671,7 @@ object Form1: TForm1
     end
     object FXStandardIcon2: FXStandardIcon
       Left = 40
-      Top = -116
+      Top = 184
       Width = 60
       Height = 60
       Margins.Left = 0
@@ -1681,7 +1681,7 @@ object Form1: TForm1
       Size.X = 60
       Size.Y = 60
       Position.X = 40
-      Position.Y = -116
+      Position.Y = 184
       CustomColors.Enabled = False
       CustomColors.Accent = 13924352
       CustomColors.LightBackGround = 15987699
@@ -1694,7 +1694,7 @@ object Form1: TForm1
     end
     object FXSelector2: FXSelector
       Left = 32
-      Top = 92
+      Top = 392
       Width = 250
       Height = 30
       Margins.Left = 0
@@ -1704,7 +1704,7 @@ object Form1: TForm1
       Size.X = 250
       Size.Y = 30
       Position.X = 32
-      Position.Y = 92
+      Position.Y = 392
       CustomColors.Enabled = False
       CustomColors.Accent = 13924352
       CustomColors.LightBackGround = 15987699
@@ -1727,7 +1727,7 @@ object Form1: TForm1
     end
     object FXEdit3: FXEdit
       Left = 72
-      Top = 4
+      Top = 304
       Width = 150
       Height = 33
       Margins.Left = 0
@@ -1770,7 +1770,7 @@ object Form1: TForm1
     end
     object FXProgress1: FXProgress
       Left = 136
-      Top = -188
+      Top = 112
       Width = 200
       Height = 20
       Margins.Left = 0
@@ -1780,7 +1780,7 @@ object Form1: TForm1
       Size.X = 200
       Size.Y = 20
       Position.X = 136
-      Position.Y = -188
+      Position.Y = 112
       CustomColors.Enabled = False
       CustomColors.Accent = 13924352
       CustomColors.LightBackGround = 15987699
@@ -1802,6 +1802,213 @@ object Form1: TForm1
       Font.Style = []
       TabOrder = 6
     end
+  end
+  object FXButton10: FXButton
+    Left = 622
+    Top = 171
+    Width = 140
+    Height = 35
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Size.X = 140
+    Size.Y = 35
+    Position.X = 622
+    Position.Y = 171
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    CustomColors.LightBackGroundInterior = 16514043
+    CustomColors.DarkBackGroundInterior = 2829099
+    CustomButtonColors.Enabled = False
+    CustomButtonColors.Accent = clBlack
+    CustomButtonColors.LightBackgroundNone = clBlack
+    CustomButtonColors.LightBackgroundHover = clBlack
+    CustomButtonColors.LightBackgroundPress = clBlack
+    CustomButtonColors.LightForeGroundNone = clBlack
+    CustomButtonColors.LightForeGroundHover = clBlack
+    CustomButtonColors.LightForeGroundPress = clBlack
+    CustomButtonColors.DarkBackGroundNone = clBlack
+    CustomButtonColors.DarkBackGroundHover = clBlack
+    CustomButtonColors.DarkBackGroundPress = clBlack
+    CustomButtonColors.DarkForeGroundNone = clBlack
+    CustomButtonColors.DarkForeGroundHover = clBlack
+    CustomButtonColors.DarkForeGroundPress = clBlack
+    Text = 'Button'
+    LineWidth = 3.000000000000000000
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 22
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    TabOrder = 35
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    StateImage.IconType = None
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
+  end
+  object FXButton13: FXButton
+    Left = 622
+    Top = 217
+    Width = 140
+    Height = 35
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Size.X = 140
+    Size.Y = 35
+    Position.X = 622
+    Position.Y = 217
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    CustomColors.LightBackGroundInterior = 16514043
+    CustomColors.DarkBackGroundInterior = 2829099
+    CustomButtonColors.Enabled = False
+    CustomButtonColors.Accent = clBlack
+    CustomButtonColors.LightBackgroundNone = clBlack
+    CustomButtonColors.LightBackgroundHover = clBlack
+    CustomButtonColors.LightBackgroundPress = clBlack
+    CustomButtonColors.LightForeGroundNone = clBlack
+    CustomButtonColors.LightForeGroundHover = clBlack
+    CustomButtonColors.LightForeGroundPress = clBlack
+    CustomButtonColors.DarkBackGroundNone = clBlack
+    CustomButtonColors.DarkBackGroundHover = clBlack
+    CustomButtonColors.DarkBackGroundPress = clBlack
+    CustomButtonColors.DarkForeGroundNone = clBlack
+    CustomButtonColors.DarkForeGroundHover = clBlack
+    CustomButtonColors.DarkForeGroundPress = clBlack
+    Text = 'Button'
+    Detail = Outline
+    LineWidth = 3.000000000000000000
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 22
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    TabOrder = 36
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    StateImage.IconType = None
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
+  end
+  object FXButton15: FXButton
+    Left = 622
+    Top = 268
+    Width = 140
+    Height = 35
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Size.X = 140
+    Size.Y = 35
+    Position.X = 622
+    Position.Y = 268
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    CustomColors.LightBackGroundInterior = 16514043
+    CustomColors.DarkBackGroundInterior = 2829099
+    CustomButtonColors.Enabled = False
+    CustomButtonColors.Accent = clBlack
+    CustomButtonColors.LightBackgroundNone = clBlack
+    CustomButtonColors.LightBackgroundHover = clBlack
+    CustomButtonColors.LightBackgroundPress = clBlack
+    CustomButtonColors.LightForeGroundNone = clBlack
+    CustomButtonColors.LightForeGroundHover = clBlack
+    CustomButtonColors.LightForeGroundPress = clBlack
+    CustomButtonColors.DarkBackGroundNone = clBlack
+    CustomButtonColors.DarkBackGroundHover = clBlack
+    CustomButtonColors.DarkBackGroundPress = clBlack
+    CustomButtonColors.DarkForeGroundNone = clBlack
+    CustomButtonColors.DarkForeGroundHover = clBlack
+    CustomButtonColors.DarkForeGroundPress = clBlack
+    Text = 'Button'
+    Detail = Underline
+    LineWidth = 3.000000000000000000
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 22
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    TabOrder = 37
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    StateImage.IconType = None
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
+  end
+  object FXButton17: FXButton
+    Left = 622
+    Top = 320
+    Width = 140
+    Height = 35
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Size.X = 140
+    Size.Y = 35
+    Position.X = 622
+    Position.Y = 320
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    CustomColors.LightBackGroundInterior = 16514043
+    CustomColors.DarkBackGroundInterior = 2829099
+    CustomButtonColors.Enabled = False
+    CustomButtonColors.Accent = clBlack
+    CustomButtonColors.LightBackgroundNone = clBlack
+    CustomButtonColors.LightBackgroundHover = clBlack
+    CustomButtonColors.LightBackgroundPress = clBlack
+    CustomButtonColors.LightForeGroundNone = clBlack
+    CustomButtonColors.LightForeGroundHover = clBlack
+    CustomButtonColors.LightForeGroundPress = clBlack
+    CustomButtonColors.DarkBackGroundNone = clBlack
+    CustomButtonColors.DarkBackGroundHover = clBlack
+    CustomButtonColors.DarkBackGroundPress = clBlack
+    CustomButtonColors.DarkForeGroundNone = clBlack
+    CustomButtonColors.DarkForeGroundHover = clBlack
+    CustomButtonColors.DarkForeGroundPress = clBlack
+    Text = 'Button'
+    LeftAccentPill = True
+    LineWidth = 3.000000000000000000
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 22
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    TabOrder = 38
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    StateImage.IconType = None
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
   end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False
