@@ -34,6 +34,7 @@ type
   private
     const
       KEY_PRESS_KEYS = [13, 32];
+    procedure SetLeftAccentPill(const Value: boolean);
 
     var DrawRect, MainRect, CaptionRect, IndicatorRect, ImageRect, TheTextRect: TRect;
     FCustomColors: FXCompleteColorSets;
@@ -190,7 +191,7 @@ type
     property Roundness: integer read FRoundness write SetRoundness default BUTTON_ROUNDNESS;
     property Animation: boolean read FAnimation write FAnimation default true;
     property Detail: FXDetailType read FDetail write SetDetail default FXDetailType.None;
-    property LeftAccentPill: boolean read FLeftAccentPill write FLeftAccentPill default false;
+    property LeftAccentPill: boolean read FLeftAccentPill write SetLeftAccentPill default false;
     property LineWidth: real read FLineWidth write SetLineWidth;
 
     // Properties
@@ -821,6 +822,15 @@ begin
 
   FImageScale := Value;
   StandardUpdateLayout;
+end;
+
+procedure FXCustomButton.SetLeftAccentPill(const Value: boolean);
+begin
+  if FLeftAccentPill = Value then
+    Exit;
+
+  FLeftAccentPill := Value;
+  StandardUpdateDraw;
 end;
 
 procedure FXCustomButton.SetLineWidth(const Value: real);
