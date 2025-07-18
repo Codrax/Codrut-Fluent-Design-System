@@ -313,7 +313,7 @@ begin
             FAnim.Terminate;
           end
         else
-          Redraw;;
+          Redraw;
       end;
 
       FAnim.OnDone := procedure

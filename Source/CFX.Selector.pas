@@ -7,6 +7,7 @@ uses
   Windows,
   Vcl.Controls,
   Vcl.Graphics,
+  Vcl.Dialogs,
   Types,
   Math,
   CFX.Colors,
@@ -253,7 +254,10 @@ begin
     end;
 
   // Pos
-  FDrawPosition := ItemRects[SelectedItem].Left;
+  if SelectedItem = -1 then
+    FDrawPosition := -1
+  else
+    FDrawPosition := ItemRects[SelectedItem].Left;
 end;
 
 constructor FXSelector.Create(aOwner: TComponent);
@@ -262,6 +266,7 @@ begin
   AutoFocusLine := true;
   BufferedComponent := true;
   FAnimation := true;
+  FHoverOver := -1;
 
   // Items
   FItems := TStringList.Create;
@@ -334,6 +339,8 @@ end;
 
 procedure FXSelector.AnimateToPosition;
 begin
+  if SelectedItem = -1 then
+    Exit;
   FAnim.Stop;
 
   FAnim.StartValue := FDrawPosition;
@@ -396,7 +403,9 @@ begin
       else
         AColor := FItemAccentColors.None;
       ARect := MakeDrawPositionRect;
-      GDIRoundRect(MakeRoundRect(ARect, ARound), GetRGB(AColor).MakeGDIBrush, nil);
+
+      if FDrawPosition <> -1 then
+        GDIRoundRect(MakeRoundRect(ARect, ARound), GetRGB(AColor).MakeGDIBrush, nil);
 
       // Draw Texts
       for I := 0 to High(ItemRects) do
@@ -455,16 +464,23 @@ end;
 
 procedure FXSelector.SetSelectedItem(const Value: integer);
 begin
-  if (FSelectedItem = Value) or (Value < 0) or (Value >= FItems.Count) then
+  if (FSelectedItem = Value) or ((Value < 0) and (Value <> -1)) or (Value >= FItems.Count) then
     Exit;
 
+  const OldSelectedItem = FSelectedItem;
 
   FSelectedItem := Value;
 
-  if Animation and not IsReading and not IsDesigning then
-    AnimateToPosition
-  else
-    FDrawPosition := ItemRects[Value].Left;
+  // Update draw pos
+  if not IsReading then
+    if Animation and (SelectedItem <> -1) and (OldSelectedItem <> -1) and not IsDesigning then
+      AnimateToPosition
+    else begin
+      if SelectedItem = -1 then
+        FDrawPosition := -1
+      else
+        FDrawPosition := ItemRects[Value].Left;
+    end;
 
   // Notify
   if not IsReading then

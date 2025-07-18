@@ -1,6 +1,7 @@
 unit CFX.AppManager;
 
 {$TYPEINFO ON}
+{$SCOPEDENUMS ON}
 
 interface
 uses
@@ -15,6 +16,7 @@ uses
   Math,
   DateUtils,
   Vcl.Graphics,
+  CFX.Components,
   CFX.ThemeManager,
   CFX.Colors,
   CFX.Files,
@@ -23,6 +25,7 @@ uses
   CFX.Registry,
   ShellAPI,
   CFX.QuickDialogs,
+  CFX.ArrayHelpers,
   CFX.Utilities,
   CFX.Constants,
   CFX.Types,
@@ -32,6 +35,8 @@ uses
   IOUTils;
 
 type
+  FXOnVersionChanged = procedure(PreviousVersion: FXVersion; ActiveVersion: FXVersion) of object;
+
   { Background App Manager Class }
   FXAppManagerClass = class(TObject)
   private
@@ -56,6 +61,7 @@ type
     FUpdateCheckSuccess: boolean;
     FCheckingUpdates: boolean;
     FLastUpdateCheck: TDate;
+    FLastInstalledVersion: FXVersion;
 
     // Procs
     function GetConfig: TIniFile;
@@ -76,7 +82,7 @@ type
     procedure LoadSettings;
 
     // Form settings
-    procedure SaveFormData(Form: TForm; Closing: boolean = false);
+    procedure SaveFormData(Form: TForm);
     procedure LoadFormData(Form: TForm);
 
     // Properties
@@ -87,6 +93,7 @@ type
     property AppData: string read FAppDataPath;
     property AppPackages: string read FAppPackagesPath;
     property AppVersion: FXVersion read FAppVersion write FAppVersion;
+    property LastInstalledVersion: FXVersion read FLastInstalledVersion;
     property UpdateCheckSuccess: boolean read FUpdateCheckSuccess;
     property UpdateCheckResult: TValueRelationship read FUpdateResult;
     property ServerVersion: FXVersion read FServerVersion write FServerVersion;
@@ -103,16 +110,44 @@ type
     destructor Destroy; override;
   end;
 
-  { App Manager Component - Use on Main Form }
-  FXAppManager = class(TComponent)
+  { App Manager Component }
+  FXAppManagerComponent = class(FXComponent)
+  private
+    FPrimaryDisplayForm: boolean;
+    FParentForm: TForm;
+
+    // Setters
+    procedure SetPrimaryDisplayForm(const Value: boolean);
+
+  protected
+    // Loaded
+    procedure Loaded; override;
+
+  published
+    // Props
+    property PrimaryDisplayForm: boolean read FPrimaryDisplayForm write SetPrimaryDisplayForm default false;
+
+  public
+    property ParentForm: TForm read FParentForm;
+
+    // Func
+    procedure FormClosing;
+    procedure FormOpening;
+
+    // Constructors
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+  end;
+
+  { App Manager - Use on Main Form }
+  FXAppManager = class(FXAppManagerComponent)
   private
     const
       DEFAULT_TASKS = [FXAppTask.WindowLoadForm, FXAppTask.WindowSaveForm];
       DEFAULT_USER_UPDATE_DELAY = 2000;
+    type TPendingDisplayAction = (UpdatePrompt);
     var
-    MainForm: TForm;
-
-    // Main form prompts
+    // Active propr
     FormPrompt: TForm;
 
     // Props
@@ -126,11 +161,15 @@ type
     FTasks: FXAppTasks;
     FAppDataStructure: TStringList;
 
+    FPendingDisplayActions: TArray<TPendingDisplayAction>;
+
     FUpdateCheckUserInitiated: boolean;
     FOnUpdateChecked: TNotifyEvent;
     FOnUpdateStartCheck: TNotifyEvent;
     FOnApplicationLoaded: TNotifyEvent;
     FOnOtherInstance: FXOnOtherInstance;
+    FOnVersionUpgraded: FXOnVersionChanged;
+    FOnVersionDowngraded: FXOnVersionChanged;
     FUserUpdateWaitDelay: cardinal;
 
     FApplicationName: string;
@@ -142,6 +181,10 @@ type
     // Stored
     function IsAppDataStored: Boolean;
     function IsEndpointStored: Boolean;
+
+    // Utils
+    function HasPrimaryDisplayForm: boolean;
+    function GetPrimaryDisplayForm: TForm;
 
     // Getters
     function GetAppData: string;
@@ -160,7 +203,11 @@ type
     procedure Loaded; override;
     procedure ApplySettings;
 
+    procedure ProcessDisplayChange;
+
   published
+    property PrimaryDisplayForm default true;
+
     property ApplicationIdentifier: string read FApplicationIdentifier write SetApplicationIdentifier;
     // The update checking interval (days)
     property UpdateCheckInterval: integer read FUpdateCheckInterval write FUpdateCheckInterval default -1;
@@ -179,6 +226,8 @@ type
     property OnUpdateStartCheck: TNotifyEvent read FOnUpdateStartCheck write FOnUpdateStartCheck;
     property OnApplicationLoaded: TNotifyEvent read FOnApplicationLoaded write FOnApplicationLoaded;
     property OnOtherInstance: FXOnOtherInstance read FOnOtherInstance write FOnOtherInstance;
+    property OnVersionUpgraded: FXOnVersionChanged read FOnVersionUpgraded write FOnVersionUpgraded;
+    property OnVersionDowngraded: FXOnVersionChanged read FOnVersionDowngraded write FOnVersionDowngraded;
 
     property AutomaticTasks: FXAppTasks read FTasks write FTasks default DEFAULT_TASKS;
     property AppDataStructure: TStringList read FAppDataStructure write SetDataStructure;
@@ -193,10 +242,6 @@ type
     procedure ApplicationOpen;
     procedure ApplicationClose;
 
-    // Executed for Main Form
-    procedure FormClosing;
-    procedure FormOpening;
-
     // Utils
     procedure InitiateUserUpdateCheck;
 
@@ -206,13 +251,11 @@ type
   end;
 
   { App Manager Form - Assist secondary forms }
-  FXAppManagerFormAssist = class(TComponent)
+  FXAppManagerFormAssist = class(FXAppManagerComponent)
   private
     const
     DEFAULT_TASKS = [FXAppFormAssistTask.WindowLoadForm, FXAppFormAssistTask.WindowSaveForm];
     var
-    ParentForm: TForm;
-
     // Props
     FTasks: FXAppFormAssistTasks;
 
@@ -235,10 +278,6 @@ type
     property AppData: string read GetAppData;
 
   public
-    // Executed for Main Form
-    procedure FormClosing;
-    procedure FormOpening;
-
     // Constructors
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -253,6 +292,9 @@ var
   AppManagerInstance: FXAppManager;
 
 implementation
+
+var
+  DisplayActiveFormStack: TArray<TForm>; // the form that displays prompts
 
 { FXAppManager }
 
@@ -281,8 +323,12 @@ begin
           FOnUpdateChecked(Self);
 
         // Auto handle
-        if FXAppTask.UpdatePrompt in FTasks then
-          PromptUpdate(Owner as TForm, FXAppTask.UpdateForce in FTasks);
+        if FXAppTask.UpdatePrompt in FTasks then begin
+          FPendingDisplayActions := FPendingDisplayActions + [TPendingDisplayAction.UpdatePrompt];
+
+          // Display
+          ProcessDisplayChange;
+        end;
 
         // User notify screen (close) (after auto handle, if It's the case)
         if FXAppTask.UpdateShowUserScreen in FTasks then
@@ -293,10 +339,8 @@ end;
 
 procedure FXAppManager.ApplicationClose;
 begin
-  // Form is closed
-  if FXAppTask.WindowSaveForm in FTasks then
-    FormClosing;
-  AppManager.SaveSettings;
+  if AppManager <> nil then
+    AppManager.SaveSettings;
 end;
 
 procedure FXAppManager.ApplicationOpen;
@@ -311,6 +355,7 @@ begin
         begin
           Action := FXOtherInstanceAction.Close;
 
+          // On Other instance
           if Assigned(OnOtherInstance) then
             OnOtherInstance(Self, Action);
 
@@ -339,6 +384,12 @@ begin
         end;
     end;
 
+  // Version upgraded
+  if AppManager.LastInstalledVersion.NewerThan(AppManager.AppVersion) and Assigned(FOnVersionUpgraded) then
+    FOnVersionUpgraded(AppManager.LastInstalledVersion, AppManager.AppVersion);
+  if AppManager.LastInstalledVersion.NewerThan(AppManager.AppVersion) and Assigned(FOnVersionUpgraded) then
+    FOnVersionDowngraded(AppManager.LastInstalledVersion, AppManager.AppVersion);
+
   // Automatic Update Check
   if (UpdateCheckInterval <> -1) then
     begin
@@ -360,6 +411,8 @@ end;
 
 constructor FXAppManager.Create(AOwner: TComponent);
 begin
+  inherited;
+
   // Is Form
   if (AOwner = nil) or not (AOwner is TForm) then
     begin
@@ -380,10 +433,8 @@ begin
   Inc(AppMgrCount);
   AppManagerInstance := Self;
 
-  // Type
-  MainForm := AOwner as TForm;
-
   // Data
+  PrimaryDisplayForm := true;
   ApplicationIdentifier := GenerateString(20, true, false, true, false);
   FUpdateCheckInterval := -1;
   FAPIEndpoint := DEFAULT_API;
@@ -393,8 +444,6 @@ begin
   FTasks := DEFAULT_TASKS;
   FAppDataStructure := TStringList.Create;
   FUserUpdateWaitDelay := DEFAULT_USER_UPDATE_DELAY;
-
-  inherited;
 end;
 
 destructor FXAppManager.Destroy;
@@ -404,23 +453,15 @@ begin
   AppManagerInstance := nil;
   FAppDataStructure.Free;
 
+  // Form is closed
+  if FXAppTask.WindowSaveForm in FTasks then
+    FormClosing;
+
   // Close
   if not IsDesigning then
     ApplicationClose;
 
   inherited;
-end;
-
-procedure FXAppManager.FormClosing;
-begin
-  // Save
-  AppManager.SaveFormData(MainForm, true);
-end;
-
-procedure FXAppManager.FormOpening;
-begin
-  // Open
-  AppManager.LoadFormData(MainForm);
 end;
 
 function FXAppManager.GetAppData: string;
@@ -436,9 +477,24 @@ begin
     Result := Format('%S%S\', [Result, ApplicationIdentifier]);
 end;
 
+function FXAppManager.GetPrimaryDisplayForm: TForm;
+begin
+  Result := nil;
+  if not HasPrimaryDisplayForm then
+    Exit;
+
+  // Get top-most stack object
+  Result := DisplayActiveFormStack[High(DisplayActiveFormStack)];
+end;
+
 function FXAppManager.GetVersion: string;
 begin
   Result := FAppVersion.ToString(true);
+end;
+
+function FXAppManager.HasPrimaryDisplayForm: boolean;
+begin
+  Result := Length(DisplayActiveFormStack) > 0;
 end;
 
 procedure FXAppManager.InitiateUserUpdateCheck;
@@ -447,8 +503,10 @@ begin
   FUpdateCheckUserInitiated := true;
 
   // User notify screen
-  if FXAppTask.UpdateShowUserScreen in FTasks then
-    PromptUpdateUser(Owner as TForm, FormPrompt);
+  if HasPrimaryDisplayForm then
+    if FXAppTask.UpdateShowUserScreen in FTasks then begin
+      PromptUpdateUser(GetPrimaryDisplayForm, FormPrompt);
+    end;
 
   // Start
   AppCheckUpdates;
@@ -485,6 +543,23 @@ begin
   // Notify
   if Assigned(FOnApplicationLoaded) then
     FOnApplicationLoaded(Self);
+end;
+
+procedure FXAppManager.ProcessDisplayChange;
+begin
+  if not HasPrimaryDisplayForm or (Length(FPendingDisplayActions) = 0) then
+    Exit;
+  const Display = GetPrimaryDisplayForm;
+  if not Display.Visible then
+    Exit;
+
+  // Process
+  while Length(FPendingDisplayActions) > 0 do
+    case TArrayUtils<TPendingDisplayAction>.Shift(FPendingDisplayActions) of
+      TPendingDisplayAction.UpdatePrompt: begin
+        PromptUpdate(Display, FXAppTask.UpdateForce in FTasks);
+      end;
+    end;
 end;
 
 procedure FXAppManager.SetAPIEndpoint(const Value: string);
@@ -573,7 +648,6 @@ begin
   // Status
   FLastUpdateCheck := 0;
 
-
   if not TDirectory.Exists(FAppPackagesPath) then
     TDirectory.CreateDirectory(FAppPackagesPath);
 
@@ -604,54 +678,70 @@ end;
 procedure FXAppManagerClass.LoadFormData(Form: TForm);
 var
   Category: string;
-  AFile: TIniFile;
+  WindowRect: TRect;
+  {$IFDEF MSWINDOWS}
+  P: TWindowPlacement;
+  {$ENDIF}
 begin
   if Form = nil then
     Exit;
 
-  // Prep
+  // Name
   Category := Form.Name;
 
-  AFile := GetWindow;
-  with AFile do
+  with GetWindow do
     try
-      // Exists
-      if not SectionExists(Category) then
-        Exit;
+      // Force poDesigned for form without triggering SetPosition()
+      if (Form.Position <> poDesigned) then
+        (PCardinal(@(Form.Position)))^ := Cardinal(poDesigned);
 
-      // Load
-      with Form do
-        begin
-          WindowState := TWindowState.wsNormal;
+      // Load scales
+      const ScaleMultiplier = Form.ScaleFactor / ReadFloat(Category, 'Scale', 1);
 
-          Position := poDesigned;
+      // Get rect
+      WindowRect := TRect.Create(
+        Point(round(ReadInteger(Category, 'Left', Form.Left)*ScaleMultiplier), round(ReadInteger(Category, 'Top', Form.Top)*ScaleMultiplier)),
+        round(ReadInteger(Category, 'Width', Form.Width)*ScaleMultiplier), round(ReadInteger(Category, 'Height', Form.Height)*ScaleMultiplier));
+      const WindowState = TWindowState(ReadInteger(Category, 'State', integer(Form.WindowState)));
 
-          // Load position
-          var Bounds: TRect;
-          Bounds.Left := ReadInteger(Category, 'Left', Left);
-          Bounds.Top := ReadInteger(Category, 'Top', Top);
-          Bounds.Width := ReadInteger(Category, 'Width', Width);
-          Bounds.Height := ReadInteger(Category, 'Height', Height);
+      // Fix bounds
+      const Client = Screen.WorkAreaRect;
+      if WindowRect.Left < Client.Left then
+        WindowRect.Offset( Client.Left - WindowRect.Left, 0 );
+      if WindowRect.Right > Client.Right then
+        WindowRect.Offset( Client.Right - WindowRect.Right, 0 );
+      if WindowRect.Top < Client.Top then
+        WindowRect.Offset( 0, Client.Top - WindowRect.Top );
+      if WindowRect.Bottom > Client.Bottom then
+        WindowRect.Offset( 0, Client.Bottom - WindowRect.Bottom );
 
-          // Fix bounds
-          const Client = Screen.WorkAreaRect;
-          if Bounds.Left < Client.Left then
-            Bounds.Offset( Client.Left - Bounds.Left, 0 );
-          if Bounds.Right > Client.Right then
-            Bounds.Offset( Client.Right - Bounds.Right, 0 );
-          if Bounds.Top < Client.Top then
-            Bounds.Offset( 0, Client.Top - Bounds.Top );
-          if Bounds.Bottom > Client.Bottom then
-            Bounds.Offset( 0, Client.Bottom - Bounds.Bottom );
+      // Align
+      case WindowState of
+        TWindowState.wsMaximized: begin
+          const RestoreData = ReadBool(Category, 'Restore data', false);
 
-          // Set position
-          SetBounds(Bounds.Left, Bounds.Top, Bounds.Width, Bounds.Height);
-
-          // Load window state
-          WindowState := TWindowState(ReadInteger(Category, 'State', integer(WindowState)));
-          if WindowState = wsMinimized then
-            WindowState := wsNormal;
+          {$IFDEF MSWINDOWS}
+          // If window was snapped, re-load the previous snap restore values
+          if RestoreData and Form.HandleAllocated and IsWindow(Form.Handle) and GetWindowPlacement(Form.Handle, P) then begin
+            P.showCmd := SW_SHOWMAXIMIZED;
+            P.rcNormalPosition := WindowRect;
+            SetWindowPlacement(Form.Handle, P);
+          end else begin
+            if RestoreData then
+              Form.SetBounds(WindowRect.Left, WindowRect.Top, WindowRect.Width, WindowRect.Height); // this backup mode is Windows Only
+          {$ENDIF}
+            Form.WindowState := TWindowState.wsMaximized;
+          {$IFDEF MSWINDOWS}
+          end;
+          {$ENDIF}
         end;
+
+        TWindowState.wsMinimized,
+        TWindowState.wsNormal: begin
+          Form.WindowState := TWindowState.wsNormal;
+          Form.SetBounds(WindowRect.Left, WindowRect.Top, WindowRect.Width, WindowRect.Height);
+        end;
+      end;
     finally
       Free;
     end;
@@ -665,6 +755,9 @@ begin
     try
       Section := 'Passive';
       FLastUpdateCheck := ReadDate(Section, 'Last update', LastUpdateCheck);
+      FLastInstalledVersion := FXVersion.Create(
+        ReadString(Section, 'Last installed version', AppVersion.ToString(true))
+        );
     finally
       Free;
     end;
@@ -683,58 +776,44 @@ begin
   ShellRun( ParamStr(0), '');
 end;
 
-procedure FXAppManagerClass.SaveFormData(Form: TForm; Closing: boolean);
+procedure FXAppManagerClass.SaveFormData(Form: TForm);
 var
   Category: string;
-  AFile: TIniFile;
-
-  // Previous
-  PrevState: TWindowState;
-  PrevValue: byte;
-  PrevEn: boolean;
+  WindowRect: TRect;
+  {$IFDEF MSWINDOWS}
+  P: TWindowPlacement;
+  {$ENDIF}
 begin
   if Form = nil then
     Exit;
 
-  // Prep
+  // Name
   Category := Form.Name;
 
-  AFile := GetWindow;
-  with AFile do
+  with GetWindow do
     try
-      with Form do
-        begin
-          PrevEn := false;
-          PrevValue := 255;
+      WindowRect := Form.BoundsRect;
+      var RestoreData: boolean; RestoreData := false;
 
-          WriteInteger(Category, 'State', integer(WindowState));
-          if WindowState = wsMinimized then
-            begin
-              PrevEn := AlphaBlend;
-              PrevValue := AlphaBlendValue;
-
-              AlphaBlend := true;
-              AlphaBlendValue := 0;
+      {$IFDEF MSWINDOWS}
+      // Window is snapped by user (via Windows snapping)
+      if Form.HandleAllocated and IsWindow(Form.Handle) and GetWindowPlacement(Form.Handle, P) then
+        if (Form.WindowState <> wsNormal)
+          or ((P.rcNormalPosition.Left <> WindowRect.Left) and (P.rcNormalPosition.Right <> WindowRect.Right)) or
+            ((P.rcNormalPosition.Top <> WindowRect.Top) and (P.rcNormalPosition.Bottom <> WindowRect.Bottom)) then begin
+              // Get restore pos
+              WindowRect := P.rcNormalPosition;
+              RestoreData := true;
             end;
-          PrevState := WindowState;
-          WindowState := TWindowState.wsNormal;
+      {$ENDIF}
 
-          WriteInteger(Category, 'Left', Left);
-          WriteInteger(Category, 'Top', Top);
-          WriteInteger(Category, 'Width', Width);
-          WriteInteger(Category, 'Height', Height);
-
-          // Revert
-          if not Closing then
-            begin
-              WindowState := PrevState;
-              if WindowState = wsMinimized then
-                begin
-                  AlphaBlend := PrevEn;
-                  AlphaBlendValue := PrevValue;
-                end;
-              end;
-        end;
+      WriteInteger(Category, 'State', integer(Form.WindowState));
+      WriteInteger(Category, 'Left', WindowRect.Left);
+      WriteInteger(Category, 'Top', WindowRect.Top);
+      WriteInteger(Category, 'Width', WindowRect.Width);
+      WriteInteger(Category, 'Height', WindowRect.Height);
+      WriteFloat(Category, 'Scale', Form.ScaleFactor);
+      WriteBool(Category, 'Restore data', RestoreData);
     finally
       Free;
     end;
@@ -748,6 +827,7 @@ begin
     try
       Section := 'Passive';
       WriteDate(Section, 'Last update', LastUpdateCheck);
+      WriteString(Section, 'Last installed version', AppVersion.ToString(true));
     finally
       Free;
     end;
@@ -786,9 +866,6 @@ constructor FXAppManagerFormAssist.Create(AOwner: TComponent);
 begin
   inherited;
 
-  // Form
-  ParentForm := AOwner as TForm;
-
   // Defaults
   FTasks := DEFAULT_TASKS;
 end;
@@ -800,18 +877,6 @@ begin
     FormClosing;
 
   inherited;
-end;
-
-procedure FXAppManagerFormAssist.FormClosing;
-begin
-  // Save
-  AppManager.SaveFormData(ParentForm, true);
-end;
-
-procedure FXAppManagerFormAssist.FormOpening;
-begin
-  // Open
-  AppManager.LoadFormData(ParentForm);
 end;
 
 function FXAppManagerFormAssist.GetAppData: string;
@@ -843,10 +908,82 @@ begin
     FormOpening;
 end;
 
+{ FXAppManagerComponent }
+
+constructor FXAppManagerComponent.Create(AOwner: TComponent);
+begin
+  inherited;
+
+  // Form
+  FParentForm := AOwner as TForm;
+end;
+
+destructor FXAppManagerComponent.Destroy;
+begin
+  // Remove from stack
+  PrimaryDisplayForm := false;
+
+  // Clear
+  FParentForm := nil;
+
+  inherited;
+end;
+
+procedure FXAppManagerComponent.FormClosing;
+begin
+  // Save
+  AppManager.SaveFormData(ParentForm);
+end;
+
+procedure FXAppManagerComponent.FormOpening;
+begin
+  // Open
+  AppManager.LoadFormData(ParentForm);
+end;
+
+procedure FXAppManagerComponent.Loaded;
+begin
+  inherited;
+
+  // Process display
+  with TThread.CreateAnonymousThread(procedure begin
+    Sleep(10);
+    if not Assigned(Self) or (FParentForm = nil) then
+      Exit;
+
+    if AppManagerInstance <> nil then
+      TThread.Synchronize(TThread.Current, procedure begin
+        AppManagerInstance.ProcessDisplayChange;
+      end);
+  end) do begin
+    FreeOnTerminate := true;
+    Start;
+  end;
+end;
+
+procedure FXAppManagerComponent.SetPrimaryDisplayForm(const Value: boolean);
+begin
+  if ParentForm = nil then
+    Exit;
+
+  // Same
+  if FPrimaryDisplayForm = Value then
+    Exit;
+
+  FPrimaryDisplayForm := Value;
+
+  //
+  if not Value then
+    TArrayUtils<TForm>.DeleteValue(ParentForm, DisplayActiveFormStack)
+  else
+    TArrayUtils<TForm>.AddValue(ParentForm, DisplayActiveFormStack);
+end;
+
 initialization
   AppMgrCount := 0;
   AppManager := FXAppManagerClass.Create;
 
 finalization
   AppManager.Free;
+  AppManager := nil;
 end.

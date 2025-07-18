@@ -235,6 +235,7 @@
         <DCCReference Include="Source\CFX.Animation.Utils.pas"/>
         <DCCReference Include="Source\CFX.Shapes.pas"/>
         <DCCReference Include="Source\CFX.Layouts.pas"/>
+        <DCCReference Include="Source\CFX.Components.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

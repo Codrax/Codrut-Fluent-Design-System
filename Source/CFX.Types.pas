@@ -6,7 +6,7 @@ interface
 uses
   UITypes, Types, CFX.Constants, VCl.GraphUtil, Winapi.Windows,
   Classes, Vcl.Themes, Vcl.Controls, Vcl.Graphics, Math,
-  SysUtils, Winapi.GDIPAPI, Winapi.GDIPOBJ;
+  SysUtils, Winapi.GDIPAPI, Winapi.GDIPOBJ, System.Generics.Defaults;
 
 type
   // File Type
@@ -129,6 +129,34 @@ type
   // Thingies
   FXPercent = type Single;
   FXAngle = type Single; // three decimal places
+
+  // Switch for any variabile type
+  TSwitch<T> = class
+    type
+    TCase = record
+      Values: TArray<T>;
+      CallBack: TProc;
+
+      procedure Execute;
+    end;
+    TCases = TArray<TCase>;
+
+    // Make
+    class function Option(Value: T; Call: TProc): TCase; overload;
+    class function Option(Values: TArray<T>; Call: TProc): TCase; overload;
+
+    // Switch
+    class procedure Switch(Value: T; Cases: TArray<TCase>); overload;
+    class procedure Switch(Value: T; Cases: TArray<TCase>; Default: TProc); overload;
+  end;
+
+  // Type helper for any
+  TType<T> = class(TObject)
+  public
+    class function IfElse(Condition: boolean; IfTrue: T; IfFalse: T): T;
+    class procedure Switch(var A, B: T);
+    class function Compare(const A, B: T): TValueRelationship;
+  end;
 
   // FXColor Helper
   FXColorHelper = record helper for FXColor
@@ -1292,6 +1320,73 @@ end;
 procedure FXColorHelper.SetB(Value: byte);
 begin                              // Typecasting is not required
   Self := (Self and $FFFFFF00) or (Value);
+end;
+
+{ TSwitch<T> }
+
+class function TSwitch<T>.Option(Value: T; Call: TProc): TCase;
+begin
+  Result := Option([Value], Call);
+end;
+
+class function TSwitch<T>.Option(Values: TArray<T>; Call: TProc): TCase;
+begin
+  Result.Values := Values;
+  Result.CallBack := Call;
+end;
+
+class procedure TSwitch<T>.Switch(Value: T; Cases: TArray<TCase>; Default: TProc);
+begin
+  for var I := 0 to High(Cases) do
+    for var J := 0 to High(Cases[I].Values) do
+      if TComparer<T>.Default.Compare(Cases[I].Values[J], Value) = EqualsValue then begin
+        Cases[I].Execute;
+        Exit;
+      end;
+
+  // Default
+  if Assigned(Default) then
+    Default;
+end;
+
+class procedure TSwitch<T>.Switch(Value: T; Cases: TArray<TCase>);
+begin
+  Switch(Value, Cases, nil);
+end;
+
+{ TSwitch<T>.TCase }
+
+procedure TSwitch<T>.TCase.Execute;
+begin
+  Callback;
+end;
+
+{ TType<T> }
+
+class function TType<T>.Compare(const A, B: T): TValueRelationship;
+var
+  lComparer: IComparer<T>;
+begin
+  lComparer := TComparer<T>.Default;
+
+  Result := lComparer.Compare(A, B);
+end;
+
+class function TType<T>.IfElse(Condition: boolean; IfTrue, IfFalse: T): T;
+begin
+  if Condition then
+    Result := IfTrue
+  else
+    Result := IfFalse;
+end;
+
+class procedure TType<T>.Switch(var A, B: T);
+var
+  Temp: T;
+begin
+  Temp := A;
+  A := B;
+  B := Temp;
 end;
 
 end.

@@ -64,6 +64,10 @@ begin
     finally
       //Free;
     end;
+
+  // Destroyed?
+  if csDestroying in Form.ComponentState then
+    Form := nil;
 end;
 
 procedure PromptUpdateUserClose(var Form: TForm);

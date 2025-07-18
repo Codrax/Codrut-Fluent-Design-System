@@ -101,6 +101,9 @@ end;
 
 function GetScrollAmount(Delta: integer; ViewHeight: integer): integer;
 begin
+  if Delta = 0 then
+    Exit(0);
+
   // Sign
   Result := -(Delta div abs(Delta));
 

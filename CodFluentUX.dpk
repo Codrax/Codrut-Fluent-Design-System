@@ -48,18 +48,14 @@ requires
   vcl,
   vclimg,
   vclwinx,
-  {$IFDEF COMPILEDESIGN}
   DesignIDE,
-  {$ENDIF}
   IndySystem,
   IndyProtocols,
   IndyCore;
 
 contains
-  {$IFDEF COMPILEDESIGN}
   CFX.PropertyEditors in 'Source\CFX.PropertyEditors.pas',
   CFX.DesignEditors in 'Source\CFX.DesignEditors.pas',
-  {$ENDIF}
   CFX.RegisterClass in 'Source\CFX.RegisterClass.pas',
   CFX.FormTemplates,
   CFX.Colors in 'Source\CFX.Colors.pas',
@@ -128,7 +124,8 @@ contains
   CFX.Animation.Main in 'Source\CFX.Animation.Main.pas',
   CFX.Animation.Utils in 'Source\CFX.Animation.Utils.pas',
   CFX.Shapes in 'Source\CFX.Shapes.pas',
-  CFX.Layouts in 'Source\CFX.Layouts.pas';
+  CFX.Layouts in 'Source\CFX.Layouts.pas',
+  CFX.Components in 'Source\CFX.Components.pas';
 
 end.
 

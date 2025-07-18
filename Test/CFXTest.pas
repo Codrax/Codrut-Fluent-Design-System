@@ -67,17 +67,12 @@ type
     FXScrollText1: FXScrollText;
     FXScrollbar1: FXScrollbar;
     FXButton2: FXButton;
-    FXAppManager1: FXAppManager;
-    FXScrollLayout1: FXScrollLayout;
-    FXButton6: FXButton;
-    FXStandardIcon2: FXStandardIcon;
-    FXSelector2: FXSelector;
-    FXEdit3: FXEdit;
-    FXProgress1: FXProgress;
     FXButton10: FXButton;
-    FXButton13: FXButton;
     FXButton15: FXButton;
     FXButton17: FXButton;
+    FXAppManager1: FXAppManager;
+    FXAppManagerFormAssist1: FXAppManagerFormAssist;
+    Timer1: TTimer;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);
@@ -90,6 +85,7 @@ type
     procedure FXPaintBox1Draw(Sender: TObject);
     procedure FXButton2Click(Sender: TObject);
     procedure FXButton4Click(Sender: TObject);
+    procedure Timer1Timer(Sender: TObject);
   private
     { Private declarations }
   public
@@ -99,8 +95,6 @@ type
 var
   Form1: FXForm;
 
-  H: FXHintPopup;
-
 implementation
 
 {$R *.dfm}
@@ -109,6 +103,8 @@ procedure TForm1.FormCreate(Sender: TObject);
 begin
   FXPopupMenu1.Items[1].Text := '-';
   AllowThemeChangeAnimation := true;
+
+     FXCustomControl
 end;
 
 procedure TForm1.FXAppManager1UpdateChecked(Sender: TObject);
@@ -271,6 +267,11 @@ begin
           FXTextFlag.Center],
         TPaintBox(Sender).Tag);
     end;
+end;
+
+procedure TForm1.Timer1Timer(Sender: TObject);
+begin
+  Caption := IsWindowSnapped.ToString(TUseBoolStrs.True);
 end;
 
 end.

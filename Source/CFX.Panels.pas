@@ -12,10 +12,11 @@ uses
   Vcl.Graphics,
   Vcl.ExtCtrls,
   CFX.Colors,
+  CFX.Animation.Main,
+  CFX.Animation.Component,
   CFX.Constants,
   CFX.Classes,
   CFX.Types,
-  CFX.Animations,
   CFX.Linker,
   CFX.Messages,
   CFX.Controls,
@@ -110,21 +111,21 @@ type
 
     FAutoCursor: boolean;
 
-    FAnim: TIntAni;
+    FAnim: FXIntAnim;
     FAnGoTo, FAnStart: integer;
 
     FDefaultHeight: integer;
 
     // UI
     function TrimEdges: boolean;
+    procedure StopAnimation;
     procedure AnimateTranzition;
 
     // Set
     procedure SetState(AState: FXControlState);
     procedure SetHandleSize(const Value: integer);
     procedure SetHandleRound(const Value: integer);
-    procedure StartToggle;
-    procedure SetMinimiseState(statemin: boolean; instant: boolean = false);
+    procedure SetMinimiseState(statemin: boolean; instant: boolean);
     procedure SetMinimised(const Value: boolean);
     procedure SetText(const Value: string);
     procedure SetContentFill(const Value: boolean);
@@ -136,11 +137,17 @@ type
   protected
     procedure Paint; override;
 
+    // Animation
+    procedure AnimationOnFinish(Sender: TObject);
+
     // Paint
     procedure PaintHandle;
 
     // Inherit align rect calculation
     procedure AdjustClientRect(var Rect: TRect); override;
+
+    // Catch Events
+    procedure CMEnabledChanged(var Message: TMessage); message CM_ENABLEDCHANGED;
 
     // Override
     procedure Resize; override;
@@ -220,42 +227,21 @@ begin
     FAnGoTo := FDefaultHeight;
 
   // Prepare
-  if FAnim.Finished then
-    begin
-      FAnim.Free;
-      FAnim := TIntAni.Create;
-    end;
+  StopAnimation;
 
-  FAnim.AniFunctionKind := afkQuartic;
-  FAnim.Duration := 40;
-  FAnim.Step := 10;
+  FAnim.StartValue := Height;
+  FAnim.EndValue := FAnGoTo;
 
-  FAnim.StartValue := FAnStart;
-  FAnim.DeltaValue := FAnGoTo - FAnStart;
-
-  // Animate
-  FAnim.OnSync := procedure(Value: integer)
-  begin
-    Height := Value;
-  end;
-
-  FAnim.OnDone := procedure
-  begin
-    TThread.Synchronize( nil, procedure
-      var
-        I: integer;
-      begin
-        for I := 0 to ControlCount - 1 do
-          Controls[I].Invalidate;
-
-        PaintHandle;
-      end);
-  end;
-
-  FAnim.AniFunctionKind := afkLinear;
-  FAnim.FreeOnTerminate := false;
-
+  // Start
   FAnim.Start;
+end;
+
+procedure FXMinimisePanel.AnimationOnFinish(Sender: TObject);
+begin
+  for var I := 0 to ControlCount - 1 do
+    Controls[I].Invalidate;
+
+  PaintHandle;
 end;
 
 function FXMinimisePanel.Background: TColor;
@@ -268,7 +254,7 @@ end;
 
 procedure FXMinimisePanel.ChangeMinimised(Minimised: boolean);
 begin
-  SetMinimiseState(Minimised);
+  SetMinimiseState(Minimised, false);
 end;
 
 procedure FXMinimisePanel.ChangeScale(M, D: Integer{$IF CompilerVersion > 29}; isDpiChange: Boolean{$ENDIF});
@@ -277,6 +263,13 @@ begin
   FDefaultHeight := MulDiv(FDefaultHeight, M, D);
   FHandleSize := MulDiv(FHandleSize, M, D);
   Height := Height;
+end;
+
+procedure FXMinimisePanel.CMEnabledChanged(var Message: TMessage);
+begin
+  inherited;
+  UpdateTheme(false);
+  Redraw;
 end;
 
 constructor FXMinimisePanel.Create(AOwner: TComponent);
@@ -294,13 +287,21 @@ begin
 
   FullRepaint := false;
 
+  // Animation
+  FAnim := FXIntAnim.Create(Self);
+  FAnim.Kind := FXAnimationKind.Sinus;
+  FAnim.Duration := 0.2;
+  FAnim.LatencyAdjustments := true;
+  FAnim.LatencyCanSkipSteps := true;
+  FAnim.Component := Self;
+  FAnim.PropertyName := 'Height';
+  FAnim.OnFinish := AnimationOnFinish;
+
   // Theme Manager building
   FCustomColors := FXCompleteColorSets.Create(Self);
   FDrawColors := FXCompleteColorSet.Create(ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
   FCustomHandleColor := FXColorStateSets.Create(Self);
   FHandleColor := FXColorStateSet.Create(FCustomHandleColor, ThemeManager.DarkTheme);
-
-  FAnim := TIntAni.Create;
 
   // Default Font
   Font.Size := 11;
@@ -326,6 +327,7 @@ end;
 
 destructor FXMinimisePanel.Destroy;
 begin
+  FreeAndNil(FAnim);
   FreeAndNil(FImage);
   FreeAndNil(FAnim);
   FreeAndNil(FCustomHandleColor);
@@ -374,7 +376,7 @@ begin
   SetState(FXControlState.Hover);
 
   if FMouseInHandle then
-    StartToggle;
+    ToggleMinimised;
 end;
 
 procedure FXMinimisePanel.Paint;
@@ -454,7 +456,7 @@ begin
 
     // Font
     Font.Assign(Self.Font);
-    Font.Color := FDrawColors.ForeGround;
+    Font.Color := FHandleColor.GetColor(true, FControlState);
 
     Pen.Style := psClear;
 
@@ -485,10 +487,8 @@ begin
           try
             TmpFont.Assign(Font);
 
-            Font := TFont.Create;
             Font.Name := ThemeManager.IconFont;
-            Font.Color := FDrawColors.ForeGround;
-            Font.Size := round(Self.FHandleSize / 4);;
+            Font.Size := round(Self.FHandleSize / 4);
 
             I := FImage.SelectSegoe;
             TextRect(IconRect, I, [tfSingleLine, tfVerticalCenter, tfCenter]);
@@ -502,10 +502,6 @@ begin
       else
         TLeft := MINIMISE_ICON_MARGIN;
 
-    // Font
-    Font.Assign(Self.Font);
-    Font.Color := FDrawColors.ForeGround;
-
     // Text
     Brush.Style := bsClear;
     TextOut(tleft, FHandleSize div 2 - TextHeight(FText) div 2, FText);
@@ -513,15 +509,14 @@ begin
     Pen.Style := psSolid;
 
     // Icon
-    Font := TFont.Create;
     if FMinimised then
       i := ''
     else
       i := '';
 
+    // Font
     Font.Size := round(Self.FHandleSize / 6);
     Font.Name := ThemeManager.IconFont;
-    Font.Color := FDrawColors.ForeGround;
 
     IconRect := Rect(Width - FHandleSize, 0, Width, FHandleSize);
     TextRect(IconRect, i, [tfSingleLine, tfVerticalCenter, tfCenter]);
@@ -591,13 +586,9 @@ begin
   SetMinimiseState(Value, true);
 end;
 
-procedure FXMinimisePanel.SetMinimiseState(statemin: boolean; instant: boolean);
+procedure FXMinimisePanel.SetMinimiseState(statemin: boolean; Instant: boolean);
 begin
-  // Exit if already Minimised
-  if statemin = FMinimised then
-    Exit;
-
-  FMinimised := NOT FMinimised;
+  FMinimised := statemin;
 
   if (FAnim <> nil) and (FAnim.Running) then
     Exit;
@@ -609,6 +600,9 @@ begin
       Height := FHandleSize
     else
       Height := FDefaultHeight;
+
+    // Stop ani
+    StopAnimation;
   end
     else
       // Animated
@@ -632,15 +626,15 @@ begin
   Paint;
 end;
 
-procedure FXMinimisePanel.StartToggle;
+procedure FXMinimisePanel.StopAnimation;
 begin
-  if not FAnim.Running then
-    SetMinimiseState(NOT FMinimised)
+  if FAnim.Running then
+    FAnim.Stop;
 end;
 
 procedure FXMinimisePanel.ToggleMinimised;
 begin
-  StartToggle;
+  SetMinimiseState(NOT FMinimised, false)
 end;
 
 function FXMinimisePanel.TrimEdges: boolean;
@@ -672,6 +666,19 @@ begin
 
   // Font Color
   Font.Color := FDrawColors.ForeGround;
+
+  // Disabled
+  if not Enabled then begin
+    FHandleColor.Accent := GetColorGrayscale(FDrawColors.Accent);
+
+    FHandleColor.BackgroundNone := ColorBlend(FHandleColor.BackgroundNone, FDrawColors.BackGround, 15);
+    FHandleColor.BackGroundHover := FHandleColor.BackgroundNone;
+    FHandleColor.BackGroundPress := FHandleColor.BackgroundNone;
+
+    FHandleColor.ForeGroundNone := ColorBlend(FHandleColor.ForeGroundNone, FDrawColors.BackGround, 100);
+    FHandleColor.ForeGroundHover := FHandleColor.ForeGroundNone;
+    FHandleColor.ForeGroundPress := FHandleColor.ForeGroundNone;
+  end;
 end;
 
 procedure FXMinimisePanel.UpdateTheme(const UpdateChildren: Boolean);

@@ -72,6 +72,7 @@ type
     FHorzScroll: FXDrawListScrollBar;
     FShowScrollbars: boolean;
     FHandleScrolling: boolean;
+    FScrollAnimation: boolean;
 
     FExtendX, FExtendY: integer;
     FAnimX, FAnimY: FXIntAnim;
@@ -200,6 +201,8 @@ type
     property ScrollExtendX: integer read FExtendX write SetExtX default 100;
     property ScrollExtendY: integer read FExtendY write SetExtY default 100;
     property HandleScrolling: boolean read FHandleScrolling write FHandleScrolling default true;
+    (* Scroll smoothly *)
+    property ScrollAnimation: boolean read FScrollAnimation write FScrollAnimation default true;
     property DefaultDraw: boolean read FDefaultDraw write SetDefaultDraw default true;
 
     property MultiSelect: boolean read FMultiSelect write FMultiSelect default false;
@@ -310,6 +313,9 @@ type
 
     // Status
     procedure ItemVisibilityChanged; override;
+
+    // Scaler
+    procedure ScaleChanged(Scaler: single); override;
 
     // Props
     property OnDrawItem;
@@ -566,6 +572,7 @@ begin
 
   FKeyboardNavigation := true;
 
+  FScrollAnimation := true;
   FShowScrollbars := true;
   FNoOutOfBoundsDraw := true;
   FDefaultDraw := true;
@@ -677,37 +684,47 @@ begin
 
   if FHandleScrolling and not (ssCtrl in Shift) then begin
     const ScrollAmount = GetScrollAmount(WheelDelta, ClientRect.Height);
+    const HorizontalScroll = (ssShift in Shift) or (FVertScroll.Max = 0);
 
     Result := true; // handled
 
-    if (ssShift in Shift) or (FVertScroll.Max = 0) then begin
-      // Horizontal
-      FAnimX.StartValue := FHorzScroll.Position;
-
-      if FAnimX.Running then
-        FAnimX.EndValue := FAnimX.EndValue + ScrollAmount
+    if not ScrollAnimation then begin
+      // Instant
+      if HorizontalScroll then
+        FHorzScroll.Position:= FHorzScroll.Position +ScrollAmount
       else
-        FAnimX.EndValue := FHorzScroll.Position+ScrollAmount;
-      FAnimX.EndValue := EnsureRange(FAnimX.EndValue, FHorzScroll.Min, FHorzScroll.Max);
-
-      FAnimX.Stop;
-
-      if FAnimX.StartValue <> FAnimX.EndValue then
-        FAnimX.Start;
+        FVertScroll.Position:= FVertScroll.Position +ScrollAmount
     end else begin
-      // Vertical
-      FAnimY.StartValue := FVertScroll.Position;
+      // Animate
+      if HorizontalScroll then begin
+        // Horizontal
+        FAnimX.StartValue := FHorzScroll.Position;
 
-      if FAnimY.Running then
-        FAnimY.EndValue := FAnimY.EndValue + ScrollAmount
-      else
-        FAnimY.EndValue := FVertScroll.Position+ScrollAmount;
-      FAnimY.EndValue := EnsureRange(FAnimY.EndValue, FVertScroll.Min, FVertScroll.Max);
+        if FAnimX.Running then
+          FAnimX.EndValue := FAnimX.EndValue + ScrollAmount
+        else
+          FAnimX.EndValue := FHorzScroll.Position+ScrollAmount;
+        FAnimX.EndValue := EnsureRange(FAnimX.EndValue, FHorzScroll.Min, FHorzScroll.Max);
 
-      FAnimY.Stop;
+        FAnimX.Stop;
 
-      if FAnimY.StartValue <> FAnimY.EndValue then
-        FAnimY.Start;
+        if FAnimX.StartValue <> FAnimX.EndValue then
+          FAnimX.Start;
+      end else begin
+        // Vertical
+        FAnimY.StartValue := FVertScroll.Position;
+
+        if FAnimY.Running then
+          FAnimY.EndValue := FAnimY.EndValue + ScrollAmount
+        else
+          FAnimY.EndValue := FVertScroll.Position+ScrollAmount;
+        FAnimY.EndValue := EnsureRange(FAnimY.EndValue, FVertScroll.Min, FVertScroll.Max);
+
+        FAnimY.Stop;
+
+        if FAnimY.StartValue <> FAnimY.EndValue then
+          FAnimY.Start;
+      end;
     end;
   end;
 
@@ -908,6 +925,8 @@ begin
           // Item mode
           ItemIndex := Next;
       end;
+
+      VK_ESCAPE: if CanDeselect then ClearSelection;
 
       Ord('A'): if (ssCtrl in Shift) and MultiSelect then
         SelectAll;
@@ -1192,7 +1211,8 @@ begin
   ClearSelectedInternal; // does not invalidate
 
   for var I := 0 to ItemCount-1 do
-    FItemSelected[I] := true;
+    if FItemVisible[I] then // select all VISIBLE
+      FItemSelected[I] := true;
 
   // Set
   FItemIndex := ItemCount-1;
@@ -1562,6 +1582,14 @@ begin
         end;
       end;
     end;
+end;
+
+procedure FXCustomLinearDrawList.ScaleChanged(Scaler: single);
+begin
+  FItemWidth := round(FItemWidth * Scaler);
+  FItemHeight := round(FItemHeight * Scaler);
+  FSpacingRow := round(FSpacingRow * Scaler);
+  FSpacingColumn := round(FSpacingColumn * Scaler);
 end;
 
 procedure FXCustomLinearDrawList.SetFullLine(const Value: boolean);

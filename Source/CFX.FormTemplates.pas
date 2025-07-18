@@ -459,7 +459,7 @@ begin
       Align := alTop;
       AlignWithMargins := true;
 
-      Caption := 'Unfortunately an error occured and the installation will not be able to continue.';
+      Text := 'Unfortunately an error occured and the installation will not be able to continue.';
 
       with Margins do
         begin
@@ -480,7 +480,7 @@ begin
 
       Align := alTop;
 
-      Caption := 'An error occured';
+      Text := 'An error occured';
 
       AlignWithMargins := true;
       with Margins do
@@ -503,7 +503,7 @@ begin
       Font.Size := 40;
       Font.Name := ThemeManager.IconFont;
 
-      Caption := #$EA39;
+      Text := #$EA39;
 
       with Margins do
         begin

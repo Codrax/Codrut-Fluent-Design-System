@@ -334,6 +334,9 @@ type
     function GetControlsAbove: TArray<TControl>;
     function GetChildControls: TArray<TControl>;
 
+    // Components
+    function GetChildComponents: TArray<TComponent>;
+
     // Handles
     procedure AllocateHandles;
 
@@ -880,6 +883,13 @@ begin
     Result := FBuffer2;
 end;
 
+function FXWindowsControl.GetChildComponents: TArray<TComponent>;
+begin
+  SetLength(Result, ComponentCount);
+  for var I := 0 to ComponentCount-1 do
+    Result[I] := Components[I];
+end;
+
 function FXWindowsControl.GetChildControls: TArray<TControl>;
 begin
   SetLength(Result, ControlCount);
@@ -1414,9 +1424,9 @@ end;
 procedure FXWindowsControl.SortControlsByIndex(var AControls: TArray<TControl>);
 begin
   // Sort
-  TArrayUtils<TControl>.Sort(AControls, function(A, B: TControl): boolean
+  TArrayUtils<TControl>.Sort(AControls, function(A, B: TControl): TValueRelationship
     begin
-      Result := A.ComponentIndex > B.ComponentIndex;
+      Result := TType<integer>.Compare(A.ComponentIndex, B.ComponentIndex);
     end);
 end;
 
@@ -1492,8 +1502,12 @@ begin
     for var I := 0 to High(Children) do
     if Supports(Children[I], IFXComponent) then
       (Children[I] as IFXComponent).UpdateTheme(UpdateChildren);
-  end;
 
+    const ChildrenC = GetChildComponents;
+    for var I := 0 to High(ChildrenC) do
+    if Supports(ChildrenC[I], IFXComponent) then
+      (ChildrenC[I] as IFXComponent).UpdateTheme(UpdateChildren);
+  end;
 end;
 
 procedure FXWindowsControl.WMMove(var Message: TWMMove);

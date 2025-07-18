@@ -714,6 +714,8 @@ end;
 procedure FXScrollLayout.Sized;
 begin
   inherited;
+
+  // Update range
   UpdateRange;
 end;
 

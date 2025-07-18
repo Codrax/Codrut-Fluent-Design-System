@@ -17,6 +17,7 @@ uses
   CFX.Colors,
   CFX.Constants,
   CFX.Animation.Main,
+  CFX.Animation.Component,
   Vcl.TitleBarCtrls,
   CFX.Animations,
   CFX.Utilities,
@@ -62,6 +63,8 @@ type
     FEnableTitlebar: boolean;
     TTlCtrl: TCustomTitleBarpanel;
     FDisableTitlebarAlign: boolean;
+    FDisableCustomTitlebar: boolean;
+    FManualCustomTitleBar: boolean;
     FBackground: FXBackgroundColor;
 
     // Mica
@@ -70,7 +73,6 @@ type
 
     // Smoke
     Smoke: TForm;
-    SmokeAnimation: TIntAni;
 
     // Prepare
     procedure CreateSmokeSettings;
@@ -79,9 +81,12 @@ type
     procedure WM_SysCommand(var Msg: TWMSysCommand); message WM_SYSCOMMAND;
     procedure WM_DWMColorizationColorChanged(var Msg: TMessage); message WM_DWMCOLORIZATIONCOLORCHANGED;
     procedure WM_Activate(var Msg: TWMActivate); message WM_ACTIVATE;
-    procedure WM_MOVE(var Msg: Tmessage); message WM_MOVE;
+    procedure WM_MOVE(var Msg: TWMMove); message WM_MOVE;
     procedure WM_SIZE(var Msg: TWMSize); message WM_SIZE;
     procedure WM_GETMINMAXINFO(var Msg: TMessage); message WM_GETMINMAXINFO;
+
+    procedure WMShowWindow(var Message: TWMShowWindow); message WM_SHOWWINDOW;
+    procedure WMClose(var Message: TWMClose); message WM_CLOSE;
 
     procedure QuickBroadcast(MessageID: integer);
 
@@ -101,6 +106,8 @@ type
 
     // Utils
     function HasActiveCustomTitleBar: boolean;
+    function IsWindowSnapped: boolean;
+    function GetWindowNormalPosition: TRect;
 
     // Sizing
     function GetClientRect: TRect; override;
@@ -111,6 +118,9 @@ type
     procedure DoShow; override;
     procedure DoMove; virtual;
     procedure DoSize(var AWidth, AHeight: word); virtual;
+
+    // Can
+    function CanMove(Position: TPoint): boolean; virtual;
 
     // Initialization
     procedure InitForm; virtual;
@@ -125,6 +135,8 @@ type
     property AllowThemeChangeAnimation: boolean read FAllowThemeChangeAnim write FAllowThemeChangeAnim default false;
     property WindowUpdateLocked: boolean read FWindowUpdateLock write SetWindowUpdateLock;
     property DisableTitlebarAlign: boolean read FDisableTitlebarAlign write FDisableTitlebarAlign default false;
+    property DisableCustomTitlebar: boolean read FDisableCustomTitlebar write FDisableCustomTitlebar default false;
+    property ManualCustomTitleBar: boolean read FManualCustomTitleBar write FManualCustomTitleBar default false;
     property BackgroundColor: FXBackgroundColor read FBackground write SetBackgroundColor;
 
     // On Change...
@@ -134,9 +146,11 @@ type
     property OnThemeChange: FXThemeChange read FThemeChange write FThemeChange;
 
   public
+    function CloseQuery: Boolean; override;
 
     // Procedures
     procedure SetBoundsRect(Bounds: TRect);
+    procedure SetBounds(ALeft, ATop, AWidth, AHeight: Integer); override;
 
     // Utils
     function IsResizable: Boolean;
@@ -205,7 +219,9 @@ type
 
     // Do
     procedure DoShow; override;
-    procedure DoMove; override;
+
+    // Can
+    function CanMove(Position: TPoint): boolean; override;
     function CanResize(var NewWidth, NewHeight: Integer): Boolean; override;
 
   public
@@ -239,6 +255,21 @@ end;
 function FXCustomForm.CanAutoSize(var NewWidth, NewHeight: Integer): Boolean;
 begin
   Result := inherited;
+end;
+
+function FXCustomForm.CanMove(Position: TPoint): boolean;
+begin
+  Result := true;
+end;
+
+function FXCustomForm.CloseQuery: Boolean;
+begin
+  Result := inherited;
+
+  // Enable close animation
+  if Result then
+    if MicaEffect then
+      AlphaBlend := false;
 end;
 
 constructor FXCustomForm.Create(aOwner: TComponent);
@@ -297,16 +328,18 @@ end;
 procedure FXCustomForm.DoShow;
 begin
   inherited;
-  if not FTitlebarInitialized then
+  if not FTitlebarInitialized and not FDisableCustomTitlebar then
     with Self.CustomTitleBar do
       begin
         Enabled := true;
 
-        SystemButtons := false;
-        SystemColors := false;
-        SystemHeight := false;
+        if not FManualCustomTitleBar then begin
+          SystemButtons := false;
+          SystemColors := false;
+          SystemHeight := false;
 
-        Height := TTlCtrl.Height;
+          Height := TTlCtrl.Height;
+        end;
 
         Control := TTlCtrl;
 
@@ -360,6 +393,8 @@ begin
     begin
       TTlCtrl := FXTitleBarPanel.Create(Self);
       TTlCtrl.Parent := Self;
+
+      TTlCtrl.Visible := not FDisableCustomTitlebar;
     end;
 
   (* Assign *)
@@ -370,7 +405,7 @@ begin
   skip_titlebar:
 
   // Needs custom title bar
-  CustomTitleBar.Enabled := true;
+  CustomTitleBar.Enabled := not FDisableCustomTitlebar;
 
   // Update Theme
   UpdateTheme(true); // also update children
@@ -394,6 +429,25 @@ begin
   Result := BorderStyle in [bsSizeable, bsSizeToolWin];
 end;
 
+function FXCustomForm.IsWindowSnapped: boolean;
+var
+  P: TWindowPlacement;
+begin
+  Result := false;
+
+  // Get the window placement
+  if not GetWindowPlacement(Handle, P) then
+    Exit;
+
+  // Check if the window is maximized or has different normal position
+  if (P.showCmd = SW_SHOWMAXIMIZED) or
+     ((P.rcNormalPosition.Left <> BoundsRect.Left) and (P.rcNormalPosition.Right <> BoundsRect.Right)) or
+     ((P.rcNormalPosition.Top <> BoundsRect.Top) and (P.rcNormalPosition.Bottom <> BoundsRect.Bottom)) then
+  begin
+    Result := True; // The window is snapped
+  end;
+end;
+
 procedure FXCustomForm.FormCloseIgnore(Sender: TObject; var CanClose: Boolean);
 begin
   if SmokeEffect then
@@ -415,6 +469,19 @@ begin
   for I := 0 to ControlCount - 1 do
     if Controls[I] is TCustomTitleBarPanel then
       Result := TCustomTitleBarPanel(Controls[I]).Height; }
+end;
+
+function FXCustomForm.GetWindowNormalPosition: TRect;
+var
+  P: TWindowPlacement;
+begin
+  Result := TRect.Empty;
+
+  // Get the window placement
+  if not GetWindowPlacement(Handle, P) then
+    Exit;
+
+  Result := P.rcNormalPosition;
 end;
 
 function FXCustomForm.HasActiveCustomTitleBar: boolean;
@@ -464,6 +531,11 @@ begin
   UpdateTheme(true);
 end;
 
+procedure FXCustomForm.SetBounds(ALeft, ATop, AWidth, AHeight: Integer);
+begin
+  inherited;
+end;
+
 procedure FXCustomForm.SetBoundsRect(Bounds: TRect);
 begin
   SetBounds(Bounds.Left, Bounds.Top, Bounds.Width, Bounds.Height);
@@ -490,42 +562,43 @@ end;
 
 procedure FXCustomForm.SetSmokeEffect(const Value: boolean);
 begin
+  if FSmokeEffect = Value then
+    Exit;
   FSmokeEffect := Value;
 
-  // Wait
-  if (SmokeAnimation <> nil) and SmokeAnimation.Running then
-    begin
-      SmokeAnimation.Terminate;
-      SmokeAnimation.WaitFor;
-    end;
-
-  // Toggle
   if Value then
-    begin
-      Smoke.Visible := true;
+    Smoke.AlphaBlendValue := 0
+  else
+    Smoke.AlphaBlendValue := FORM_SMOKE_BLEND_VALUE;
 
-      Smoke.AlphaBlendValue := FORM_SMOKE_BLEND_VALUE;
-    end
+  with FXAsyncIntAnim.Create do
+    try
+      StartValue := 0;
+      EndValue := FORM_SMOKE_BLEND_VALUE;
+
+      Inverse := not Value;
+
+      // Prep
+      Kind := FXAnimationKind.Linear;
+      if Value then
+        Duration := 0.1
       else
-    begin
-      if SmokeAnimation <> nil then
-        SmokeAnimation.Free;
+        Duration := 0.3;
+      LatencyAdjustments := true;
+      LatencyCanSkipSteps := true;
 
-      SmokeAnimation := TIntAni.Create(true, TAniKind.akIn, TAniFunctionKind.afkLinear,
-      Smoke.AlphaBlendValue, -Smoke.AlphaBlendValue,
-      procedure(Value: integer)
-        begin
-          Smoke.AlphaBlendValue := Value
-        end,
-      procedure
-        begin
-          Smoke.Visible := false;
-        end);
+      // Proc
+      OnValue := procedure(V: integer) begin
+        Smoke.AlphaBlendValue := V;
+        Smoke.Visible := true;
+      end;
 
-      SmokeAnimation.Duration := 100;
+      Start;
 
-      SmokeAnimation.FreeOnTerminate := false;
-      SmokeAnimation.Start;
+      if not Value then
+        Smoke.Hide;
+    finally
+      Free;
     end;
 end;
 
@@ -652,16 +725,31 @@ begin
   LockWindowUpdate(0);
 end;
 
+procedure FXCustomForm.WMClose(var Message: TWMClose);
+begin
+  inherited;
+end;
+
+procedure FXCustomForm.WMShowWindow(var Message: TWMShowWindow);
+begin
+  inherited;
+
+  // Re-enable alpha blend
+  if MicaEffect then
+    AlphaBlend := true;
+end;
+
 procedure FXCustomForm.WM_Activate(var Msg: TWMActivate);
 begin
   inherited;
 
-  if Smoke.Visible then
+  if SmokeEffect and  (Smoke<> nil) and Smoke.Visible then
     Smoke.SetFocus;
 end;
 
 procedure FXCustomForm.WM_DWMColorizationColorChanged(var Msg: TMessage);
 begin
+  inherited;
   ThemeManager.MeasuredUpdateSettings;
 
   UpdateTheme(true);
@@ -687,8 +775,11 @@ begin
     inherited;
 end;
 
-procedure FXCustomForm.WM_MOVE(var Msg: Tmessage);
+procedure FXCustomForm.WM_MOVE(var Msg: TWMMove);
 begin
+  if not CanMove(Msg.Pos) then
+    Abort;
+
   inherited;
   DoMove;
 
@@ -713,6 +804,41 @@ begin
 end;
 
 { FXDialogForm }
+
+function FXDialogForm.CanMove(Position: TPoint): boolean;
+begin
+  Result := inherited;
+
+  if Visible and FAutoMoveParent and FCanMoveParent and FAutoCenter and (FParentForm <> nil) then begin
+    // Calculate can move
+    var P: TWindowPlacement;
+    var CanMove: boolean; CanMove := true;
+
+    // Check if parent snapped
+    if FParentForm.HandleAllocated and GetWindowPlacement(FParentForm.Handle, P) then
+      // Check if the window is maximized or has different normal position
+      if (P.showCmd = SW_SHOWMAXIMIZED) or
+         ((P.rcNormalPosition.Left <> FParentForm.BoundsRect.Left) and (P.rcNormalPosition.Right <> FParentForm.BoundsRect.Right)) or
+         ((P.rcNormalPosition.Top <> FParentForm.BoundsRect.Top) and (P.rcNormalPosition.Bottom <> FParentForm.BoundsRect.Bottom)) then
+          CanMove := false;
+
+    if CanMove then begin
+      // Center parent around
+      const ACenter = BoundsRect.CenterPoint;
+      with FParentForm do begin
+        const NewP = Point(ACenter.X - Width div 2, ACenter.Y - Height div 2);
+
+        if Left <> NewP.X then
+          Left := NewP.X;
+        if Top <> NewP.Y then
+          Top := NewP.Y;
+      end;
+    end else begin
+      Result := false;
+      CenterDialogInParentForm;
+    end;
+  end;
+end;
 
 function FXDialogForm.CanResize(var NewWidth, NewHeight: Integer): Boolean;
 begin
@@ -746,24 +872,6 @@ begin
   else
     if Screen.ActiveForm <> nil then
       Params.WndParent := Screen.ActiveForm.Handle;
-end;
-
-procedure FXDialogForm.DoMove;
-begin
-  inherited;
-
-  if Visible and FAutoMoveParent and FCanMoveParent and FAutoCenter and (FParentForm <> nil) then begin
-    // Center parent around
-    const ACenter = BoundsRect.CenterPoint;
-    with FParentForm do begin
-      const NewP = Point(ACenter.X - Width div 2, ACenter.Y - Height div 2);
-
-      if Left <> NewP.X then
-        Left := NewP.X;
-      if Top <> NewP.Y then
-        Top := NewP.Y;
-    end;
-  end;
 end;
 
 procedure FXDialogForm.DoShow;
@@ -816,8 +924,6 @@ end;
 
 procedure FXForm.InitForm;
 begin
-  FDefaultConstraints := true;
-
   // Constraints
   if FDefaultConstraints and
     ((Constraints.MinWidth = 0) and (Constraints.MinHeight = 0)
