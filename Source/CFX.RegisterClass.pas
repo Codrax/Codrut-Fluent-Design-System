@@ -104,7 +104,7 @@ begin
     FXPopupConnector, FXTitleBarPanel, FXAppManager, FXAppManagerFormAssist
     ]
   );
-  Exit;
+
   // Legacy
   RegisterComponents(REGISTER_CLASS_LEGACY,
     [
