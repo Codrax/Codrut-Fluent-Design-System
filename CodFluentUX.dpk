@@ -57,7 +57,7 @@ contains
   CFX.PropertyEditors in 'Source\CFX.PropertyEditors.pas',
   CFX.DesignEditors in 'Source\CFX.DesignEditors.pas',
   CFX.RegisterClass in 'Source\CFX.RegisterClass.pas',
-  CFX.FormTemplates,
+  CFX.FormTemplates in 'Source\CFX.FormTemplates.pas',
   CFX.Colors in 'Source\CFX.Colors.pas',
   CFX.Classes in 'Source\CFX.Classes.pas',
   CFX.VarHelpers in 'Source\CFX.VarHelpers.pas',

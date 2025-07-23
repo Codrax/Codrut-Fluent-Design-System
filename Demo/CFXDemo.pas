@@ -17,11 +17,13 @@ uses
   CFX.Messages, CFX.VarHelpers, CFX.Graphics, CFX.RatingControl, CFX.Effects,
   CFX.Progress, CFX.GDI, CFX.Utilities, CFX.QuickDialogs, CFX.Instances,
   CFX.PaintBox, CFX.Lists, CFX.TabStrip, CFX.AppManager, CFX.Shapes,
+  CFX.FormTemplates,
 
   // VCL COMPONENTS
   Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage, Vcl.ControlList,
   Vcl.ExtDlgs, System.ImageList, UITypes, Vcl.ComCtrls, Vcl.Mask,
-  Vcl.Themes, System.Generics.Collections, CFX.Layouts, CFX.TitlebarPanel;
+  Vcl.Themes, System.Generics.Collections, CFX.Layouts, CFX.TitlebarPanel,
+  CFX.Components;
 
 type
   TForm1 = class(FXForm)
@@ -137,18 +139,17 @@ end;
 
 procedure TForm1.FXButton13Click(Sender: TObject);
 var
-  A: FXDialog;
+  A: FXModalDialog;
 begin
-  A := FXDialog.Create;
+  A := FXModalDialog.Create;
 
   with A do
     try
       Title := 'Hello World!';
       Text := 'This is a fluent dialog box! Here you can press any of the buttons below!';
 
-      Kind := FXMessageType.Warning;
       Buttons := [mbOk, mbCancel];
-      ParentForm := Self;
+      Parent := Self;
 
       Execute;
     finally
@@ -205,16 +206,15 @@ end;
 
 procedure TForm1.FXButton4Click(Sender: TObject);
 var
-  A: FXDialog;
+  A: FXModalDialog;
 begin
-  A := FXDialog.Create;
+  A := FXModalDialog.Create;
 
   with A do
     try
       Title := 'Hello World!';
       Text := 'This is a fluent dialog box! Here you can press any of the buttons below!';
 
-      Kind := FXMessageType.Warning;
       Buttons := [mbOk, mbCancel];
 
       Execute;
@@ -472,7 +472,7 @@ end;
 procedure TForm1.FXButtonDesign4Click(Sender: TObject);
 var
   A: FXInputBox;
-  D: FXDialog;
+  D: FXModalDialog;
   S: string;
 begin
   A := FXInputBox.Create;
@@ -482,19 +482,20 @@ begin
       Title := 'Search';
       Text := 'Enter the search query to begin searching';
 
-      ParentForm := Self;
+      Parent := Self;
       Value := '';
       TextHint := 'Type here';
 
-      S := Execute;
+      if not Execute then
+        Exit;
 
-      D := FXDialog.Create;
+      D := FXModalDialog.Create;
       with D do
         try
           Title := 'Search Query';
-          Text := Format('Your search for "%S" returned no results.', [S]);
+          Text := Format('Your search for "%S" returned no results.', [Value]);
 
-          ParentForm := Self;
+          Parent := Self;
 
           Execute;
         finally

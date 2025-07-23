@@ -137,9 +137,6 @@ type
   procedure CreateBySignature(var Wallpaper: TGraphic; Sign: TFileType);
   procedure CreateByExtension(var Wallpaper: TGraphic; Extension: string);
 
-const
-  DESKTOP_PROGRAM = 'Program Manager';
-
 var
   WorkingAP: boolean;
   Wallpaper: TBitMap;
@@ -195,7 +192,7 @@ end;
 
 function GetWallpaperName(ScreenIndex: integer; TranscodedDefault: boolean): string;
 begin
-  if GetNTKernelVersion <= 6.1 then
+  if NTKernelVersion <= 6.1 then
     Result := GetUserShellLocation(FXUserShell.AppData) + '\Microsoft\Windows\Themes\TranscodedWallpaper.jpg'
   else
     begin
@@ -209,23 +206,126 @@ end;
 
 procedure GetWallpaper;
 var
-  DeskRect: TRect;
+  Filename: string;
+
+  DestRect: TRect;
+
+  DRects: TArray<TRect>;
+
+  DeskRect,
+  MonitorRect: TRect;
+
+  I, J, OffsetX, OffsetY: integer;
+
+  Extension: string;
+
+  TranscodedDefault: boolean;
+
+  WallpaperSetting: TWallpaperSetting;
+  DrawMode: FXDrawMode;
+
+  BitMap: TBitMap;
 begin
-  (* This method is objectively better than loading all files manually and colaging them!
-    Screenshot the program Manager! *)
+  if WorkingAP then
+    Exit;
+
+  // Windows Xp and below compatability
+  if NTKernelVersion <= 5.2 then
+    Exit;
+
   // Working
   WorkingAP := true;
 
   // Get Rects
   DeskRect := Screen.DesktopRect;
 
+  OffsetX := abs(Screen.DesktopRect.Left);
+  OffsetY := abs(Screen.DesktopRect.Top);
+
   // Create Images
   WallpaperBlurred := TBitMap.Create(DeskRect.Width, DeskRect.Height);
 
-  // Screenshot
-  AppScreenShot(WallpaperBlurred, DESKTOP_PROGRAM);
+  WallpaperBlurred.Canvas.Brush.Color := clBlack;
+  WallpaperBlurred.Canvas.FillRect(WallpaperBlurred.Canvas.ClipRect);
 
-  // Normal
+  // Prepare
+  WallpaperSetting := GetWallpaperSetting;
+
+  TranscodedDefault := Screen.MonitorCount = 1;
+
+  // Rects Draw Mode
+  case WallpaperSetting of
+    TWallpaperSetting.Fill: DrawMode := FXDrawMode.Center3Fill;
+    TWallpaperSetting.Fit: DrawMode := FXDrawMode.CenterFit;
+    TWallpaperSetting.Stretch: DrawMode := FXDrawMode.Stretch;
+    TWallpaperSetting.Tile: DrawMode := FXDrawMode.Tile;
+    TWallpaperSetting.Center: DrawMode := FXDrawMode.Center;
+    TWallpaperSetting.Span: DrawMode := FXDrawMode.CenterFill;
+    else DrawMode := FXDrawMode.Stretch;
+  end;
+
+  if WallpaperSetting = TWallpaperSetting.Span then
+    // Fill Image with Wallpaper
+    begin
+      // Single-File Extension
+      Extension := GetCurrentExtension;
+
+      // Get Transcoded
+      CreateByExtension( TGraphic(Wallpaper), Extension );
+      FileName := GetWallpaperName(0);
+
+      if not fileexists(FileName) then
+        Exit;
+
+      Wallpaper.LoadFromFile(FileName);
+      DrawImageInRect(WallpaperBlurred.Canvas, WallpaperBlurred.Canvas.ClipRect, Wallpaper, FXDrawMode.CenterFill);
+    end
+  else
+    // Complete Desktop Puzzle
+    for I := 0 to Screen.MonitorCount - 1 do
+      begin
+        // Get Transcoded
+		FileName := GetWallpaperName(Screen.Monitors[I].MonitorNum, TranscodedDefault);
+
+        if not fileexists(FileName) then
+          Break;
+
+		// Create Extension
+        CreateBySignature( TGraphic(Wallpaper), ReadFileSignature(FileName) );
+
+        // Load
+        try
+          Wallpaper.LoadFromFile(FileName);
+        except
+          Break;
+        end;
+
+        // Draw Monitor
+        MonitorRect := Screen.Monitors[I].BoundsRect;
+
+        DestRect := MonitorRect;
+        DestRect.Offset(OffsetX, OffsetY);
+
+        DRects := GetDrawModeRects(DestRect, Wallpaper, DrawMode);
+
+        // Draw
+        if WallpaperSetting in [TWallpaperSetting.Fit, TWallpaperSetting.Stretch] then
+          for J := 0 to High(DRects) do
+            WallpaperBlurred.Canvas.StretchDraw(DRects[J], Wallpaper, 255)
+          else
+            begin
+              Bitmap := TBitMap.Create(DestRect.Width, DestRect.Height);
+              for J := 0 to High(DRects) do
+                begin
+                  DRects[J].Offset(-DestRect.Left, -DestRect.Top);
+
+                  Bitmap.Canvas.StretchDraw(DRects[J], Wallpaper, 255)
+                end;
+
+              WallpaperBlurred.Canvas.StretchDraw(DestRect, Bitmap, 255)
+            end;
+      end;
+
   WallpaperBMP := TBitMap.Create(DeskRect.Width, DeskRect.Height);
   WallpaperBMP.Assign( WallpaperBlurred );
 
@@ -265,7 +365,7 @@ var
   Bytes: TBytes;
 begin
   // Windows7
-  if GetNTKernelVersion <= 6.1 then
+  if NTKernelVersion <= 6.1 then
     Exit('.jpeg');
 
   // Create registry

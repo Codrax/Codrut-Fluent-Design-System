@@ -70,7 +70,6 @@ type
     FXButton10: FXButton;
     FXButton15: FXButton;
     FXButton17: FXButton;
-    Button1: TButton;
     FXAppManager1: FXAppManager;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
@@ -84,7 +83,6 @@ type
     procedure FXPaintBox1Draw(Sender: TObject);
     procedure FXButton2Click(Sender: TObject);
     procedure FXButton4Click(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -97,11 +95,6 @@ var
 implementation
 
 {$R *.dfm}
-
-procedure TForm1.Button1Click(Sender: TObject);
-begin
-  ShowMEssage( FXAppManager1.AppData + #13 + AppManager.FolderPackage );
-end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin

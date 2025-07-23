@@ -1751,15 +1751,6 @@ object Form1: TForm1
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
   end
-  object Button1: TButton
-    Left = 486
-    Top = 463
-    Width = 131
-    Height = 40
-    Caption = 'Pack'
-    TabOrder = 37
-    OnClick = Button1Click
-  end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
@@ -1800,8 +1791,9 @@ object Form1: TForm1
     PublisherName = 'Codrut Software'
     HasAppData = True
     AppVersion = '1.1.0.0'
+    AutomaticTasks = [UpdatePrompt, WindowSaveForm, WindowLoadForm]
     UserUpdateWaitDelay = 2000
-    Left = 776
-    Top = 264
+    Left = 760
+    Top = 168
   end
 end

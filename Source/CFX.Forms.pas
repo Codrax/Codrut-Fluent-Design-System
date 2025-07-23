@@ -373,7 +373,7 @@ begin
 
   // TitleBar
   FTitlebarInitialized := false;
-  FEnableTitlebar := GetNTKernelVersion >= 6.0;
+  FEnableTitlebar := NTKernelVersion >= 6.0;
   if not FEnableTitlebar then
     begin
       FTitlebarInitialized := true;

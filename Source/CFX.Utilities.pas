@@ -13,9 +13,11 @@ function GetAccentColor( brightencolor: boolean = true ): TColor;
 function GetScrollAmount(Delta: integer; ViewHeight: integer): integer;
 function GetLinesPerScroll: integer;
 function GetLineScrollHeight: integer;
-function GetNTKernelVersion: single;
 
 function GetUserNameString: string;
+
+// Winapi
+function NTKernelVersion: single;
 
 // Shell
 procedure ShellRun(Command: string; Parameters: string = '');
@@ -34,10 +36,9 @@ function GetAppDataFolder: string;
 procedure QuickScreenShot(var BitMap: TBitMap; Monitor: integer = -2);
 procedure AppScreenShot(var BitMap: TBitMap; ApplicationCapton: string);
 
-
 implementation
 
-function GetNTKernelVersion: single;
+function NTKernelVersion: single;
 begin
   Result := Win32MajorVersion + Win32MinorVersion / 10;
 end;
