@@ -246,7 +246,7 @@ type
 
     // Interface
     function IsContainer: Boolean;
-    procedure UpdateTheme(const UpdateChildren: Boolean);
+    procedure UpdateTheme(const UpdateChildren: Boolean); override;
 
     function Background: TColor;
   end;

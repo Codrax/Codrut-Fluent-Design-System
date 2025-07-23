@@ -132,6 +132,7 @@ type
 
     // Data
     procedure Initialize;
+    property Initializeed: boolean read FInitialized;
 
     // Utils
     procedure RestartApplicationProcess;
@@ -186,6 +187,7 @@ type
     procedure SetUpdateCheckInterval(const Value: integer);
     function GetHasAppData: boolean;
     type TPendingDisplayAction = (UpdatePrompt);
+    type TUnEditableBoolean = type boolean;
     var
     // Active propr
     FormPrompt: TForm;
@@ -207,11 +209,14 @@ type
     FOnVersionDowngraded: FXOnVersionChanged;
     FUserUpdateWaitDelay: cardinal;
 
+    // Manager design fixes (Delphi is dumb sometimes)
+    FIdentifierValueSet: boolean;
+    FPublisherValueSet: boolean;
+
     // Background
     procedure AppCheckUpdates;
 
     // Stored
-    function IsAppDataStored: Boolean;
     function IsEndpointStored: Boolean;
 
     // Utils
@@ -256,7 +261,7 @@ type
     // Info
     property ApplicationIdentifier: string read GetApplicationIdentifier write SetApplicationIdentifier;
     property ApplicationName: string read GetApplicationName write SetApplicationName;
-    property PublisherName: TCaption read GetPublisherName write SetPublisherName stored IsAppDataStored;
+    property PublisherName: TCaption read GetPublisherName write SetPublisherName;
     property HasAppData: boolean read GetHasAppData write SetHasAppData default false;
 
     // Update
@@ -315,6 +320,8 @@ type
   protected
     // Loaded
     procedure Loaded; override;
+    procedure Updated; override;
+
 
   published
     // Props
@@ -388,10 +395,16 @@ procedure FXAppManager.ApplicationClose;
 begin
   // Save settings
   if AppManager <> nil then
-    AppManager.SaveSettings;
+    try
+      AppManager.SaveSettings;
+    except
+    end;
 
   // Save form manager settings
-  SaveSettings;
+  try
+    SaveSettings;
+  except
+  end;
 end;
 
 procedure FXAppManager.ApplicationOpen;
@@ -486,9 +499,12 @@ begin
 
   // Data
   PrimaryDisplayForm := true;
-  ApplicationIdentifier := GenerateString(20, [TStrGenFlag.LowercaseLetters, TStrGenFlag.Numbers]);
   FUpdateCheckInterval := -1;
   FTasks := DEFAULT_TASKS;
+  ApplicationIdentifier := GenerateString(10, [TStrGenFlag.LowercaseLetters, TStrGenFlag.Numbers]);
+    FIdentifierValueSet := false;
+  PublisherName := DEFAULT_COMPANY;
+    FPublisherValueSet := false; // delphi moment
   FAppDataStructure := TStringList.Create;
   FUserUpdateWaitDelay := DEFAULT_USER_UPDATE_DELAY;
 end;
@@ -501,11 +517,14 @@ begin
   FAppDataStructure.Free;
 
   // Form is closed
-  if not IsDesigning and (FXAppTask.WindowSaveForm in FTasks) then
-    FormClosing;
+  if not IsDesigning and AppManager.Initializeed and (FXAppTask.WindowSaveForm in FTasks) then
+    try
+      FormClosing;
+    except
+    end;
 
   // Close
-  if not IsDesigning then
+  if not IsDesigning and AppManager.Initializeed then
     ApplicationClose;
 
   inherited;
@@ -576,11 +595,6 @@ begin
   AppCheckUpdates;
 end;
 
-function FXAppManager.IsAppDataStored: Boolean;
-begin
-  Result := AppManager.PublisherName <> DEFAULT_COMPANY;
-end;
-
 function FXAppManager.IsEndpointStored: Boolean;
 begin
   Result := AppManager.APIEndpoint <> DEFAULT_API;
@@ -594,6 +608,12 @@ end;
 procedure FXAppManager.Loaded;
 begin
   inherited;
+
+  if not FIdentifierValueSet then
+    ApplicationIdentifier := '';
+  if not FPublisherValueSet then
+    PublisherName := '';
+
   // Settings loaded
   if IsDesigning then
     Exit;
@@ -665,6 +685,7 @@ end;
 procedure FXAppManager.SetApplicationIdentifier(Value: string);
 begin
   AppManager.AppIdentifier := Value;
+  FIdentifierValueSet := true;
 end;
 
 procedure FXAppManager.SetApplicationName(const Value: string);
@@ -687,7 +708,8 @@ end;
 
 procedure FXAppManager.SetPublisherName(const Value: TCaption);
 begin
-
+  AppManager.PublisherName := Value;
+  FPublisherValueSet := true;
 end;
 
 procedure FXAppManager.SetUpdateCheckInterval(const Value: integer);
@@ -701,7 +723,7 @@ end;
 
 procedure FXAppManager.SetVersion(const Value: string);
 begin
-
+  AppManager.AppVersion.Parse(Value);
 end;
 
 { FXAppManagerClass }
@@ -737,7 +759,7 @@ begin
 
   FAppIdentifier := '';
   FApplicationName := '';
-  FPublisherName := DEFAULT_COMPANY;
+  FPublisherName := '';
 
   FFlags := [];
 
@@ -1003,7 +1025,7 @@ end;
 
 procedure FXAppManagerClass.SetIdentifier(const Value: string);
 begin
-  const ModiVal = CFX.StringUtils.ClearStringSymbols(Value).Replace(' ', '');
+  const ModiVal = CFX.StringUtils.ClearStringSymbols(Value).Replace(' ', '').ToLower;
 
   if ModiVal = 'packages' then
     raise Exception.Create('Invalid application identifier.');
@@ -1031,7 +1053,10 @@ destructor FXAppManagerFormAssist.Destroy;
 begin
   // Form is closed
   if not IsDesigning and (FXAppFormAssistTask.WindowSaveForm in FTasks) then
-    FormClosing;
+    try
+      FormClosing;
+    except
+    end;
 
   inherited;
 end;
@@ -1056,6 +1081,11 @@ begin
   // Form is created
   if not IsDesigning and (FXAppFormAssistTask.WindowLoadForm in FTasks) then
     FormOpening;
+end;
+
+procedure FXAppManagerFormAssist.Updated;
+begin
+  inherited;
 end;
 
 { FXAppManagerComponent }

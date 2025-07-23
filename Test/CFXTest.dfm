@@ -1597,7 +1597,7 @@ object Form1: TForm1
     StateImage.SelectImageIndex = 0
   end
   object FXButton10: FXButton
-    Left = 622
+    Left = 501
     Top = 171
     Width = 140
     Height = 35
@@ -1607,7 +1607,7 @@ object Form1: TForm1
     Margins.Bottom = 0
     Size.X = 140
     Size.Y = 35
-    Position.X = 622
+    Position.X = 501
     Position.Y = 171
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
@@ -1648,7 +1648,7 @@ object Form1: TForm1
     StateImage.SelectImageIndex = 0
   end
   object FXButton15: FXButton
-    Left = 622
+    Left = 501
     Top = 217
     Width = 140
     Height = 35
@@ -1658,7 +1658,7 @@ object Form1: TForm1
     Margins.Bottom = 0
     Size.X = 140
     Size.Y = 35
-    Position.X = 622
+    Position.X = 501
     Position.Y = 217
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
@@ -1700,7 +1700,7 @@ object Form1: TForm1
     StateImage.SelectImageIndex = 0
   end
   object FXButton17: FXButton
-    Left = 622
+    Left = 501
     Top = 269
     Width = 140
     Height = 35
@@ -1710,7 +1710,7 @@ object Form1: TForm1
     Margins.Bottom = 0
     Size.X = 140
     Size.Y = 35
-    Position.X = 622
+    Position.X = 501
     Position.Y = 269
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
@@ -1752,8 +1752,8 @@ object Form1: TForm1
     StateImage.SelectImageIndex = 0
   end
   object Button1: TButton
-    Left = 566
-    Top = 330
+    Left = 486
+    Top = 463
     Width = 131
     Height = 40
     Caption = 'Pack'
@@ -1795,16 +1795,13 @@ object Form1: TForm1
     Top = 73
   end
   object FXAppManager1: FXAppManager
-    ApplicationIdentifier = 'fluentdesignsystem'
+    ApplicationIdentifier = 'fluentdesigntest'
     ApplicationName = 'Codrut Fluent Design Test'
+    PublisherName = 'Codrut Software'
     HasAppData = True
-    AppVersion = '1.0.0.0'
-    AppDataStructure.Strings = (
-      'data'
-      'cache'
-      'config')
-    UserUpdateWaitDelay = 0
-    Left = 824
-    Top = 133
+    AppVersion = '1.1.0.0'
+    UserUpdateWaitDelay = 2000
+    Left = 776
+    Top = 264
   end
 end

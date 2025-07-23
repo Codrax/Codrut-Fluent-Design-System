@@ -100,7 +100,7 @@ implementation
 
 procedure TForm1.Button1Click(Sender: TObject);
 begin
-  ShowMEssage( FXAppManager1.UpdateCheckInterval.ToString );
+  ShowMEssage( FXAppManager1.AppData + #13 + AppManager.FolderPackage );
 end;
 
 procedure TForm1.FormCreate(Sender: TObject);
