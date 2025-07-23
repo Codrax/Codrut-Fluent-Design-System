@@ -1024,13 +1024,19 @@ begin
 end;
 
 procedure FXAppManagerClass.SetIdentifier(const Value: string);
+var
+  Val: string;
+const
+  RemoveChars : TArray<char> = ['~', '!', '@', '#', '$', '%', '^', '&', '*',
+    '(', ')', '[', ']', '{', '}', ';', ':', '"', '\', '|', '<', '>', ',',
+    '.', '/', '?', #39, '`'];
 begin
-  const ModiVal = CFX.StringUtils.ClearStringSymbols(Value).Replace(' ', '').ToLower;
+  Val := StringRemoveCharacters(Value, RemoveChars).Replace(' ', '').ToLower;
 
-  if ModiVal = 'packages' then
+  if Val = 'packages' then
     raise Exception.Create('Invalid application identifier.');
   RaiseInit;
-  FAppIdentifier := ModiVal;
+  FAppIdentifier := Val;
 end;
 
 procedure FXAppManagerClass.SetPublisherName(const Value: string);

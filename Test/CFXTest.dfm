@@ -1786,7 +1786,7 @@ object Form1: TForm1
     Top = 73
   end
   object FXAppManager1: FXAppManager
-    ApplicationIdentifier = 'fluentdesigntest'
+    ApplicationIdentifier = 'fluent-design-test'
     ApplicationName = 'Codrut Fluent Design Test'
     PublisherName = 'Codrut Software'
     HasAppData = True

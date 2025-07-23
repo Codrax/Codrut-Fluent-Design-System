@@ -54,7 +54,10 @@ function StrPos(SubString: string; MainString: string; index: integer = 1; offse
 function InString(SubString, MainString: string; Flags: TStringFindFlags = []): boolean;
 
 // Search Utilities
+/// <summary> Remove all known symbols from string. </summary>
 function ClearStringSymbols(MainString: string): string;
+/// <summary> Remove provided characters from string. </summary>
+function StringRemoveCharacters(MainString: string; Characters: TArray<char>): string;
 /// <summary> Return the first string which is not Empty. </summary>
 function StringNullLess(Strings: TArray<string>): string; overload;
 /// <summary> Return the first string which is not Empty. </summary>
@@ -502,6 +505,15 @@ begin
   Result := MainString;
   for I := 0 to High(SymbolChars) do
     Result := Result.Replace(SymbolChars[I], '')
+end;
+
+function StringRemoveCharacters(MainString: string; Characters: TArray<char>): string;
+var
+  I: Integer;
+begin
+  Result := MainString;
+  for I := 0 to High(Characters) do
+    Result := Result.Replace(Characters[I], '')
 end;
 
 function StringNullLess(Strings: TArray<string>): string;
