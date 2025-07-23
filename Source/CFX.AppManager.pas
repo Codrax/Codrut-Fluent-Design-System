@@ -9,6 +9,7 @@ uses
   Winapi.Messages,
   Classes,
   Vcl.Forms,
+  Vcl.Dialogs,
   CFX.Instances,
   System.SysUtils,
   System.UITypes,
@@ -37,41 +38,58 @@ uses
 type
   FXOnVersionChanged = procedure(PreviousVersion: FXVersion; ActiveVersion: FXVersion) of object;
 
+  TAppManagerFlag = (WantsAppData);
+  TAppManagerFlags = set of TAppManagerFlag;
+
   { Background App Manager Class }
   FXAppManagerClass = class(TObject)
-  private
+  strict private
     // Constant Folders
-    FAppDataPath,
-    FAppPackagesPath: string;
+    FFolderGlobalAppData: string;
 
     // Dynamic data
-    FAppSelfFolder: string;
-    FAppConfig: string;
-    FAppWindows: string;
+    FFolderPackage: string;
+    FFolderData: string;
+
+    // Manager
+    FFlags: TAppManagerFlags;
 
     // Variabiles
     FAppIdentifier: string;
     FApplicationName: string;
+    FPublisherName: string;
     FAppVersion: FXVersion;
     FServerVersion: FXVersion;
     FAPIName,
     FAPiEndpoint: string;
 
+    // Update
     FUpdateResult: TValueRelationship;
     FUpdateCheckSuccess: boolean;
     FCheckingUpdates: boolean;
     FLastUpdateCheck: TDate;
     FLastInstalledVersion: FXVersion;
 
+    // Init
+    FInitialized: boolean;
+
     // Procs
     function GetConfig: TIniFile;
     function GetWindow: TIniFile;
 
-    procedure UpdateFolders;
-    procedure VerifyFolders;
+    // Init
+    procedure RaiseInit;
+    procedure RaiseNotInit;
 
     // Setters
     procedure SetIdentifier(const Value: string);
+    procedure SetPublisherName(const Value: string);
+    procedure SetApplicationName(const Value: string);
+
+    // Getters
+    function GetFolderData: string;
+    function GetFolderPackage: string;
+    procedure SetFlags(const Value: TAppManagerFlags);
 
   public
     // Procedures
@@ -85,22 +103,35 @@ type
     procedure SaveFormData(Form: TForm);
     procedure LoadFormData(Form: TForm);
 
-    // Properties
+    // Manager
+    property Flags: TAppManagerFlags read FFlags write SetFlags;
+
+    // Info
+    property AppIdentifier: string read FAppIdentifier write SetIdentifier;
+    property ApplicationName: string read FApplicationName write SetApplicationName;
+    property PublisherName: string read FPublisherName write SetPublisherName;
+    property AppVersion: FXVersion read FAppVersion write FAppVersion;
+
+    // Data
+    property FolderGlobalAppData: string read FFolderGlobalAppData;
+    property FolderData: string read GetFolderData;
+    property FolderPackage: string read GetFolderPackage;
+
+    // Update
     property CheckingForUpdates: boolean read FCheckingUpdates;
     property LastUpdateCheck: TDate read FLastUpdateCheck;
-    property AppIdentifier: string read FAppIdentifier write SetIdentifier;
-    property ApplicationName: string read FApplicationName write FApplicationName;
-    property AppData: string read FAppDataPath;
-    property AppPackages: string read FAppPackagesPath;
-    property AppVersion: FXVersion read FAppVersion write FAppVersion;
     property LastInstalledVersion: FXVersion read FLastInstalledVersion;
     property UpdateCheckSuccess: boolean read FUpdateCheckSuccess;
     property UpdateCheckResult: TValueRelationship read FUpdateResult;
     property ServerVersion: FXVersion read FServerVersion write FServerVersion;
     property APIName: string read FAPIName write FAPIName;
-    property APiEndpoint: string read FAPiEndpoint write FAPiEndpoint;
+    property APIEndpoint: string read FAPiEndpoint write FAPiEndpoint;
 
+    // Status
     function NewVersion: boolean;
+
+    // Data
+    procedure Initialize;
 
     // Utils
     procedure RestartApplicationProcess;
@@ -115,6 +146,9 @@ type
   private
     FPrimaryDisplayForm: boolean;
     FParentForm: TForm;
+
+    // Getters
+    function GetAppData: string;
 
     // Setters
     procedure SetPrimaryDisplayForm(const Value: boolean);
@@ -134,6 +168,9 @@ type
     procedure FormClosing;
     procedure FormOpening;
 
+    // Props
+    property AppData: string read GetAppData;
+
     // Constructors
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -145,18 +182,16 @@ type
     const
       DEFAULT_TASKS = [FXAppTask.WindowLoadForm, FXAppTask.WindowSaveForm];
       DEFAULT_USER_UPDATE_DELAY = 2000;
+    procedure SetAPIName(const Value: string);
+    procedure SetUpdateCheckInterval(const Value: integer);
+    function GetHasAppData: boolean;
     type TPendingDisplayAction = (UpdatePrompt);
     var
     // Active propr
     FormPrompt: TForm;
 
     // Props
-    FApplicationIdentifier: string;
     FUpdateCheckInterval: integer;
-    FAppVersion: FXVersion;
-    FAPIName: string;
-    FAPIEndpoint: string;
-    FHasAppData: boolean;
     FSingleInstance: boolean;
     FTasks: FXAppTasks;
     FAppDataStructure: TStringList;
@@ -172,9 +207,6 @@ type
     FOnVersionDowngraded: FXOnVersionChanged;
     FUserUpdateWaitDelay: cardinal;
 
-    FApplicationName: string;
-    FPublisherName: TCaption;
-
     // Background
     procedure AppCheckUpdates;
 
@@ -186,42 +218,57 @@ type
     function HasPrimaryDisplayForm: boolean;
     function GetPrimaryDisplayForm: TForm;
 
-    // Getters
-    function GetAppData: string;
+    // Update
+    procedure CheckUpdateCheckInterval;
+
+    // Settings (for app manager)
+    procedure SaveSettings;
+    procedure LoadSettings;
+
+    function GetApplicationIdentifier: string;
+    function GetApplicationName: string;
+    function GetPublisherName: TCaption;
     function GetVersion: string;
 
+    function GetAPIEndpoint: string;
+    function GetAPIName: string;
+
     // Setters
-    procedure SetApplicationIdentifier(Value: string);
-    procedure SetAPIEndpoint(const Value: string);
-    procedure SetVersion(const Value: string);
     procedure SetHasAppData(const Value: boolean);
+
+    procedure SetApplicationIdentifier(Value: string);
     procedure SetApplicationName(const Value: string);
+    procedure SetPublisherName(const Value: TCaption);
+    procedure SetVersion(const Value: string);
+
     procedure SetDataStructure(const Value: TStringList);
+    procedure SetAPIEndpoint(const Value: string);
 
   protected
     // Loaded
     procedure Loaded; override;
-    procedure ApplySettings;
 
     procedure ProcessDisplayChange;
 
   published
     property PrimaryDisplayForm default true;
 
-    property ApplicationIdentifier: string read FApplicationIdentifier write SetApplicationIdentifier;
-    // The update checking interval (days)
-    property UpdateCheckInterval: integer read FUpdateCheckInterval write FUpdateCheckInterval default -1;
-    property AppVersion: string read GetVersion write SetVersion;
-    property APIName: string read FAPIName write FAPIName;
-    property APIEndpoint: string read FAPIEndpoint write SetAPIEndpoint stored IsEndpointStored;
+    // Info
+    property ApplicationIdentifier: string read GetApplicationIdentifier write SetApplicationIdentifier;
+    property ApplicationName: string read GetApplicationName write SetApplicationName;
+    property PublisherName: TCaption read GetPublisherName write SetPublisherName stored IsAppDataStored;
+    property HasAppData: boolean read GetHasAppData write SetHasAppData default false;
 
+    // Update
+    property UpdateCheckInterval: integer read FUpdateCheckInterval write SetUpdateCheckInterval default -1; // The update checking interval (days)
+    property AppVersion: string read GetVersion write SetVersion;
+    property APIName: string read GetAPIName write SetAPIName;
+    property APIEndpoint: string read GetAPIEndpoint write SetAPIEndpoint stored IsEndpointStored;
+
+    // Settings
     property SingleInstance: boolean read FSingleInstance write FSingleInstance default false;
 
-    property ApplicationName: string read FApplicationName write SetApplicationName;
-    property PublisherName: TCaption read FPublisherName write FPublisherName stored IsAppDataStored;
-    property HasAppData: boolean read FHasAppData write SetHasAppData default false;
-
-    property UpdateCheckUserInitiated: boolean read FUpdateCheckUserInitiated;
+    // Events
     property OnUpdateChecked: TNotifyEvent read FOnUpdateChecked write FOnUpdateChecked;
     property OnUpdateStartCheck: TNotifyEvent read FOnUpdateStartCheck write FOnUpdateStartCheck;
     property OnApplicationLoaded: TNotifyEvent read FOnApplicationLoaded write FOnApplicationLoaded;
@@ -229,10 +276,9 @@ type
     property OnVersionUpgraded: FXOnVersionChanged read FOnVersionUpgraded write FOnVersionUpgraded;
     property OnVersionDowngraded: FXOnVersionChanged read FOnVersionDowngraded write FOnVersionDowngraded;
 
+    // Tasks
     property AutomaticTasks: FXAppTasks read FTasks write FTasks default DEFAULT_TASKS;
     property AppDataStructure: TStringList read FAppDataStructure write SetDataStructure;
-
-    property AppData: string read GetAppData;
 
     property UserUpdateWaitDelay: cardinal read FUserUpdateWaitDelay write FUserUpdateWaitDelay;
     function LastUpdateCheck: string;
@@ -244,6 +290,9 @@ type
 
     // Utils
     procedure InitiateUserUpdateCheck;
+
+    // Props
+    property UpdateCheckUserInitiated: boolean read FUpdateCheckUserInitiated;
 
     // Constructors
     constructor Create(AOwner: TComponent); override;
@@ -260,7 +309,6 @@ type
     FTasks: FXAppFormAssistTasks;
 
     // Getters
-    function GetAppData: string;
     function GetApplicationName: string;
     function GetPublisherName: TCaption;
 
@@ -275,7 +323,6 @@ type
     // Read
     property ApplicationName: string read GetApplicationName;
     property PublisherName: TCaption read GetPublisherName;
-    property AppData: string read GetAppData;
 
   public
     // Constructors
@@ -339,8 +386,12 @@ end;
 
 procedure FXAppManager.ApplicationClose;
 begin
+  // Save settings
   if AppManager <> nil then
     AppManager.SaveSettings;
+
+  // Save form manager settings
+  SaveSettings;
 end;
 
 procedure FXAppManager.ApplicationOpen;
@@ -348,7 +399,7 @@ begin
   // Other instance
   if FSingleInstance then
     begin
-      SetSemafor( FApplicationIdentifier );
+      SetSemafor( AppManager.AppIdentifier );
 
       var Action: FXOtherInstanceAction;
       if HasOtherInstances then
@@ -367,9 +418,12 @@ begin
     end;
 
   // Form is created
-  if FXAppTask.WindowLoadForm in FTasks then
+  if not IsDesigning and (FXAppTask.WindowLoadForm in FTasks) then
     FormOpening;
   AppManager.LoadSettings;
+
+  // Load form manager settings
+  LoadSettings;
 
   // Initialise directory structure
   if FAppDataStructure.Count > 0 then
@@ -391,22 +445,19 @@ begin
     FOnVersionDowngraded(AppManager.LastInstalledVersion, AppManager.AppVersion);
 
   // Automatic Update Check
-  if (UpdateCheckInterval <> -1) then
-    begin
-      const ADays = DaysBetween(AppManager.LastUpdateCheck, Now) ;
-
-      if (ADays >= UpdateCheckInterval) then begin
-        FUpdateCheckUserInitiated := false;
-        AppCheckUpdates;
-      end;
-    end;
+  CheckUpdateCheckInterval;
 end;
 
-procedure FXAppManager.ApplySettings;
+procedure FXAppManager.CheckUpdateCheckInterval;
 begin
-  AppManager.FAPIEndpoint := FAPIEndpoint;
-  AppManager.FAPIName := FAPIName;
-  AppManager.FAppVersion := FAppVersion;
+  if (UpdateCheckInterval = -1) then
+    Exit;
+
+  // Verify if last update check was longer than <UpdateCheckInterval> days ago
+  if (UpdateCheckInterval = 0) or (DaysBetween(AppManager.LastUpdateCheck, Now) >= UpdateCheckInterval) then begin
+    FUpdateCheckUserInitiated := false;
+    AppCheckUpdates;
+  end;
 end;
 
 constructor FXAppManager.Create(AOwner: TComponent);
@@ -435,12 +486,8 @@ begin
 
   // Data
   PrimaryDisplayForm := true;
-  ApplicationIdentifier := GenerateString(20, true, false, true, false);
+  ApplicationIdentifier := GenerateString(20, [TStrGenFlag.LowercaseLetters, TStrGenFlag.Numbers]);
   FUpdateCheckInterval := -1;
-  FAPIEndpoint := DEFAULT_API;
-  FAppVersion.Parse('1.0.0.0');
-  FHasAppData := false;
-  FPublisherName := DEFAULT_COMPANY;
   FTasks := DEFAULT_TASKS;
   FAppDataStructure := TStringList.Create;
   FUserUpdateWaitDelay := DEFAULT_USER_UPDATE_DELAY;
@@ -454,7 +501,7 @@ begin
   FAppDataStructure.Free;
 
   // Form is closed
-  if FXAppTask.WindowSaveForm in FTasks then
+  if not IsDesigning and (FXAppTask.WindowSaveForm in FTasks) then
     FormClosing;
 
   // Close
@@ -464,17 +511,29 @@ begin
   inherited;
 end;
 
-function FXAppManager.GetAppData: string;
+function FXAppManager.GetAPIEndpoint: string;
 begin
-  Result := AppManager.AppData;
+  Result := AppManager.APIEndpoint;
+end;
 
-  if FPublisherName <> '' then
-    Result := Format('%S%S\', [Result, FPublisherName]);
+function FXAppManager.GetAPIName: string;
+begin
+  Result := AppManager.APIName;
+end;
 
-  if ApplicationName <> '' then
-    Result := Format('%S%S\', [Result, ApplicationName])
-  else
-    Result := Format('%S%S\', [Result, ApplicationIdentifier]);
+function FXAppManager.GetApplicationIdentifier: string;
+begin
+  Result := AppManager.AppIdentifier;
+end;
+
+function FXAppManager.GetApplicationName: string;
+begin
+  Result := AppManager.ApplicationName;
+end;
+
+function FXAppManager.GetHasAppData: boolean;
+begin
+  Result := TAppManagerFlag.WantsAppData in AppManager.Flags;
 end;
 
 function FXAppManager.GetPrimaryDisplayForm: TForm;
@@ -487,9 +546,14 @@ begin
   Result := DisplayActiveFormStack[High(DisplayActiveFormStack)];
 end;
 
+function FXAppManager.GetPublisherName: TCaption;
+begin
+  Result := AppManager.PublisherName;
+end;
+
 function FXAppManager.GetVersion: string;
 begin
-  Result := FAppVersion.ToString(true);
+  Result := AppManager.AppVersion.ToString;
 end;
 
 function FXAppManager.HasPrimaryDisplayForm: boolean;
@@ -514,12 +578,12 @@ end;
 
 function FXAppManager.IsAppDataStored: Boolean;
 begin
-  Result := FPublisherName <> DEFAULT_COMPANY;
+  Result := AppManager.PublisherName <> DEFAULT_COMPANY;
 end;
 
 function FXAppManager.IsEndpointStored: Boolean;
 begin
-  Result := FAPIEndpoint <> DEFAULT_API;
+  Result := AppManager.APIEndpoint <> DEFAULT_API;
 end;
 
 function FXAppManager.LastUpdateCheck: string;
@@ -534,8 +598,8 @@ begin
   if IsDesigning then
     Exit;
 
-  // Apply
-  ApplySettings;
+  // Initialize app manager
+  AppManager.Initialize;
 
   // Opened
   ApplicationOpen;
@@ -543,6 +607,19 @@ begin
   // Notify
   if Assigned(FOnApplicationLoaded) then
     FOnApplicationLoaded(Self);
+end;
+
+procedure FXAppManager.LoadSettings;
+var
+  Section: string;
+begin
+  with TIniFile.Create(AppManager.FolderPackage + 'formappmgr.ini') do
+    try
+      Section := 'Update';
+      FUpdateCheckInterval := ReadInteger(Section, 'Check interval', FUpdateCheckInterval);
+    finally
+      Free;
+    end;
 end;
 
 procedure FXAppManager.ProcessDisplayChange;
@@ -562,32 +639,37 @@ begin
     end;
 end;
 
+procedure FXAppManager.SaveSettings;
+var
+  Section: string;
+begin
+  with TIniFile.Create(AppManager.FolderPackage + 'formappmgr.ini') do
+    try
+      Section := 'Update';
+      WriteInteger(Section, 'Check interval', FUpdateCheckInterval);
+    finally
+      Free;
+    end;
+end;
+
 procedure FXAppManager.SetAPIEndpoint(const Value: string);
 begin
-  if FAPIEndpoint = Value then
-    Exit;
+  AppManager.APIEndpoint := Value;
+end;
 
-  FAPIEndpoint := Value;
-  AppManager.FApiEndpoint := Value;
+procedure FXAppManager.SetAPIName(const Value: string);
+begin
+  AppManager.APIName := Value;
 end;
 
 procedure FXAppManager.SetApplicationIdentifier(Value: string);
 begin
-  Value := LowerCase(Value);
-  if (FApplicationIdentifier = Value) or (Value = '') then
-    Exit;
-
-  FApplicationIdentifier := Value;
-  AppManager.AppIdentifier := ApplicationIdentifier;
+  AppManager.AppIdentifier := Value;
 end;
 
 procedure FXAppManager.SetApplicationName(const Value: string);
 begin
-  if FApplicationName = Value then
-    Exit;
-
   AppManager.ApplicationName := Value;
-  FApplicationName := Value;
 end;
 
 procedure FXAppManager.SetDataStructure(const Value: TStringList);
@@ -597,16 +679,29 @@ end;
 
 procedure FXAppManager.SetHasAppData(const Value: boolean);
 begin
-  FHasAppData := Value;
+  if Value then
+    AppManager.Flags := AppManager.Flags + [TAppManagerFlag.WantsAppData]
+  else
+    AppManager.Flags := AppManager.Flags - [TAppManagerFlag.WantsAppData];
+end;
 
-  if Value and not IsDesigning then
-    if not TDirectory.Exists(AppData) then
-      TDirectory.CreateDirectory(AppData);
+procedure FXAppManager.SetPublisherName(const Value: TCaption);
+begin
+
+end;
+
+procedure FXAppManager.SetUpdateCheckInterval(const Value: integer);
+begin
+  FUpdateCheckInterval := Value;
+
+  // Perform verification
+  if not IsDesigning and not IsReading then
+    CheckUpdateCheckInterval;
 end;
 
 procedure FXAppManager.SetVersion(const Value: string);
 begin
-  FAppVersion.Parse(Value);
+
 end;
 
 { FXAppManagerClass }
@@ -638,21 +733,21 @@ end;
 
 constructor FXAppManagerClass.Create;
 begin
-  FAppDataPath := GetAppDataFolder;
-  FAppPackagesPath := GetPackagesFolder;
+  FFolderGlobalAppData := GetAppDataFolder;
+
   FAppIdentifier := '';
+  FApplicationName := '';
+  FPublisherName := DEFAULT_COMPANY;
+
+  FFlags := [];
+
   FAPIEndpoint := DEFAULT_API;
   FAppVersion.Parse('1.0.0.0');
   FUpdateResult := EqualsValue;
 
   // Status
+  FInitialized := false;
   FLastUpdateCheck := 0;
-
-  if not TDirectory.Exists(FAppPackagesPath) then
-    TDirectory.CreateDirectory(FAppPackagesPath);
-
-  // Folders
-  UpdateFolders;
 end;
 
 destructor FXAppManagerClass.Destroy;
@@ -663,16 +758,62 @@ end;
 
 function FXAppManagerClass.GetConfig: TIniFile;
 begin
-  VerifyFolders;
+  Result := TIniFile.Create(FFolderPackage + 'configurations.ini');
+end;
 
-  Result := TIniFile.Create(FAppConfig);
+function FXAppManagerClass.GetFolderData: string;
+begin
+  RaiseNotInit;
+  Result := FFolderData;
+end;
+
+function FXAppManagerClass.GetFolderPackage: string;
+begin
+  RaiseNotInit;
+  Result := FFolderPackage;
 end;
 
 function FXAppManagerClass.GetWindow: TIniFile;
 begin
-  VerifyFolders;
+  Result := TIniFile.Create(FFolderPackage + 'windows.ini');
+end;
 
-  Result := TIniFile.Create(FAppWindows);
+procedure FXAppManagerClass.Initialize;
+begin
+  RaiseInit;
+
+  if AppIdentifier = '' then
+    raise Exception.Create('Application cannot be initialized. Missing app identifier.');
+
+  // Packages
+  FFolderPackage := FFolderGlobalAppData;
+  if PublisherName <> '' then
+    FFolderPackage := IncludeTrailingPathDelimiter(FFolderPackage + PublisherName);
+  FFolderPackage := IncludeTrailingPathDelimiter(
+    IncludeTrailingPathDelimiter(FFolderPackage + 'Packages')+AppIdentifier);
+
+  // App data
+  FFolderData := '';
+  if TAppManagerFlag.WantsAppData in Flags then begin
+    FFolderData := FFolderGlobalAppData;
+    if PublisherName <> '' then
+      FFolderData := IncludeTrailingPathDelimiter(FFolderData + PublisherName);
+    if ApplicationName <> '' then
+      FFolderData := IncludeTrailingPathDelimiter(FFolderData + ApplicationName)
+    else
+      FFolderData := IncludeTrailingPathDelimiter(FFolderData + AppIdentifier);
+  end;
+
+  // Create
+  if not TDirectory.Exists(FFolderPackage) then
+    TDirectory.CreateDirectory(FFolderPackage);
+  if TAppManagerFlag.WantsAppData in Flags then begin
+    if not TDirectory.Exists(FFolderData) then
+      TDirectory.CreateDirectory(FFolderData);
+  end;
+
+  // Init
+  FInitialized := true;
 end;
 
 procedure FXAppManagerClass.LoadFormData(Form: TForm);
@@ -756,7 +897,7 @@ begin
       Section := 'Passive';
       FLastUpdateCheck := ReadDate(Section, 'Last update', LastUpdateCheck);
       FLastInstalledVersion := FXVersion.Create(
-        ReadString(Section, 'Last installed version', AppVersion.ToString(true))
+        ReadString(Section, 'Last installed version', AppVersion.ToString)
         );
     finally
       Free;
@@ -766,6 +907,18 @@ end;
 function FXAppManagerClass.NewVersion: boolean;
 begin
   Result := FUpdateResult = GreaterThanValue;
+end;
+
+procedure FXAppManagerClass.RaiseInit;
+begin
+  if FInitialized then
+    raise Exception.Create('Application manager already initialized.');
+end;
+
+procedure FXAppManagerClass.RaiseNotInit;
+begin
+  if not FInitialized then
+    raise Exception.Create('Application manager has not been initialized.');
 end;
 
 procedure FXAppManagerClass.RestartApplicationProcess;
@@ -827,37 +980,41 @@ begin
     try
       Section := 'Passive';
       WriteDate(Section, 'Last update', LastUpdateCheck);
-      WriteString(Section, 'Last installed version', AppVersion.ToString(true));
+      WriteString(Section, 'Last installed version', AppVersion.ToString);
     finally
       Free;
     end;
 end;
 
+procedure FXAppManagerClass.SetApplicationName(const Value: string);
+begin
+  if Value.ToLower = 'packages' then
+    raise Exception.Create('Invalid application name.');
+
+  RaiseInit;
+  FApplicationName := Value;
+end;
+
+procedure FXAppManagerClass.SetFlags(const Value: TAppManagerFlags);
+begin
+  RaiseInit;
+  FFlags := Value;
+end;
+
 procedure FXAppManagerClass.SetIdentifier(const Value: string);
 begin
-  if FAppIdentifier = Value then
-    Exit;
+  const ModiVal = CFX.StringUtils.ClearStringSymbols(Value).Replace(' ', '');
 
-  FAppIdentifier := Value;
-  UpdateFolders;
+  if ModiVal = 'packages' then
+    raise Exception.Create('Invalid application identifier.');
+  RaiseInit;
+  FAppIdentifier := ModiVal;
 end;
 
-procedure FXAppManagerClass.UpdateFolders;
+procedure FXAppManagerClass.SetPublisherName(const Value: string);
 begin
-  FAppSelfFolder := Format('%S%S\', [FAppPackagesPath, FAppIdentifier]);
-
-  FAppConfig := FAppSelfFolder + 'configurations.ini';
-  FAppWindows := FAppSelfFolder + 'windows.ini';
-end;
-
-procedure FXAppManagerClass.VerifyFolders;
-begin
-  if FAppIdentifier = '' then
-    raise Exception.Create('ERROR: Application identifier has not been initialised.');
-
-  // Check pack
-  if not TDirectory.Exists(FAppSelfFolder) then
-    TDirectory.CreateDirectory(FAppSelfFolder);
+  RaiseInit;
+  FPublisherName := Value;
 end;
 
 { FXAppManagerFormAssist }
@@ -873,17 +1030,10 @@ end;
 destructor FXAppManagerFormAssist.Destroy;
 begin
   // Form is closed
-  if FXAppFormAssistTask.WindowSaveForm in FTasks then
+  if not IsDesigning and (FXAppFormAssistTask.WindowSaveForm in FTasks) then
     FormClosing;
 
   inherited;
-end;
-
-function FXAppManagerFormAssist.GetAppData: string;
-begin
-  Result := '';
-  if AppManagerInstance <> nil then
-    Result := AppManagerInstance.AppData;
 end;
 
 function FXAppManagerFormAssist.GetApplicationName: string;
@@ -904,7 +1054,7 @@ procedure FXAppManagerFormAssist.Loaded;
 begin
   inherited;
   // Form is created
-  if FXAppFormAssistTask.WindowLoadForm in FTasks then
+  if not IsDesigning and (FXAppFormAssistTask.WindowLoadForm in FTasks) then
     FormOpening;
 end;
 
@@ -939,6 +1089,11 @@ procedure FXAppManagerComponent.FormOpening;
 begin
   // Open
   AppManager.LoadFormData(ParentForm);
+end;
+
+function FXAppManagerComponent.GetAppData: string;
+begin
+  Result := AppManager.FolderData;
 end;
 
 procedure FXAppManagerComponent.Loaded;

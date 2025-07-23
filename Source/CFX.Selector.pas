@@ -464,7 +464,7 @@ end;
 
 procedure FXSelector.SetSelectedItem(const Value: integer);
 begin
-  if (FSelectedItem = Value) or ((Value < 0) and (Value <> -1)) or (Value >= FItems.Count) then
+  if (FSelectedItem = Value) or ((Value < 0) and (Value <> -1)) or ((Value >= FItems.Count) and not IsReading) then
     Exit;
 
   const OldSelectedItem = FSelectedItem;

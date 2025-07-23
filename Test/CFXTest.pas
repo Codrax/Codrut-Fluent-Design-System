@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Forms, Threading, Types, Math,
+  Vcl.Forms, Threading, Types, Math, Vcl.Clipbrd,
 
   // CFX LIBRARY
   CFX.Forms, CFX.Colors, CFX.ThemeManager, Vcl.StdCtrls, Vcl.TitleBarCtrls,
@@ -26,7 +26,7 @@ uses
   Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage, Vcl.ControlList,
   Vcl.ExtDlgs, System.ImageList, UITypes, Vcl.ComCtrls, Vcl.Mask,
   Vcl.Themes, System.Generics.Collections,
-  Vcl.NumberBox;
+  Vcl.NumberBox, CFX.Components;
 
 type
   TForm1 = class(FXForm)
@@ -70,9 +70,8 @@ type
     FXButton10: FXButton;
     FXButton15: FXButton;
     FXButton17: FXButton;
+    Button1: TButton;
     FXAppManager1: FXAppManager;
-    FXAppManagerFormAssist1: FXAppManagerFormAssist;
-    Timer1: TTimer;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);
@@ -85,7 +84,7 @@ type
     procedure FXPaintBox1Draw(Sender: TObject);
     procedure FXButton2Click(Sender: TObject);
     procedure FXButton4Click(Sender: TObject);
-    procedure Timer1Timer(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -99,12 +98,15 @@ implementation
 
 {$R *.dfm}
 
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  ShowMEssage( FXAppManager1.UpdateCheckInterval.ToString );
+end;
+
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   FXPopupMenu1.Items[1].Text := '-';
   AllowThemeChangeAnimation := true;
-
-     FXCustomControl
 end;
 
 procedure TForm1.FXAppManager1UpdateChecked(Sender: TObject);
@@ -267,11 +269,6 @@ begin
           FXTextFlag.Center],
         TPaintBox(Sender).Tag);
     end;
-end;
-
-procedure TForm1.Timer1Timer(Sender: TObject);
-begin
-  Caption := IsWindowSnapped.ToString(TUseBoolStrs.True);
 end;
 
 end.

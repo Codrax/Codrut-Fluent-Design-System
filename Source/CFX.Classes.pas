@@ -7,11 +7,6 @@ uses
   TypInfo, CFX.Linker, CFX.Colors, Math;
 
 type
-  // Base Clases
-  FXComponent = class(TComponent)
-
-  end;
-
   // Persistent
   FXPersistent = class(TPersistent)
     Owner : TPersistent;

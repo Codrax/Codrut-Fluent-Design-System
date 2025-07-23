@@ -7,6 +7,7 @@ uses
   Winapi.Windows,
   Classes,
   Types,
+  CFX.Components,
   UITypes,
   Vcl.Controls,
   Vcl.Graphics,

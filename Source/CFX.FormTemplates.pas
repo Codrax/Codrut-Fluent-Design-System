@@ -600,7 +600,7 @@ function FXFormUpdateTemplate.BuildTempFile: string;
 var
   S: string;
 begin
-  S := GenerateString(8, true, false, true, false);
+  S := GenerateString(8, [TStrGenFlag.LowercaseLetters, TStrGenFlag.Numbers]);
   Result := ReplaceWinPath(Format('%%TEMP%%\updateinstall_%S.exe', [S]));
 end;
 

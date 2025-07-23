@@ -101,10 +101,10 @@ begin
   // Utils
   RegisterComponents(REGISTER_CLASS_UTILS_NAME,
     [
-    FXPopupConnector, FXAppManager, FXAppManagerFormAssist, FXTitleBarPanel
+    FXPopupConnector, FXTitleBarPanel, FXAppManager, FXAppManagerFormAssist
     ]
   );
-
+  Exit;
   // Legacy
   RegisterComponents(REGISTER_CLASS_LEGACY,
     [

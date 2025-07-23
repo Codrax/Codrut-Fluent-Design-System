@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Vcl.Graphics, Classes, Types, Winapi.Messages, CFX.Types,
   CFX.Constants, SysUtils, CFX.Graphics, CFX.VarHelpers, CFX.ThemeManager,
-  Vcl.Controls, CFX.Linker, Vcl.Forms, CFX.PopupMenu,
+  Vcl.Controls, CFX.Linker, Vcl.Forms,
   Vcl.Dialogs, CFX.Classes, Math, DateUtils, CFX.ArrayHelpers, CFX.Messages;
 
 type

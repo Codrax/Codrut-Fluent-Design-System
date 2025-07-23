@@ -168,6 +168,7 @@
         <DCCReference Include="Source\CFX.PropertyEditors.pas"/>
         <DCCReference Include="Source\CFX.DesignEditors.pas"/>
         <DCCReference Include="Source\CFX.RegisterClass.pas"/>
+        <DCCReference Include="Source\CFX.FormTemplates.pas"/>
         <DCCReference Include="Source\CFX.Colors.pas"/>
         <DCCReference Include="Source\CFX.Classes.pas"/>
         <DCCReference Include="Source\CFX.VarHelpers.pas"/>

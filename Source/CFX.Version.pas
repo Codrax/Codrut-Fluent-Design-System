@@ -40,8 +40,7 @@ type
 
     // Conversion
     function ToString: string; overload;
-    function ToString(IncludeBuild: boolean): string; overload;
-    function ToString(Separator: char; IncludeBuild: boolean = false): string; overload;
+    function ToString(Separator: char): string; overload;
 
     // Operators
     class operator Equal(A, B: FXVersion): Boolean;
@@ -120,7 +119,7 @@ begin
   Request.AddPair('mode', 'getversion');
   Request.AddPair('app', AppName);
   if not Current.Empty then
-    Request.AddPair('client-version', Current.ToString(true));
+    Request.AddPair('client-version', Current.ToString);
 
   // Request
   RequestStream := TStringStream.Create(Request.ToJSON, TEncoding.UTF8);
@@ -265,20 +264,12 @@ end;
 
 function FXVersion.ToString: string;
 begin
-  Result := ToString(false);
+  Result := ToString('.');
 end;
 
-function FXVersion.ToString(IncludeBuild: boolean): string;
+function FXVersion.ToString(Separator: char): string;
 begin
-  Result := ToString('.', IncludeBuild);
-end;
-
-function FXVersion.ToString(Separator: char; IncludeBuild: boolean): string;
-begin
-  Result := Major.ToString + Separator + Minor.ToString + Separator + Maintenance.ToString;
-
-  if IncludeBuild then
-    Result := Result + Separator + Build.ToString;
+  Result := Major.ToString + Separator + Minor.ToString + Separator + Maintenance.ToString + Separator + Build.ToString;
 end;
 
 end.

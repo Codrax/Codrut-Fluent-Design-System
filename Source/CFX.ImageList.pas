@@ -15,6 +15,7 @@ uses
   Threading,
   System.Generics.Collections,
   Vcl.Menus,
+  CFX.Components,
   CFX.Graphics,
   CFX.VarHelpers,
   Vcl.Forms,

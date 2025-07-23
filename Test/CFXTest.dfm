@@ -31,7 +31,7 @@ object Form1: TForm1
   Font.Name = 'Segoe UI'
   Font.Style = []
   GlassFrame.Top = 30
-  Position = poDesigned
+  Position = poScreenCenter
   OnCreate = FormCreate
   DesignSize = (
     1184
@@ -1751,6 +1751,15 @@ object Form1: TForm1
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
   end
+  object Button1: TButton
+    Left = 566
+    Top = 330
+    Width = 131
+    Height = 40
+    Caption = 'Pack'
+    TabOrder = 37
+    OnClick = Button1Click
+  end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
@@ -1786,10 +1795,10 @@ object Form1: TForm1
     Top = 73
   end
   object FXAppManager1: FXAppManager
-    ApplicationIdentifier = 'fluentdesigntest'
-    AppVersion = '1.0.0.0'
+    ApplicationIdentifier = 'fluentdesignsystem'
     ApplicationName = 'Codrut Fluent Design Test'
     HasAppData = True
+    AppVersion = '1.0.0.0'
     AppDataStructure.Strings = (
       'data'
       'cache'
@@ -1797,14 +1806,5 @@ object Form1: TForm1
     UserUpdateWaitDelay = 0
     Left = 824
     Top = 133
-  end
-  object FXAppManagerFormAssist1: FXAppManagerFormAssist
-    Left = 560
-    Top = 160
-  end
-  object Timer1: TTimer
-    OnTimer = Timer1Timer
-    Left = 488
-    Top = 328
   end
 end

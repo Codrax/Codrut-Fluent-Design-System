@@ -29,7 +29,6 @@ function ReadFileSignature(FileName: string): TFileType;
 
 // General Folder
 function GetAppDataFolder: string;
-function GetPackagesFolder: string;
 
 // Screen
 procedure QuickScreenShot(var BitMap: TBitMap; Monitor: integer = -2);
@@ -323,11 +322,6 @@ end;
 function GetAppDataFolder: string;
 begin
   Result := IncludeTrailingPathDelimiter(ReplaceWinPath('%APPDATA%'));
-end;
-
-function GetPackagesFolder: string;
-begin
-  Result := IncludeTrailingPathDelimiter(GetAppDataFolder + 'Packages');
 end;
 
 procedure QuickScreenShot(var BitMap: TBitMap; Monitor: integer);
