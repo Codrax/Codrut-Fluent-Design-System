@@ -18,6 +18,7 @@ function GetUserNameString: string;
 
 // Winapi
 function NTKernelVersion: single;
+function IsWindows10OrGreater(buildNumber: DWORD): Boolean;
 
 // Shell
 procedure ShellRun(Command: string; Parameters: string = '');
@@ -57,6 +58,12 @@ begin
   finally
     R.Free;
   end;
+end;
+
+function IsWindows10OrGreater(buildNumber: DWORD): Boolean;
+begin
+  Result := (TOSVersion.Major > 10) or
+    ((TOSVersion.Major = 10) and (TOSVersion.Minor = 0) and (DWORD(TOSVersion.Build) >= buildNumber));
 end;
 
 function GetAccentColor( brightencolor: boolean = true ): TColor;

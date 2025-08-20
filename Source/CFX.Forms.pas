@@ -7,6 +7,8 @@ uses
   Classes,
   Winapi.Windows,
   Winapi.Dwmapi,
+  CFX.Windows.DarkmodeApi,
+  CFX.Windows.DarkmodeApi.Types,
   Types,
   CFX.ToolTip,
   Vcl.Forms,
@@ -62,6 +64,9 @@ type
     // Status
     FDestColor: TColor;
 
+    // DWM Backdrop
+    FBackdrop: FXFormBackdropType;
+
     // Titlebar
     FTitlebarInitialized: boolean;
     FEnableTitlebar: boolean;
@@ -70,6 +75,7 @@ type
     FDisableCustomTitlebar: boolean;
     FManualCustomTitleBar: boolean;
     FBackground: FXBackgroundColor;
+    FPostTitlebarEnableTransparentValue: boolean;
 
     // Mica
     FPostMicaBlend: boolean;
@@ -103,6 +109,8 @@ type
     // Utilities
     procedure FormCloseIgnore(Sender: TObject; var CanClose: Boolean);
     procedure SetCornerPreference(const Value: FXFormCornerPreference);
+    procedure SetDisableCustomTitlebar(const Value: boolean);
+    procedure SetBackdrop(const Value: FXFormBackdropType);
 
   protected
     procedure CreateParams(var Params: TCreateParams); override;
@@ -142,13 +150,19 @@ type
     property CustomColors: FXColorSets read FCustomColors write FCustomColors;
     property AllowThemeChangeAnimation: boolean read FAllowThemeChangeAnim write FAllowThemeChangeAnim default false;
 
+    // Experimental feature - DO NOT USE
+    property Backdrop: FXFormBackdropType read FBackdrop write SetBackdrop;
+
     property CornerPreference: FXFormCornerPreference read FCornerPreference write SetCornerPreference default FXFormCornerPreference.Default;
     property CornerPreferenceCustomized: FXRoundEllipseSettings read FCornerPreferenceCustomized write FCornerPreferenceCustomized;
 
     property WindowUpdateLocked: boolean read FWindowUpdateLock write SetWindowUpdateLock;
 
+    // Do not adjust the ClientRect with the titlebar's height
     property DisableTitlebarAlign: boolean read FDisableTitlebarAlign write FDisableTitlebarAlign default false;
-    property DisableCustomTitlebar: boolean read FDisableCustomTitlebar write FDisableCustomTitlebar default false;
+    // Disable custom titlebar entirely
+    property DisableCustomTitlebar: boolean read FDisableCustomTitlebar write SetDisableCustomTitlebar default false;
+    // Manage the styling options of the titlebar yourself
     property ManualCustomTitleBar: boolean read FManualCustomTitleBar write FManualCustomTitleBar default false;
     property BackgroundColor: FXBackgroundColor read FBackground write SetBackgroundColor;
 
@@ -387,6 +401,7 @@ var
   I: Integer;
 begin
   FDisableTitlebarAlign := false;
+  FDisableCustomTitlebar := false;
 
   // Settings
   Font.Name := ThemeManager.FormFont;
@@ -424,18 +439,20 @@ begin
     begin
       TTlCtrl := FXTitleBarPanel.Create(Self);
       TTlCtrl.Parent := Self;
-
-      TTlCtrl.Visible := not FDisableCustomTitlebar;
     end;
 
   (* Assign *)
   if not Assigned(CustomTitleBar.Control) then
     CustomTitleBar.Control := TTlCtrl;
 
+  (* Edit prop *)
+  TTlCtrl.Visible := not FDisableCustomTitlebar;
+
   // Title Bar End
   skip_titlebar:
 
   // Needs custom title bar
+    FPostTitlebarEnableTransparentValue := TransparentColor;
   CustomTitleBar.Enabled := not FDisableCustomTitlebar;
 
   // Update Theme
@@ -548,6 +565,21 @@ begin
   inherited;
 end;
 
+procedure FXCustomForm.SetBackdrop(const Value: FXFormBackdropType);
+begin
+  if FBackdrop = Value then
+    Exit;
+  FBackdrop := Value;
+
+  const EnableEffect = not (Value in [FXFormBackdropType.Automatic, FXFormBackdropType.None]);
+
+  GlassFrame.Enabled := EnableEffect;
+  GlassFrame.SheetOfGlass := EnableEffect;
+
+  if EnableEffect then
+    SetSystemBackdropType(Handle, TSystemBackdropType(Value));
+end;
+
 procedure FXCustomForm.SetBackgroundColor(const Value: FXBackgroundColor);
 begin
   if FBackground = Value then
@@ -590,10 +622,26 @@ begin
     SetWindowRgn(Handle, 0, True);
 
     // Set preference
-    //Result := Succeeded(
-    DwmSetWindowAttribute(Handle, Ord(DWMWA_WINDOW_CORNER_PREFERENCE), @Value, SizeOf(Integer));
-    //);
+    SetWindowCorner(Handle, TWindowCornerPreference(Value));
   end;
+end;
+
+procedure FXCustomForm.SetDisableCustomTitlebar(const Value: boolean);
+begin
+  if FDisableCustomTitlebar = Value then
+    Exit;
+  const LastTransparent = TransparentColor;
+  FDisableCustomTitlebar := Value;
+
+  // Enable
+  CustomTitleBar.Enabled := not Value;
+  TTlCtrl.Visible := not Value;
+
+  // Last
+  if Value then
+    TransparentColor := FPostTitlebarEnableTransparentValue
+  else
+    FPostTitlebarEnableTransparentValue := LastTransparent;
 end;
 
 procedure FXCustomForm.SetMicaEffect(const Value: boolean);
@@ -670,6 +718,17 @@ begin
     LockWindowUpdate(0);
 end;
 
+function ImmersiveDarkMode: integer;
+const
+  DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
+  DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+begin
+  if IsWindows10OrGreater(18985) then
+    Result := DWMWA_USE_IMMERSIVE_DARK_MODE
+  else
+    Result := DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1;
+end;
+
 procedure FXCustomForm.UpdateTheme(const UpdateChildren: Boolean);
 var
   PrevColor: TColor;
@@ -681,6 +740,11 @@ begin
   BackgroundSelect := FXColorType.Background;
   if BackgroundColor = FXBackgroundColor.Content then
     BackgroundSelect := FXColorType.Content;
+
+  // Update titlebar
+  var Value: LongBool := ThemeManager.DarkTheme;
+  if Succeeded(DwmSetWindowAttribute(Handle, Ord(ImmersiveDarkMode), @Value, SizeOf(Value))) then
+    AllowDarkModeForWindow(Handle, ThemeManager.DarkTheme);
 
   // Update Colors
   if CustomColors.Enabled then
@@ -726,7 +790,7 @@ begin
     with FXAsyncIntAnim.Create do begin
       Duration := 0.1;
       Kind := FXAnimationKind.Exponential;
-      Steps := 6;
+      Steps := 4;
 
       LatencyAdjustments := true;
       LatencyCanSkipSteps := true;

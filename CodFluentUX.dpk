@@ -126,7 +126,9 @@ contains
   CFX.Animation.Utils in 'Source\CFX.Animation.Utils.pas',
   CFX.Shapes in 'Source\CFX.Shapes.pas',
   CFX.Layouts in 'Source\CFX.Layouts.pas',
-  CFX.Components in 'Source\CFX.Components.pas';
+  CFX.Components in 'Source\CFX.Components.pas',
+  CFX.Windows.DarkmodeApi in 'Source\CFX.Windows.DarkmodeApi.pas',
+  CFX.Windows.DarkmodeApi.Types in 'Source\CFX.Windows.DarkmodeApi.Types.pas';
 
 end.
 

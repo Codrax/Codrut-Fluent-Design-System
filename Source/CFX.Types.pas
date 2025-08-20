@@ -45,6 +45,13 @@ type
     RoundSmall = 3,       // Semi-rounded
     Customized = 100      // Customized settings
   );
+  FXFormBackdropType = (       //
+    Automatic = 0,            // Auto
+    None = 1,         // None
+    Mica = 2,      // Mica
+    Acrylic = 3 // Acrylic
+    //DWMSBT_TABBEDWINDOW = 4     // Tabbed
+  );
 
   // Animation
   FXTaskStatus = (Stopped, Running, Paused);

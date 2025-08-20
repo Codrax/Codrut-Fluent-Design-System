@@ -7,6 +7,8 @@ interface
 uses
   Winapi.Windows,
   Winapi.Messages,
+  Winapi.Dwmapi,
+  CFX.Windows.DarkmodeApi,
   System.SysUtils,
   Win.Registry,
   System.UITypes,
@@ -431,6 +433,17 @@ begin
   end;
 end;
 
+function ImmersiveDarkMode: integer;
+const
+  DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
+  DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+begin
+  if IsWindows10OrGreater(18985) then
+    Result := DWMWA_USE_IMMERSIVE_DARK_MODE
+  else
+    Result := DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1;
+end;
+
 procedure FXThemeManager.UpdateColors;
 begin
   // Update system color
@@ -441,6 +454,9 @@ begin
 
   // Get Accent
   SystemColor.Accent := AccentColor;
+
+  // Update app settings
+  AllowDarkModeForApp(FDarkTheme);
 
   // Create System Defaults
   SystemColorSet.Accent := AccentColor;

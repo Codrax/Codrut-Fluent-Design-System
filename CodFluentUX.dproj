@@ -238,6 +238,8 @@
         <DCCReference Include="Source\CFX.Shapes.pas"/>
         <DCCReference Include="Source\CFX.Layouts.pas"/>
         <DCCReference Include="Source\CFX.Components.pas"/>
+        <DCCReference Include="Source\CFX.Windows.DarkmodeApi.pas"/>
+        <DCCReference Include="Source\CFX.Windows.DarkmodeApi.Types.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
