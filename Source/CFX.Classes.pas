@@ -70,6 +70,38 @@ type
     function AbsoluteBottomLeft: single;
   end;
 
+  FXRoundEllipseSettings = class(FXPersistent)
+  private
+    FRoundWidth,
+    FRoundHeight: integer;
+
+    FOnChange: TNotifyEvent;
+
+    // Setters
+    procedure SetRoundWidth(const Value: integer);
+    procedure SetRoundHeight(const Value: integer);
+
+  protected
+    procedure Updated; virtual;
+
+  published
+    property RoundWidth: integer read FRoundWidth write SetRoundWidth;
+    property RoundHeight: integer read FRoundHeight write SetRoundHeight;
+
+    // Events
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    procedure ScaleChanged(Scaling: single);
+
+  public
+    constructor Create(AOwner : TPersistent); override;
+
+    // Assignment
+    procedure AssignTo(Dest: TPersistent); override;
+  end;
+
+  // Rect layout porting
+
+
   // Side values
   FXSideValues = class(FXPersistent)
   private
@@ -342,11 +374,11 @@ begin
   case IconType of
     FXIconType.Image:
     if SelectPicture.Graphic <> nil then
-      DrawImageInRect( Canvas, ARectangle, SelectPicture.Graphic, FXDrawMode.CenterFit );
+      DrawImageInRect( Canvas, ARectangle, SelectPicture.Graphic, TDrawMode.CenterFit );
 
     FXIconType.BitMap:
     if SelectBitmap <> nil then
-      DrawImageInRect( Canvas, ARectangle, SelectBitmap, FXDrawMode.CenterFit );
+      DrawImageInRect( Canvas, ARectangle, SelectBitmap, TDrawMode.CenterFit );
 
     FXIconType.ImageList: (* Work In Progress;*);
 
@@ -541,8 +573,7 @@ end;
 
 procedure FXSideValues.AssignTo(Dest: TPersistent);
 begin
-  if Dest is FXSideValues then
-  begin
+  if Dest is FXSideValues then begin
     const Destination = FXSideValues(Dest);
 
     Destination.FLeft := FLeft;
@@ -763,8 +794,7 @@ end;
 
 procedure FXCornerSettings.AssignTo(Dest: TPersistent);
 begin
-  if Dest is FXCornerSettings then
-  begin
+  if Dest is FXCornerSettings then begin
     const Destination = FXCornerSettings(Dest);
 
     Destination.FTopLeft := FTopLeft;
@@ -915,6 +945,62 @@ begin
 end;
 
 procedure FNumberRange.Updated;
+begin
+  if Assigned(FOnChange) then
+    FOnChange(Self);
+end;
+
+{ FXRoundEllipseSettings }
+
+procedure FXRoundEllipseSettings.AssignTo(Dest: TPersistent);
+begin
+  if Dest is FXRoundEllipseSettings then begin
+    const Destination = FXRoundEllipseSettings(Dest);
+
+    Destination.FRoundWidth := FRoundWidth;
+    Destination.FRoundHeight := FRoundHeight;
+
+    // Notify
+    Destination.Updated;
+  end
+  else
+    inherited Assign(Dest);
+end;
+
+constructor FXRoundEllipseSettings.Create(AOwner: TPersistent);
+begin
+  inherited;
+
+end;
+
+procedure FXRoundEllipseSettings.ScaleChanged(Scaling: single);
+begin
+  FRoundWidth := trunc(FRoundWidth * Scaling);
+  FRoundHeight := trunc(FRoundHeight * Scaling);
+
+  // Notify
+  Updated;
+end;
+
+procedure FXRoundEllipseSettings.SetRoundHeight(const Value: integer);
+begin
+  if FRoundHeight = Value then
+    Exit;
+
+  FRoundHeight := Value;
+  Updated;
+end;
+
+procedure FXRoundEllipseSettings.SetRoundWidth(const Value: integer);
+begin
+  if FRoundWidth = Value then
+    Exit;
+
+  FRoundWidth := Value;
+  Updated;
+end;
+
+procedure FXRoundEllipseSettings.Updated;
 begin
   if Assigned(FOnChange) then
     FOnChange(Self);

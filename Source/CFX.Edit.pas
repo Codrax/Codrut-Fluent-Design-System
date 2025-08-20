@@ -44,8 +44,8 @@ type
     FReadOnly: boolean;
     FRoundness: integer;
     FLineColor: TColor;
-    FLayout: FXLayout;
-    FLayoutHoriz: FXLayout;
+    FLayout: TLayout;
+    FLayoutHoriz: TLayout;
     FSelGoesLeft: boolean;
     FDownStart: integer;
     LastShiftState: TShiftState;
@@ -99,7 +99,7 @@ type
     procedure SetLineSize(const Value: integer);
     procedure SetRoundness(const Value: integer);
     procedure SetPosition(const Value: integer);
-    procedure SetLayout(const Value: FXLayout);
+    procedure SetLayout(const Value: TLayout);
     procedure SetSelLength(const Value: integer);
     procedure SetPasswordChar(const Value: char);
     procedure SetCanUndo(const Value: boolean);
@@ -107,7 +107,7 @@ type
     procedure SetCharCase(const Value: FXCharCase);
     procedure SetNumbersOnly(const Value: boolean);
     procedure SetValue(const Value: int64);
-    procedure SetLayoutHoriz(const Value: FXLayout);
+    procedure SetLayoutHoriz(const Value: TLayout);
     procedure SetTextHint(const Value: string);
     procedure SetDetail(const Value: FXDetailType);
     procedure SetTextMarginX(const Value: integer);
@@ -167,8 +167,8 @@ type
 
     property Position: integer read FPosition write SetPosition;
     property SelectionLength: integer read FSelLength write SetSelLength;
-    property Layout: FXLayout read FLayout write SetLayout default FXLayout.Center;
-    property LayoutHorizontal: FXLayout read FLayoutHoriz write SetLayoutHoriz default FXLayout.Beginning;
+    property Layout: TLayout read FLayout write SetLayout default TLayout.Center;
+    property LayoutHorizontal: TLayout read FLayoutHoriz write SetLayoutHoriz default TLayout.Beginning;
 
     // Settings
     property TextHint: string read FTextHint write SetTextHint;
@@ -269,8 +269,8 @@ type
 
     property Position;
     property SelectionLength;
-    property Layout default FXLayout.Center;
-    property LayoutHorizontal default FXLayout.Beginning;
+    property Layout default TLayout.Center;
+    property LayoutHorizontal default TLayout.Beginning;
 
     // Settings
     property TextHint;
@@ -346,8 +346,8 @@ type
 
     property Position;
     property SelectionLength;
-    property Layout default FXLayout.Center;
-    property LayoutHorizontal default FXLayout.Beginning;
+    property Layout default TLayout.Center;
+    property LayoutHorizontal default TLayout.Beginning;
 
     // Settings
     property TextHint;
@@ -587,8 +587,8 @@ begin
   FRoundness := EDIT_BORDER_ROUND;
   FTextMarginX := EDIT_EXTRA_SPACE;
   FTextMarginY := EDIT_EXTRA_SPACE;
-  FLayout := FXLayout.Center;
-  FLayoutHoriz := FXLayout.Beginning;
+  FLayout := TLayout.Center;
+  FLayoutHoriz := TLayout.Beginning;
   FCanUndo := true;
   FEnableSelection := true;
   FClearSelOnExit := true;
@@ -1126,9 +1126,9 @@ begin
 
       Y := 0;
       case Layout of
-        FXLayout.Beginning: Y := 0;
-        FXLayout.Center: Y := (TxtRect.Height - TxtHeight) div 2;
-        FXLayout.Ending: Y := TxtRect.Height-TxtHeight;
+        TLayout.Beginning: Y := 0;
+        TLayout.Center: Y := (TxtRect.Height - TxtHeight) div 2;
+        TLayout.Ending: Y := TxtRect.Height-TxtHeight;
       end;
       X := -FCutPosition + TxtRect.Left;
       Y := Y + TxtRect.Top;
@@ -1310,8 +1310,8 @@ begin
   ATextWidth := TextW(DrawText);
   if ATextWidth <= TxtRect.Width  then
     case LayoutHorizontal of
-      FXLayout.Center: FCutPosition := -(TxtRect.Width - ATextWidth) div 2;
-      FXLayout.Ending: FCutPosition := -(TxtRect.Width - ATextWidth);
+      TLayout.Center: FCutPosition := -(TxtRect.Width - ATextWidth) div 2;
+      TLayout.Ending: FCutPosition := -(TxtRect.Width - ATextWidth);
     end;
 
   // Update
@@ -1449,7 +1449,7 @@ begin
     StandardUpdateLayout;
 end;
 
-procedure FXCustomEdit.SetLayout(const Value: FXLayout);
+procedure FXCustomEdit.SetLayout(const Value: TLayout);
 begin
   if FLayout = Value then
     Exit;
@@ -1458,7 +1458,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXCustomEdit.SetLayoutHoriz(const Value: FXLayout);
+procedure FXCustomEdit.SetLayoutHoriz(const Value: TLayout);
 begin
   if FLayoutHoriz = Value then
     Exit;

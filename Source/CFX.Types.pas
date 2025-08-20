@@ -1,5 +1,11 @@
 unit CFX.Types;
 
+/// ? - What is "Ported from CLB"
+///
+///  This clause means the following declared type/function is imported as was
+///  from Codrut's Library Pack. A suite of system-like units developed for
+///  Embarcadero Delphi and Lazarus, and cross-platform devices.
+
 {$SCOPEDENUMS ON}
 
 interface
@@ -32,6 +38,13 @@ type
   // FXForm
   FXFormFill = (TitleBar, Complete);
   FXFormCloseAction = (Default, Free, Hide, Minimise);
+  FXFormCornerPreference = (    //
+    Default = 0,          // Default
+    DoNotRound = 1,       // Rectangular
+    Round = 2,            // Default
+    RoundSmall = 3,       // Semi-rounded
+    Customized = 100      // Customized settings
+  );
 
   // Animation
   FXTaskStatus = (Stopped, Running, Paused);
@@ -77,10 +90,10 @@ type
   FXOrientation = (Horizontal, Vertical);
   FXContentJustify = (Start, Center, SpaceBetween, SpaceAround, SpaceEvenly, Ending, Stretch(*Not widely supported*));
 
-  // Graphics
-  FXDrawMode = (Fill, Fit, Stretch, Center, CenterFill,
-               Center3Fill, CenterFit, Normal, Tile);
+  // FXPicture
+  FXPictureContentFill = (None, Stretch, Fill, Fit);
 
+  // Graphics
   FXTextFlag = (WordWrap,
                 Top, VerticalCenter, Bottom, (* Vertical allignment *)
                 Left, Center, Right, (* Horizontal allignment *)
@@ -93,9 +106,10 @@ type
   FXTextFlags= set of FXTextFlag;
 
   FXDrawLayout = (Left, Top, Right, Bottom);
-  FXLayout = (Beginning, Center, Ending);
 
-  FXCorners = (TopLeft, TopRight, BottomLeft, BottomRight);
+  // **Ported from CLB
+  TLayout = (Beginning, Center, Ending);
+  TCorners = (TopLeft, TopRight, BottomLeft, BottomRight);
 
   // Text
   FXCharCase = (Both, Uppercase, Lowercase);
@@ -156,6 +170,33 @@ type
     class function IfElse(Condition: boolean; IfTrue: T; IfFalse: T): T;
     class procedure Switch(var A, B: T);
     class function Compare(const A, B: T): TValueRelationship;
+  end;
+
+  // Rects
+  TRectLayoutContentFill = (None, Stretch, Fill, Fit, SelfProportion, ParentProportion);
+  TRectLayoutTileFlag = (ExtendX, ExtendY);
+  TRectLayoutTileFlags = set of TRectLayoutTileFlag;
+  TRectLayout = record
+    // Alignment
+    LayoutHorizontal: TLayout;
+    LayoutVertical: TLayout;
+
+    CenterDivisor: TSizeF; // divide size by to get the CENTER
+    ProportionScale: TSizeF; // scale either CHILD or PARENT by provided scale values
+
+    // Fill method
+    ContentFill: TRectLayoutContentFill;
+
+    // Tile content
+    Tile: boolean;
+    TileFlags: TRectLayoutTileFlags;
+
+    // Margins
+    MarginTile: integer;
+    MarginParent: integer;
+    MarginSelf: integer;
+
+    class function New: TRectLayout; static;
   end;
 
   // FXColor Helper
@@ -244,7 +285,7 @@ type
     RoundBL,
     RoundBR: integer;
 
-    Corners: FXCorners;
+    Corners: TCorners;
 
     function Left: integer;
     function Right: integer;
@@ -784,10 +825,29 @@ function StringNToColor(AString: string): FXColor;
 function RotatePointAroundPoint(APoint: TPoint; ACenter: TPoint; ARotateDegree: real; ACustomRadius: real = -1): TPoint;
 
 { Rectangles }
+///  <summary>Translate a rectangle that is positioned in a bigger client rectangle (parent rect)
+///  to a new rectangle. Or: Translate CHILD positions from PARENT1 to PARENT2. </summary>
 function TranslateRect(const Rect, Client, Dest: TRect): TRect;
 function GetValidRect(Point1, Point2: TPoint): TRect; overload;
 function GetValidRect(Points: TArray<TPoint>): TRect; overload;
+function GetValidRect(Points: TArray<TPointF>): TRectF; overload;
 function GetValidRect(Rect: TRect): TRect; overload;
+procedure CenterRectInRect(var ARect: TRect; const ParentRect: TRect);
+procedure CenterRectAtPoint(var ARect: TRect; const APoint: TPoint);
+function PointInRect(Point: TPoint; Rect: TRect): boolean;
+procedure ContainRectInRect(var ARect: TRect; const ParentRect: TRect);
+///  Morph rectangle or point from a value to the destination rectangle
+///  based on the percent provided. The percent is from 0.00 to 1.00
+///  NOTE: Rectangles must be normalised!
+/// <summary>Animate from the source to the destination TRect using a percentage.</summary>
+function MorphToRect(Source: TRect; Destination: TRect; Percent: single): TRect; overload;
+/// <summary>Animate from the source to the destination TRectF using a percentage.</summary>
+function MorphToRect(Source: TPoint; Destination: TRect; Percent: single): TRect; overload;
+/// <summary>Get the rectangle layouts of a element in a parent rectangle using specified layout settings.</summary>
+function RectangleLayouts(const Element: TSize; Parent: TRect; Layout: TRectLayout): TArray<TRect>; overload;
+/// <summary>Get the rectangle layouts of a element in a parent rectangle using specified layout settings.</summary>
+function RectangleLayouts(const Element: TRect; Parent: TRect; Layout: TRectLayout): TArray<TRect>; overload;
+
 
 { Conversion }
 function DecToHex(Dec: int64): string;
@@ -981,6 +1041,30 @@ begin
     end;
 end;
 
+function GetValidRect(Points: TArray<TPointF>): TRectF; overload;
+var
+  I: Integer;
+begin
+  if Length( Points ) = 0 then
+    Exit;
+
+  Result.TopLeft := Points[0];
+  Result.BottomRight := Points[0];
+
+  for I := 1 to High(Points) do
+    begin
+      if Points[I].X < Result.Left then
+        Result.Left := Points[I].X;
+      if Points[I].Y < Result.Top then
+        Result.Top := Points[I].Y;
+
+      if Points[I].X > Result.Right then
+        Result.Right := Points[I].X;
+      if Points[I].Y > Result.Bottom then
+        Result.Bottom := Points[I].Y;
+    end;
+end;
+
 function GetValidRect(Rect: TRect): TRect;
 begin
   if Rect.TopLeft.X < Rect.BottomRight.X then
@@ -995,6 +1079,196 @@ begin
 
   Result.Width := abs( Rect.BottomRight.X - Rect.TopLeft.X);
   Result.Height := abs( Rect.BottomRight.Y - Rect.TopLeft.Y);
+end;
+
+procedure CenterRectInRect(var ARect: TRect; const ParentRect: TRect);
+var
+  NewLeft, NewTop: Integer;
+begin
+  NewLeft := ParentRect.Left + (ParentRect.Width - ARect.Width) div 2;
+  NewTop := ParentRect.Top + (ParentRect.Height - ARect.Height) div 2;
+  ARect.Offset(NewLeft - ARect.Left, NewTop - ARect.Top);
+end;
+
+procedure CenterRectAtPoint(var ARect: TRect; const APoint: TPoint);
+var
+  ACenter: TPoint;
+begin
+  ACenter := ARect.CenterPoint;
+  ARect.Offset(APoint.X-ACenter.X, APoint.Y-ACenter.Y);
+end;
+
+function PointInRect(Point: TPoint; Rect: TRect): boolean;
+begin
+  Result := Rect.Contains(Point);
+end;
+
+procedure ContainRectInRect(var ARect: TRect; const ParentRect: TRect);
+var
+  Left, Top, Right, Bottom: integer;
+begin
+  Left := ParentRect.Left - ARect.Left;
+  Top := ParentRect.Top - ARect.Top;
+  Right := ParentRect.Right - ARect.Right;
+  Bottom := ParentRect.Bottom - ARect.Bottom;
+
+  if Left > 0 then
+    ARect.Offset(Left, 0);
+  if Top > 0 then
+    ARect.Offset(0, Top);
+  if Right < 0 then
+    ARect.Offset(Right, 0);
+  if Bottom < 0 then
+    ARect.Offset(0, Bottom);
+end;
+
+function MorphToRect(Source: TRect; Destination: TRect; Percent: single): TRect;
+begin
+  Result := Source;
+
+  Inc(Result.Left,
+    round((Destination.Left-Source.Left)*Percent)
+    );
+  Inc(Result.Top,
+    round((Destination.Top-Source.Top)*Percent)
+    );
+  Inc(Result.Right,
+    round((Destination.Right-Source.Right)*Percent)
+    );
+  Inc(Result.Bottom,
+    round((Destination.Bottom-Source.Bottom)*Percent)
+    );
+end;
+
+function MorphToRect(Source: TPoint; Destination: TRect; Percent: single): TRect;
+begin
+  Result := MorphToRect(TRect.Create(Source), Destination, Percent);
+end;
+
+function RectangleLayouts(const Element: TSize; Parent: TRect; Layout: TRectLayout): TArray<TRect>; overload;
+var
+  Base: TRect;
+
+  BoundBottomRight: TPoint;
+begin
+  // Shrink Margins
+  if Layout.MarginParent <> 0 then
+    Parent.Inflate(-Layout.MarginParent, -Layout.MarginParent);
+
+  if (Element.Width = 0) or (Element.Height = 0) then
+    Exit;
+
+  // Calculate base
+  Base := TRect.Empty;
+  case Layout.ContentFill of
+    TRectLayoutContentFill.Stretch: Base := Parent;
+    TRectLayoutContentFill.Fill: begin
+      Base := Parent;
+
+      // Get proportions
+      const Scale = Element .Height * (Base.Width / Element.Width);
+      if Scale < Base.Height then
+        Base.Width := trunc(Element.Width * (Base.Height / Element.Height))
+          else
+            Base.Height := trunc(Scale);
+    end;
+    TRectLayoutContentFill.Fit: begin
+      Base := Parent;
+
+      // Get proportions
+      const Scale = Element.Height * (Base.Width / Element.Width);
+      if Scale > Base.Height then
+        Base.Width := trunc(Element.Width * (Base.Height / Element.Height))
+          else
+            Base.Height := trunc(Scale);
+    end;
+    TRectLayoutContentFill.SelfProportion: begin
+      Base := TRect.Create(Parent.TopLeft,
+        round(Element.Width * Layout.ProportionScale.cx),
+        round(Element.Height * Layout.ProportionScale.cy));
+    end;
+    TRectLayoutContentFill.ParentProportion: begin
+      Base := TRect.Create(Parent.TopLeft,
+        round(Parent.Width * Layout.ProportionScale.cx),
+        round(Parent.Height * Layout.ProportionScale.cy));
+    end
+
+    // Default, keep same size
+    else Base := TRect.Create(Parent.TopLeft, Element.Width, Element.Height);
+  end;
+
+  // Layout
+  if Layout.Tile then begin
+    Result := [Base];
+    var ColCount, RowCount, DivTotal: integer;
+    var ElemSize: TSize;
+    ElemSize := TSize.Create(Base.Width+Layout.MarginTile, Base.Height+Layout.MarginTile);
+
+    // Calculate columns
+    DivTotal := (Parent.Width+Layout.MarginTile);
+    ColCount := DivTotal div ElemSize.cx;
+    if TRectLayoutTileFlag.ExtendX in Layout.TileFlags then
+      if DivTotal mod ElemSize.cx > 0 then
+        Inc(ColCount);
+
+
+    // Calculate rows
+    DivTotal := (Parent.Height+Layout.MarginTile);
+    RowCount := DivTotal div ElemSize.cy;
+    if TRectLayoutTileFlag.ExtendY in Layout.TileFlags then
+      if DivTotal mod ElemSize.cy > 0 then
+        Inc(RowCount);
+
+    // Calculate each
+    SetLength(Result, RowCount*ColCount);
+    BoundBottomRight := Base.TopLeft;
+    for var Row := 0 to RowCount-1 do
+      for var Col := 0 to ColCount-1 do begin
+        const Index = Row*ColCount + Col;
+        Result[Index] := Base;
+        Result[Index].Offset( ElemSize.cx*Col, ElemSize.cy*Row );
+      end;
+
+    // Bottom right
+    BoundBottomRight := TPoint.Create(
+      Base.Left+ElemSize.cx*(ColCount-1) + Base.Width,
+      Base.Top+ElemSize.cy*(RowCount-1) + Base.Height);
+  end
+    else begin
+      Result := [Base];
+
+      BoundBottomRight := Base.BottomRight;
+    end;
+
+  // Layout
+  if (Layout.LayoutHorizontal <> TLayout.Beginning) or (Layout.LayoutVertical <> TLayout.Beginning) then begin
+    var Offset: TPoint;
+    Offset := TPoint.Zero;
+
+    // Horizontal offset
+    case Layout.LayoutHorizontal of
+      TLayout.Center: Offset.X := trunc((Parent.Right - BoundBottomRight.X) / Layout.CenterDivisor.cx);
+      TLayout.Ending: Offset.X := Parent.Right - BoundBottomRight.X;
+    end;
+    // Vertical offset
+    case Layout.LayoutVertical of
+      TLayout.Center: Offset.Y := trunc((Parent.Bottom - BoundBottomRight.Y) / Layout.CenterDivisor.cy);
+      TLayout.Ending: Offset.Y := Parent.Bottom - BoundBottomRight.Y;
+    end;
+
+    for var I := 0 to High(Result) do
+      Result[I].Offset( Offset );
+  end;
+
+  // Margin self
+  if Layout.MarginSelf <> 0 then
+    for var I := 0 to High(Result) do
+      Result[I].Inflate(-Layout.MarginSelf, -Layout.MarginSelf);
+end;
+
+function RectangleLayouts(const Element: TRect; Parent: TRect; Layout: TRectLayout): TArray<TRect>;
+begin
+  Result := RectangleLayouts(TSize.Create(Element.Width, Element.Height), Parent, Layout);
 end;
 
 function DecToHex(Dec: int64): string;
@@ -1387,6 +1661,25 @@ begin
   Temp := A;
   A := B;
   B := Temp;
+end;
+
+{ TRectLayout }
+
+class function TRectLayout.New: TRectLayout;
+begin
+  Result.LayoutHorizontal := TLayout.Beginning;
+  Result.LayoutVertical := TLayout.Beginning;
+
+  Result.CenterDivisor := TSizeF.Create(2, 2);
+  Result.ProportionScale := TSizeF.Create(1, 1);
+
+  Result.ContentFill := TRectLayoutContentFill.None;
+  Result.Tile := false;
+  Result.TileFlags := [TRectLayoutTileFlag.ExtendX, TRectLayoutTileFlag.ExtendY];
+
+  Result.MarginTile := 0;
+  Result.MarginParent := 0;
+  Result.MarginsELF := 0;
 end;
 
 end.

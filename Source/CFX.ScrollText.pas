@@ -31,8 +31,8 @@ type
     FCustomColors: FXColorSets;
     FText: string;
     FDrawColors: FXCompleteColorSet;
-    FVertLayout: FXLayout;
-    FHorzLayout: FXLayout;
+    FVertLayout: TLayout;
+    FHorzLayout: TLayout;
     FImage: FXIconSelect;
     FImageScale: real;
 
@@ -57,8 +57,8 @@ type
     // Set properties
     procedure SetText(const Value: string);
     procedure SetTextSpacing(const Value: Integer);
-    procedure SetHorzLayout(const Value: FXLayout);
-    procedure SetVertLayout(const Value: FXLayout);
+    procedure SetHorzLayout(const Value: TLayout);
+    procedure SetVertLayout(const Value: TLayout);
     procedure SetImage(const Value: FXIconSelect);
     procedure SetImageScale(const Value: real);
     procedure SetAnimationDelay(const Value: integer);
@@ -100,8 +100,8 @@ type
     property AnimationDelay: integer read FAnimationDelay write SetAnimationDelay;
     property AnimationSpeed: integer read FAnimationSpeed write SetAnimationSpeed;
 
-    property LayoutHorizontal: FXLayout read FHorzLayout write SetHorzLayout default FXLayout.Beginning;
-    property LayoutVertical: FXLayout read FVertLayout write SetVertLayout default FXLayout.Center;
+    property LayoutHorizontal: TLayout read FHorzLayout write SetHorzLayout default TLayout.Beginning;
+    property LayoutVertical: TLayout read FVertLayout write SetVertLayout default TLayout.Center;
 
     property Align;
     property Font;
@@ -191,19 +191,19 @@ begin
 
   // Image alignment
   case FVertLayout of
-    FXLayout.Beginning: ImageRect.Height := ImageRect.Width;
-    FXLayout.Ending: ImageRect.Top := ImageRect.Bottom-ImageRect.Width;
+    TLayout.Beginning: ImageRect.Height := ImageRect.Width;
+    TLayout.Ending: ImageRect.Top := ImageRect.Bottom-ImageRect.Width;
   end;
 
   // Offset
   SpaceLeft := DrawRect.Right - TextRect.Right;
   if SpaceLeft > 0 then
     case FHorzLayout of
-      FXLayout.Center: begin
+      TLayout.Center: begin
         TextRect.Offset(SpaceLeft div 2, 0);
         ImageRect.Offset(SpaceLeft div 2, 0);
       end;
-      FXLayout.Ending: begin
+      TLayout.Ending: begin
         TextRect.Offset(SpaceLeft, 0);
         ImageRect.Offset(SpaceLeft, 0);
       end;
@@ -255,7 +255,7 @@ begin
   StandardUpdateDraw;
 end;
 
-procedure FXScrollText.SetHorzLayout(const Value: FXLayout);
+procedure FXScrollText.SetHorzLayout(const Value: TLayout);
 begin
   if FHorzLayout = Value then
     Exit;
@@ -303,7 +303,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXScrollText.SetVertLayout(const Value: FXLayout);
+procedure FXScrollText.SetVertLayout(const Value: TLayout);
 begin
   if FVertLayout = Value then
     Exit;
@@ -334,8 +334,8 @@ begin
   FTextSpacing := CHECKBOX_TEXT_SPACE;
   AutoFocusLine := true;
   BufferedComponent := true;
-  FHorzLayout := FXLayout.Beginning;
-  FVertLayout := FXLayout.Center;
+  FHorzLayout := TLayout.Beginning;
+  FVertLayout := TLayout.Center;
   FSpacePercent := SCROLL_TEXT_SPACE;
   FAnimationDelay := SCROLL_TEXT_DELAY;
   FAnimationSpeed := SCROLL_TEXT_SPEED;
@@ -448,9 +448,9 @@ begin
           DrawFlags := [];
 
           case FVertLayout of
-            FXLayout.Beginning: DrawFlags := DrawFlags + [FXTextFlag.Top];
-            FXLayout.Center: DrawFlags := DrawFlags + [FXTextFlag.VerticalCenter];
-            FXLayout.Ending: DrawFlags := DrawFlags + [FXTextFlag.Bottom];
+            TLayout.Beginning: DrawFlags := DrawFlags + [FXTextFlag.Top];
+            TLayout.Center: DrawFlags := DrawFlags + [FXTextFlag.VerticalCenter];
+            TLayout.Ending: DrawFlags := DrawFlags + [FXTextFlag.Bottom];
           end;
 
           DrawTextRect(Buffer, RectText, FText, DrawFlags);

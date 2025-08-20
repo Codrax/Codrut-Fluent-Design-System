@@ -6,6 +6,7 @@ uses
   SysUtils,
   Classes,
   Winapi.Windows,
+  Winapi.Dwmapi,
   Types,
   CFX.ToolTip,
   Vcl.Forms,
@@ -50,6 +51,9 @@ type
     FMicaEffect: boolean;
     FSmokeEffect: boolean;
     FAllowThemeChangeAnim: boolean;
+
+    FCornerPreference: FXFormCornerPreference;
+    FCornerPreferenceCustomized: FXRoundEllipseSettings;
 
     // Notify
     FThemeChange: FXThemeChange;
@@ -98,6 +102,7 @@ type
 
     // Utilities
     procedure FormCloseIgnore(Sender: TObject; var CanClose: Boolean);
+    procedure SetCornerPreference(const Value: FXFormCornerPreference);
 
   protected
     procedure CreateParams(var Params: TCreateParams); override;
@@ -113,6 +118,9 @@ type
     function GetClientRect: TRect; override;
     procedure AdjustClientRect(var Rect: TRect); override;
     function CanAutoSize(var NewWidth, NewHeight: Integer): Boolean; override;
+
+    // Catch events
+    procedure CornerPreferenceCustomizedChanged(Sender: TObject);
 
     // Do
     procedure DoShow; override;
@@ -133,7 +141,12 @@ type
     property SmokeEffect: boolean read FSmokeEffect write SetSmokeEffect default false;
     property CustomColors: FXColorSets read FCustomColors write FCustomColors;
     property AllowThemeChangeAnimation: boolean read FAllowThemeChangeAnim write FAllowThemeChangeAnim default false;
+
+    property CornerPreference: FXFormCornerPreference read FCornerPreference write SetCornerPreference default FXFormCornerPreference.Default;
+    property CornerPreferenceCustomized: FXRoundEllipseSettings read FCornerPreferenceCustomized write FCornerPreferenceCustomized;
+
     property WindowUpdateLocked: boolean read FWindowUpdateLock write SetWindowUpdateLock;
+
     property DisableTitlebarAlign: boolean read FDisableTitlebarAlign write FDisableTitlebarAlign default false;
     property DisableCustomTitlebar: boolean read FDisableCustomTitlebar write FDisableCustomTitlebar default false;
     property ManualCustomTitleBar: boolean read FManualCustomTitleBar write FManualCustomTitleBar default false;
@@ -272,6 +285,18 @@ begin
       AlphaBlend := false;
 end;
 
+procedure FXCustomForm.CornerPreferenceCustomizedChanged(Sender: TObject);
+begin
+  if CornerPreference <> FXFormCornerPreference.Customized then
+    Exit;
+
+  // Update region
+  var Rgn: HRGN;
+  Rgn := CreateRoundRectRgn(0, 0, Width, Height,
+    FCornerPreferenceCustomized.RoundWidth, FCornerPreferenceCustomized.RoundHeight);
+  SetWindowRgn(Handle, Rgn, True);
+end;
+
 constructor FXCustomForm.Create(aOwner: TComponent);
 begin
   // Create Form and Components
@@ -313,8 +338,9 @@ end;
 
 destructor FXCustomForm.Destroy;
 begin
-  FCustomColors.Free;
-  FDrawColors.Free;
+  FreeAndNil(FCustomColors);
+  FreeAndNil(FDrawColors);
+  FreeAndNil(FCornerPreferenceCustomized);
 
   inherited;
 end;
@@ -370,6 +396,11 @@ begin
   MicaEffect := true;
   CreateSmokeSettings;
   FAllowThemeChangeAnim := false;
+
+  // Corner preference
+  FCornerPreference := FXFormCornerPreference.Default;
+  FCornerPreferenceCustomized := FXRoundEllipseSettings.Create(Self);
+  FCornerPreferenceCustomized.OnChange := CornerPreferenceCustomizedChanged;
 
   // TitleBar
   FTitlebarInitialized := false;
@@ -541,6 +572,30 @@ begin
   SetBounds(Bounds.Left, Bounds.Top, Bounds.Width, Bounds.Height);
 end;
 
+procedure FXCustomForm.SetCornerPreference(const Value: FXFormCornerPreference);
+const
+  DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+begin
+  if FCornerPreference = Value then
+    Exit;
+  FCornerPreference := Value;
+
+  if Value = FXFormCornerPreference.Customized then begin
+    var Rgn: HRGN;
+    Rgn := CreateRoundRectRgn(0, 0, Width, Height,
+      FCornerPreferenceCustomized.RoundWidth, FCornerPreferenceCustomized.RoundHeight);
+    SetWindowRgn(Handle, Rgn, True);
+  end else begin
+    // Reset DWM-handled window styling
+    SetWindowRgn(Handle, 0, True);
+
+    // Set preference
+    //Result := Succeeded(
+    DwmSetWindowAttribute(Handle, Ord(DWMWA_WINDOW_CORNER_PREFERENCE), @Value, SizeOf(Integer));
+    //);
+  end;
+end;
+
 procedure FXCustomForm.SetMicaEffect(const Value: boolean);
 begin
   FMicaEffect := Value;
@@ -669,9 +724,12 @@ begin
   FDestColor := FDrawColors.Background;
   if Self.Visible and FAllowThemeChangeAnim then
     with FXAsyncIntAnim.Create do begin
-      Duration := 0.2;
+      Duration := 0.1;
       Kind := FXAnimationKind.Exponential;
-      Steps := 8;
+      Steps := 6;
+
+      LatencyAdjustments := true;
+      LatencyCanSkipSteps := true;
 
       StartValue := 0;
       EndValue := 255;

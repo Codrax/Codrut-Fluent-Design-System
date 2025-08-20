@@ -43,7 +43,7 @@ type
     FImage: FXIconSelect;
     FImageScale: single;
     FLayout: FXDrawLayout;
-    FTextLayout: FXLayout;
+    FTextLayout: TLayout;
 
     // Internal
     procedure ImageUpdated(Sender: TObject);
@@ -217,7 +217,7 @@ begin
         DrawRect.Left + AWidth + TextSpacing * 2, DrawRect.Bottom);
       TextRect := Rect(IconRect.Right + TextSpacing, DrawRect.Top,
         DrawRect.Right, DrawRect.Bottom);
-      FTextLayout := FXLayout.Beginning;
+      FTextLayout := TLayout.Beginning;
 
       // Image
       if Image.Enabled then
@@ -230,7 +230,7 @@ begin
     FXDrawLayout.Right: begin
       IconRect := Rect(DrawRect.Right-AWidth-TextSpacing, DrawRect.Top, DrawRect.Right, DrawRect.Bottom);
       TextRect := Rect(DrawRect.Left, DrawRect.Top, IconRect.Left - TextSpacing * 2, DrawRect.Bottom);
-      FTextLayout := FXLayout.Beginning;
+      FTextLayout := TLayout.Beginning;
 
       // Image
       if Image.Enabled then
@@ -247,7 +247,7 @@ begin
       IconRect.Height := AWidth;
       IconRect.Offset((DrawRect.Width-AWidth) div 2, 0);
 
-      FTextLayout := FXLayout.Center;
+      FTextLayout := TLayout.Center;
 
       // Image
       if Image.Enabled then
@@ -264,7 +264,7 @@ begin
       IconRect.Top := DrawRect.Bottom-AWidth;
       IconRect.Offset((DrawRect.Width-AWidth) div 2, 0);
 
-      FTextLayout := FXLayout.Center;
+      FTextLayout := TLayout.Center;
 
       // Image
       if Image.Enabled then
@@ -501,9 +501,9 @@ begin
       DrawFlags := [FXTextFlag.VerticalCenter];
 
       case FTextLayout of
-        FXLayout.Beginning: DrawFlags := DrawFlags + [FXTextFlag.Left];
-        FXLayout.Center: DrawFlags := DrawFlags + [FXTextFlag.Center];
-        FXLayout.Ending: DrawFlags := DrawFlags + [FXTextFlag.Right];
+        TLayout.Beginning: DrawFlags := DrawFlags + [FXTextFlag.Left];
+        TLayout.Center: DrawFlags := DrawFlags + [FXTextFlag.Center];
+        TLayout.Ending: DrawFlags := DrawFlags + [FXTextFlag.Right];
       end;
 
       if WordWrap then

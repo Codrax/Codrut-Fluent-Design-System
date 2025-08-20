@@ -210,6 +210,7 @@
         <DCCReference Include="Source\CFX.PopupConnector.pas"/>
         <DCCReference Include="Source\CFX.Button.pas"/>
         <DCCReference Include="Source\CFX.IconView.pas"/>
+        <DCCReference Include="Source\CFX.Picture.pas"/>
         <DCCReference Include="Source\CFX.ScrollText.pas"/>
         <DCCReference Include="Source\CFX.ArrayHelpers.pas"/>
         <DCCReference Include="Source\CFX.FormClasses.pas"/>

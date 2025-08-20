@@ -107,7 +107,7 @@ type
     FButtonSpacing: integer;
     FButtonWidth,
     FButtonHeight: integer;
-    FButtonAlignment: FXLayout;
+    FButtonAlignment: TLayout;
     FButtonDynamicSizing: boolean;
 
     FPanelOfButtons: FXPanel;
@@ -152,7 +152,7 @@ type
     property ButtonSpacing: integer read FButtonSpacing write FButtonSpacing;
     property ButtonWidth: integer read FButtonWidth write FButtonWidth;
     property ButtonHeight: integer read FButtonHeight write FButtonHeight;
-    property ButtonAlignment: FXLayout read FButtonAlignment write FButtonAlignment;
+    property ButtonAlignment: TLayout read FButtonAlignment write FButtonAlignment;
     property ButtonDynamicSizing: boolean read FButtonDynamicSizing write FButtonDynamicSizing;
 
   public
@@ -831,7 +831,7 @@ begin
   FButtons := [];
   FButtonDefault := -1;
   FButtonCancel := -1;
-  FButtonAlignment := FXLayout.Ending;
+  FButtonAlignment := TLayout.Ending;
 
   FClickedButton := -1;
 
@@ -862,7 +862,7 @@ begin
 
     // Center offset
     Padding.Right := 0;
-    if FButtonAlignment = FXLayout.Center then
+    if FButtonAlignment = TLayout.Center then
       Padding.Right := (FForm.ClientWidth - GetButtonBarWidth) div 2;
   end;
 
@@ -887,7 +887,7 @@ begin
 
       // Position
       MarginsFill.Right := FButtonSpacing;
-      if FButtonAlignment = FXLayout.Beginning then begin
+      if FButtonAlignment = TLayout.Beginning then begin
         Align := alLeft;
         Left := FActualClient.Right;
       end

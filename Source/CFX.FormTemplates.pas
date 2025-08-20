@@ -400,7 +400,7 @@ begin
 
       WordWrap := true;
 
-      LayoutHorizontal := FXLayout.Center;
+      LayoutHorizontal := TLayout.Center;
 
       Align := alTop;
       AlignWithMargins := true;
@@ -1072,7 +1072,7 @@ begin
 
       WordWrap := true;
 
-      LayoutHorizontal := FXLayout.Center;
+      LayoutHorizontal := TLayout.Center;
 
       Align := alTop;
       AlignWithMargins := true;

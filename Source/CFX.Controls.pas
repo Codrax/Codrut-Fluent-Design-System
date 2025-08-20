@@ -901,6 +901,10 @@ function FXWindowsControl.GetClientRect: TRect;
 begin
   // Apply padding
   Result := FInnerMargins.RectangleInflate( GetAbsoluteRect );
+  if Result.Left > Result.Right then
+    Result.Left := Result.Right;
+  if Result.Top > Result.Bottom then
+    Result.Top := Result.Bottom;
 end;
 
 function FXWindowsControl.GetContentRect: TRect;

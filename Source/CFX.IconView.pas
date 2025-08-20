@@ -30,8 +30,8 @@ type
     FUseAccentAsForeground: boolean;
     FScale: real;
     FImage: FXIconSelect;
-    FVertLayout: FXLayout;
-    FHorizLayout: FXLayout;
+    FVertLayout: TLayout;
+    FHorizLayout: TLayout;
 
     // Internal
     procedure ImageUpdated(Sender: TObject);
@@ -39,10 +39,10 @@ type
     // Getters
 
     // Setters
-    procedure SetHorizLayout(const Value: FXLayout);
+    procedure SetHorizLayout(const Value: TLayout);
     procedure SetImage(const Value: FXIconSelect);
     procedure SetScale(const Value: real);
-    procedure SetVertLayout(const Value: FXLayout);
+    procedure SetVertLayout(const Value: TLayout);
     procedure SetUseAccentAsForeground(const Value: boolean);
 
   protected
@@ -68,8 +68,8 @@ type
     // Props
     property Image: FXIconSelect read FImage write SetImage;
     property Scale: real read FScale write SetScale;
-    property LayoutHorizontal: FXLayout read FHorizLayout write SetHorizLayout default FXLayout.Center;
-    property LayoutVertical: FXLayout read FVertLayout write SetVertLayout default FXLayout.Center;
+    property LayoutHorizontal: TLayout read FHorizLayout write SetHorizLayout default TLayout.Center;
+    property LayoutVertical: TLayout read FVertLayout write SetVertLayout default TLayout.Center;
 
     // Default props
     property Align;
@@ -127,8 +127,8 @@ begin
   FImage.Enabled := true;
   FImage.OnChange := ImageUpdated;
 
-  FHorizLayout := FXLayout.Center;
-  FVertLayout := FXLayout.Center;
+  FHorizLayout := TLayout.Center;
+  FVertLayout := TLayout.Center;
 
   // Custom Color
   FCustomColors := FXColorSets.Create(Self);
@@ -213,15 +213,15 @@ begin
 
   // Allign
   case FHorizLayout of
-    FXLayout.Beginning: ;
-    FXLayout.Center: IconRect.Offset((DrawRect.Width - IconRect.Width) div 2, 0);
-    FXLayout.Ending: IconRect.Offset(DrawRect.Width - IconRect.Width, 0);
+    TLayout.Beginning: ;
+    TLayout.Center: IconRect.Offset((DrawRect.Width - IconRect.Width) div 2, 0);
+    TLayout.Ending: IconRect.Offset(DrawRect.Width - IconRect.Width, 0);
   end;
 
   case FVertLayout of
-    FXLayout.Beginning: ;
-    FXLayout.Center: IconRect.Offset(0, (ClientRect.Height - IconRect.Height) div 2);
-    FXLayout.Ending: IconRect.Offset(0, DrawRect.Height - IconRect.Height);
+    TLayout.Beginning: ;
+    TLayout.Center: IconRect.Offset(0, (ClientRect.Height - IconRect.Height) div 2);
+    TLayout.Ending: IconRect.Offset(0, DrawRect.Height - IconRect.Height);
   end;
 end;
 
@@ -231,7 +231,7 @@ begin
   inherited;
 end;
 
-procedure FXIconView.SetHorizLayout(const Value: FXLayout);
+procedure FXIconView.SetHorizLayout(const Value: TLayout);
 begin
   if FHorizLayout = Value then
     Exit;
@@ -269,7 +269,7 @@ begin
   StandardUpdateDraw;
 end;
 
-procedure FXIconView.SetVertLayout(const Value: FXLayout);
+procedure FXIconView.SetVertLayout(const Value: TLayout);
 begin
   if FVertLayout = Value then
     Exit;

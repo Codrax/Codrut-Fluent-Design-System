@@ -222,7 +222,7 @@ var
   TranscodedDefault: boolean;
 
   WallpaperSetting: TWallpaperSetting;
-  DrawMode: FXDrawMode;
+  DrawMode: TDrawMode;
 
   BitMap: TBitMap;
 begin
@@ -255,13 +255,13 @@ begin
 
   // Rects Draw Mode
   case WallpaperSetting of
-    TWallpaperSetting.Fill: DrawMode := FXDrawMode.Center3Fill;
-    TWallpaperSetting.Fit: DrawMode := FXDrawMode.CenterFit;
-    TWallpaperSetting.Stretch: DrawMode := FXDrawMode.Stretch;
-    TWallpaperSetting.Tile: DrawMode := FXDrawMode.Tile;
-    TWallpaperSetting.Center: DrawMode := FXDrawMode.Center;
-    TWallpaperSetting.Span: DrawMode := FXDrawMode.CenterFill;
-    else DrawMode := FXDrawMode.Stretch;
+    TWallpaperSetting.Fill: DrawMode := TDrawMode.Center3Fill;
+    TWallpaperSetting.Fit: DrawMode := TDrawMode.CenterFit;
+    TWallpaperSetting.Stretch: DrawMode := TDrawMode.Stretch;
+    TWallpaperSetting.Tile: DrawMode := TDrawMode.Tile;
+    TWallpaperSetting.Center: DrawMode := TDrawMode.Center;
+    TWallpaperSetting.Span: DrawMode := TDrawMode.CenterFill;
+    else DrawMode := TDrawMode.Stretch;
   end;
 
   if WallpaperSetting = TWallpaperSetting.Span then
@@ -278,7 +278,7 @@ begin
         Exit;
 
       Wallpaper.LoadFromFile(FileName);
-      DrawImageInRect(WallpaperBlurred.Canvas, WallpaperBlurred.Canvas.ClipRect, Wallpaper, FXDrawMode.CenterFill);
+        DrawImageInRect(WallpaperBlurred.Canvas, WallpaperBlurred.Canvas.ClipRect, Wallpaper, TDrawMode.CenterFill);
     end
   else
     // Complete Desktop Puzzle
@@ -305,8 +305,7 @@ begin
 
         DestRect := MonitorRect;
         DestRect.Offset(OffsetX, OffsetY);
-
-        DRects := GetDrawModeRects(DestRect, Wallpaper, DrawMode);
+        DRects := RectangleLayouts(TSize.Create(Wallpaper.Width, Wallpaper.Height), DestRect, DrawModeToImageLayout(DrawMode));
 
         // Draw
         if WallpaperSetting in [TWallpaperSetting.Fit, TWallpaperSetting.Stretch] then

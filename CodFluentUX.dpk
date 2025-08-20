@@ -99,6 +99,7 @@ contains
   CFX.PopupConnector in 'Source\CFX.PopupConnector.pas',
   CFX.Button in 'Source\CFX.Button.pas',
   CFX.IconView in 'Source\CFX.IconView.pas',
+  CFX.Picture in 'Source\CFX.Picture.pas',
   CFX.ScrollText in 'Source\CFX.ScrollText.pas',
   CFX.ArrayHelpers in 'Source\CFX.ArrayHelpers.pas',
   CFX.FormClasses in 'Source\CFX.FormClasses.pas',

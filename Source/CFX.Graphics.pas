@@ -23,6 +23,9 @@ uses
 type
   TPent = array[0..4] of TPoint;
 
+  TDrawMode = (Fill, Fit, Stretch, Center, CenterFill, Center3Fill,
+    CenterFit, Normal, Tile); { Windows DWM use a Center3 Fill }
+
 // Graphic Utilities
 procedure GetCenterPos(Width, Height: Integer; Rect: TRect; out X, Y: Integer);
 function CreateSolidBrushWithAlpha(Color: TColor; Alpha: Byte = $FF): HBRUSH;
@@ -57,13 +60,13 @@ procedure StretchInvertedMask(Source: TCanvas; Destination: TCanvas; DestRect: T
 function Desaturate(Color: TColor): TColor; overload;
 procedure Desaturate(Bitmap: TBitmap); overload;
 
-// Draw Rectangles
-function GetDrawModeRects(Rect: TRect; Image: TGraphic; DrawMode: FXDrawMode; ImageMargin:
-                          integer = 0): TArray<TRect>;
-function GetDrawModeRect(Rect: TRect; Image: TGraphic; DrawMode: FXDrawMode;
-                          ImageMargin: integer = 0): TRect;
+{ Drawing }
+function DrawModeToImageLayout(DrawMode: TDrawMode): TRectLayout;
 procedure DrawImageInRect(Canvas: TCanvas; Rect: TRect; Image: TGraphic;
-                          DrawMode: FXDrawMode; ImageMargin: integer = 0);
+  Layout: TRectLayout; ClipImage: boolean = false; Opacity: byte = 255); overload;
+procedure DrawImageInRect(Canvas: TCanvas; Rect: TRect; Image: TGraphic;
+  DrawMode: TDrawMode = TDrawMode.Fill; ImageMargin: integer = 0;
+  ClipImage: boolean = false; Opacity: byte = 255); overload;
 
 // Gradient
 procedure GradHorizontal(Canvas:TCanvas; Rect:TRect; FromColor, ToColor:TColor);
@@ -84,199 +87,120 @@ begin
   Y := Rect.Top + (Rect.Height - Height) div 2;
 end;
 
-function GetDrawModeRects(Rect: TRect; Image: TGraphic; DrawMode: FXDrawMode; ImageMargin: integer): TArray<TRect>;
-var
-  A, B, C: real;
-  TMPRect: TRect;
-  I, W, H: Integer;
+function DrawModeToImageLayout(DrawMode: TDrawMode): TRectLayout;
 begin
-  if Image.Empty then
-    Exit;
+  Result := TRectLayout.New;
 
-  SetLength(Result, 1);
-  if Image <> nil then
+  // Set
   case DrawMode of
-
-    // Fill
-    FXDrawMode.Fill: begin
-      Result[0] := Rect;
-
-      A := Result[0].Width / Image.Width ;
-      B := Image.Height * A;
-
-      if B < Result[0].Height then
-        begin
-          C := Result[0].Height / Image.Height;
-
-          Result[0].Width := trunc(Image.Width * C);
-        end
-          else
-            Result[0].Height := trunc(B);
+    TDrawMode.Fill: Result.ContentFill := TRectLayoutContentFill.Fill;
+    TDrawMode.Fit: Result.ContentFill := TRectLayoutContentFill.Fit;
+    TDrawMode.Stretch: Result.ContentFill := TRectLayoutContentFill.Stretch;
+    TDrawMode.Center: begin
+      Result.LayoutHorizontal := TLayout.Center;
+      Result.LayoutVertical := TLayout.Center;
     end;
+    TDrawMode.CenterFill: begin
+      Result.ContentFill := TRectLayoutContentFill.Fill;
 
-    // Fit
-    FXDrawMode.Fit: begin
-      Result[0] := Rect;
-
-      A := Result[0].Width / Image.Width ;
-      B := Image.Height * A;
-
-      if B > Result[0].Height then
-        begin
-          C := Result[0].Height / Image.Height;
-
-          Result[0].Width := trunc(Image.Width * C);
-        end
-          else
-            Result[0].Height := trunc(B);
+      Result.LayoutHorizontal := TLayout.Center;
+      Result.LayoutVertical := TLayout.Center;
     end;
+    TDrawMode.Center3Fill: begin
+      Result.ContentFill := TRectLayoutContentFill.Fill;
 
-    // Stretch
-    FXDrawMode.Stretch: begin
-      Result[0] := Rect;
+      Result.LayoutHorizontal := TLayout.Center;
+      Result.LayoutVertical := TLayout.Center;
+
+      Result.CenterDivisor := TSizeF.Create(3, 3);
     end;
+    TDrawMode.CenterFit: begin
+      Result.ContentFill := TRectLayoutContentFill.Fit;
 
-    // Center
-    FXDrawMode.Center: begin
-      Result[0].Left := Rect.CenterPoint.X - Image.Width div 2;
-      Result[0].Right := Rect.CenterPoint.X + Image.Width div 2;
-
-      Result[0].Top := Rect.CenterPoint.Y - Image.Height div 2;
-      Result[0].Bottom := Rect.CenterPoint.Y + Image.Height div 2;
+      Result.LayoutHorizontal := TLayout.Center;
+      Result.LayoutVertical := TLayout.Center;
     end;
-
-    // Center Fill
-    FXDrawMode.CenterFill: begin
-      Result[0] := Rect;
-
-      A := Result[0].Width / Image.Width ;
-      B := Image.Height * A;
-
-      if B < Result[0].Height then
-        begin
-          C := Result[0].Height / Image.Height;
-
-          Result[0].Width := trunc(Image.Width * C);
-        end
-          else
-            Result[0].Height := trunc(B);
-
-      W := Result[0].Width;
-      H := Result[0].Height;
-
-      Result[0].Left := Result[0].Left - (W - Rect.Width) div 2;
-      Result[0].Right := Result[0].Right - (W - Rect.Width) div 2;
-      Result[0].Top := Result[0].Top - (H - Rect.Height) div 2;
-      Result[0].Bottom := Result[0].Bottom - (H - Rect.Height) div 2;
-    end;
-
-    // Center Fill
-    FXDrawMode.Center3Fill: begin
-      Result[0] := Rect;
-
-      A := Result[0].Width / Image.Width ;
-      B := Image.Height * A;
-
-      if B < Result[0].Height then
-        begin
-          C := Result[0].Height / Image.Height;
-
-          Result[0].Width := trunc(Image.Width * C);
-        end
-          else
-            Result[0].Height := trunc(B);
-
-      W := Result[0].Width;
-      H := Result[0].Height;
-
-      Result[0].Left := Result[0].Left - (W - Rect.Width) div 3;
-      Result[0].Right := Result[0].Right - (W - Rect.Width) div 3;
-      Result[0].Top := Result[0].Top - (H - Rect.Height) div 3;
-      Result[0].Bottom := Result[0].Bottom - (H - Rect.Height) div 3;
-    end;
-
-    // Center Fit
-    FXDrawMode.CenterFit: begin
-      Result[0] := Rect;
-
-      A := Result[0].Width / Image.Width ;
-      B := Image.Height * A;
-
-      if B > Result[0].Height then
-        begin
-          C := Result[0].Height / Image.Height;
-
-          Result[0].Width := trunc(Image.Width * C);
-        end
-          else
-            Result[0].Height := trunc(B);
-
-      W := Result[0].Width;
-      H := Result[0].Height;
-
-      Result[0].Left := Result[0].Left + (Rect.Width - W) div 2;
-      Result[0].Right := Result[0].Right + (Rect.Width - W) div 2;
-      Result[0].Top := Result[0].Top + (Rect.Height - H) div 2;
-      Result[0].Bottom := Result[0].Bottom + (Rect.Height - H) div 2;
-    end;
-
-    // Normal
-    FXDrawMode.Normal: begin
-      Result[0].Left := Rect.Left;
-      Result[0].Right := Result[0].Left + Image.Width;
-
-      Result[0].Top := Rect.Top;
-      Result[0].Bottom := Result[0].Bottom + Image.Height;
-    end;
-
-    // Tile
-    FXDrawMode.Tile: begin
-      SetLength(Result, 0);
-      A := Rect.Top;
-      repeat
-        B := Rect.Left;
-        repeat
-          SetLength(Result, Length(Result) + 1);
-
-          TMPRect.TopLeft := Point(trunc(B), trunc(A));
-          TMPRect.Width := Image.Width;
-          TMPRect.Height := Image.Height;
-
-          Result[Length(Result) - 1] := TMPRect;
-
-          B := B + Image.Width;
-        until (B >= Rect.Width);
-
-        A := A + Image.Height;
-      until (A >= Rect.Height);
+    TDrawMode.Tile: begin
+      Result.Tile := true;
+      Result.TileFlags := [TRectLayoutTileFlag.ExtendX, TRectLayoutTileFlag.ExtendY];
     end;
   end;
-
-  if ImageMargin <> 0 then
-    for I := 0 to High( Result ) do
-      with Result[I] do
-        begin
-          Left := Left + ImageMargin;
-          Top := Top + ImageMargin;
-          Right := Right - ImageMargin;
-          Bottom := Bottom - ImageMargin;
-        end;
 end;
 
-function GetDrawModeRect(Rect: TRect; Image: TGraphic; DrawMode: FXDrawMode; ImageMargin: integer): TRect;
+procedure DrawImageInRect(Canvas: TCanvas; Rect: TRect; Image: TGraphic;
+  DrawMode: TDrawMode; ImageMargin: integer; ClipImage: boolean; Opacity: byte);
+var
+  Layout: TRectLayout;
 begin
-  Result := GetDrawModeRects(Rect, Image, DrawMode, ImageMargin)[0];
+  Layout := DrawModeToImageLayout(DrawMode);
+  Layout.MarginParent := ImageMargin;
+
+  // Data
+  DrawImageInRect(Canvas, Rect, Image, Layout, ClipImage, Opacity);
 end;
 
-procedure DrawImageInRect(Canvas: TCanvas; Rect: TRect; Image: TGraphic; DrawMode: FXDrawMode; ImageMargin: integer);
+procedure DrawImageInRect(Canvas: TCanvas; Rect: TRect; Image: TGraphic;
+  Layout: TRectLayout; ClipImage: boolean = false; Opacity: byte = 255);
 var
   Rects: TArray<TRect>;
   I: integer;
+  Bitmap: TBitMap;
+  FRect: TRect;
 begin
-  Rects := GetDrawModeRects(Rect, Image, DrawMode, ImageMargin);
+  // Get Rectangles
+  Rects := RectangleLayouts(TSize.Create(Image.Width, Image.Height), Rect, Layout);
 
-  for I := 0 to High( Rects ) do
-    Canvas.StretchDraw( Rects[I], Image, 255 );
+  if not ClipImage then
+    // Standard Draw
+    begin
+      for I := 0 to High( Rects ) do
+        Canvas.StretchDraw( Rects[I], Image, Opacity );
+    end
+  else
+    // Clip Image Drw
+    begin
+      for I := 0 to High(Rects) do
+        begin
+          Bitmap := TBitMap.Create(Rect.Width, Rect.Height);
+          Bitmap.PixelFormat := pf32bit;
+          Bitmap.Transparent := true;
+
+          const PIXEL_BYTE_SIZE = 4;
+
+          // Fill image with
+          for var Y := 0 to Bitmap.Height - 1 do
+            FillMemory(Bitmap.ScanLine[Y], PIXEL_BYTE_SIZE * Bitmap.Width, 0);
+
+          Bitmap.Canvas.Lock;
+          try
+            FRect := Rects[I];
+            FRect.Offset( -Rect.Left, -Rect.Top );
+
+            Bitmap.Canvas.StretchDraw(FRect, Image, 255); // Full opacity for temp
+
+            // Image has no alpha channel, set A bytes to 255
+            if not Image.Transparent then begin
+              const RectZone = TRect.Intersect(Bitmap.Canvas.ClipRect, FRect);
+
+              for var Y := RectZone.Top to RectZone.Bottom-1 do begin
+                // Line
+                const Pos: PByte = Bitmap.ScanLine[Y];
+
+                // Start left
+                for var X := RectZone.Left to RectZone.Right-1 do
+                  Pos[X * PIXEL_BYTE_SIZE + 3] := 255;
+              end;
+            end;
+
+            // Draw
+            //Canvas.StretchDraw(Rect, BitMap, Opacity)
+            Canvas.Draw(Rect.Left, Rect.Top, BitMap, Opacity);
+          finally
+            Bitmap.Canvas.Unlock;
+            BitMap.Free;
+          end;
+        end;
+    end;
 end;
 
 procedure GradHorizontal(Canvas:TCanvas; Rect:TRect; FromColor, ToColor:TColor);

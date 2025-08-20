@@ -32,8 +32,8 @@ type
     FUseAccentAsForeground: boolean;
 
     FText: string;
-    FVertLayout: FXLayout;
-    FHorzLayout: FXLayout;
+    FVertLayout: TLayout;
+    FHorzLayout: TLayout;
     FInnerMargin: integer;
 
     FAutoSize: boolean;
@@ -45,8 +45,8 @@ type
 
     // Set properties
     procedure SetText(const Value: string);
-    procedure SetHorzLayout(const Value: FXLayout);
-    procedure SetVertLayout(const Value: FXLayout);
+    procedure SetHorzLayout(const Value: TLayout);
+    procedure SetVertLayout(const Value: TLayout);
     procedure SetInnermargin(const Value: integer);
     procedure SetElipsis(const Value: boolean);
     procedure SetWordWrap(const Value: boolean);
@@ -81,8 +81,8 @@ type
 
     property UseAccentAsForeground: boolean read FUseAccentAsForeground write SetUseAccentAsForeground default false;
 
-    property LayoutHorizontal: FXLayout read FHorzLayout write SetHorzLayout default FXLayout.Beginning;
-    property LayoutVertical: FXLayout read FVertLayout write SetVertLayout default FXLayout.Center;
+    property LayoutHorizontal: TLayout read FHorzLayout write SetHorzLayout default TLayout.Beginning;
+    property LayoutVertical: TLayout read FVertLayout write SetVertLayout default TLayout.Center;
 
     property AutoSize: boolean read FAutoSize write SetAutoSizeEx;
     property WordWrap: boolean read FWordWrap write SetWordWrap default false;
@@ -257,7 +257,12 @@ var
   AWidth, AHeight: integer;
   ARect: TRect;
   AFlags: FXTextFlags;
+  ALeft: integer;
+  ATop: integer;
 begin
+  ALeft := Left;
+  ATop := Top;
+
   with Canvas do begin
     Font.Assign( Self.Font );
 
@@ -291,8 +296,19 @@ begin
     end;
 
     // Set
+    const WidthOffset = AWidth-Width;
+    const HeightOffset = AHeight-Height;
+    case LayoutHorizontal of
+      TLayout.Center: Dec(ALeft, WidthOffset div 2);
+      TLayout.Ending: Dec(ALeft, WidthOffset);
+    end;
+    case LayoutVertical of
+      TLayout.Center: Dec(ATop, HeightOffset div 2);
+      TLayout.Ending: Dec(ATop, HeightOffset);
+    end;
+
     if (Width <> AWidth) or (Height <> AHeight) then
-      Self.SetBounds(Left, Top, AWidth, AHeight);
+      Self.SetBounds(ALeft, ATop, AWidth, AHeight);
   end;
 end;
 
@@ -348,7 +364,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXCustomTextBox.SetHorzLayout(const Value: FXLayout);
+procedure FXCustomTextBox.SetHorzLayout(const Value: TLayout);
 begin
   if FHorzLayout = Value then
     Exit;
@@ -400,7 +416,7 @@ begin
   StandardUpdateDraw;
 end;
 
-procedure FXCustomTextBox.SetVertLayout(const Value: FXLayout);
+procedure FXCustomTextBox.SetVertLayout(const Value: TLayout);
 begin
   if FVertLayout = Value then
     Exit;
@@ -436,8 +452,8 @@ begin
   AutoFocusLine := true;
   BufferedComponent := true;
   
-  FHorzLayout := FXLayout.Beginning;
-  FVertLayout := FXLayout.Center;
+  FHorzLayout := TLayout.Beginning;
+  FVertLayout := TLayout.Center;
   FWordWrap := false;
   FAutoSize := true;
 
@@ -501,15 +517,15 @@ begin
     Result := Result + [FXTextFlag.ShowAccelChar];
 
   case FHorzLayout of
-    FXLayout.Beginning: Result := Result + [FXTextFlag.Left];
-    FXLayout.Center: Result := Result + [FXTextFlag.Center];
-    FXLayout.Ending: Result := Result + [FXTextFlag.Right];
+    TLayout.Beginning: Result := Result + [FXTextFlag.Left];
+    TLayout.Center: Result := Result + [FXTextFlag.Center];
+    TLayout.Ending: Result := Result + [FXTextFlag.Right];
   end;
 
   case FVertLayout of
-    FXLayout.Beginning: Result := Result + [FXTextFlag.Top];
-    FXLayout.Center: Result := Result + [FXTextFlag.VerticalCenter];
-    FXLayout.Ending: Result := Result + [FXTextFlag.Bottom];
+    TLayout.Beginning: Result := Result + [FXTextFlag.Top];
+    TLayout.Center: Result := Result + [FXTextFlag.VerticalCenter];
+    TLayout.Ending: Result := Result + [FXTextFlag.Bottom];
   end;
 end;
 

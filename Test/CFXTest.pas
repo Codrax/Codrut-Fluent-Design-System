@@ -26,7 +26,7 @@ uses
   Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage, Vcl.ControlList,
   Vcl.ExtDlgs, System.ImageList, UITypes, Vcl.ComCtrls, Vcl.Mask,
   Vcl.Themes, System.Generics.Collections,
-  Vcl.NumberBox, CFX.Components;
+  Vcl.NumberBox, CFX.Components, CFX.Picture;
 
 type
   TForm1 = class(FXForm)
@@ -71,6 +71,9 @@ type
     FXButton15: FXButton;
     FXButton17: FXButton;
     FXAppManager1: FXAppManager;
+    FXPicture1: FXPicture;
+    FXTextBox1: FXTextBox;
+    FXButton6: FXButton;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);

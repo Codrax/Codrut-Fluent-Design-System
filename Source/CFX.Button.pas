@@ -47,8 +47,8 @@ type
     FImage: FXIconSelect;
     FImageScale: real;
     FImageLayout: FXDrawLayout;
-    FVertLayout: FXLayout;
-    FHorizLayout: FXLayout;
+    FVertLayout: TLayout;
+    FHorizLayout: TLayout;
     FAutomaticMouseCursor: boolean;
     FCancel: boolean;
     FDefault: boolean;
@@ -105,13 +105,13 @@ type
     procedure SetCancel(const Value: boolean);
     procedure SetDefault(const Value: boolean);
     procedure SetImageScale(const Value: real);
-    procedure SetHorizLayout(const Value: FXLayout);
+    procedure SetHorizLayout(const Value: TLayout);
     procedure SetImageLayout(const Value: FXDrawLayout);
     procedure SetStateEnabled(const Value: boolean);
     procedure SetStateImage(const Value: FXIconSelect);
     procedure SetStateText(const Value: string);
     procedure SetStateDuration(const Value: integer);
-    procedure SetVertLayout(const Value: FXLayout);
+    procedure SetVertLayout(const Value: TLayout);
     procedure SetDetail(const Value: FXDetailType);
     procedure SetButtonKind(const Value: FXButtonKind);
     procedure SetRoundness(const Value: integer);
@@ -153,8 +153,8 @@ type
     property Image: FXIconSelect read FImage write SetImage;
     property ImageScale: real read FImageScale write SetImageScale;
     property ImageLayout: FXDrawLayout read FImageLayout write SetImageLayout default FXDrawLayout.Left;
-    property LayoutHorizontal: FXLayout read FHorizLayout write SetHorizLayout default FXLayout.Center;
-    property LayoutVertical: FXLayout read FVertLayout write SetVertLayout default FXLayout.Center;
+    property LayoutHorizontal: TLayout read FHorizLayout write SetHorizLayout default TLayout.Center;
+    property LayoutVertical: TLayout read FVertLayout write SetVertLayout default TLayout.Center;
     property ButtonKind: FXButtonKind read FButtonKind write SetButtonKind default FXButtonKind.Normal;
     property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default true;
 
@@ -567,9 +567,9 @@ begin
               end
             else
               case FHorizLayout of
-                FXLayout.Beginning: ALeft := CaptionRect.Left;
-                FXLayout.Center: ALeft := CaptionRect.Left + round((CaptionRect.Width - ATextWidth - ASize) /2);
-                FXLayout.Ending: ALeft := CaptionRect.Left + CaptionRect.Width - ATextWidth - ASize;
+                TLayout.Beginning: ALeft := CaptionRect.Left;
+                TLayout.Center: ALeft := CaptionRect.Left + round((CaptionRect.Width - ATextWidth - ASize) /2);
+                TLayout.Ending: ALeft := CaptionRect.Left + CaptionRect.Width - ATextWidth - ASize;
               end;
 
             // Split
@@ -592,20 +592,20 @@ begin
 
             // Vertical Align
             case FVertLayout of
-              FXLayout.Beginning:
+              TLayout.Beginning:
                 begin
                   FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Top];
                   ImageRect.Height := ASize;
                 end;
 
-              FXLayout.Center:
+              TLayout.Center:
                 begin
                   FTextDrawFlags := FTextDrawFlags + [FXTextFlag.VerticalCenter];
                   ImageRect.Height := ASize;
                   ImageRect.Offset(0, (CaptionRect.Height-ASize) div 2);
                 end;
 
-              FXLayout.Ending:
+              TLayout.Ending:
                 begin
                   FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Bottom];
                   ImageRect.Height := ASize;
@@ -630,9 +630,9 @@ begin
               end
             else
               case FVertLayout of
-                FXLayout.Beginning: ATop := CaptionRect.Top;
-                FXLayout.Center: ATop := CaptionRect.Top + (CaptionRect.Height - ATextHeight - ASize) div 2;
-                FXLayout.Ending: ATop := CaptionRect.Top + CaptionRect.Height - ATextHeight - ASize;
+                TLayout.Beginning: ATop := CaptionRect.Top;
+                TLayout.Center: ATop := CaptionRect.Top + (CaptionRect.Height - ATextHeight - ASize) div 2;
+                TLayout.Ending: ATop := CaptionRect.Top + CaptionRect.Height - ATextHeight - ASize;
               end;
 
             // Split
@@ -657,20 +657,20 @@ begin
 
             // Horizontal Align
             case FHorizLayout of
-              FXLayout.Beginning:
+              TLayout.Beginning:
                 begin
                   FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Left];
                   ImageRect.Width := ASize;
                 end;
 
-              FXLayout.Center:
+              TLayout.Center:
                 begin
                   FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Center];
                   ImageRect.Width := ASize;
                   ImageRect.Offset((CaptionRect.Width-ASize) div 2, 0);
                 end;
 
-              FXLayout.Ending:
+              TLayout.Ending:
                 begin
                   FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Right];
                   ImageRect.Width := ASize;
@@ -684,13 +684,18 @@ begin
     begin
       TheTextRect := CaptionRect;
 
-      FTextDrawFlags := [FXTextFlag.WordWrap, FXTextFlag.VerticalCenter];
+      FTextDrawFlags := [FXTextFlag.WordWrap];
 
       // Text Align
       case FHorizLayout of
-        FXLayout.Beginning: FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Left];
-        FXLayout.Center: FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Center];
-        FXLayout.Ending: FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Right];
+        TLayout.Beginning: FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Left];
+        TLayout.Center: FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Center];
+        TLayout.Ending: FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Right];
+      end;
+      case FVertLayout of
+        TLayout.Beginning: FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Top];
+        TLayout.Center: FTextDrawFlags := FTextDrawFlags + [FXTextFlag.VerticalCenter];
+        TLayout.Ending: FTextDrawFlags := FTextDrawFlags + [FXTextFlag.Bottom];
       end;
     end;
 end;
@@ -704,7 +709,7 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXCustomButton.SetVertLayout(const Value: FXLayout);
+procedure FXCustomButton.SetVertLayout(const Value: TLayout);
 begin
   if FVertLayout = Value then
     Exit;
@@ -788,7 +793,7 @@ begin
   StandardUpdateDraw;
 end;
 
-procedure FXCustomButton.SetHorizLayout(const Value: FXLayout);
+procedure FXCustomButton.SetHorizLayout(const Value: TLayout);
 begin
   if FHorizLayout = Value then
     Exit;
@@ -990,8 +995,8 @@ begin
   FAutomaticCheck := true;
   FButtonKind := FXButtonKind.Normal;
   FImageLayout := FXDrawLayout.Left;
-  FHorizLayout := FXLayout.Center;
-  FVertLayout := FXLayout.Center;
+  FHorizLayout := TLayout.Center;
+  FVertLayout := TLayout.Center;
   FImageScale := BUTTON_IMAGE_SCALE;
   FWordWrap := true;
   FCancel := false;

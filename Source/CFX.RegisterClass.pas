@@ -6,7 +6,7 @@ uses Classes, CFX.Classes, CFX.Constants, CFX.Controls,
      CFX.StandardIcons, CFX.Slider, CFX.BlurMaterial, CFX.PopupMenu,
      CFX.ImageList, CFX.TextBox, CFX.RadioButton, CFX.Scrollbar,
      CFX.ScrollBox, CFX.Selector, CFX.Edit, CFX.PopupConnector,
-     CFX.IconView, CFX.ScrollText, CFX.Progress, CFX.RatingControl,
+     CFX.IconView, CFX.Picture, CFX.ScrollText, CFX.Progress, CFX.RatingControl,
      CFX.Effects, CFX.AppManager, CFX.PaintBox, CFX.TabStrip, CFX.Lists,
      CFX.Animation.Component, CFX.Layouts, CFX.Shapes, CFX.TitlebarPanel;
 
@@ -41,6 +41,7 @@ begin
     FXEdit,
     FXNumberEdit,
     FXIconView,
+    FXPicture,
     FXProgress,
     FXRatingControl
     ]
