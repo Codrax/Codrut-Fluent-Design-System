@@ -16,7 +16,8 @@ The component package is not at a state where it can be considered finished with
 - Checkbox, a animated checkbox that supports 3 states
 - Edit Box, a flue edit box with vertical alignment support
 - Standard icon, a drawable TGraphicControl icon component that has multiple icons
-- IconV iew, a simple icon view control that relies on the FXIcon class for drawing & storing. Very lightweight
+- IconView, a simple icon view control that relies on the FXIcon class for drawing & storing. Very lightweight
+- Picture, a image viewer with advanced layout configurations and tiling support
 - Slider, a slider with tick support, hint previews and more features
 - Blur Material, a acrilic blur box that can be drawn from the wallaper or a screenshot of the screen. Great for Windows Fluent Design System like apps
 - Popup Menu, it supports (FXIconSelect) icons and can have multiple sub-menus, It used a acrylic effect for the background with a accent colored border. It also has Checkable items, Radio Items, separators and as mentioned before, It can go infinite layers deep
