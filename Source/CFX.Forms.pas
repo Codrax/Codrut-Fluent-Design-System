@@ -408,7 +408,8 @@ begin
   Font.Height := ThemeManager.FormFontHeight;
 
   // Effects
-  MicaEffect := true;
+  if not AlphaBlend and (AlphaBlendValue = 255) then // enable mica effect by default if values are default
+    MicaEffect := true;
   CreateSmokeSettings;
   FAllowThemeChangeAnim := false;
 
