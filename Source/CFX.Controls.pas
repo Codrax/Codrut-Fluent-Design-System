@@ -329,6 +329,9 @@ type
     // Invalidate
     procedure Invalidate; override;
 
+    // Utility
+    procedure DisableAllAnimations; virtual;
+
     // Controls
     /// <summary> Return all controls with the same parent above this one. </summary>
     function GetControlsAbove: TArray<TControl>;
@@ -358,6 +361,7 @@ type
   FXContainerWindowsControl = class(FXWindowsControl)
   published
     property PaddingFill;
+    property TabStop default false;
 
   public
     // Draw
@@ -626,6 +630,11 @@ begin
   Result := IsDestroying or (Self = nil) or (Self.Parent = nil);
 end;
 
+procedure FXWindowsControl.DisableAllAnimations;
+begin
+  //
+end;
+
 procedure FXWindowsControl.DoEnter;
 begin
   inherited;
@@ -829,8 +838,8 @@ begin
 end;
 
 procedure FXWindowsControl.DrawTo(ACanvas: TCanvas; Destination: TRect);
-begin
-  DrawTo(ClientRect, ACanvas, Destination);
+begin    // Draw absolute rect, as we need to capture control clipping of the "inner margin"
+  DrawTo(AbsoluteRect, ACanvas, Destination);
 end;
 
 procedure FXWindowsControl.FocusChanged(Focused: boolean);
@@ -1604,6 +1613,7 @@ end;
 constructor FXContainerWindowsControl.Create(aOwner: TComponent);
 begin
   inherited;
+  TabStop := false;
   ControlStyle := ControlStyle + [csAcceptsControls];
   Transparent := false;
 end;

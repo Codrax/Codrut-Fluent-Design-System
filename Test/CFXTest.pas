@@ -26,7 +26,7 @@ uses
   Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage, Vcl.ControlList,
   Vcl.ExtDlgs, System.ImageList, UITypes, Vcl.ComCtrls, Vcl.Mask,
   Vcl.Themes, System.Generics.Collections,
-  Vcl.NumberBox, CFX.Components, CFX.Picture;
+  Vcl.NumberBox, CFX.Components, CFX.Picture, CFX.Animation.Component;
 
 type
   TForm1 = class(FXForm)
@@ -54,7 +54,6 @@ type
     FXTextBox4: FXTextBox;
     FXTextBox5: FXTextBox;
     FXPopupMenu1: FXPopupMenu;
-    FXBlurMaterial1: FXBlurMaterial;
     FXButton14: FXButton;
     FXButton16: FXButton;
     PaintBox1: TPaintBox;
@@ -74,6 +73,8 @@ type
     FXPicture1: FXPicture;
     FXTextBox1: FXTextBox;
     FXButton6: FXButton;
+    FXBlurMaterial1: FXBlurMaterial;
+    FXButton13: FXButton;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);
@@ -86,6 +87,7 @@ type
     procedure FXPaintBox1Draw(Sender: TObject);
     procedure FXButton2Click(Sender: TObject);
     procedure FXButton4Click(Sender: TObject);
+    procedure FXButton13Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -117,6 +119,23 @@ procedure TForm1.FXButton12Click(Sender: TObject);
 begin
   FXButton(Sender).Tag := FXButton(Sender).Tag + 1;
   FXButton(Sender).StateText := FXButton(Sender).Tag.ToString;
+end;
+
+procedure TForm1.FXButton13Click(Sender: TObject);
+begin
+  const F = FXPopupForm.CreateNew(nil);
+  with F do begin
+    Width := 200;
+    Height := 100;
+
+    with FXButton.create(F) do begin
+      Parent := F;
+      Top := 0;
+      left := 0;
+    end;
+
+    ShowAtControl(Sender as TControl, 0, (Sender as TControl).Height);
+  end;
 end;
 
 procedure TForm1.FXButton14Click(Sender: TObject);

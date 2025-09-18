@@ -61,6 +61,7 @@ type
     FClearSelOnExit: boolean;
     FOnChange: TNotifyEvent;
     FOnChangeValue: TNotifyEvent;
+    FOnEnterPressed: TNotifyEvent;
     FTextHint: string;
     FDetail: FXDetailType;
 
@@ -215,6 +216,7 @@ type
     // Events
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
+    property OnEnterPressed: TNotifyEvent read FOnEnterPressed write FOnEnterPressed;
 
     // Inherited properties
     property Cursor default crIBeam;
@@ -739,6 +741,8 @@ end;
 procedure FXCustomEdit.EnterPressed;
 begin
   //
+  if Assigned(FOnEnterPressed) then
+    FOnEnterPressed(Self);
 end;
 
 function FXCustomEdit.ExtendsBounds: boolean;
@@ -1691,6 +1695,8 @@ end;
 procedure FXNumberEdit.EnterPressed;
 begin
   UpdateTextValue;
+
+  inherited;
 end;
 
 function FXNumberEdit.GetValueCurrency: currency;

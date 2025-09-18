@@ -1028,6 +1028,8 @@ begin
 
       Font.Assign( FTextFont );
 
+      LayoutVertical := CFX.Types.TLayout.Beginning;
+
       // Data
       Text := FText;
 

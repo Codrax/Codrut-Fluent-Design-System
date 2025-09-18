@@ -68,6 +68,7 @@ type
     FOnCheck: TNotifyEvent;
     FOnOpenLink: TNotifyEvent;
     FOnDropDown: TNotifyEvent;
+    FOnStateTimeEnded: TNotifyEvent;
     FAnimationRunning: boolean;
     FAnimPos: integer;
     FAutoRepeat: TTimer;
@@ -173,6 +174,7 @@ type
     property OnCheck: TNotifyEvent read FOnCheck write FOnCheck;
     property OnOpenLink: TNotifyEvent read FOnOpenLink write FOnOpenLink;
     property OnDropDown: TNotifyEvent read FOnDropDown write FOnDropDown;
+    property OnStateTimeEnded: TNotifyEvent read FOnStateTimeEnded write FOnStateTimeEnded;
     property OnBeforeModalResult: FXBeforeModalResult read FBeforeModal write FBeforeModal;
 
     // Button
@@ -731,6 +733,8 @@ procedure FXCustomButton.StateStop(Sender: TObject);
 begin
   StateEnabled := false;
   FAutoStopState.Enabled := false;
+  if Assigned(FOnStateTimeEnded) then
+    FOnStateTimeEnded(Self);
 end;
 
 procedure FXCustomButton.TimerRepeat(Sender: TObject);

@@ -1,6 +1,7 @@
 object Form1: TForm1
   Left = 0
   Top = 0
+  AlphaBlend = True
   Caption = 'Codrut Fluent Design'
   ClientHeight = 661
   ClientWidth = 1184
@@ -44,27 +45,6 @@ object Form1: TForm1
     Width = 138
     Height = 128
     OnPaint = PaintBox1Paint
-  end
-  object FXBlurMaterial1: FXBlurMaterial
-    Left = 0
-    Top = 30
-    Width = 215
-    Height = 631
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 0
-    Size.X = 215
-    Size.Y = 631
-    Position.X = 0
-    Position.Y = 30
-    Align = alLeft
-    CustomColors.Enabled = False
-    CustomColors.Accent = 5789570
-    CustomColors.LightBackGround = clWhite
-    CustomColors.LightForeGround = 1776410
-    CustomColors.DarkBackGround = clBlack
-    CustomColors.DarkForeGround = clWhite
   end
   object FXStandardIcon1: FXStandardIcon
     Left = 15
@@ -1376,7 +1356,7 @@ object Form1: TForm1
   end
   object FXTabStrip1: FXTabStrip
     Left = 725
-    Top = 529
+    Top = 604
     Width = 300
     Height = 40
     Margins.Left = 0
@@ -1386,7 +1366,7 @@ object Form1: TForm1
     Size.X = 300
     Size.Y = 40
     Position.X = 725
-    Position.Y = 529
+    Position.Y = 604
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1471,7 +1451,7 @@ object Form1: TForm1
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 29
+    TabOrder = 28
     Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
@@ -1518,7 +1498,7 @@ object Form1: TForm1
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 30
+    TabOrder = 29
   end
   object FXScrollbar1: FXScrollbar
     Left = 230
@@ -1543,7 +1523,7 @@ object Form1: TForm1
     Orientation = Horizontal
     Animation = True
     CustomScrollbarSize = 0
-    TabOrder = 32
+    TabOrder = 31
   end
   object FXButton2: FXButton
     Left = 512
@@ -1587,7 +1567,7 @@ object Form1: TForm1
     Font.Height = 22
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 33
+    TabOrder = 32
     OnClick = FXButton2Click
     Image.IconType = None
     Image.SelectSegoe = #59188
@@ -1639,7 +1619,7 @@ object Form1: TForm1
     Font.Height = 22
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 34
+    TabOrder = 33
     Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
@@ -1691,7 +1671,7 @@ object Form1: TForm1
     Font.Height = 22
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 35
+    TabOrder = 34
     Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
@@ -1743,7 +1723,7 @@ object Form1: TForm1
     Font.Height = 22
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 36
+    TabOrder = 35
     Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
@@ -1966,7 +1946,7 @@ object Form1: TForm1
     Font.Name = 'Segoe UI'
     Font.Style = []
     Anchors = [akRight, akBottom]
-    TabOrder = 37
+    TabOrder = 36
   end
   object FXTextBox1: FXTextBox
     Left = 984
@@ -1993,7 +1973,7 @@ object Form1: TForm1
     Font.Name = 'Segoe UI'
     Font.Style = []
     Anchors = [akRight, akBottom]
-    TabOrder = 38
+    TabOrder = 37
     Text = 'Codrut Software.  Empowering technology '
     LayoutHorizontal = Ending
     AutoSize = True
@@ -2043,7 +2023,7 @@ object Form1: TForm1
     Font.Height = 22
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 39
+    TabOrder = 38
     Image.Enabled = True
     Image.IconType = Image
     Image.SelectPicture.Data = {
@@ -3053,6 +3033,80 @@ object Form1: TForm1
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
   end
+  object FXBlurMaterial1: FXBlurMaterial
+    Left = 0
+    Top = 30
+    Width = 215
+    Height = 631
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Size.X = 215
+    Size.Y = 631
+    Position.X = 0
+    Position.Y = 30
+    Align = alLeft
+    Version = Wallpaper
+    CustomColors.Enabled = False
+    CustomColors.Accent = 5789570
+    CustomColors.LightBackGround = clWhite
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = clBlack
+    CustomColors.DarkForeGround = clWhite
+  end
+  object FXButton13: FXButton
+    Left = 501
+    Top = 365
+    Width = 140
+    Height = 60
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Size.X = 140
+    Size.Y = 60
+    Position.X = 501
+    Position.Y = 365
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    CustomColors.LightBackGroundInterior = 16514043
+    CustomColors.DarkBackGroundInterior = 2829099
+    CustomButtonColors.Enabled = False
+    CustomButtonColors.Accent = clBlack
+    CustomButtonColors.LightBackgroundNone = clBlack
+    CustomButtonColors.LightBackgroundHover = clBlack
+    CustomButtonColors.LightBackgroundPress = clBlack
+    CustomButtonColors.LightForeGroundNone = clBlack
+    CustomButtonColors.LightForeGroundHover = clBlack
+    CustomButtonColors.LightForeGroundPress = clBlack
+    CustomButtonColors.DarkBackGroundNone = clBlack
+    CustomButtonColors.DarkBackGroundHover = clBlack
+    CustomButtonColors.DarkBackGroundPress = clBlack
+    CustomButtonColors.DarkForeGroundNone = clBlack
+    CustomButtonColors.DarkForeGroundHover = clBlack
+    CustomButtonColors.DarkForeGroundPress = clBlack
+    Text = 'Launch popup form'
+    LineWidth = 3.000000000000000000
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 22
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    TabOrder = 40
+    OnClick = FXButton13Click
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    StateImage.IconType = None
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
+  end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
@@ -3093,6 +3147,7 @@ object Form1: TForm1
     PublisherName = 'Codrut Software'
     HasAppData = True
     AppVersion = '1.1.0.0'
+    APIName = 'timely'
     AutomaticTasks = [UpdatePrompt, WindowSaveForm, WindowLoadForm]
     UserUpdateWaitDelay = 2000
     Left = 760

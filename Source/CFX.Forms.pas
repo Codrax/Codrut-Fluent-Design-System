@@ -263,6 +263,48 @@ type
     function ShowModal: Integer; override;
   end;
 
+  { Specialized for Popups }
+  FXPopupForm = class(FXCustomForm)
+  private
+    FLightDismiss: boolean;
+    FFreeOnClose: boolean;
+
+  protected
+    // Initialization (after form creation)
+    procedure InitForm; override;
+
+    // Do
+    procedure DoShow; override;
+    procedure DoClose(var Action: TCloseAction); override;
+
+    // Can
+    function CanMove(Position: TPoint): boolean; override;
+    function CanResize(var NewWidth, NewHeight: Integer): Boolean; override;
+
+    // Params
+    procedure CreateParams(var Params: TCreateParams); override;
+
+    // Messages
+    procedure WMKeyDown(var Msg: TWMKeyDown); message WM_KEYDOWN;
+    procedure WMKillFocus(var Msg: TWMKillFocus); message WM_KILLFOCUS;
+    procedure WMActivate(var Msg: TWMActivate); message WM_ACTIVATE;
+
+  public
+    property LightDismiss: boolean read FLightDismiss write FLightDismiss;
+    property FreeOnClose: boolean read FFreeOnClose write FFreeOnClose;
+
+    procedure Show(Position: TPoint); reintroduce; overload;
+    procedure ShowAtCursor;
+    procedure ShowAtControl(Executor: TControl; HorizontalOffset: integer=0; VerticalOffset: integer=0); overload;
+
+    // Modal
+    function ShowModal: Integer; overload; override;
+    function ShowModal(Position: TPoint): Integer; reintroduce; overload;
+
+    function ShowModalAtCursor: Integer;
+    function ShowModalAtControl(Executor: TControl; HorizontalOffset: integer=0; VerticalOffset: integer=0): Integer; overload;
+  end;
+
 implementation
 
 { FXCustomForm }
@@ -1080,6 +1122,157 @@ begin
       BorderStyle := FRestoredBorder;
       SetBoundsRect(FRestoredPosition);
     end;
+end;
+
+{ FXPopupForm }
+
+function FXPopupForm.CanMove(Position: TPoint): boolean;
+begin
+  Result := inherited;
+  if Visible and (BorderStyle in [bsSingle, bsDialog]) then
+    Result := false;
+end;
+
+function FXPopupForm.CanResize(var NewWidth, NewHeight: Integer): Boolean;
+begin
+  Result := inherited;
+  if Visible and (BorderStyle in [bsSingle, bsDialog]) then
+    Result := false;
+end;
+
+procedure FXPopupForm.CreateParams(var Params: TCreateParams);
+begin
+  inherited;
+
+  Params.ExStyle := Params.ExStyle or WS_EX_NOACTIVATE;
+  Params.Style := Params.Style and not (WS_CAPTION) or WS_SIZEBOX;
+end;
+
+function FXPopupForm.ShowModal: Integer;
+begin
+  Result := inherited;
+end;
+
+function FXPopupForm.ShowModalAtControl(Executor: TControl; HorizontalOffset: integer=0; VerticalOffset: integer=0): Integer;
+begin
+  Result := ShowModal( Executor.ClientToScreen(Point(HorizontalOffset, VerticalOffset)) );
+end;
+
+procedure FXPopupForm.WMActivate(var Msg: TWMActivate);
+begin
+  inherited;
+  if Msg.Active = WA_INACTIVE then
+    Close;
+end;
+
+procedure FXPopupForm.WMKeyDown(var Msg: TWMKeyDown);
+begin
+  if (Msg.CharCode = VK_ESCAPE) and LightDismiss then begin
+    Close;
+    Msg.Result := 0; // eat the key
+    Exit;
+  end;
+  inherited;
+end;
+
+procedure FXPopupForm.WMKillFocus(var Msg: TWMKillFocus);
+begin
+  if FLightDismiss then
+    Close; // or Hide, depending on your behavior
+end;
+
+{procedure FXPopupForm.DisableFormBorder;
+var
+  Style: Cardinal;
+  ExStyle: Cardinal;
+begin
+  Style := GetWindowLong(Handle, GWL_STYLE);
+  ExStyle := GetWindowLong(Handle, GWL_EXSTYLE);
+
+  // Remove caption bar
+  Style := Style and not (WS_CAPTION) or WS_SIZEBOX; // sizeable it MUST be - Yoda
+  ExStyle := ExStyle or WS_EX_NOACTIVATE;
+
+  SetWindowLong(Handle, GWL_STYLE, Style);
+  SetWindowLong(Handle, GWL_EXSTYLE, ExStyle);
+
+  // Crate
+  Perform(WM_NCCREATE, 0, 0);
+
+  // Is minimised?
+  if not IsIconic(Handle) then
+    // Re-calculate bounds
+    SetWindowPos(Handle, 0, 0, 0, 0, 0,
+      SWP_NOSIZE or SWP_NOMOVE or SWP_NOZORDER or SWP_NOACTIVATE or SWP_FRAMECHANGED);
+end;}
+
+procedure FXPopupForm.DoClose(var Action: TCloseAction);
+begin
+  if FreeOnClose then
+    Action := caFree;
+end;
+
+procedure FXPopupForm.DoShow;
+begin
+  inherited;
+
+  // Re-inforce, in case the border style changed, etc.
+  //DisableFormBorder;
+end;
+
+procedure FXPopupForm.InitForm;
+begin
+  inherited;
+  PopupMode := pmExplicit;
+  BorderStyle := bsDialog;
+  BorderIcons := [];
+  KeyPreview := true;
+
+  // Titlebar
+  CustomTitleBar.ShowCaption := false;
+  CustomTitleBar.ShowIcon := false;
+  CustomTitleBar.SystemButtons := false;
+  CustomTitleBar.SystemHeight := false;
+  CustomTitleBar.Height := 1;
+
+  // Props
+  FLightDismiss := true;
+  FFreeOnClose := true;
+
+  // UI
+  //DisableFormBorder;
+end;
+
+procedure FXPopupForm.Show(Position: TPoint);
+begin
+  Left := Position.X;
+  Top := Position.Y;
+
+  Show;
+end;
+
+procedure FXPopupForm.ShowAtControl(Executor: TControl; HorizontalOffset,
+  VerticalOffset: integer);
+begin
+  Show( Executor.ClientToScreen(Point(HorizontalOffset, VerticalOffset)) );
+end;
+
+procedure FXPopupForm.ShowAtCursor;
+begin
+  Show(Mouse.CursorPos);
+end;
+
+function FXPopupForm.ShowModal(Position: TPoint): Integer;
+begin
+  Left := Position.X;
+  Top := Position.Y;
+
+  Result := ShowModal;
+end;
+
+function FXPopupForm.ShowModalAtCursor: Integer;
+begin
+  Result := ShowModal(Mouse.CursorPos);
 end;
 
 end.

@@ -32,10 +32,14 @@ uses
   CFX.Controls;
 
 type
+  THackFXWindowsControl = class (FXWindowsControl);
+
   // Scrollbox Scrollbar
   FXDrawListScrollBar = class(FXScrollbar)
   protected
     procedure PaintBuffer; override;
+  public
+    constructor Create(aOwner: TComponent); override;
   end;
 
   FXDrawListOnDraw = procedure(Sender: TObject; AIndex: integer; ARect: TRect; Canvas: TCanvas) of object;
@@ -88,16 +92,24 @@ type
     FOpacitySelected: byte;
 
     FKeyboardNavigation: boolean;
+    FKeyboardUpDownSelectRow: boolean; // determines if to select all items when moving
+      // row, or select items in the same line, like the snake nokia game
 
     // Notifiers
     FOnDrawItem,
     FOnBeforeDrawItem,
     FOnAfterDrawItem: FXDrawListOnDraw;
 
+    FOnAfterDrawItems: TNotifyEvent;
+
     FOnItemClick,
     FOnItemDoubleClick,
     FOnItemHover,
     FOnItemSelect: TNotifyEvent;
+
+    FSelectLineItemCount: integer; // by default 1, can be more
+    FSelectLineIsColumn: boolean;
+    // this determines the number of items to move the selected by when using UP/DOWN to navigate
 
     // Internal
     procedure ClearSelectedInternal;
@@ -175,6 +187,9 @@ type
     function GetItemDisplayRect(Index: integer): TRect; virtual;
     function GetItemRect(Index: integer): TRect; virtual;
 
+    // Do
+    procedure DoAfterDrawItems; virtual;
+
     // Scaler
     procedure ScaleChanged(Scaler: single); override;
 
@@ -185,6 +200,8 @@ type
     property OnDrawItem: FXDrawListOnDraw read FOnDrawItem write FOnDrawItem;
     property OnBeforeDrawItem: FXDrawListOnDraw read FOnBeforeDrawItem write FOnBeforeDrawItem;
     property OnAfterDrawItem: FXDrawListOnDraw read FOnAfterDrawItem write FOnAfterDrawItem;
+
+    property OnAfterDrawItems: TNotifyEvent read FOnAfterDrawItems write FOnAfterDrawItems;
 
   published
     // Custom Colors
@@ -266,6 +283,9 @@ type
     property ItemRect[Index: integer]: TRect read GetItemRect;
     property ItemDisplayRect[Index: integer]: TRect read GetItemDisplayRect;
     property ItemVisible[Index: integer]: boolean read GetItemVisible write SetItemVisible;
+
+    property KeyboardNavigation: boolean read FKeyboardNavigation write FKeyboardNavigation;
+    property KeyboardUpDownSelectRow: boolean read FKeyboardUpDownSelectRow write FKeyboardUpDownSelectRow;
 
     function SelectedItemCount: integer;
     function GetSelectedItems: TArray<integer>;
@@ -437,6 +457,8 @@ type
   private
     FContainer: FXControlContainer;
 
+    FEnableControlInteraction: boolean;
+
     // Padding and margins
     function GetItemPaddding: FXMargins;
     procedure SetItemPaddding(const Value: FXMargins);
@@ -453,6 +475,9 @@ type
     // Created
     procedure ComponentCreated; override;
 
+    // Do
+    procedure DoAfterDrawItems; override;
+
     // Internal
     procedure UpdateRects; override;
 
@@ -460,6 +485,18 @@ type
     procedure DrawNoItemsText; override;
 
     function GetChildParent: TComponent; override; // set the loaded children parent
+
+    // Send messages to contrls
+    function GetHoverControl: FXWindowsControl;
+    function UpdateControlsState(Index: integer): boolean;
+
+    // Inherited Mouse Detection
+    procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+    procedure MouseUp(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+
+    procedure Click; override;
+    procedure DblClick; override;
 
   published
     property OnDrawItem;
@@ -479,6 +516,7 @@ type
 
     property Container: FXControlContainer read FContainer write FContainer stored true;
 
+    property EnableControlInteraction: boolean read FEnableControlInteraction write FEnableControlInteraction default false;
     property ItemPaddding: FXMargins read GetItemPaddding write SetItemPaddding;
     property ItemInnerMarginsFill: FXMargins read GetItemInnerMarginsFill write SetItemInnerMarginsFill;
 
@@ -570,7 +608,10 @@ begin
 
   FDrawColors := FXCompleteColorSet.Create;
 
+  FSelectLineItemCount := 1;
+
   FKeyboardNavigation := true;
+  FKeyboardUpDownSelectRow := true;
 
   FScrollAnimation := true;
   FShowScrollbars := true;
@@ -674,6 +715,15 @@ begin
   inherited;
 end;
 
+procedure FXDrawList.DoAfterDrawItems;
+begin
+  //
+
+  // Event
+  if Assigned(FOnAfterDrawItems) then
+    FOnAfterDrawItems(Self);
+end;
+
 function FXDrawList.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer;
   MousePos: TPoint): Boolean;
 begin
@@ -762,19 +812,20 @@ begin
   if ItemIndex = -1 then
     Exit;
 
-  // Stop
   StopScrollAnimations;
 
   const Bounds = ItemDisplayRect[ItemIndex];
   const Client = GetClientRect;
 
+  // Vertical scrolling
   if Bounds.Top < Client.Top then
     FVertScroll.Position := FVertScroll.Position + (Bounds.Top - Client.Top);
-  if Bounds.Left < Client.Left then
-    FVertScroll.Position := FVertScroll.Position + (Bounds.Left - Client.Left);
-
   if Bounds.Bottom > Client.Bottom then
     FVertScroll.Position := FVertScroll.Position + (Bounds.Bottom - Client.Bottom);
+
+  // Horizontal scrolling
+  if Bounds.Left < Client.Left then
+    FHorzScroll.Position := FHorzScroll.Position + (Bounds.Left - Client.Left);
   if Bounds.Right > Client.Right then
     FHorzScroll.Position := FHorzScroll.Position + (Bounds.Right - Client.Right);
 end;
@@ -856,8 +907,6 @@ end;
 
 procedure FXDrawList.HandleKeyDown(var CanHandle: boolean; Key: integer;
   Shift: TShiftState);
-var
-  Value, Next: integer;
 function GetNextVisible(From, Direction: integer): integer;
 begin
   Result := From;
@@ -869,61 +918,82 @@ begin
 
   until FItemVisible[Result];
 end;
+procedure IncreaseCursorPosition(AFrom, ATo: integer; Select: boolean; InBetweenSelection: boolean);
+begin
+  if AFrom = ATo then
+    Exit;
+
+  if (ATo >= ItemCount) or (ATo < 0) then
+    Exit;
+
+  // Sel mode
+  if Select then begin
+    if InBetweenSelection then begin
+      const Direction = Sign(ATo-AFrom);
+      const AToState = FItemSelected[ATo];
+      var Cursor := AFrom;
+      var Dest := ATo;
+
+      // Select row
+      repeat
+        if AToState then
+          FItemSelected[Cursor] := false
+        else
+          FItemSelected[Cursor] := true;
+        Inc(Cursor, Direction);
+      until Cursor = Dest;
+      FItemSelected[ATo] := not AToState;
+
+      if AToState then
+        ItemSelected[ATo] := true;
+
+      // Set index
+      FItemIndex := ATo;
+
+      // Draw
+      StandardUpdateDraw;
+    end
+    else begin
+      // Select just "To" item
+      if FItemSelected[ATo] then
+        ItemSelected[AFrom] := false
+      else
+        ItemSelected[ATo] := true;
+
+      // Set index
+      FItemIndex := ATo;
+    end;
+
+    EnsureIndexVisible;
+  end else
+    // Item mode
+    ItemIndex := ATo;
+end;
 begin
   inherited;
-  if FKeyboardNavigation then
+  if FKeyboardNavigation and CanHandle then
     case Key of
-      VK_LEFT, VK_UP: begin
+      VK_LEFT, VK_UP, VK_RIGHT, VK_DOWN: begin
         CanHandle := false;
 
-        // Next
-        Next := GetNextVisible(FItemIndex, - 1);
-        if Next = FItemIndex then
-          Exit;
-
-        // Sel mode
-        if (ssShift in Shift) and MultiSelect then begin
-          Value := Next;
-          if Value < 0 then
-            Exit;
-
-          if FItemSelected[Value] then
-            ItemSelected[FItemIndex] := false
-          else
-            ItemSelected[Value] := true;
-          FItemIndex := Value;
-
-          EnsureIndexVisible;
-        end else
-          // Item mode
-          if ItemIndex > 0 then
-            ItemIndex := Next
-      end;
-
-      VK_RIGHT, VK_DOWN: begin
-        CanHandle := false;
+        var Dir := 1;
+        if Key in [VK_LEFT, VK_UP] then Dir := -1;
 
         // Next
-        Next := GetNextVisible(FItemIndex, 1);
-        if Next = FItemIndex then
-          Exit;
+        var Next := FItemIndex;
+        var SingleMovement := Key in [VK_LEFT, VK_RIGHT];
+        if FSelectLineIsColumn then SingleMovement := not SingleMovement;
 
-        // Sel mode
-        if (ssShift in Shift) and MultiSelect then begin
-          Value := Next;
-          if Value >= ItemCount then
-            Exit;
+        if SingleMovement or (FSelectLineItemCount <= 1) then
+          // Move by one
+          Next := GetNextVisible(Next, Dir)
+        else
+          // Move by row
+          for var I := 1 to FSelectLineItemCount do
+            Next := GetNextVisible(Next, Dir);
 
-          if FItemSelected[Value] then
-            ItemSelected[FItemIndex] := false
-          else
-            ItemSelected[Value] := true;
-          FItemIndex := Value;
-
-          EnsureIndexVisible;
-        end else
-          // Item mode
-          ItemIndex := Next;
+        // Increase
+        IncreaseCursorPosition(FItemIndex, Next, (ssShift in Shift) and MultiSelect, FKeyboardUpDownSelectRow and not SingleMovement);
       end;
 
       VK_ESCAPE: if CanDeselect then ClearSelection;
@@ -1074,6 +1144,9 @@ begin
   // No items
   if (Length(FItemRects) = 0) and (FNoItemsOutputText <> '') then
     DrawNoItemsText;
+
+  // Afte draw
+  DoAfterDrawItems;
 
   // Inherit
   inherited;
@@ -1440,6 +1513,12 @@ end;
 
 { FXDrawListScrollBar }
 
+constructor FXDrawListScrollBar.Create(aOwner: TComponent);
+begin
+  inherited;
+  TabStop := false;
+end;
+
 procedure FXDrawListScrollBar.PaintBuffer;
 begin
   inherited;
@@ -1520,6 +1599,11 @@ begin
     );
   LeftoverSpace := TotalSize-Max(0, (ItemSize+ItemSpace)*ItemsFit-ItemSpace);
 
+  // Line size
+  FSelectLineItemCount := ItemsFit;
+  FSelectLineIsColumn := Orientation = FXOrientation.Horizontal;
+
+  // Justify
   case JustifyContent of
     FXContentJustify.Center: OffsetStart := LeftoverSpace div 2;
     FXContentJustify.SpaceBetween:
@@ -1689,6 +1773,17 @@ begin
   Redraw;
 end;
 
+procedure FXLinearControlList.Click;
+begin
+  inherited;
+
+  // Update control data
+  if FEnableControlInteraction and (ItemIndexHover <> -1) then begin
+    const Ctrl = GetHoverControl;
+    if (Ctrl <> nil) and Ctrl.Enabled then THackFXWindowsControl(Ctrl).Click;
+  end;
+end;
+
 procedure FXLinearControlList.CMControlListChange(
   var Msg: TCMControlListChange);
 begin
@@ -1718,10 +1813,28 @@ begin
   FContainer.Visible := IsDesigning;
 end;
 
+procedure FXLinearControlList.DblClick;
+begin
+  inherited;
+
+  // Update control data
+  if FEnableControlInteraction and (ItemIndexHover <> -1) then begin
+    const Ctrl = GetHoverControl;
+    if (Ctrl <> nil) and Ctrl.Enabled then THackFXWindowsControl(Ctrl).DblClick;
+  end;
+end;
+
 destructor FXLinearControlList.Destroy;
 begin
   //FreeAndNil( FContainer );
   inherited;
+end;
+
+procedure FXLinearControlList.DoAfterDrawItems;
+begin
+  // Update to latest index
+  if FEnableControlInteraction then
+    UpdateControlsState(ItemIndexHover);
 end;
 
 procedure FXLinearControlList.DrawItem(Index: integer; ARect: TRect;
@@ -1756,6 +1869,10 @@ begin
   FContainer.Width := ARect.Width;
   FContainer.Height := ARect.Height;
 
+  // Update control data
+  if FEnableControlInteraction then
+    UpdateControlsState(Index);
+
   // Draw controls
   FContainer.DrawTo(Buffer, ARect);
 end;
@@ -1777,6 +1894,21 @@ begin
   FContainer.GetChildren(Proc, Root);
 end;
 
+function FXLinearControlList.GetHoverControl: FXWindowsControl;
+begin
+  Result := nil;
+
+  for var I := 0 to FContainer.ControlCount-1 do begin
+    if not (FContainer.Controls[I] is FXWindowsControl) then
+      continue;
+    const Ctrl = FContainer.Controls[I] as FXWindowsControl;
+    var CtrlRect := Ctrl.BoundsRect;
+
+    if CtrlRect.Contains(ItemHoverLocalPosition) then
+      Exit(Ctrl);
+  end;
+end;
+
 function FXLinearControlList.GetItemInnerMarginsFill: FXMargins;
 begin
   Result := FContainer.InnerMarginsFill;
@@ -1790,6 +1922,39 @@ end;
 function FXLinearControlList.IsContainer: Boolean;
 begin
   Result := true;
+end;
+
+procedure FXLinearControlList.MouseDown(Button: TMouseButton;
+  Shift: TShiftState; X, Y: integer);
+begin
+  inherited;
+
+  // Update control data
+  if FEnableControlInteraction and (ItemIndexHover <> -1) and UpdateControlsState(ItemIndexHover) then
+    StandardUpdateDraw;
+end;
+
+procedure FXLinearControlList.MouseMove(Shift: TShiftState; X, Y: Integer);
+begin
+  inherited;
+
+  // Update control data
+  if FEnableControlInteraction and (ItemIndexHover <> -1) and UpdateControlsState(ItemIndexHover) then begin
+    StandardUpdateDraw;
+
+    const Ctrl = GetHoverControl;
+    if (Ctrl <> nil) and Ctrl.Enabled then Cursor := Ctrl.Cursor;
+  end;
+end;
+
+procedure FXLinearControlList.MouseUp(Button: TMouseButton; Shift: TShiftState;
+  X, Y: integer);
+begin
+  inherited;
+
+  // Update control data
+  if FEnableControlInteraction and (ItemIndexHover <> -1) and UpdateControlsState(ItemIndexHover) then
+    StandardUpdateDraw;
 end;
 
 procedure FXLinearControlList.PaintBuffer;
@@ -1823,6 +1988,35 @@ end;
 procedure FXLinearControlList.SetItemPaddding(const Value: FXMargins);
 begin
   FContainer.PaddingFill.Assign(Value);
+end;
+
+function FXLinearControlList.UpdateControlsState(Index: integer): boolean;
+begin
+  Result := false;
+
+  for var I := 0 to FContainer.ControlCount-1 do begin
+    if not (FContainer.Controls[I] is FXWindowsControl) then
+      continue;
+    const Ctrl = FContainer.Controls[I] as FXWindowsControl;
+    var CtrlRect := Ctrl.BoundsRect;
+
+    var NewState := FXControlState.None;
+    if Index = ItemIndexHover then begin
+      if not CtrlRect.Contains(ItemHoverLocalPosition) or not Ctrl.Enabled then
+        NewState := FXControlState.None
+      else
+        if InteractionState = FXControlState.Press then
+          NewState := FXControlState.Press
+        else
+          NewState := FXControlState.Hover;
+    end;
+
+    // Set
+    if (Ctrl.InteractionState <> NewState) then begin
+      Result := true;
+      Ctrl.InteractionState := NewState;
+    end;
+  end;
 end;
 
 procedure FXLinearControlList.UpdateRects;

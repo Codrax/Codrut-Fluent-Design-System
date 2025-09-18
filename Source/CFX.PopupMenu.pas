@@ -71,7 +71,8 @@ type
     function AddNew: FXPopupItem;
     procedure Delete(Index: integer; AndFree: boolean = true);
 
-    procedure Clear(AndFree: boolean = true);
+    procedure Clear; overload;
+    procedure Clear(AndFree: boolean); overload;
   end;
 
   // Popup Container
@@ -1381,6 +1382,11 @@ begin
   if AndFree then
     for I := High(FItems) downto 0 do
       Delete(I);
+end;
+
+procedure FXPopupItems.Clear;
+begin
+  Clear(true);
 end;
 
 function FXPopupItems.Count: integer;

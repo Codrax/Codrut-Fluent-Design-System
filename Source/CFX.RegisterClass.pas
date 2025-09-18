@@ -79,7 +79,8 @@ begin
     FXGrayscaleEffect,
     FXInvertEffect,
     FXDeepFryEffect,
-    FXGlowEffect
+    FXGlowEffect,
+    FXMaskEffect
     ]
   );
 

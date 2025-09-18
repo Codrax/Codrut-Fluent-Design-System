@@ -1,4 +1,4 @@
-unit CFX.Effects;
+﻿unit CFX.Effects;
 
 interface
 
@@ -165,6 +165,28 @@ type
 
   protected
     procedure ApplyEffect(Background: TBitMap); override;
+  end;
+
+  { Mask }
+  FXMaskEffect = class(FXEffect)
+  private
+    FMask, FTranslatedMask: TBitmap;
+
+    procedure SetMask(const Value: TBitmap);
+  protected
+    procedure ApplyEffect(Background: TBitmap); override;
+
+    procedure UpdateTranslatedMask;
+
+    // Size
+    procedure Resize; override;
+
+  published
+    property Mask: TBitmap read FMask write SetMask;
+
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
   end;
 
 implementation
@@ -423,6 +445,126 @@ end;
 procedure FXGlowEffect.ApplyEffect(Background: TBitMap);
 begin
   ApplyGlowEffect(Background, FXColors.Blue, 0);
+end;
+
+{ FXMaskEffect }
+
+{$R-}
+procedure FXMaskEffect.ApplyEffect(Background: TBitmap);
+var
+  TempSrc: TBitmap;
+begin
+  inherited;
+
+  if FTranslatedMask.Empty then
+    Exit;
+
+  // Prepare source copy
+  TempSrc := TBitmap.Create;
+  try
+    TempSrc.Assign(Background);
+    TempSrc.PixelFormat := pf32bit;
+
+    Background.Canvas.Lock;
+    try
+      // Get parent background
+      if Supports(Parent, IFXControl) then begin
+        if Parent is FXWindowsControl then begin
+          const P = Parent as FXWindowsControl;
+          const R = Self.BoundsRect;
+
+          // Get self rect in parent
+          Background.Canvas.CopyRect(Background.Canvas.ClipRect, P.Buffer, R);
+        end else begin
+          Background.Canvas.Brush.Color := (Parent as IFXControl).Background;
+          Background.Canvas.FillRect(Background.Canvas.ClipRect);
+        end;
+      end else begin
+        Background.Canvas.Brush.Color := FDrawColors.BackGround;
+        Background.Canvas.FillRect(Background.Canvas.ClipRect);
+      end;
+
+      // Prepare alpba-based mask
+      for var y := 0 to TempSrc.Height - 1 do begin
+      var Row := PByte(TempSrc.ScanLine[y]);
+      var RowM := PByte(FTranslatedMask.ScanLine[y]);
+
+      for var x := 0 to TempSrc.Width - 1 do begin
+        var MaskByte := RowM[x div 8];
+        // Extract the bit for this pixel (MSB first)
+        if (MaskByte and (128 shr (x mod 8))) <> 0 then
+          Row[x*4 + 3] := 255 // mask white → opaque
+        else
+          Row[x*4 + 3] := 0;  // mask black → transparent
+      end;
+    end;
+
+      // Do a masked blit
+      var BlendFunc: TBlendFunction;
+
+      // Set up blend function
+      BlendFunc.BlendOp := AC_SRC_OVER;
+      BlendFunc.BlendFlags := 0;
+      BlendFunc.SourceConstantAlpha := 255; // fully opaque
+      BlendFunc.AlphaFormat := AC_SRC_ALPHA; // use mask alpha channel
+
+      // AlphaBlend from TempSrc to Background using mask
+      AlphaBlend(
+        Background.Canvas.Handle,
+        0, 0,
+        Background.Width, Background.Height,
+        TempSrc.Canvas.Handle,
+        0, 0,
+        TempSrc.Width, TempSrc.Height,
+        BlendFunc
+      );
+    finally
+      Background.Canvas.Unlock;
+    end;
+  finally
+    TempSrc.Free;
+  end;
+end;
+{$R+}
+
+constructor FXMaskEffect.Create(aOwner: TComponent);
+begin
+  inherited;
+  FMask := TBitmap.Create;
+  FMask.PixelFormat := pf1bit;
+
+  FTranslatedMask := TBitMap.Create;
+  FTranslatedMask.PixelFormat := pf1bit;
+  FTranslatedMask.Monochrome := true;
+end;
+
+destructor FXMaskEffect.Destroy;
+begin
+  FreeAndNil(FMask);
+  FreeAndNil(FTranslatedMask);
+  inherited;
+end;
+
+procedure FXMaskEffect.Resize;
+begin
+  inherited;
+  if (ClientRect.Width <> FTranslatedMask.Width) or (ClientRect.Height <> FTranslatedMask.Height) then
+    UpdateTranslatedMask;
+end;
+
+procedure FXMaskEffect.SetMask(const Value: TBitmap);
+begin
+  FMask.Assign(Value);
+
+  // Update translated
+  UpdateTranslatedMask;
+end;
+
+procedure FXMaskEffect.UpdateTranslatedMask;
+begin
+  FTranslatedMask.SetSize(ClientRect.Width, ClientRect.Height);
+  with FTranslatedMask.Canvas do
+    StretchDraw(ClipRect, FMask);
 end;
 
 end.

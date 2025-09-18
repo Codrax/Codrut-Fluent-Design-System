@@ -8,6 +8,7 @@ uses
   System.Classes,
   System.Types,
   Vcl.Controls,
+  Vcl.Forms,
   Vcl.TitleBarCtrls,
   Vcl.Graphics,
   Vcl.ExtCtrls,
@@ -52,6 +53,8 @@ type
     constructor Create(aOwner: TComponent); override;
     destructor Destroy; override;
 
+    procedure Paint; override;
+
     // Draw
     procedure Redraw;
 
@@ -63,6 +66,8 @@ type
 
 implementation
 
+const
+  INVISIBLE_RESERVED_SIZE = 1;
 
 { FXTitleBarPanel }
 
@@ -93,6 +98,16 @@ end;
 function FXTitleBarPanel.IsContainer: Boolean;
 begin
   Result := true;
+end;
+
+procedure FXTitleBarPanel.Paint;
+begin
+  if not (Parent is TCustomForm) or not Assigned(Parent) then
+    Exit;
+  const F = Parent as TCustomForm;
+
+  if (Height > INVISIBLE_RESERVED_SIZE) and (F.CustomTitleBar.Height > INVISIBLE_RESERVED_SIZE) then
+    inherited;
 end;
 
 procedure FXTitleBarPanel.Redraw;

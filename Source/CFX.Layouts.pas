@@ -876,6 +876,7 @@ constructor FXScrollViewScrollbar.Create(aOwner: TComponent);
 begin
   inherited;
   ControlStyle := ControlStyle + [csCaptureMouse, csDesignInteractive];
+  TabStop := false;
 end;
 
 end.
