@@ -2012,9 +2012,17 @@ begin
     end;
 
     // Set
-    if (Ctrl.InteractionState <> NewState) then begin
+    const OldState = Ctrl.InteractionState;
+    if (OldState <> NewState) then begin
       Result := true;
       Ctrl.InteractionState := NewState;
+
+      with THackFXWindowsControl(Ctrl) do
+        case NewState of
+          FXControlState.None: if Assigned(OnMouseLeave) then OnMouseLeave(Ctrl);
+          FXControlState.Hover: if OldState = FXControlState.None then if Assigned(OnMouseEnter) then OnMouseEnter(Ctrl)
+          //FXControlState.Press: ;
+        end;
     end;
   end;
 end;
