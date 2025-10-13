@@ -82,7 +82,10 @@ type
     procedure PopupItemClick(Sender: TObject; Item: FXPopupComponent; Index: integer);
 
     // Text
+    // Change text, notify OnChange & OnChangeValue
     procedure ChangeText(AText: string); virtual;
+    // Change text, notify OnChangeValue
+    procedure ChangeTextValue(AText: string);
     procedure DeleteChar(Index: integer);
 
     procedure ScrollForCursor; overload;
@@ -1025,6 +1028,15 @@ end;
 
 procedure FXCustomEdit.ChangeText(AText: string);
 begin
+  ChangeTextValue(AText);
+
+  // Notify
+  if Assigned(OnChange) then
+    OnChange(Self);
+end;
+
+procedure FXCustomEdit.ChangeTextValue(AText: string);
+begin
   // Undp
   if FCanUndo then
     FHistory.Add(FText);
@@ -1035,17 +1047,15 @@ begin
   // Char
   ApplyCharCase;
 
-  // Notify
-  if Assigned(OnChange) then
-    OnChange(Self);
-  if Assigned(OnChangeValue) then
-    OnChangeValue(Self);
-
   // Scroll
   ScrollForCursor;
 
   // Update
   StandardUpdateLayout;
+
+  // Notify
+  if Assigned(OnChangeValue) then
+    OnChangeValue(Self);
 end;
 
 procedure FXCustomEdit.Clear;
@@ -1808,7 +1818,7 @@ begin
 
   // Update
   if Number <> Text then
-    inherited ChangeText(Number);
+    inherited ChangeTextValue(Number);
 end;
 
 procedure FXNumberEdit.SetValue(Value: extended);
