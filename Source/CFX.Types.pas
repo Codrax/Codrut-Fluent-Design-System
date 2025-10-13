@@ -128,7 +128,7 @@ type
   FXCharCase = (Both, Uppercase, Lowercase);
 
   // Theme Color
-  FXDarkSetting = (Auto, ForceDark, ForceLight);
+  FXDarkSetting = (Auto=0, ForceLight=1, ForceDark=2);
 
   // File
   FXUserShell = (User, AppData, AppDataLocal, Documents,

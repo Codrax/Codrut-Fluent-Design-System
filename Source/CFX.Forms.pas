@@ -991,7 +991,6 @@ begin
 
   if Result and Visible and FAutoMoveParent and FCanMoveParent and FAutoCenter and (FParentForm <> nil) then begin
     // Calculate can move
-    var P: TWindowPlacement;
     var CanMove: boolean; CanMove := true;
 
     // Check if parent snapped
