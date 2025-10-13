@@ -80,6 +80,9 @@ type
   FXCheckBoxState = (Checked, Unchecked, Grayed);
 
   // FXAppManager
+  TAppManagerFlag = (WantsAppData);
+  TAppManagerFlags = set of TAppManagerFlag;
+
   FXAppTask = (UpdatePrompt, UpdateForce, UpdateShowUserScreen, WindowSaveForm, WindowLoadForm);
   FXAppTasks = set of FXAppTask;
   FXAppFormAssistTask = (WindowSaveForm, WindowLoadForm);

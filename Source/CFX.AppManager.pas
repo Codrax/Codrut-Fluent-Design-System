@@ -38,9 +38,6 @@ uses
 type
   FXOnVersionChanged = procedure(PreviousVersion: FXVersion; ActiveVersion: FXVersion) of object;
 
-  TAppManagerFlag = (WantsAppData);
-  TAppManagerFlags = set of TAppManagerFlag;
-
   { Background App Manager Class }
   FXAppManagerClass = class(TObject)
   strict private
