@@ -460,7 +460,9 @@ begin
 
     Result := true; // handled
 
-    if (ssShift in Shift) or (FVertScroll.Max = 0) then begin
+    if (ssShift in Shift) or ((FVertScroll.Max = 0) or not FEnableVertical) then
+    // HORIZONTAL
+    begin
       if not Animate then begin
         FHorzScroll.Position := FHorzScroll.Position+ScrollAmount;
         Exit;
@@ -479,7 +481,10 @@ begin
 
       if FAnimX.StartValue <> FAnimX.EndValue then
         FAnimX.Start;
-    end else begin
+    end else
+    // VERTICAL
+    if EnableHorizontal then
+    begin
       if not Animate then begin
         FVertScroll.Position := FVertScroll.Position+ScrollAmount;
         Exit;
@@ -769,7 +774,7 @@ begin
         Left := 0;
 
       // Data
-      Vis := FShowScrollbars and FEnableVertical and (Max > 0);
+      Vis := FShowScrollbars and FEnableHorizontal and (Max > 0);
 
       // Size
       if FVertScroll.Visible then
