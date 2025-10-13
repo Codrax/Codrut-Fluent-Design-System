@@ -8,6 +8,7 @@ uses
   Vcl.Controls,
   Vcl.Graphics,
   Types,
+  Math,
   CFX.Colors,
   CFX.ThemeManager,
   CFX.Graphics,
@@ -22,7 +23,7 @@ type
   FXRadioButton = class(FXWindowsControl)
   private
     var DrawRect, IconRect, TextRect, ImageRect: TRect;
-    FIconFont: TFont;
+    FIconScale: single;
     FChecked: boolean;
     FTextSpacing: Integer;
     FOnCheck: TNotifyEvent;
@@ -79,7 +80,7 @@ type
 
   published
     property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
-    property IconFont: TFont read FIconFont write FIconFont;
+    property IconScale: single read FIconScale write FIconScale;
     property TextSpacing: Integer read FTextSpacing write SetTextSpacing default RADIO_TEXT_SPACE;
     property Checked: Boolean read GetChecked write SetChecked default false;
     property OnCheck: TNotifyEvent read FOnCheck write FOnCheck;
@@ -189,9 +190,8 @@ begin
   // Rect
   DrawRect := GetClientRect;
 
-  // Font
-  Buffer.Font.Assign(IconFont);
-  AWidth := Buffer.TextWidth(CHECKBOX_OUTLINE);
+  // Check icon
+  AWidth := round(GetTextHeight * FIconScale);
 
   // Image
   ASize := 0;
@@ -310,9 +310,9 @@ end;
 
 procedure FXRadioButton.ScaleChanged(Scaler: single);
 begin
-  IconFont.Height := round(IconFont.Height * Scaler);
   FTextSpacing := round(FTextSpacing * Scaler);
   FImageScale := FImageScale * Scaler;
+  FIconScale := FIconScale * Scaler;
   inherited;
 end;
 
@@ -398,10 +398,6 @@ end;
 constructor FXRadioButton.Create(aOwner: TComponent);
 begin
   inherited;
-  FIconFont := TFont.Create;
-  FIconFont.Name := ThemeManager.IconFont;
-  FIconFont.Size := 14;
-
   FChecked := false;
   FTextSpacing := RADIO_TEXT_SPACE;
   FAutomaticMouseCursor := false;
@@ -409,7 +405,9 @@ begin
   BufferedComponent := true;
   FWordWrap := true;
 
-  // Icon
+  FIconScale := 0.5;
+
+  // Image
   FImage := FXIconSelect.Create(Self);
   FImageScale := GENERAL_IMAGE_SCALE;
   FImage.OnChange := ImageUpdated;
@@ -429,7 +427,6 @@ end;
 
 destructor FXRadioButton.Destroy;
 begin
-  FIconFont.Free;
   FreeAndNil( FCustomColors );
   FreeAndNil( FDrawColors );
   FreeAndNil( FIconAccentColors );
@@ -444,9 +441,9 @@ end;
 
 procedure FXRadioButton.PaintBuffer;
 var
-  AText: string;
   IconFormat: TTextFormat;
   DrawFlags: FXTextFlags;
+  ARect: TRect;
 begin
   // Background
   Color := FDrawColors.BackGround;
@@ -471,9 +468,8 @@ begin
         DrawFlags := DrawFlags + [FXTextFlag.WordWrap];
       DrawTextRect(Buffer, Self.TextRect, FText, DrawFlags);
 
-      //  Set Brush Accent Color
-      Font.Assign(IconFont);
-      Font.Color := FIconAccentColors.GetColor(InteractionState);
+      // Icon
+      ARect := IconRect;
 
       // Paint Image
       if Image.Enabled then
@@ -483,23 +479,20 @@ begin
       IconFormat := [tfVerticalCenter, tfCenter, tfSingleLine];
       if Checked then
         begin
-          AText := RADIO_FILL;
-          TextRect(IconRect, AText, IconFormat);
+          DrawFontIcon(Buffer, RADIO_FILL, FIconAccentColors.GetColor(InteractionState), ARect);
 
+          var InflVal := 0;
           case InteractionState of
-            FXControlState.Hover: Font.Size := Font.Size + 2;
-            FXControlState.Press: Font.Size := Font.Size - 1;
+            FXControlState.Hover: InflVal:= Min(ARect.Width div 12, ARect.Height div 12);
+            FXControlState.Press: InflVal:= Min(-ARect.Width div 16, -ARect.Height div 16);
           end;
+          ARect.Inflate(InflVal, InflVal);
 
-          Font.Color := FDrawColors.BackGround;
-          AText := RADIO_BULLET;
-          TextRect(IconRect, AText, IconFormat);
+          DrawFontIcon(Buffer, RADIO_BULLET, FDrawColors.BackGround, ARect);
         end
       else
         begin
-          Font.Color := FDrawColors.ForeGround;
-          AText := RADIO_OUTLINE;
-          TextRect(IconRect, AText, IconFormat);
+          DrawFontIcon(Buffer, RADIO_OUTLINE, FDrawColors.ForeGround, ARect);
         end;
     end;
 

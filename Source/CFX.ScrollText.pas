@@ -106,13 +106,14 @@ type
     property Align;
     property Font;
     property Transparent;
+    property HitTest;
     property Opacity;
     property Constraints;
     property Anchors;
     property Hint;
     property ShowHint;
     property ParentShowHint;
-    property TabStop;
+    property TabStop default false;
     property TabOrder;
     property FocusFlags;
     property DragKind;

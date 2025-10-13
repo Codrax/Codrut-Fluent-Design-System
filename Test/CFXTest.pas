@@ -44,8 +44,6 @@ type
     FXButton11: FXButton;
     FXButton12: FXButton;
     FXScrollText2: FXScrollText;
-    FXSlider1: FXSlider;
-    FXCheckBox1: FXCheckBox;
     FXSelector1: FXSelector;
     FXButton4: FXButton;
     FXButton5: FXButton;
@@ -66,7 +64,6 @@ type
     FXScrollText1: FXScrollText;
     FXScrollbar1: FXScrollbar;
     FXButton2: FXButton;
-    FXButton10: FXButton;
     FXButton15: FXButton;
     FXButton17: FXButton;
     FXAppManager1: FXAppManager;
@@ -75,6 +72,10 @@ type
     FXButton6: FXButton;
     FXBlurMaterial1: FXBlurMaterial;
     FXButton13: FXButton;
+    FXRadioButton1: FXRadioButton;
+    FXRadioButton2: FXRadioButton;
+    FXSlider1: FXSlider;
+    FXRatingControl3: FXRatingControl;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);
@@ -265,7 +266,7 @@ end;
 
 procedure TForm1.FXSlider1Change(Sender: TObject);
 begin
-  PaintBox1.Tag := round(FXSlider(Sender).Position / 100 * 360);
+  PaintBox1.Tag := round(FXSlider(Sender).Value / 100 * 360);
   PaintBox1.Repaint;
 end;
 

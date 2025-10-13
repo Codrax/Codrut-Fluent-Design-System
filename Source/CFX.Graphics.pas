@@ -16,6 +16,7 @@ uses
   CFX.VarHelpers,
   CFX.Types,
   CFX.BlurFunctions,
+  CFX.ThemeManager,
   Math,
   CFX.StringUtils,
   CFX.ArrayHelpers;
@@ -74,6 +75,9 @@ procedure GradVertical(Canvas:TCanvas; Rect:TRect; FromColor, ToColor:TColor);
 
 // Bitmap Manipulation
 procedure FastBlur(Bitmap: TBitmap; Radius: Real; BlurScale: Integer; HighQuality: Boolean = True);
+
+// Icon drawing
+procedure DrawFontIcon(Canvas: TCanvas; Icon: string; Color: TColor; Rect: TRect);
 
 const
   HAlignments: Array[TAlignment] of Longint = (DT_LEFT, DT_RIGHT, DT_CENTER);
@@ -294,6 +298,33 @@ end;
 procedure FastBlur(Bitmap: TBitmap; Radius: Real; BlurScale: Integer; HighQuality: Boolean = True);
 begin
   CFX.BlurFunctions.FastBlur( Bitmap, Radius, BlurScale, HighQuality );
+end;
+
+
+procedure DrawFontIcon(Canvas: TCanvas; Icon: string; Color: TColor; Rect: TRect);
+var
+  FontPrevious: TFont;
+  TextDraw: string;
+begin
+  with Canvas do begin
+    FontPrevious := TFont.Create;
+    try
+      FontPrevious.Assign(Font);
+
+      // Draw
+      Font.Color := Color;
+      Font.Name := ThemeManager.IconFont;
+      Font.Height := GetMaxFontHeight(Canvas, Copy(Icon, 1, 1), Rect.Width, Rect.Height);
+      for var I := Low(Icon) to High(Icon) do begin
+        TextDraw := Icon[I];
+        TextRect( Rect, TextDraw, [tfSingleLine, tfCenter, tfVerticalCenter] );
+      end;
+
+      Font.Assign(FontPrevious);
+    finally
+      FontPrevious.Free;
+    end;
+  end;
 end;
 
 procedure DrawTextRect(Canvas: TCanvas; ARect: TRect; Text: string; Flags: FXTextFlags; AMargin: integer);

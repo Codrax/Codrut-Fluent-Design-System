@@ -37,6 +37,42 @@ function GetAppDataFolder: string;
 procedure QuickScreenShot(var BitMap: TBitMap; Monitor: integer = -2);
 procedure AppScreenShot(var BitMap: TBitMap; ApplicationCapton: string);
 
+{ Application }
+///  <summary> Get parameter by index </summary>
+function GetParameter(Index: integer): string; overload; // get parameter by index
+///  <summary> Get all parameters as string </summary>
+function GetParameters: string;
+///  <summary>
+///    Check for a Parameter, takes parameter as "value" without shell prefix, return index position
+///  </summary>
+function FindParameter(Value: string): integer; overload;
+///  <summary>
+///    Check for a Parameter, takes parameter as "value" without shell prefix
+///  </summary>
+function HasParameter(Value: string): boolean; overload;
+///  <summary> Get value of the following param of the requested value </summary>
+function GetParameterValue(Value: string): string; overload;
+///  <summary>
+///    Check for a single char parameter, return index position
+///  </summary>
+function FindParameter(Value: char): integer; overload;
+///  <summary> Check for a single char Unix parameter </summary>
+function HasParameter(Value: char): boolean; overload;
+///  <summary> Get single char Unix parameter value </summary>
+function GetParameterValue(Value: char): string; overload;
+///  <summary>
+///    Check for a Unix Parameter alternative, either string or singlechar, return index position
+///  </summary>
+function FindParameter(Value: string; AltChar: char): integer; overload;
+///  <summary> Check for a Unix Parameter alternative, either string or singlechar </summary>
+function HasParameter(Value: string; AltChar: char): boolean; overload;
+///  <summary> Gets the unix parameter, than returns the value </summary>
+function GetParameterValue(Value: string; AltChar: char): string; overload;
+
+const
+  PARAM_PREFIX = {$IFDEF MSWINDOWS}'-'{$ELSE}'--'{$ENDIF};
+  PARAM_PREFIX_CHAR = '-';
+
 implementation
 
 function NTKernelVersion: single;
@@ -391,6 +427,124 @@ begin
   BitBlt(Bitmap.Canvas.Handle, 0, 0, Bitmap.Width, Bitmap.Height, DC, 0, 0, SRCCOPY);
   SelectObject(DC, Old);
   ReleaseDC(Handle, DC);
+end;
+
+function GetParameter(Index: integer): string;
+begin
+  Result := ParamStr(Index);
+
+  {$IFDEF MSWINDOWS}
+  // Fix WinNT
+  if (Length(Result)>0) and (Result[1] = '/') then
+    Result[1] := '-';
+  {$ENDIF}
+end;
+
+function GetParameters: string;
+var
+  I: Integer;
+  Parameter: string;
+  ACount: integer;
+begin
+  ACount := ParamCount;
+  for I := 1 to ParamCount do
+    begin
+      Parameter := GetParameter(I);
+
+      if Parameter.IndexOf(' ') <> -1 then
+        Parameter := Format('"%S"', [Parameter]);
+
+      Result := Result + Parameter;
+      if I <> ACount then
+        Result := Result + ' ';
+    end;
+end;
+
+function FindParameter(Value: string): integer;
+var
+  S: string;
+begin
+  Result := -1;
+  for var I := 1 to ParamCount do
+    begin
+      S := GetParameter(I);
+      if (Length(S) < Length(PARAM_PREFIX)+1) or (Copy(S, 1, Length(PARAM_PREFIX)) <> PARAM_PREFIX) then
+        Continue;
+
+      // Remove prefix
+      S := S.Remove(0, Length(PARAM_PREFIX));
+      {$IFDEF MSWINDOWS}
+      // Ignore casing
+      S := Lowercase(S);
+      {$ENDIF}
+
+      // Check for equalitry
+      if S = Value then
+        Exit( I );
+    end;
+end;
+
+function HasParameter(Value: string): boolean; overload;
+begin
+  Result := FindParameter( Value ) <> -1;
+end;
+
+function GetParameterValue(Value: string): string; overload;
+begin
+  const Index = FindParameter( Value );
+  Result := GetParameter(Index+1);
+end;
+
+function FindParameter(Value: char): integer;
+var
+  S: string;
+begin
+  Result := -1;
+  for var I := 1 to ParamCount do
+    begin
+      S := GetParameter(I);
+      if (Length(S) < Length(PARAM_PREFIX_CHAR)+1)
+        or (Copy(S, 1, Length(PARAM_PREFIX_CHAR)) <> PARAM_PREFIX_CHAR)
+        {$IFNDEF MSWINDOWS}or (Copy(S, 1, Length(PARAM_PREFIX)) = PARAM_PREFIX){$ENDIF} then
+        Continue;
+
+      // Remove prefix
+      S := S.Remove(0, Length(PARAM_PREFIX_CHAR));
+
+      // Check for char in list of chars
+      if S.IndexOf( Value ) <> -1 then
+        Exit( I );
+    end;
+end;
+
+function HasParameter(Value: char): boolean; overload;
+begin
+  Result := FindParameter( Value ) <> -1;
+end;
+
+function GetParameterValue(Value: char): string; overload;
+begin
+  const Index = FindParameter( Value );
+  Result := GetParameter(Index+1);
+end;
+
+function FindParameter(Value: string; AltChar: char): integer;
+begin
+  Result := FindParameter( Value );
+  if Result <> -1 then
+    Exit;
+  Result := FindParameter( AltChar );
+end;
+
+function HasParameter(Value: string; AltChar: char): boolean; overload;
+begin
+  Result := FindParameter( Value, AltChar ) <> -1;
+end;
+
+function GetParameterValue(Value: string; AltChar: char): string; overload;
+begin
+  const Index = FindParameter( Value, AltChar );
+  Result := GetParameter(Index+1);
 end;
 
 end.

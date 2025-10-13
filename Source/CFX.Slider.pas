@@ -38,15 +38,15 @@ type
     FSliderHeight: integer;
     FIconSize: integer;
     FRoundness: integer;
-    FPosition, FMin, FMax: int64;
+    FValue, FMin, FMax: int64;
     FTotalTicks: integer;
     FSmallChange: integer;
-    FEnablePositionHint: boolean;
+    FEnableValueHint: boolean;
     FOnHint: FXSliderOnHint;
     FAlwaysSnap: boolean;
     FDrawSliderFilling: boolean;
 
-    FPositionDraw: integer;
+    FPositionDraw: integer; // pos in canvas
 
     FFillTick: TTimer;
     FCenterFill: integer;
@@ -60,7 +60,7 @@ type
     procedure FillTickChange(Sender: TObject);
 
     // Hint
-    procedure ShowPositionHint;
+    procedure ShowValueHint;
 
     procedure CMHintShow(var Message: TCMHintShow); message CM_HINTSHOW;
 
@@ -76,8 +76,8 @@ type
     procedure SetOrientation(const Value: FXOrientation);
     procedure SetMax(const Value: int64);
     procedure SetMin(const Value: int64);
-    procedure SetPosition(const Value: int64);
-    procedure SetPositionEx(const Value: int64; ARedraw: boolean; UserExecuted: boolean = true);
+    procedure SetValue(const Value: int64);
+    procedure SetValueEx(const Value: int64; ARedraw: boolean; UserExecuted: boolean = true);
     procedure SetSliderHeight(const Value: integer);
     procedure SetIconSize(const Value: integer);
     procedure SetSmallChange(const Value: integer);
@@ -113,14 +113,14 @@ type
     property Orientation: FXOrientation read FOrientation write SetOrientation default FXOrientation.Horizontal;
     property SliderHeight: integer read FSliderHeight write SetSliderHeight default 6;
     property IconSize: integer read FIconSize write SetIconSize default CHECKBOX_ICON_SIZE;
-    property Position: int64 read FPosition write SetPosition;
+    property Value: int64 read FValue write SetValue;
     property SmallChange: integer read FSmallChange write SetSmallChange default 1;
     property Min: int64 read FMin write SetMin default 0;
     property Max: int64 read FMax write SetMax default 100;
     property TotalTicks: integer read FTotalTicks write SetTicks default 0;
     property AlwaysSnap: boolean read FAlwaysSnap write FAlwaysSnap default false;
     property DrawSliderFilling: boolean read FDrawSliderFilling write SetDrawSliderFilling default true;
-    property EnablePositionHint: boolean read FEnablePositionHint write FEnablePositionHint default true;
+    property EnableValueHint: boolean read FEnableValueHint write FEnableValueHint default true;
     property OnHint: FXSliderOnHint read FOnHint write FOnHint;
 
     //  Modify default props
@@ -175,7 +175,7 @@ begin
   inherited;
 
   if AState <> FXControlState.Press then
-    if FEnablePositionHint then
+    if FEnableValueHint then
       FHint.AutoHide := true;
 end;
 
@@ -185,11 +185,11 @@ begin
   if (key = '-') or (key = '+') or (key = '=') then
     begin
       if Key = '-' then
-        SetPositionEx(Position - FSmallChange, true)
+        SetValueEx(Value - FSmallChange, true)
       else
-        SetPositionEx(Position + FSmallChange, true);
+        SetValueEx(Value + FSmallChange, true);
 
-      ShowPositionHint;
+      ShowValueHint;
       FHint.AutoHide := true;
     end;
 end;
@@ -209,7 +209,7 @@ end;
 
 procedure FXSlider.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
-  NewPosition: int64;
+  NewValue: int64;
   //IsHover: boolean;
 begin
   inherited;
@@ -238,15 +238,15 @@ begin
   if InteractionState = FXControlState.Press then
     begin
       if FMax = FMin then
-        NewPosition := FMin
+        NewValue := FMin
       else
         begin
           if Orientation = FXOrientation.Horizontal then
-            NewPosition := round((X-GetSliderBegin - FIconSize div 2) / (GetSliderSize - FIconSize) * (FMax - FMin))
+            NewValue := round((X-GetSliderBegin - FIconSize div 2) / (GetSliderSize - FIconSize) * (FMax - FMin))
           else
-            NewPosition := round((Y-GetSliderBegin - FIconSize div 2) / (GetSliderSize - FIconSize) * (FMax - FMin));
+            NewValue := round((Y-GetSliderBegin - FIconSize div 2) / (GetSliderSize - FIconSize) * (FMax - FMin));
         end;
-      ShowPositionHint;
+      ShowValueHint;
 
       // Snap
       if AlwaysSnap then
@@ -265,7 +265,7 @@ begin
         end;
 
       // Position
-      SetPositionEx(NewPosition + Min, false);
+      SetValueEx(NewValue + Min, false);
 
       // Update
       UpdateRects;
@@ -286,7 +286,7 @@ begin
   AnimateToFill;
 
   // Hint
-  ShowPositionHint;
+  ShowValueHint;
   if FHint.IsVisible then
     begin
       FHint.AutoHide := true;
@@ -405,7 +405,7 @@ end;
 
 procedure FXSlider.CMHintShow(var Message: TCMHintShow);
 begin
-  ShowPositionHint;
+  ShowValueHint;
   FHint.AutoHide := true;
 end;
 
@@ -419,12 +419,12 @@ begin
   FCenterFill := 50;
   FSmallChange := 1;
   FTotalTicks := 0;
-  FEnablePositionHint := true;
+  FEnableValueHint := true;
   FDrawSliderFilling := true;
 
   ShowHint := true;
 
-  FPosition := 0;
+  FValue := 0;
   FMin := 0;
   FMax := 100;
 
@@ -486,7 +486,7 @@ var
   Value1, Value2: int64;
 begin
   Result := 0;
-  Value1 := FPosition - FMin;
+  Value1 := FValue - FMin;
   Value2 := FMax - FMin;
   if Value1 < 0 then
     begin
@@ -513,8 +513,8 @@ begin
     Result := DrawRect.Height;
 end;
 
-procedure FXSlider.HandleKeyDown(var CanHandle: boolean; Key: integer;ShiftState: TShiftState
-  );
+procedure FXSlider.HandleKeyDown(var CanHandle: boolean; Key: integer;
+  ShiftState: TShiftState);
 var
   C: char;
 begin
@@ -699,8 +699,8 @@ begin
   // Constraint
   if not IsReading then
     begin
-      if FPosition > FMax then
-        FPosition := FMax;
+      if FValue > FMax then
+        FValue := FMax;
 
       if FMin > FMax then
         FMin := FMax;
@@ -722,8 +722,8 @@ begin
   // Constraint
   if not IsReading then
     begin
-      if FPosition < FMin then
-        FPosition := FMin;
+      if FValue < FMin then
+        FValue := FMin;
 
       if FMax < FMin then
         FMax := FMin;
@@ -746,26 +746,26 @@ begin
     SetBounds(Left, Top, Height, Width);  // this will also invoke UpdateRects() in Sized();
 end;
 
-procedure FXSlider.SetPosition(const Value: int64);
+procedure FXSlider.SetValue(const Value: int64);
 begin
-  SetPositionEx(Value, true, false);
+  SetValueEx(Value, true, false);
 end;
 
-procedure FXSlider.SetPositionEx(const Value: int64; ARedraw: boolean;
+procedure FXSlider.SetValueEx(const Value: int64; ARedraw: boolean;
   UserExecuted: boolean);
 begin
-  if FPosition = Value then
+  if FValue = Value then
     Exit;
 
-  FPosition := Value;
+  FValue := Value;
 
   // Constraint
   if not IsReading then begin
-    if FPosition < FMin then
-      FPosition := FMin;
+    if FValue < FMin then
+      FValue := FMin;
 
-    if FPosition > FMax then
-      FPosition := FMax;
+    if FValue > FMax then
+      FValue := FMax;
 
     // User update
     if UserExecuted then
@@ -812,14 +812,14 @@ begin
       end;
 end;
 
-procedure FXSlider.ShowPositionHint;
+procedure FXSlider.ShowValueHint;
 var
   AText: string;
 begin
-  if FEnablePositionHint then
+  if FEnableValueHint then
     begin
       // Get Value
-      AText := FPosition.ToString;
+      AText := FValue.ToString;
 
       // On Hint procedure
       if Assigned(FOnHint) then

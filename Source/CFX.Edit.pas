@@ -20,7 +20,6 @@ uses
   CFX.VarHelpers,
   CFX.Types,
   CFX.Linker,
-  CFX.Animations,
   CFX.PopupMenu,
   CFX.Controls;
 

@@ -71,7 +71,7 @@ object Form1: TForm1
   end
   object FXEdit1: FXEdit
     Left = 237
-    Top = 376
+    Top = 392
     Width = 125
     Height = 33
     Margins.Left = 0
@@ -354,10 +354,10 @@ object Form1: TForm1
     State = mbsLeave
     FlatButton = False
     FlatComplete = False
-    Colors.Enter = 16480483
-    Colors.Leave = 15493588
-    Colors.Down = 13848763
-    Colors.BLine = 12861868
+    Colors.Enter = 16414947
+    Colors.Leave = 15428052
+    Colors.Down = 13783227
+    Colors.BLine = 12796332
     UnderLine.Enable = True
     UnderLine.UnderLineRound = True
     UnderLine.UnderLineThicknes = 6
@@ -533,7 +533,7 @@ object Form1: TForm1
     Image.SelectImageIndex = 0
     ImageScale = 1.250000000000000000
     ButtonKind = Link
-    HyperLinkURL = 'www.codrutsoft.com'
+    HyperLinkURL = 'https://docs.codrutsoft.com'
     StateText = 'Success'
     StateImage.IconType = None
     StateImage.SelectSegoe = #59188
@@ -686,10 +686,10 @@ object Form1: TForm1
     State = mbsLeave
     FlatButton = False
     FlatComplete = False
-    Colors.Enter = 16480483
-    Colors.Leave = 15493588
-    Colors.Down = 13848763
-    Colors.BLine = 12861868
+    Colors.Enter = 16414947
+    Colors.Leave = 15428052
+    Colors.Down = 13783227
+    Colors.BLine = 12796332
     UnderLine.Enable = True
     UnderLine.UnderLineRound = True
     UnderLine.UnderLineThicknes = 6
@@ -826,7 +826,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    TabStop = False
     Size.X = 186
     Size.Y = 50
     Position.X = 15
@@ -853,76 +852,8 @@ object Form1: TForm1
     Anchors = [akLeft, akBottom]
     TabOrder = 12
   end
-  object FXSlider1: FXSlider
-    Left = 236
-    Top = 171
-    Width = 234
-    Height = 49
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 0
-    Size.X = 234
-    Size.Y = 49
-    Position = 12
-    CustomColors.Enabled = False
-    CustomColors.Accent = 13924352
-    CustomColors.LightBackGround = 15987699
-    CustomColors.LightForeGround = 1776410
-    CustomColors.DarkBackGround = 2105376
-    CustomColors.DarkForeGround = clWhite
-    CustomColors.LightBackGroundInterior = 16514043
-    CustomColors.DarkBackGroundInterior = 2829099
-    OnChange = FXSlider1Change
-    TotalTicks = 6
-    ParentColor = False
-    ShowHint = True
-    ParentShowHint = False
-    TabOrder = 13
-  end
-  object FXCheckBox1: FXCheckBox
-    Left = 231
-    Top = 135
-    Width = 180
-    Height = 30
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 0
-    Size.X = 180
-    Size.Y = 30
-    Position.X = 231
-    Position.Y = 135
-    CustomColors.Enabled = False
-    CustomColors.Accent = 13924352
-    CustomColors.LightBackGround = 15987699
-    CustomColors.LightForeGround = 1776410
-    CustomColors.DarkBackGround = 2105376
-    CustomColors.DarkForeGround = clWhite
-    IconFont.Charset = DEFAULT_CHARSET
-    IconFont.Color = clWindowText
-    IconFont.Height = -21
-    IconFont.Name = 'Segoe Fluent Icons'
-    IconFont.Style = []
-    AllowGrayed = True
-    State = Checked
-    Checked = True
-    AutomaticCursorPointer = False
-    Text = 'Fluent Checkbox'
-    WordWrap = False
-    Image.IconType = None
-    Image.SelectSegoe = #59188
-    Image.SelectImageIndex = 0
-    ImageScale = 1.250000000000000000
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -16
-    Font.Name = 'Segoe UI'
-    Font.Style = []
-    TabOrder = 14
-  end
   object FXButton4: FXButton
-    Left = 231
+    Left = 235
     Top = 80
     Width = 130
     Height = 35
@@ -933,7 +864,7 @@ object Form1: TForm1
     PopupMenu = FXPopupMenu1
     Size.X = 130
     Size.Y = 35
-    Position.X = 231
+    Position.X = 235
     Position.Y = 80
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
@@ -964,7 +895,7 @@ object Form1: TForm1
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 16
+    TabOrder = 15
     OnClick = FXButton4Click
     Image.IconType = None
     Image.SelectSegoe = #59188
@@ -1018,7 +949,7 @@ object Form1: TForm1
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 17
+    TabOrder = 16
     OnClick = FXButton5Click
     Image.IconType = None
     Image.SelectSegoe = #59188
@@ -1054,7 +985,7 @@ object Form1: TForm1
     Font.Height = -16
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 18
+    TabOrder = 17
     Text = 'Password'
     AutoSize = True
     Elipsis = False
@@ -1062,7 +993,7 @@ object Form1: TForm1
   end
   object FXTextBox3: FXTextBox
     Left = 237
-    Top = 349
+    Top = 365
     Width = 71
     Height = 21
     Margins.Left = 0
@@ -1073,7 +1004,7 @@ object Form1: TForm1
     Size.X = 71
     Size.Y = 21
     Position.X = 237
-    Position.Y = 349
+    Position.Y = 365
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1085,7 +1016,7 @@ object Form1: TForm1
     Font.Height = -16
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 19
+    TabOrder = 18
     Text = 'Username'
     AutoSize = True
     Elipsis = False
@@ -1116,7 +1047,7 @@ object Form1: TForm1
     Font.Height = -16
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 20
+    TabOrder = 19
     Text = 'Dialogs'
     AutoSize = False
     Elipsis = False
@@ -1147,7 +1078,7 @@ object Form1: TForm1
     Font.Height = -27
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 21
+    TabOrder = 20
     Text = 'Test'
     AutoSize = False
     Elipsis = False
@@ -1195,7 +1126,7 @@ object Form1: TForm1
     Font.Height = -16
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 22
+    TabOrder = 21
     OnClick = FXButton14Click
     Image.Enabled = True
     Image.SelectSegoe = #60371
@@ -1248,7 +1179,7 @@ object Form1: TForm1
     Font.Height = -16
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 23
+    TabOrder = 22
     OnClick = FXButton16Click
     Image.Enabled = True
     Image.SelectSegoe = #60412
@@ -1284,7 +1215,7 @@ object Form1: TForm1
     Font.Height = -16
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 24
+    TabOrder = 23
     Text = 'Wow cool very col indeed wow 23'
     AutoSize = False
     WordWrap = True
@@ -1300,6 +1231,7 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
+    TabStop = True
     Size.X = 116
     Size.Y = 60
     Position.X = 49
@@ -1319,11 +1251,11 @@ object Form1: TForm1
     Font.Height = 22
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 25
+    TabOrder = 24
   end
   object FXSelector1: FXSelector
     Left = 231
-    Top = 273
+    Top = 253
     Width = 232
     Height = 30
     Margins.Left = 0
@@ -1333,7 +1265,7 @@ object Form1: TForm1
     Size.X = 232
     Size.Y = 30
     Position.X = 231
-    Position.Y = 273
+    Position.Y = 253
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1352,7 +1284,7 @@ object Form1: TForm1
     Font.Height = -16
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 15
+    TabOrder = 14
   end
   object FXTabStrip1: FXTabStrip
     Left = 725
@@ -1373,7 +1305,7 @@ object Form1: TForm1
     CustomColors.LightForeGround = 1776410
     CustomColors.DarkBackGround = 2105376
     CustomColors.DarkForeGround = clWhite
-    TabOrder = 26
+    TabOrder = 25
   end
   object FXTitleBarPanel1: FXTitleBarPanel
     Left = 0
@@ -1396,6 +1328,7 @@ object Form1: TForm1
       Margins.Top = 0
       Margins.Right = 0
       Margins.Bottom = 0
+      TabStop = True
       Size.X = 215
       Size.Y = 30
       Position.X = 0
@@ -1451,7 +1384,7 @@ object Form1: TForm1
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 28
+    TabOrder = 27
     Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
@@ -1472,7 +1405,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    TabStop = False
     Size.X = 125
     Size.Y = 68
     Position.X = 237
@@ -1498,11 +1430,11 @@ object Form1: TForm1
     Font.Height = 21
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 29
+    TabOrder = 28
   end
   object FXScrollbar1: FXScrollbar
     Left = 230
-    Top = 239
+    Top = 223
     Width = 233
     Height = 13
     Margins.Left = 0
@@ -1523,7 +1455,7 @@ object Form1: TForm1
     Orientation = Horizontal
     Animation = True
     CustomScrollbarSize = 0
-    TabOrder = 31
+    TabOrder = 29
   end
   object FXButton2: FXButton
     Left = 512
@@ -1567,7 +1499,7 @@ object Form1: TForm1
     Font.Height = 22
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 32
+    TabOrder = 30
     OnClick = FXButton2Click
     Image.IconType = None
     Image.SelectSegoe = #59188
@@ -1577,60 +1509,9 @@ object Form1: TForm1
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
   end
-  object FXButton10: FXButton
-    Left = 501
-    Top = 171
-    Width = 140
-    Height = 35
-    Margins.Left = 0
-    Margins.Top = 0
-    Margins.Right = 0
-    Margins.Bottom = 0
-    Size.X = 140
-    Size.Y = 35
-    Position.X = 501
-    Position.Y = 171
-    CustomColors.Enabled = False
-    CustomColors.Accent = 13924352
-    CustomColors.LightBackGround = 15987699
-    CustomColors.LightForeGround = 1776410
-    CustomColors.DarkBackGround = 2105376
-    CustomColors.DarkForeGround = clWhite
-    CustomColors.LightBackGroundInterior = 16514043
-    CustomColors.DarkBackGroundInterior = 2829099
-    CustomButtonColors.Enabled = False
-    CustomButtonColors.Accent = clBlack
-    CustomButtonColors.LightBackgroundNone = clBlack
-    CustomButtonColors.LightBackgroundHover = clBlack
-    CustomButtonColors.LightBackgroundPress = clBlack
-    CustomButtonColors.LightForeGroundNone = clBlack
-    CustomButtonColors.LightForeGroundHover = clBlack
-    CustomButtonColors.LightForeGroundPress = clBlack
-    CustomButtonColors.DarkBackGroundNone = clBlack
-    CustomButtonColors.DarkBackGroundHover = clBlack
-    CustomButtonColors.DarkBackGroundPress = clBlack
-    CustomButtonColors.DarkForeGroundNone = clBlack
-    CustomButtonColors.DarkForeGroundHover = clBlack
-    CustomButtonColors.DarkForeGroundPress = clBlack
-    Text = 'Button'
-    LineWidth = 3.000000000000000000
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = 22
-    Font.Name = 'Segoe UI'
-    Font.Style = []
-    TabOrder = 33
-    Image.IconType = None
-    Image.SelectSegoe = #59188
-    Image.SelectImageIndex = 0
-    ImageScale = 1.250000000000000000
-    StateImage.IconType = None
-    StateImage.SelectSegoe = #59188
-    StateImage.SelectImageIndex = 0
-  end
   object FXButton15: FXButton
-    Left = 501
-    Top = 217
+    Left = 733
+    Top = 94
     Width = 140
     Height = 35
     Margins.Left = 0
@@ -1639,8 +1520,8 @@ object Form1: TForm1
     Margins.Bottom = 0
     Size.X = 140
     Size.Y = 35
-    Position.X = 501
-    Position.Y = 217
+    Position.X = 733
+    Position.Y = 94
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1671,7 +1552,7 @@ object Form1: TForm1
     Font.Height = 22
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 34
+    TabOrder = 31
     Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
@@ -1681,8 +1562,8 @@ object Form1: TForm1
     StateImage.SelectImageIndex = 0
   end
   object FXButton17: FXButton
-    Left = 501
-    Top = 269
+    Left = 733
+    Top = 135
     Width = 140
     Height = 35
     Margins.Left = 0
@@ -1691,8 +1572,8 @@ object Form1: TForm1
     Margins.Bottom = 0
     Size.X = 140
     Size.Y = 35
-    Position.X = 501
-    Position.Y = 269
+    Position.X = 733
+    Position.Y = 135
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1723,7 +1604,7 @@ object Form1: TForm1
     Font.Height = 22
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 35
+    TabOrder = 32
     Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0
@@ -1741,6 +1622,7 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
+    TabStop = True
     Size.X = 32
     Size.Y = 32
     Position.X = 1144
@@ -1946,7 +1828,7 @@ object Form1: TForm1
     Font.Name = 'Segoe UI'
     Font.Style = []
     Anchors = [akRight, akBottom]
-    TabOrder = 36
+    TabOrder = 33
   end
   object FXTextBox1: FXTextBox
     Left = 984
@@ -1973,7 +1855,7 @@ object Form1: TForm1
     Font.Name = 'Segoe UI'
     Font.Style = []
     Anchors = [akRight, akBottom]
-    TabOrder = 37
+    TabOrder = 34
     Text = 'Codrut Software.  Empowering technology '
     LayoutHorizontal = Ending
     AutoSize = True
@@ -1982,8 +1864,8 @@ object Form1: TForm1
     InnerMargin = 0
   end
   object FXButton6: FXButton
-    Left = 501
-    Top = 319
+    Left = 733
+    Top = 53
     Width = 140
     Height = 35
     Margins.Left = 0
@@ -1992,8 +1874,8 @@ object Form1: TForm1
     Margins.Bottom = 0
     Size.X = 140
     Size.Y = 35
-    Position.X = 501
-    Position.Y = 319
+    Position.X = 733
+    Position.Y = 53
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -2023,7 +1905,7 @@ object Form1: TForm1
     Font.Height = 22
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 38
+    TabOrder = 36
     Image.Enabled = True
     Image.IconType = Image
     Image.SelectPicture.Data = {
@@ -3042,6 +2924,7 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
+    TabStop = True
     Size.X = 215
     Size.Y = 631
     Position.X = 0
@@ -3056,8 +2939,8 @@ object Form1: TForm1
     CustomColors.DarkForeGround = clWhite
   end
   object FXButton13: FXButton
-    Left = 501
-    Top = 365
+    Left = 512
+    Top = 125
     Width = 140
     Height = 60
     Margins.Left = 0
@@ -3066,8 +2949,8 @@ object Form1: TForm1
     Margins.Bottom = 0
     Size.X = 140
     Size.Y = 60
-    Position.X = 501
-    Position.Y = 365
+    Position.X = 512
+    Position.Y = 125
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -3097,7 +2980,7 @@ object Form1: TForm1
     Font.Height = 22
     Font.Name = 'Segoe UI'
     Font.Style = []
-    TabOrder = 40
+    TabOrder = 37
     OnClick = FXButton13Click
     Image.IconType = None
     Image.SelectSegoe = #59188
@@ -3107,6 +2990,122 @@ object Form1: TForm1
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
   end
+  object FXRadioButton1: FXRadioButton
+    Left = 236
+    Top = 292
+    Width = 180
+    Height = 30
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Size.X = 180
+    Size.Y = 30
+    Position.X = 236
+    Position.Y = 292
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    IconScale = 0.500000000000000000
+    Checked = True
+    Text = 'Fluent Radio Button'
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.500000000000000000
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 22
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    TabOrder = 38
+  end
+  object FXRadioButton2: FXRadioButton
+    Left = 236
+    Top = 322
+    Width = 180
+    Height = 30
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Size.X = 180
+    Size.Y = 30
+    Position.X = 236
+    Position.Y = 322
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    IconScale = 0.500000000000000000
+    Text = 'Fluent Radio Button'
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.500000000000000000
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 22
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    TabOrder = 39
+  end
+  object FXSlider1: FXSlider
+    Left = 237
+    Top = 125
+    Width = 261
+    Height = 60
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Size.X = 261
+    Size.Y = 60
+    Position.X = 237
+    Position.Y = 125
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    CustomColors.LightBackGroundInterior = 16514043
+    CustomColors.DarkBackGroundInterior = 2829099
+    AutomaticCursorPointer = False
+    Value = 0
+    ParentColor = False
+    ShowHint = True
+    ParentShowHint = False
+    TabOrder = 40
+  end
+  object FXRatingControl3: FXRatingControl
+    Left = 733
+    Top = 192
+    Width = 140
+    Height = 30
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Size.X = 140
+    Size.Y = 30
+    Position.X = 733
+    Position.Y = 192
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    ValueIncrement = 2.000000000000000000
+    ClearEnabled = True
+    TabOrder = 41
+  end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
@@ -3114,6 +3113,8 @@ object Form1: TForm1
     CustomColors.LightForeGround = 1776410
     CustomColors.DarkBackGround = 2105376
     CustomColors.DarkForeGround = clWhite
+    AnimationType = Square
+    MinimumWidth = 300
     Items.Item = {
       05000000545046300B4658506F7075704974656D0004546578740604436F7079
       0D496D6167652E456E61626C65640911496D6167652E53656C6563745365676F
@@ -3138,8 +3139,8 @@ object Form1: TForm1
       5365676F65120100000009E716496D6167652E53656C656374496D616765496E
       64657802000853686F727463757406064374726C2B430A4974656D732E497465
       6D0A04000000000000000B4973536570617261746F72080000}
-    Left = 824
-    Top = 73
+    Left = 816
+    Top = 393
   end
   object FXAppManager1: FXAppManager
     ApplicationIdentifier = 'fluent-design-test'
@@ -3150,7 +3151,7 @@ object Form1: TForm1
     APIName = 'timely'
     AutomaticTasks = [UpdatePrompt, WindowSaveForm, WindowLoadForm]
     UserUpdateWaitDelay = 2000
-    Left = 760
-    Top = 168
+    Left = 808
+    Top = 328
   end
 end

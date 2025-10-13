@@ -29,7 +29,6 @@ uses
   CFX.Colors,
   CFX.Math,
   CFX.GDI,
-  CFX.Animations,
   CFX.Types;
 
   type

@@ -76,14 +76,17 @@ type
 
   published
     property Align;
+    property Transparent;
+    property HitTest;
+    property Constraints;
     property Anchors;
     property AutoSize;
-    property Constraints;
     property DragCursor;
     property DragKind;
     property DragMode;
     property Enabled;
     property ParentShowHint;
+    property TabStop default false;
     property PopupMenu;
     property ShowHint;
     property Touch;

@@ -1031,8 +1031,8 @@ begin
   if (ItemIndexHover <> -1) or FCanDeselect then begin
     const LastIndex = ItemIndex;
 
-    // Set new
-    if (ssCtrl in Shift) and MultiSelect and (ItemIndexHover <> -1) then begin
+    // [CTRL] Toggle select
+    if (Button = mbLeft) and (ssCtrl in Shift) and MultiSelect and (ItemIndexHover <> -1) then begin
       FItemIndex := ItemIndexHover;
 
       // Set selection
@@ -1043,7 +1043,8 @@ begin
         FOnItemSelect(Self);
     end
     else
-    if (ssShift in Shift) and MultiSelect and (ItemIndexHover <> -1) and (ItemIndex <> -1) then begin
+    // [SHIFT] Toggle select for multiple items
+    if (Button = mbLeft) and (ssShift in Shift) and MultiSelect and (ItemIndexHover <> -1) and (ItemIndex <> -1) then begin
       const AMin = Min(ItemIndex, ItemIndexHover);
       const AMax = Max(ItemIndex, ItemIndexHover);
       if AMin = AMax then
@@ -1064,8 +1065,11 @@ begin
       if Assigned(FOnItemSelect) then
         FOnItemSelect(Self);
     end
-    else begin
-      ItemIndex := ItemIndexHover;
+    else
+    // [] Change single selected item
+    if (Button = mbLeft) or (ItemIndexHover = -1) or not FItemSelected[ItemIndexHover] then
+    begin
+        ItemIndex := ItemIndexHover;
 
       // Changed
       if LastIndex <> ItemIndex then

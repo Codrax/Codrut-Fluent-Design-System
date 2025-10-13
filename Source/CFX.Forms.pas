@@ -22,7 +22,6 @@ uses
   CFX.Animation.Main,
   CFX.Animation.Component,
   Vcl.TitleBarCtrls,
-  CFX.Animations,
   CFX.Utilities,
   Vcl.ExtCtrls,
   CFX.TitlebarPanel,
@@ -971,21 +970,33 @@ end;
 { FXDialogForm }
 
 function FXDialogForm.CanMove(Position: TPoint): boolean;
+function IsWindowSnapped(Form: TForm): boolean;
+var
+  P: TWindowPlacement;
+  BoundsRect: TRect;
+begin
+  Result := false;
+
+  // Get rect
+  GetWindowRect(Form.Handle, BoundsRect);
+
+  // Compare normals
+  if Form.HandleAllocated and IsWindow(Form.Handle) and GetWindowPlacement(Form.Handle, P) then
+    Result := (Form.WindowState <> wsNormal)
+      or ((P.rcNormalPosition.Left <> BoundsRect.Left) and (P.rcNormalPosition.Right <> BoundsRect.Right)) or
+        ((P.rcNormalPosition.Top <> BoundsRect.Top) and (P.rcNormalPosition.Bottom <> BoundsRect.Bottom));
+end;
 begin
   Result := inherited;
 
-  if Visible and FAutoMoveParent and FCanMoveParent and FAutoCenter and (FParentForm <> nil) then begin
+  if Result and Visible and FAutoMoveParent and FCanMoveParent and FAutoCenter and (FParentForm <> nil) then begin
     // Calculate can move
     var P: TWindowPlacement;
     var CanMove: boolean; CanMove := true;
 
     // Check if parent snapped
-    if FParentForm.HandleAllocated and GetWindowPlacement(FParentForm.Handle, P) then
-      // Check if the window is maximized or has different normal position
-      if (P.showCmd = SW_SHOWMAXIMIZED) or
-         ((P.rcNormalPosition.Left <> FParentForm.BoundsRect.Left) and (P.rcNormalPosition.Right <> FParentForm.BoundsRect.Right)) or
-         ((P.rcNormalPosition.Top <> FParentForm.BoundsRect.Top) and (P.rcNormalPosition.Bottom <> FParentForm.BoundsRect.Bottom)) then
-          CanMove := false;
+    if IsWindowSnapped(FParentForm) then
+      CanMove := false;
 
     if CanMove then begin
       // Center parent around
@@ -1007,17 +1018,20 @@ end;
 
 function FXDialogForm.CanResize(var NewWidth, NewHeight: Integer): Boolean;
 begin
-  Result := inherited CanResize(NewWidth, NewHeight);
+  Result := inherited;
 
   // Offset self position in parent
-  if Visible and FAutoMoveParent and FCanMoveParent and FAutoCenter and (FParentForm <> nil) then
+  if Result and Visible and FAutoMoveParent and FCanMoveParent and FAutoCenter and (FParentForm <> nil) then
     CenterDialogInParentForm;
 end;
 
 procedure FXDialogForm.CenterDialogInParentForm;
 begin
-  Left := FParentForm.Left + (FParentForm.Width - Width) div 2;
-  Top := FParentForm.Top + (FParentForm.Height - Height) div 2;
+  const NewLeft = FParentForm.Left + (FParentForm.Width - Width) div 2;
+  const NewTop = FParentForm.Top + (FParentForm.Height - Height) div 2;
+
+  if (NewLeft <> Left) or (NewTop <> Top) then
+    SetWindowPos(Handle, 0, NewLeft, NewTop, 0, 0, SWP_NOSIZE or SWP_NOZORDER or SWP_NOACTIVATE);
 end;
 
 procedure FXDialogForm.CMShowingChanged(var Message: TMessage);
@@ -1253,8 +1267,27 @@ end;
 
 procedure FXPopupForm.ShowAtControl(Executor: TControl; HorizontalOffset,
   VerticalOffset: integer);
+var
+  Pos: TPoint;
 begin
-  Show( Executor.ClientToScreen(Point(HorizontalOffset, VerticalOffset)) );
+  Pos := Executor.ClientToScreen(Point(HorizontalOffset, VerticalOffset));
+
+  const OutRect = Screen.WorkAreaRect;
+
+  // Keep inbounds horizontally
+  if Pos.X + Width > OutRect.Right then
+    Pos.X := OutRect.Right - Width
+  else if Pos.X < OutRect.Left then
+    Pos.X := OutRect.Left;
+
+  // Keep inbounds vertically
+  if Pos.Y + Height > OutRect.Bottom then
+    Pos.Y := OutRect.Bottom - Height
+  else if Pos.Y < OutRect.Top then
+    Pos.Y := OutRect.Top;
+
+  // Show
+  Show( Pos );
 end;
 
 procedure FXPopupForm.ShowAtCursor;

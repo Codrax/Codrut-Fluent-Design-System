@@ -7,6 +7,7 @@ uses
   Winapi.Windows,
   System.Classes,
   System.Types,
+  System.Math,
   System.SysUtils,
   Vcl.Controls,
   Vcl.Graphics,
@@ -58,6 +59,7 @@ type
     property Anchors;
     property Hint;
     property ShowHint;
+    property ParentShowHint;
     property TabStop;
     property TabOrder;
     property FocusFlags;

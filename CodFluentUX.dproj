@@ -5,7 +5,7 @@
         <ProjectVersion>20.1</ProjectVersion>
         <FrameworkType>None</FrameworkType>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
+        <Config Condition="'$(Config)'==''">Release</Config>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Package</AppType>
@@ -173,7 +173,6 @@
         <DCCReference Include="Source\CFX.Classes.pas"/>
         <DCCReference Include="Source\CFX.VarHelpers.pas"/>
         <DCCReference Include="Source\CFX.AnimColection.pas"/>
-        <DCCReference Include="Source\CFX.Animations.pas"/>
         <DCCReference Include="Source\CFX.Graphics.pas"/>
         <DCCReference Include="Source\CFX.Constants.pas"/>
         <DCCReference Include="Source\CFX.Utilities.pas"/>

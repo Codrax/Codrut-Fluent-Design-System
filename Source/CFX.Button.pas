@@ -18,13 +18,14 @@ uses
   CFX.ThemeManager,
   CFX.Graphics,
   CFX.Constants,
+  CFX.Animation.Component,
+  CFX.Animation.Main,
   SysUtils,
   CFX.Utilities,
   CFX.Classes,
   CFX.PopupMenu,
   CFX.Types,
   CFX.Linker,
-  CFX.Animations,
   CFX.Controls;
 
 type
@@ -69,7 +70,7 @@ type
     FOnOpenLink: TNotifyEvent;
     FOnDropDown: TNotifyEvent;
     FOnStateTimeEnded: TNotifyEvent;
-    FAnimationRunning: boolean;
+    FAnim: FXIntAnim;
     FAnimPos: integer;
     FAutoRepeat: TTimer;
     FRepeatWhenPressed: boolean;
@@ -94,6 +95,9 @@ type
     // Timers
     procedure TimerRepeat(Sender: TObject);
     procedure StateStop(Sender: TObject);
+
+    // Anim
+    procedure DoAnimationStep(Sender: TObject; Step, TotalSteps: integer);
 
     // Update
     procedure ImageUpdated(Sender: TObject);
@@ -278,56 +282,15 @@ type
 implementation
 
 procedure FXCustomButton.InteractionStateChanged(AState: FXControlState);
-var
-  FAnim: TIntAni;
 begin
-  inherited;
+  FArrowOffset := 0;
 
   // Animation
-  if FAnimation and not IsReading and not Destroyed and not FAnimationRunning then
-    begin
-      FAnim := TIntAni.Create;
+  if FAnimation and not IsReading and not Destroyed and (FAnim <> nil) and not FAnim.Running then
+    FAnim.Start;
 
-      FAnim.Duration := 10;
-      FAnim.Step := 10;
-      FAnim.StartValue := 0;
-      FAnim.DeltaValue := 255;
-
-      const MaxArrowOffset = GetTextH / 8;
-      FAnim.OnSync := procedure(Value: integer)
-      begin
-        FAnimPos := trunc(FAnim.Percent * 255);
-
-        if (ButtonKind = FXButtonKind.Dropdown) then
-          begin
-            case PreviousInteractionState of
-              FXControlState.Hover: if InteractionState = FXControlState.Press then
-                FArrowOffset := round(FAnim.Percent * MaxArrowOffset);
-
-              FXControlState.Press: FArrowOffset := round(MaxArrowOffset - FAnim.Percent * MaxArrowOffset);
-
-              else FArrowOffset := 0;
-            end;
-          end;
-
-        if Destroyed then
-          begin
-            FAnim.Terminate;
-          end
-        else
-          Redraw;
-      end;
-
-      FAnim.OnDone := procedure
-      begin
-        if not Destroyed then
-          FAnimationRunning := false;
-      end;
-
-      FAnim.FreeOnTerminate := true;
-      FAnimationRunning := true;
-      FAnim.Start;
-    end;
+  // Draw
+  inherited;
 end;
 
 procedure FXCustomButton.KeyDown(var Key: Word; Shift: TShiftState);
@@ -992,8 +955,20 @@ begin
   AutoFocusLine := true;
   BufferedComponent := true;
 
+  FAnim := FXIntAnim.Create(nil);
   FAnimation := true;
-  FAnimationRunning := false;
+
+  with FAnim do begin
+    OnStep := DoAnimationStep;
+
+    LatencyAdjustments := true;
+    LatencyCanSkipSteps := true;
+
+    Duration := 0.15;
+
+    StartValue := 0;
+    EndValue := 255;
+  end;
 
   FAutomaticMouseCursor := true;
   FAutomaticCheck := true;
@@ -1051,6 +1026,8 @@ end;
 
 destructor FXCustomButton.Destroy;
 begin
+  FAnim.Stop;
+  FreeAndNil( FAnim );
   FreeAndNil( FCustomColors );
   FreeAndNil( FCustomButtonColors );
   FreeAndNil( FDrawColors );
@@ -1061,6 +1038,33 @@ begin
   FreeAndNil( FAutoRepeat );
 
   inherited;
+end;
+
+procedure FXCustomButton.DoAnimationStep(Sender: TObject; Step,
+  TotalSteps: integer);
+begin
+  if Destroyed then
+    Exit;
+
+  // Update
+  FAnimPos := trunc(FAnim.Percent * 255);
+
+  const MaxArrowOffset = GetTextH / 8;
+
+  if (ButtonKind = FXButtonKind.Dropdown) then
+    begin
+      case PreviousInteractionState of
+        FXControlState.Hover: if InteractionState = FXControlState.Press then
+          FArrowOffset := round(FAnim.Percent * MaxArrowOffset);
+
+        FXControlState.Press: FArrowOffset := round(MaxArrowOffset - FAnim.Percent * MaxArrowOffset);
+
+        else FArrowOffset := 0;
+      end;
+    end;
+
+  // Draw
+  Redraw;
 end;
 
 function FXCustomButton.Background: TColor;
@@ -1088,11 +1092,14 @@ begin
       end;
 
     FXButtonKind.Dropdown: begin
-      if Assigned(FDropDown) then
+      if Assigned(FDropDown) then begin
+        FDropDown.MinimumWidth := Self.Width;
+
         FDropDown.PopupAtPoint( ClientToScreen(Point(0, Height+BUTTON_MARGIN)) );
+      end;
 
       if Assigned(OnDropDown) then
-          OnDropDown(Self);
+        OnDropDown(Self);
     end;
 
     FXButtonKind.Link: begin
@@ -1143,7 +1150,7 @@ begin
   with Buffer do
     begin
       // Colors
-      if FAnimationRunning then
+      if FAnim.Running then
         begin
           FBackground := ColorBlend( FButtonColors.GetColor(False, PreviousInteractionState),
             FButtonColors.GetColor(False, InteractionState), FAnimPos);

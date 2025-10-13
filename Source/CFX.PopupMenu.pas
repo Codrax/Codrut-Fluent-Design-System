@@ -7,6 +7,7 @@ uses
   Winapi.Windows,
   Classes,
   Types,
+  Math,
   CFX.Components,
   UITypes,
   Vcl.Controls,
@@ -15,6 +16,8 @@ uses
   Vcl.Dialogs,
   Threading,
   System.Generics.Collections,
+  CFX.Animation.Main,
+  CFX.Animation.Component,
   Vcl.Menus,
   CFX.Graphics,
   CFX.VarHelpers,
@@ -30,7 +33,6 @@ uses
   CFX.Math,
   CFX.GDI,
   CFX.Linker,
-  CFX.Animations,
   CFX.Types;
 
 type
@@ -157,8 +159,10 @@ type
   FXPopupComponent = class(FXPopupContainer, IFXComponent)
   private
     // Animation
-    FAnim: TIntAni;
+    FAnim: FXIntAnim;
     FAnimType: FXAnimateSelection;
+    FAnimGoesUpwards: boolean;
+    FMinimumWidth: integer;
 
     // Parent
     FParentPopup: FXPopupComponent;
@@ -189,6 +193,8 @@ type
 
     // Animate
     procedure Animation;
+
+    procedure DoAnimationStep(Sender: TObject; Step, TotalSteps: integer);
 
     // Items
     procedure SetHover(Index: integer);
@@ -231,6 +237,7 @@ type
     property CustomColors: FXColorSets read FCustomColors write FCustomColors;
 
     property AnimationType: FXAnimateSelection read FAnimType write FAnimType default FXAnimateSelection.Linear;
+    property MinimumWidth: integer read FMinimumWidth write FMinimumWidth;
 
     property FlatMenu: boolean read FFlatMenu write FFlatMenu default false;
     property EnableBorder: boolean read FEnableBorder write FEnableBorder default true;
@@ -299,6 +306,7 @@ type
     property CustomColors;
     property FlatMenu;
     property AnimationType;
+    property MinimumWidth;
     property EnableBorder;
     property EnableRadius;
     property Items;
@@ -513,22 +521,16 @@ end;
 { FXPopupComponent }
 
 procedure FXPopupComponent.Animation;
-var
-  LinearUpwards: boolean;
 begin
-  // Anim
-  FAnim := TIntAni.Create;
+  // Stop previous
+  FAnim.Stop;
 
-  // Settings
-  FAnim.AniKind := akIn;
-  FAnim.AniFunctionKind := afkQuadratic;
-
+  // Prepare
   with FForm do
     begin
       // Prepare
       case FAnimType of
         FXAnimateSelection.Instant: begin
-          AlphaBlendValue := 255;
           Height := NormalHeight;
           Width := NormalWidth;
         end;
@@ -537,53 +539,21 @@ begin
           Width := NormalWidth;
 
           FAnim.StartValue := 0;
-          FAnim.DeltaValue := 255;
+          FAnim.EndValue := 255;
         end;
         FXAnimateSelection.Linear: begin
-          AlphaBlendValue := 255;
           Width := NormalWidth;
-          FAnim.Duration := 10;
-          FAnim.Step := 10;
 
-          LinearUpwards := FDropPoint.Y > Top;
+          FAnimGoesUpwards := FDropPoint.Y > Top;
 
           FAnim.StartValue := NormalHeight div 8;
           FAnim.EndValue := NormalHeight;
         end;
         FXAnimateSelection.Square: begin
-          AlphaBlendValue := 255;
-          FAnim.Duration := 10;
-          FAnim.Step := 10;
-
-          LinearUpwards := FDropPoint.Y > Top;
+          FAnimGoesUpwards := FDropPoint.Y > Top;
 
           FAnim.StartValue := NormalHeight div 8;
           FAnim.EndValue := NormalHeight;
-        end;
-      end;
-
-      // Sync
-      FAnim.OnSync := procedure(Value: integer)
-      begin
-        case FAnimType of
-          FXAnimateSelection.Opacity: AlphaBlendValue := Value;
-          FXAnimateSelection.Linear: begin
-            Height := Value;
-
-            if LinearUpwards then
-              begin
-                Top := FDropPoint.Y - Value;
-              end;
-          end;
-          FXAnimateSelection.Square: begin
-            Height := Value;
-            Width := trunc(Value / FAnim.EndValue * (NormalWidth - POPUP_ANIMATE_X_SIZE)) + POPUP_ANIMATE_X_SIZE;
-
-            if LinearUpwards then
-              begin
-                Top := FDropPoint.Y - Value;
-              end;
-          end;
         end;
       end;
     end;
@@ -657,6 +627,22 @@ end;
 constructor FXPopupComponent.Create(AOwner: TComponent);
 begin
   inherited;
+
+  FAnim := FXIntAnim.Create(nil);
+  with FAnim do begin
+    OnStep := DoAnimationStep;
+
+    Kind := FXAnimationKind.ReverseExpo;
+
+    LatencyAdjustments := true;
+    LatencyCanSkipSteps := true;
+
+    Duration := 0.15;
+
+    StartValue := 0;
+    EndValue := 255;
+  end;
+
   FCustomColors := FXColorSets.Create(False);
   FDrawColors := FXColorSet.Create;
   FEnableBorder := true;
@@ -672,8 +658,40 @@ end;
 
 destructor FXPopupComponent.Destroy;
 begin
+  FAnim.Stop;
+  FreeAndNil( FAnim );
 
   inherited;
+end;
+
+procedure FXPopupComponent.DoAnimationStep(Sender: TObject; Step,
+  TotalSteps: integer);
+begin
+  with FForm do begin
+    case FAnimType of
+      FXAnimateSelection.Opacity: AlphaBlendValue := FAnim.CurrentValue;
+      FXAnimateSelection.Linear: begin
+        Height := FAnim.CurrentValue;
+
+        if FAnimGoesUpwards then
+          begin
+            Top := FDropPoint.Y - FAnim.CurrentValue;
+          end;
+      end;
+      FXAnimateSelection.Square: begin
+        Height := FAnim.CurrentValue;
+        Width := trunc(FAnim.CurrentValue / FAnim.EndValue * (NormalWidth - POPUP_ANIMATE_X_SIZE)) + POPUP_ANIMATE_X_SIZE;
+
+        if FAnimGoesUpwards then
+          begin
+            Top := FDropPoint.Y - FAnim.CurrentValue;
+          end;
+      end;
+    end;
+
+    if FAnimType <> FXAnimateSelection.Opacity then
+      FForm.AlphaBlendValue := 255;
+  end;
 end;
 
 procedure FXPopupComponent.ExecuteItem(AMenuIndex: integer);
@@ -1176,7 +1194,7 @@ begin
       Y := Y + POPUP_SPACING_TOPBOTTOM;
 
       // Resize
-      if (FForm.Height <> Y) and ((FAnim = nil) or FAnim.Finished) then
+      if (FForm.Height <> Y) and (FAnim = nil) then
         FForm.Height := Y;
 
       // Data
@@ -1199,7 +1217,14 @@ begin
               Pen.Color := FORM_COMPOSITE_COLOR;
             RoundRect(ClipRect, I, I);
           end;
+      if FEnableBorder and not FEnableRadius then begin
+        Pen.Color := FDrawColors.Accent;
+        Rectangle(ClipRect);
+      end;
     end;
+
+  // Upate normal width
+  NormalWidth := Max(NormalWidth, Self.FMinimumWidth);
 end;
 
 procedure FXPopupComponent.OpenItem(MenuIndex: integer);
@@ -1300,6 +1325,9 @@ begin
             end;
         end;
     end;
+
+  // Hide flicker for animation to take over
+  FForm.AlphaBlendValue := 0;
 
   // Show
   FForm.Show;

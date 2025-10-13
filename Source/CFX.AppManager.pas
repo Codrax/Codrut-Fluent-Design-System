@@ -196,6 +196,7 @@ type
     FUpdateCheckInterval: integer;
     FSingleInstance: boolean;
     FTasks: FXAppTasks;
+    FSettings: FXAppSettings;
     FAppDataStructure: TStringList;
 
     FPendingDisplayActions: TArray<TPendingDisplayAction>;
@@ -283,6 +284,7 @@ type
 
     // Tasks
     property AutomaticTasks: FXAppTasks read FTasks write FTasks default DEFAULT_TASKS;
+    property Settings: FXAppSettings read FSettings write FSettings default [];
     property AppDataStructure: TStringList read FAppDataStructure write SetDataStructure;
 
     property UserUpdateWaitDelay: cardinal read FUserUpdateWaitDelay write FUserUpdateWaitDelay;
@@ -410,7 +412,7 @@ end;
 procedure FXAppManager.ApplicationOpen;
 begin
   // Other instance
-  if FSingleInstance then
+  if FSingleInstance and not ((FXAppSetting.PermitOverrideSingleInstance in FSettings) and (HasParameter('override-single-instance'))) then
     begin
       SetSemafor( AppManager.AppIdentifier );
 
@@ -501,6 +503,7 @@ begin
   PrimaryDisplayForm := true;
   FUpdateCheckInterval := -1;
   FTasks := DEFAULT_TASKS;
+  FSettings := [];
   ApplicationIdentifier := GenerateString(10, [TStrGenFlag.LowercaseLetters, TStrGenFlag.Numbers]);
     FIdentifierValueSet := false;
   PublisherName := DEFAULT_COMPANY;
@@ -917,7 +920,7 @@ begin
   with GetConfig do
     try
       Section := 'Passive';
-      FLastUpdateCheck := ReadDate(Section, 'Last update', LastUpdateCheck);
+      FLastUpdateCheck := ReadFloat(Section, 'Last update', LastUpdateCheck);
       FLastInstalledVersion := FXVersion.Create(
         ReadString(Section, 'Last installed version', AppVersion.ToString)
         );
@@ -1001,7 +1004,7 @@ begin
   with GetConfig do
     try
       Section := 'Passive';
-      WriteDate(Section, 'Last update', LastUpdateCheck);
+      WriteFloat(Section, 'Last update', LastUpdateCheck);
       WriteString(Section, 'Last installed version', AppVersion.ToString);
     finally
       Free;

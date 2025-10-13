@@ -10,6 +10,7 @@ uses
   Vcl.Graphics,
   Vcl.ExtCtrls,
   Types,
+  Math,
   CFX.Colors,
   CFX.ThemeManager,
   CFX.Graphics,
@@ -25,7 +26,7 @@ type
   FXCheckBox = class(FXWindowsControl)
   private
     var DrawRect, IconRect, TextRect, ImageRect: TRect;
-    FIconFont: TFont;
+    FIconScale: single;
     FAllowGrayed: Boolean;
     FState: FXCheckBoxState;
     FTextSpacing: Integer;
@@ -92,8 +93,8 @@ type
 
   published
     property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
-    property IconFont: TFont read FIconFont write FIconFont;
     property AllowGrayed: Boolean read FAllowGrayed write SetAllowGrayed default false;
+    property IconScale: single read FIconScale write FIconScale;
     property State: FXCheckBoxState read FState write SetState default FXCheckBoxState.Unchecked;
     property TextSpacing: Integer read FTextSpacing write SetTextSpacing default CHECKBOX_TEXT_SPACE;
     property Checked: Boolean read GetChecked write SetChecked default false;
@@ -197,14 +198,14 @@ end;
 
 procedure FXCheckBox.UpdateRects;
 var
-  AWidth, ASize: integer;
+  AWidth, // width of check icon
+  ASize: integer; // ASize width of custom icon
 begin
   // Rect
   DrawRect := GetClientRect;
 
-  // Font
-  Buffer.Font.Assign(IconFont);
-  AWidth := Buffer.TextWidth(CHECKBOX_OUTLINE);
+  // Check icon
+  AWidth := round(GetTextHeight * FIconScale);
 
   // Image
   ASize := 0;
@@ -278,9 +279,9 @@ end;
 
 procedure FXCheckBox.ScaleChanged(Scaler: single);
 begin
-  IconFont.Height := round(IconFont.Height * Scaler);
   FTextSpacing := round(FTextSpacing * Scaler);
   FImageScale := FImageScale * Scaler;
+  FIconScale := FIconScale * Scaler;
   inherited;
 end;
 
@@ -304,7 +305,8 @@ begin
 
   // Animation
   if FAnimationEnabled
-    and (Value = FXCheckBoxState.Checked) and (FState = FXCheckBoxState.Unchecked)
+    and (((Value = FXCheckBoxState.Checked) and (FState = FXCheckBoxState.Unchecked))
+      or ((Value = FXCheckBoxState.Grayed) and (FState = FXCheckBoxState.Checked)))
     and not ThemeManager.Designing and not IsReading then
       begin
         FAnimationStatus := 0;
@@ -351,6 +353,8 @@ end;
 
 procedure FXCheckBox.SetChecked(const Value: Boolean);
 begin
+  if (FState = FXCheckboxState.Grayed) and IsReading then
+    Exit;
   if Value then
     State := FXCheckBoxState.Checked
   else
@@ -411,10 +415,6 @@ end;
 constructor FXCheckBox.Create(aOwner: TComponent);
 begin
   inherited;
-  FIconFont := TFont.Create;
-  FIconFont.Name := ThemeManager.IconFont;
-  FIconFont.Size := 16;
-  FAnimationEnabled := true;
 
   FAnimateTimer := TTimer.Create(nil);
   with FAnimateTimer do
@@ -425,6 +425,7 @@ begin
     end;
 
   FAllowGrayed := false;
+  FAnimationEnabled := true;
   FState := FXCheckBoxState.Unchecked;
   FTextSpacing := CHECKBOX_TEXT_SPACE;
   FAutomaticMouseCursor := false;
@@ -432,7 +433,9 @@ begin
   BufferedComponent := true;
   FWordWrap := true;
 
-  // Icon
+  FIconScale := 0.5;
+
+  // Image
   FImage := FXIconSelect.Create(Self);
   FImageScale := GENERAL_IMAGE_SCALE;
   FImage.OnChange := ImageUpdated;
@@ -452,7 +455,6 @@ end;
 
 destructor FXCheckBox.Destroy;
 begin
-  FIconFont.Free;
   FreeAndNil( FImage );
   FreeAndNil( FCustomColors );
   FreeAndNil( FDrawColors );
@@ -481,11 +483,11 @@ end;
 
 procedure FXCheckBox.PaintBuffer;
 var
-  AText: string;
   IconFormat: TTextFormat;
   DrawFlags: FXTextFlags;
-  P1, P2: TPoint;
+  P1, P2, P3: TPoint;
   ALine: TLine;
+  ARect: TRect;
 begin
   // Background
   Color := FDrawColors.BackGround;
@@ -510,13 +512,13 @@ begin
         DrawFlags := DrawFlags + [FXTextFlag.WordWrap];
       DrawTextRect(Buffer, Self.TextRect, FText, DrawFlags);
 
-      //  Set Brush Accent Color
-      Font.Assign(IconFont);
-      Font.Color := FIconAccentColors.GetColor(InteractionState);
-
       // Paint Image
       if Image.Enabled then
         Image.DrawIcon(Buffer, ImageRect);
+
+      // Icon
+      ARect := IconRect;
+      const InflVal = Min(ARect.Width div 12, ARect.Height div 12);
 
       //  Draw icon
       IconFormat := [tfVerticalCenter, tfCenter, tfSingleLine];
@@ -526,72 +528,78 @@ begin
             // Animate
             if FAnimationEnabled then
               begin
-                AText := CHECKBOX_OUTLINE;
-                TextRect(IconRect, AText, IconFormat);
-                Font.Size := Font.Size + 1;
-                AText := CHECKBOX_FILL;
-                TextRect(IconRect, AText, IconFormat);
+                DrawFontIcon(Buffer, CHECKBOX_OUTLINE, FIconAccentColors.GetColor(InteractionState), ARect);
+                ARect.Inflate(InflVal, InflVal);
+                DrawFontIcon(Buffer, CHECKBOX_FILL, FIconAccentColors.GetColor(InteractionState), ARect);
+                ARect.Inflate(-InflVal, -InflVal);
 
                 // Fix Size
-                IconRect.Offset(0, IconRect.Height div 2 - IconRect.Width div 2);
-                IconRect.Height := IconRect.Width;
+                ARect.Offset(0, ARect.Height div 2 - ARect.Width div 2);
+                ARect.Height := ARect.Width;
 
-                // Anim
-                P1 := Point(IconRect.CenterPoint.X - trunc(IconRect.Width / 6), IconRect.CenterPoint.Y - trunc(IconRect.Height / 18));
-                P2 := Point(IconRect.CenterPoint.X - trunc(IconRect.Width / 12), IconRect.CenterPoint.Y + trunc(IconRect.Height / 10));
+                // Define check points
+                P1 := Point(ARect.CenterPoint.X - trunc(ARect.Width / 4),
+                            ARect.CenterPoint.Y - trunc(ARect.Height / 10));
 
+                P2 := Point(ARect.CenterPoint.X - trunc(ARect.Width / 10),
+                            ARect.CenterPoint.Y + trunc(ARect.Height / 10));
+
+                P3 := Point(ARect.CenterPoint.X + trunc(ARect.Width / 4),
+                            ARect.CenterPoint.Y - trunc(ARect.Height / 4));
+
+                // First segment: P1 - P2
                 ALine := Line(P1, P2);
-
                 if FAnimationStatus <= 50 then
-                  ALine.SetPercentage(FAnimationStatus/50*100);
+                  ALine.SetPercentage(FAnimationStatus / 50 * 100)
+                else
+                  ALine.SetPercentage(100);
 
                 GDILine(ALine, GetRGB(FDrawColors.BackGround).MakeGDIPen(1.8));
 
+                // Second segment: P2 - P3
                 if FAnimationStatus > 50 then
-                  begin
-                    P1 := Point(IconRect.CenterPoint.X + trunc(IconRect.Width / 6), IconRect.CenterPoint.Y - trunc(IconRect.Height / 7));
-                    ALine := Line(P2, P1);
-                    ALine.SetPercentage((FAnimationStatus-50)/50 * 100);
-
-                    GDILine(ALine, GetRGB(FDrawColors.BackGround).MakeGDIPen(1.8));
-                  end;
-
-                //TextOut(0, 0, FAnimationStatus.ToString);
+                begin
+                  ALine := Line(P2, P3);
+                  ALine.SetPercentage((FAnimationStatus - 50) / 50 * 100);
+                  GDILine(ALine, GetRGB(FDrawColors.BackGround).MakeGDIPen(1.8));
+                end;
               end
             else
               begin
-                AText := CHECKBOX_CHECKED;
-                TextRect(IconRect, AText, IconFormat);
+                DrawFontIcon(Buffer, CHECKBOX_CHECKED, FIconAccentColors.GetColor(InteractionState), ARect);
               end;
           end;
 
         FXCheckBoxState.Unchecked:
           begin
-            Font.Color := FDrawColors.ForeGround;
-            AText := CHECKBOX_OUTLINE;
-            TextRect(IconRect, AText, IconFormat);
+            DrawFontIcon(Buffer, CHECKBOX_OUTLINE, FDrawColors.ForeGround, ARect);
           end;
 
         FXCheckBoxState.Grayed:
           begin
-            AText := CHECKBOX_OUTLINE;
-            TextRect(IconRect, AText, IconFormat);
-            AText := CHECKBOX_FILL;
-            TextRect(IconRect, AText, IconFormat);
+            DrawFontIcon(Buffer, CHECKBOX_OUTLINE, FIconAccentColors.GetColor(InteractionState), ARect);
+            ARect.Inflate(InflVal, InflVal);
+            DrawFontIcon(Buffer, CHECKBOX_FILL, FIconAccentColors.GetColor(InteractionState), ARect);
+            ARect.Inflate(-InflVal, -InflVal);
 
-            if FAnimationEnabled then
-              begin
-                P1 := Point(IconRect.Left + round(3/10*IconRect.Width), IconRect.CenterPoint.Y);
-                P2 := Point(IconRect.Right - round(3/10*IconRect.Width)-1, IconRect.CenterPoint.Y);
+            // Animate
+            if FAnimationEnabled then begin
+                // Fix Size
+                ARect.Offset(0, ARect.Height div 2 - ARect.Width div 2);
+                ARect.Height := ARect.Width;
+
+                // Points
+                P1 := Point(ARect.CenterPoint.X - round(ARect.Width / 3), ARect.CenterPoint.Y-1);
+                P2 := Point(ARect.CenterPoint.X + round(ARect.Width / 3) - 1, ARect.CenterPoint.Y-1);
                 ALine := Line(P1, P2);
 
-                GDILine(ALine, GetRGB(FDrawColors.BackGround).MakeGDIPen(1.8));
-              end
-            else
+                ALine.SetPercentage(FAnimationStatus);
+
+                // Draw
+                GDILine(ALine, GetRGB(FDrawColors.BackGround).MakeGDIPen(2));
+            end else
               begin
-                Font.Color := FDrawColors.BackGround;
-                AText := CHECKBOX_GRAYED;
-                TextRect(IconRect, AText, IconFormat);
+                DrawFontIcon(Buffer, CHECKBOX_GRAYED, FDrawColors.BackGround, ARect);
               end;
           end;
       end;

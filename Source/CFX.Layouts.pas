@@ -19,9 +19,9 @@ uses
   CFX.Graphics,
   CFX.Constants,
   CFX.Scrollbar,
-  CFX.Animation.Component,
   SysUtils,
   CFX.Classes,
+  CFX.Animation.Component,
   CFX.Types,
   CFX.VarHelpers,
   CFX.Linker,
@@ -70,6 +70,7 @@ type
     // Default props
     property Align;
     property Transparent default false;
+    property HitTest;
     property Constraints;
     property Anchors;
     property Hint;
@@ -324,6 +325,8 @@ end;
 
 procedure FXScrollLayout.AdjustClientRect(var Rect: TRect);
 begin
+  inherited;
+
   // Update scrollbars
   UpdateRange;
 
@@ -333,10 +336,10 @@ begin
     FVertScroll.Max));
 
   // Remove scrollbars from client
-  if FVertScroll.Visible or (FKeepScrollClientWhenBarHidden and FEnableVertical) then
+  if not FVertScroll.Visible and FKeepScrollClientWhenBarHidden and FEnableVertical then
     Rect.Width := Rect.Width - FVertScroll.Width;
 
-  if FHorzScroll.Visible or (FKeepScrollClientWhenBarHidden and FEnableHorizontal) then
+  if not FHorzScroll.Visible and FKeepScrollClientWhenBarHidden and FEnableHorizontal then
     Rect.Height := Rect.Height - FHorzScroll.Height;
 end;
 

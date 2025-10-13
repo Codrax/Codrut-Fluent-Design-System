@@ -62,7 +62,6 @@ contains
   CFX.Classes in 'Source\CFX.Classes.pas',
   CFX.VarHelpers in 'Source\CFX.VarHelpers.pas',
   CFX.AnimColection in 'Source\CFX.AnimColection.pas',
-  CFX.Animations in 'Source\CFX.Animations.pas',
   CFX.Graphics in 'Source\CFX.Graphics.pas',
   CFX.Constants in 'Source\CFX.Constants.pas',
   CFX.Utilities in 'Source\CFX.Utilities.pas',

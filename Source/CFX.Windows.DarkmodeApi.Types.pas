@@ -10,7 +10,7 @@ unit CFX.Windows.DarkmodeApi.Types;
 interface
 
 uses
-  Windows;
+  Winapi.Windows;
 
 type
   TDwmWindowAttribute = (                             //

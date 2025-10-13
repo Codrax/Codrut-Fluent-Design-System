@@ -85,6 +85,9 @@ type
   FXAppFormAssistTask = (WindowSaveForm, WindowLoadForm);
   FXAppFormAssistTasks = set of FXAppFormAssistTask;
 
+  FXAppSetting = (PermitOverrideSingleInstance);
+  FXAppSettings = set of FXAppSetting;
+
   // FXBlurMaterial
   FXGlassRefreshMode = (Automatic, Manual, Timer);
   FXBlurVersion = (WallpaperBlurred, Wallpaper, Screenshot, None);
