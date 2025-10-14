@@ -483,7 +483,7 @@ begin
         FAnimX.Start;
     end else
     // VERTICAL
-    if EnableHorizontal then
+    if FEnableVertical then
     begin
       if not Animate then begin
         FVertScroll.Position := FVertScroll.Position+ScrollAmount;

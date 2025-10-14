@@ -25,7 +25,7 @@ const
 
   // System interaction
   DEFAULT_SCROLL_LINES = 3;
-  DEFAULT_LINE_SIZE = 25;
+  DEFAULT_LINE_SIZE = 50;
 
   // TIME
   ONE_MS = 1;
