@@ -1049,6 +1049,7 @@ begin
           end;
 
       // Draw
+      var LastWasSeparator := true; // cannot start with separator
       for I := 0 to GetMenuItemCount - 1 do
         begin
           // Clear Bound
@@ -1061,6 +1062,8 @@ begin
           // Analise
           if not MenuItems[I].IsSeparator then
             begin
+              // NORMAL ITEM
+              LastWasSeparator := false;
               X := POPUP_ITEM_SPACINT;
 
               Brush.Style := bsClear;
@@ -1198,6 +1201,10 @@ begin
             end
           else
             begin
+              // SEPARATOR ITEM
+              if LastWasSeparator then continue; // do not draw more that 1 separator in a row
+              LastWasSeparator := true;
+
               X := POPUP_LINE_SPACING;
 
               Brush.Style := bsSolid;
