@@ -1050,7 +1050,8 @@ begin
 
       // Draw
       var LastWasSeparator := true; // cannot start with separator
-      for I := 0 to GetMenuItemCount - 1 do
+      const ACount = GetMenuItemCount;
+      for I := 0 to ACount -1 do
         begin
           // Clear Bound
           MenuItems[I].FBounds := TRect.Empty;
@@ -1230,6 +1231,7 @@ begin
       NormalHeight := Y;
 
       // Final Border
+      Brush.Style := bsClear;
       Pen.Width := 1;
       if FEnableRadius then
         for I := 0 to POPUP_MENU_ROUND - 1 do
