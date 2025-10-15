@@ -221,6 +221,7 @@ type
     property OnKeyDown;
     property OnKeyUp;
     property OnClick;
+    property OnDblClick;
     property OnStateChange : FXButtonDesignStateChange read FOnStateChange write FOnStateChange;
 
     property PopupMenu;

@@ -148,6 +148,7 @@ type
     property OnEnter;
     property OnExit;
     property OnClick;
+    property OnDblClick;
     property OnKeyDown;
     property OnKeyUp;
     property OnKeyPress;

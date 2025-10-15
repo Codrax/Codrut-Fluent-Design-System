@@ -164,6 +164,8 @@ type
     FAnimGoesUpwards: boolean;
     FMinimumWidth: integer;
 
+    FCanCloseWhenLoseFocus: boolean;
+
     // Parent
     FParentPopup: FXPopupComponent;
     FParentMenu: FXPopupMenu;
@@ -572,6 +574,9 @@ var
   Focused: boolean;
   Item: FXPopupComponent;
 begin
+  if not FCanCloseWhenLoseFocus then
+    Exit;
+
   // Focus
   Item := Self;
   Focused := FForm.Focused;
@@ -667,11 +672,19 @@ end;
 procedure FXPopupComponent.DoAnimationStep(Sender: TObject; Step,
   TotalSteps: integer);
 begin
+  // Lazy path fix, too lazy to re-write entire popup menu library atm
+  var AddonSize: integer := 0;
+
+  // Update height, just in case
+  if not (FAnimType in [FXAnimateSelection.Opacity]) then
+    AddonSize := NormalHeight-FAnim.EndValue;
+
+  // Anim
   with FForm do begin
     case FAnimType of
       FXAnimateSelection.Opacity: AlphaBlendValue := FAnim.CurrentValue;
       FXAnimateSelection.Linear: begin
-        Height := FAnim.CurrentValue;
+        Height := FAnim.CurrentValue + AddonSize;
 
         if FAnimGoesUpwards then
           begin
@@ -679,7 +692,7 @@ begin
           end;
       end;
       FXAnimateSelection.Square: begin
-        Height := FAnim.CurrentValue;
+        Height := FAnim.CurrentValue + AddonSize;
         Width := trunc(FAnim.CurrentValue / FAnim.EndValue * (NormalWidth - POPUP_ANIMATE_X_SIZE)) + POPUP_ANIMATE_X_SIZE;
 
         if FAnimGoesUpwards then
@@ -891,23 +904,32 @@ begin
   // Notify
   if (FHoverOver <> -1) and (FHoverOver <> FHoverPrevious) then
     begin
-      // Focus
-      FForm.SetFocus;
+      FCanCloseWhenLoseFocus := false;
+      try
+        // Focus
+        FForm.SetFocus;
 
-      // Get Item
-      Item := FXPopupMenu(MenuItems[FHoverOver]);
+        // Get Item
+        Item := FXPopupMenu(MenuItems[FHoverOver]);
 
-      // Close windows if exists
-      if HasChildOpen then
-        Items[GetOpenChildIndex].CloseMenu;
+        // Close windows if exists
+        if HasChildOpen then
+          Items[GetOpenChildIndex].CloseMenu();
 
-      // Hover
-      if Assigned( Item.OnHover ) then
-        Item.OnHover(Item);
+        // Hover
+        if Assigned( Item.OnHover ) then
+          Item.OnHover(Item);
 
-      // Extend
-      if Item.HasSubItems and not Item.IsOpen then
-        OpenItem( FHoverOver );
+        // Extend
+        if Item.HasSubItems and not Item.IsOpen then
+          OpenItem( FHoverOver );
+
+        // Focus - good measure
+        if not HasChildOpen then
+          FForm.SetFocus;
+      finally
+        FCanCloseWhenLoseFocus := true;
+      end;
     end;
 
   (FGlassBlur as FXWindowsControl).Redraw(false);
@@ -1200,7 +1222,6 @@ begin
       // Data
       NormalHeight := Y;
 
-
       // Final Border
       Pen.Width := 1;
       if FEnableRadius then
@@ -1325,6 +1346,9 @@ begin
             end;
         end;
     end;
+
+  // Clear
+  FCanCloseWhenLoseFocus := true;
 
   // Hide flicker for animation to take over
   FForm.AlphaBlendValue := 0;

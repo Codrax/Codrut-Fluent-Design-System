@@ -1246,6 +1246,7 @@ begin
   CustomTitleBar.ShowIcon := false;
   CustomTitleBar.SystemButtons := false;
   CustomTitleBar.SystemHeight := false;
+  CustomTitleBar.SystemColors := false;
   CustomTitleBar.Height := 1;
 
   // Props

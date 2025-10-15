@@ -10,7 +10,8 @@ uses
 function GetAppsUseDarkTheme: Boolean;
 function GetAccentColor( brightencolor: boolean = true ): TColor;
 /// <summary> Returns the scroll amount in Pixels. </summary>
-function GetScrollAmount(Delta: integer; ViewHeight: integer): integer;
+function GetScrollAmount(Delta: integer; ViewHeight: integer): integer; overload;
+function GetScrollAmount(Delta: integer; ViewHeight: integer; LineHeight: integer): integer; overload;
 function GetLinesPerScroll: integer;
 function GetLineScrollHeight: integer;
 
@@ -144,6 +145,11 @@ end;
 
 function GetScrollAmount(Delta: integer; ViewHeight: integer): integer;
 begin
+  Result := GetScrollAmount(Delta, ViewHeight, 0);
+end;
+
+function GetScrollAmount(Delta: integer; ViewHeight: integer; LineHeight: integer): integer;
+begin
   if Delta = 0 then
     Exit(0);
 
@@ -153,11 +159,15 @@ begin
   // Registry
   const LinePerScroll = GetLinesPerScroll;
 
-  // Full page
-  if LinePerScroll = -1 then
-    Result := Result * ViewHeight
+  // Self handled
+  if LineHeight > 0 then
+    Result := Result * LineHeight
   else
-    Result := Result * LinePerScroll * GetLineScrollHeight;
+    // Windows handled
+    if LinePerScroll = -1 then
+      Result := Result * ViewHeight
+    else
+      Result := Result * LinePerScroll * GetLineScrollHeight;
 end;
 
 function GetLineScrollHeight: integer;

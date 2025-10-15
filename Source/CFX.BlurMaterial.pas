@@ -92,6 +92,7 @@ type
     property Touch;
     property Visible;
     property OnClick;
+    property OnDblClick;
 
     property OnPaint;
     property OnPaintBuffer;
@@ -104,7 +105,6 @@ type
 
     property CustomColors: FXColorSets read FCustomColors write SetCustomColor;
     property OnContextPopup;
-    property OnDblClick;
     property OnDragDrop;
     property OnDragOver;
     property OnEndDock;

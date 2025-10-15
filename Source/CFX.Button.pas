@@ -224,6 +224,7 @@ type
     property OnEnter;
     property OnExit;
     property OnClick;
+    property OnDblClick;
     property OnKeyDown;
     property OnKeyUp;
     property OnKeyPress;
@@ -369,6 +370,12 @@ begin
           else
             LoadPreset := FXButtonKind.Normal;
         end;
+        FXButtonKind.Dropdown: begin
+          if Checked then
+            LoadPreset := FXButtonKind.Accent
+          else
+            LoadPreset := FXButtonKind.Normal;
+        end;
 
         FXButtonKind.FlatToggle: begin
           if Checked then
@@ -390,7 +397,7 @@ begin
 
       with FButtonColors do
         case LoadPreset of
-          FXButtonKind.Normal, FXButtonKind.Dropdown:
+          FXButtonKind.Normal:
             begin
               if AutomaticCursorPointer and not IsReading then
                 Cursor := crDefault;
