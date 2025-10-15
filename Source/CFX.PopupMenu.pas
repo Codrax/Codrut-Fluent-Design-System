@@ -156,7 +156,7 @@ type
   end;
 
   // General Component
-  FXPopupComponent = class(FXPopupContainer, IFXComponent)
+  FXPopupComponent = class(FXPopupContainer)
   private
     // Animation
     FAnim: FXIntAnim;
@@ -255,10 +255,7 @@ type
     procedure CloseWindowsForward(CloseSelf: boolean = false);
 
     // Interface
-    function IsContainer: Boolean;
     procedure UpdateTheme(const UpdateChildren: Boolean); override;
-
-    function Background: TColor;
   end;
 
   // Popup Item
@@ -295,7 +292,7 @@ type
   end;
 
   // Popup Menu
-  FXPopupMenu = class(FXPopupComponent, IFXComponent)
+  FXPopupMenu = class(FXPopupComponent)
   private
     FOnPopup: TNotifyEvent;
     FOnBeforePopup: TOnBeforePopup;
@@ -562,11 +559,6 @@ begin
 
   // Start
   FAnim.Start;
-end;
-
-function FXPopupComponent.Background: TColor;
-begin
-  Result := FDrawColors.Background;
 end;
 
 procedure FXPopupComponent.CheckFocusLoss;
@@ -965,11 +957,6 @@ end;
 function FXPopupComponent.IndexIsValid(Index: integer): boolean;
 begin
   Result := (Index > -1) and (Index < GetMenuItemCount);
-end;
-
-function FXPopupComponent.IsContainer: Boolean;
-begin
-  Result := true;
 end;
 
 function FXPopupComponent.IsOpen: boolean;
@@ -1395,12 +1382,12 @@ begin
           end
         else
           begin
-            FDrawColors.BackGround := ThemeManager.SystemColor.BackGroundInterior;
-            FDrawColors.ForeGround := ThemeManager.SystemColor.ForeGround;
-
-            FDrawColors.Accent := ThemeManager.AccentColor;
+            FDrawColors.LoadFrom(ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
           end;
 
+  // Update glass
+  if Assigned(FGlassBlur) then
+    (FGlassBlur as FXWindowsControl).UpdateTheme(true);
 
   // Redraw
   if (FGlassBlur <> nil) and not (csReading in ComponentState) then
@@ -1408,12 +1395,11 @@ begin
 
   // Update Children
   if IsOpen then
-    if IsContainer and UpdateChildren then
-      begin
-        for I := 0 to Items.Count-1 do
-          if Supports(Items[I], IFXComponent) then
-            (Items[I] as IFXComponent).UpdateTheme(UpdateChildren);
-      end;
+    if UpdateChildren then begin
+      for I := 0 to Items.Count-1 do
+        if Supports(Items[I], IFXComponent) then
+          (Items[I] as IFXComponent).UpdateTheme(UpdateChildren);
+    end;
 end;
 
 { FXPopupItems }
