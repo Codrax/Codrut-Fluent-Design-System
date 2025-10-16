@@ -280,6 +280,64 @@ type
     property ModalResult;
   end;
 
+  FXDropdownButton = class(FXCustomButton)
+  private
+    FDropdown: FXPopupMenu;
+    FItems: TStringList;
+    FSelectedItem: integer;
+
+    FOnChange: TNotifyEvent;
+    FOnChangeValue: TNotifyEvent;
+
+    // Changes
+    procedure SelectorItemsChange(Sender: TObject);
+
+    procedure PopupOnBeforePopup(Sender: TObject; var CanPopup: boolean; Point: TPoint);
+    procedure PopupOnItemClick(Sender: TObject; Item: FXPopupComponent; Index: integer);
+
+    // Setters
+    procedure SetItems(const Value: TStringList);
+    procedure SetSelectedItem(const Value: integer);
+
+  published
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
+
+    property SelectedItem: integer read FSelectedItem write SetSelectedItem;
+    property Items: TStringList read FItems write SetItems;
+
+    property Checked;
+
+    property ShowText;
+    property Image;
+    property ImageScale;
+    property ImageLayout;
+    property LayoutHorizontal;
+    property LayoutVertical;
+    property AutomaticCursorPointer;
+
+    property HyperLinkURL;
+    property DropDown;
+    property Margin;
+    property RepeatWhenPressed;
+    property AutomaticCheck;
+
+    property StateText;
+    property StateImage;
+    property StateEnabled;
+    property StateDuration;
+    property AutoStateToggle;
+
+    property OnCheck;
+    property OnOpenLink;
+    property OnDropDown;
+    property OnBeforeModalResult;
+
+  public
+    constructor Create(aOwner: TComponent); override;
+    destructor Destroy; override;
+  end;
+
 implementation
 
 procedure FXCustomButton.InteractionStateChanged(AState: FXControlState);
@@ -1252,6 +1310,96 @@ begin
     end;
 
   inherited;
+end;
+
+{ FXDropdownButton }
+
+constructor FXDropdownButton.Create(aOwner: TComponent);
+begin
+  inherited;
+
+  ButtonKind := FXButtonKind.Dropdown;
+
+  // Items
+  FItems := TStringList.Create;
+
+  FItems.Add('Item1');
+  FItems.Add('Item2');
+  FItems.Add('Item3');
+
+  FItems.OnChange := SelectorItemsChange;
+
+  FSelectedItem := 0;
+
+  // Dropdown
+  FDropdown := FXPopupMenu.Create(Self);
+
+  FDropdown.OnBeforePopup := PopupOnBeforePopup;
+  FDropdown.OnItemClick := PopupOnItemClick;
+
+  inherited Dropdown := FDropDown;
+end;
+
+destructor FXDropdownButton.Destroy;
+begin
+  FreeAndNil(FItems);
+  FreeAndNil(FDropdown);
+  inherited;
+end;
+
+procedure FXDropdownButton.PopupOnBeforePopup(Sender: TObject; var CanPopup: boolean; Point: TPoint);
+begin
+  CanPopup := FItems.Count > 0;
+
+  FDropdown.MinimumWidth := Width;
+
+  // Items
+  FDropdown.Items.Clear;
+
+  for var I := 0 to FItems.Count-1 do
+    with FDropdown.Items.AddNew do begin
+      Text := FItems[I];
+      RadioItem := true;
+      Checked := I = FSelectedItem;
+    end;
+end;
+
+procedure FXDropdownButton.PopupOnItemClick(Sender: TObject; Item: FXPopupComponent; Index: integer);
+begin
+  SelectedItem := Index;
+
+  if Assigned(FOnChange) then
+    FOnChange(Self);
+end;
+
+procedure FXDropdownButton.SelectorItemsChange(Sender: TObject);
+begin
+  StandardUpdateLayout;
+end;
+
+procedure FXDropdownButton.SetItems(const Value: TStringList);
+begin
+  FItems.Assign(Value);
+
+  StandardUpdateLayout;
+end;
+
+procedure FXDropdownButton.SetSelectedItem(const Value: integer);
+begin
+  if (FSelectedItem = Value) or ((Value < 0) and (Value <> -1)) or ((Value >= FItems.Count) and not IsReading) then
+    Exit;
+
+  const OldSelectedItem = FSelectedItem;
+
+  FSelectedItem := Value;
+
+  // Notify
+  if not IsReading then
+    if Assigned(FOnChangeValue) then
+      FOnChangeValue(Self);
+
+  // Draw
+  StandardUpdateDraw;
 end;
 
 end.

@@ -22,6 +22,7 @@ begin
     FXMinimisePanel,
 
     FXButton,
+    FXDropdownButton,
     FXButtonDesign,
     FXPaintBox,
     FXCheckBox,

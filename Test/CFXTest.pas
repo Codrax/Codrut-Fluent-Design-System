@@ -76,6 +76,7 @@ type
     FXRadioButton2: FXRadioButton;
     FXSlider1: FXSlider;
     FXRatingControl3: FXRatingControl;
+    FXDropdownButton1: FXDropdownButton;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);

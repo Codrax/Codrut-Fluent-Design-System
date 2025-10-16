@@ -83,6 +83,7 @@ type
 
   published
     property CustomColors: FXCompleteColorSets read FCustomColors write FCustomColors stored true;
+
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
 
@@ -451,16 +452,14 @@ end;
 
 procedure FXSelector.SelectorItemsChange(Sender: TObject);
 begin
-  UpdateRects;
-  Redraw;
+  StandardUpdateLayout;
 end;
 
 procedure FXSelector.SetItems(const Value: TStringList);
 begin
   FItems.Assign(Value);
 
-  UpdateRects;
-  Redraw;
+  StandardUpdateLayout;
 end;
 
 procedure FXSelector.SetSelectedItem(const Value: integer);
