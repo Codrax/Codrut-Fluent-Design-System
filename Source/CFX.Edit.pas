@@ -1214,6 +1214,8 @@ var
   HasSelection: boolean;
   IsPassword: boolean;
 begin
+  ThemeManager.ProcessSystemMenu(FDefaultMenu);
+
   HasSelection := SelectionLength <> 0;
   IsPassword := (PasswordChar <> #0);
 

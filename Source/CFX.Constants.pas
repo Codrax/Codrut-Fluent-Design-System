@@ -2,6 +2,9 @@ unit CFX.Constants;
 
 interface
 
+uses
+  CFX.Types;
+
 const
   // CLASSES
   REGISTER_CLASS_NAME = 'CFX Main';
@@ -61,6 +64,11 @@ const
   (* Use the ThemeManager.IconFont function to get the optimal font *)
   FORM_ICON_FONT_NAME_NEW = 'Segoe Fluent Icons';
   FORM_ICON_FONT_NAME_LEGACY = 'Segoe MDL2 Assets';
+
+  MENU_ANIMATION_SELECTION = FXAnimateSelection.Linear;
+  MENU_ANIMATION_ENABLE_BORDER = true;
+  MENU_ANIMATION_ENABLE_RADIUS = true;
+  MENU_ANIMATION_FLAT = false;
 
   TEXT_SIZE_COMPARER = 'ABC...';
 

@@ -3085,7 +3085,7 @@ object Form1: TForm1
   end
   object FXRatingControl3: FXRatingControl
     Left = 733
-    Top = 192
+    Top = 238
     Width = 140
     Height = 30
     Margins.Left = 0
@@ -3095,7 +3095,7 @@ object Form1: TForm1
     Size.X = 140
     Size.Y = 30
     Position.X = 733
-    Position.Y = 192
+    Position.Y = 238
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -3107,8 +3107,8 @@ object Form1: TForm1
     TabOrder = 41
   end
   object FXDropdownButton1: FXDropdownButton
-    Left = 520
-    Top = 278
+    Left = 733
+    Top = 181
     Width = 140
     Height = 35
     Margins.Left = 0
@@ -3117,8 +3117,8 @@ object Form1: TForm1
     Margins.Bottom = 0
     Size.X = 140
     Size.Y = 35
-    Position.X = 520
-    Position.Y = 278
+    Position.X = 733
+    Position.Y = 181
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -3141,7 +3141,7 @@ object Form1: TForm1
     CustomButtonColors.DarkForeGroundNone = clBlack
     CustomButtonColors.DarkForeGroundHover = clBlack
     CustomButtonColors.DarkForeGroundPress = clBlack
-    Text = 'Button'
+    Text = 'Item1'
     LineWidth = 3.000000000000000000
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -3149,11 +3149,12 @@ object Form1: TForm1
     Font.Name = 'Segoe UI'
     Font.Style = []
     TabOrder = 42
-    SelectedItem = -1
+    SelectedItem = 0
     Items.Strings = (
       'Item1'
       'Item2'
       'Item3')
+    MatchTextEmpty = 'WOW'
     Image.IconType = None
     Image.SelectSegoe = #59188
     Image.SelectImageIndex = 0

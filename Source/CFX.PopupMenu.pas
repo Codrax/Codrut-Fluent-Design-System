@@ -466,7 +466,7 @@ constructor FXPopupMenu.Create(AOwner: TComponent);
 begin
   inherited;
   // Properties
-  FAnimType := FXAnimateSelection.Linear;
+  FAnimType := MENU_ANIMATION_SELECTION;
 
   FCloseOnCheck := false;
   CloseOnExecute := true;
@@ -642,9 +642,9 @@ begin
 
   FCustomColors := FXColorSets.Create(False);
   FDrawColors := FXColorSet.Create;
-  FEnableBorder := true;
-  FEnableRadius := true;
-  FFlatMenu := false;
+  FEnableBorder := MENU_ANIMATION_ENABLE_BORDER;
+  FEnableRadius := MENU_ANIMATION_ENABLE_RADIUS;
+  FFlatMenu := MENU_ANIMATION_FLAT;
 
   if (AOwner is FXPopupMenu) then
     begin

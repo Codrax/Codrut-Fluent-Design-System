@@ -285,9 +285,13 @@ type
     FDropdown: FXPopupMenu;
     FItems: TStringList;
     FSelectedItem: integer;
+    FMatchTextToItem: boolean;
+    FMatchTextEmpty: string;
 
     FOnChange: TNotifyEvent;
     FOnChangeValue: TNotifyEvent;
+
+    procedure SetTextToMatch;
 
     // Changes
     procedure SelectorItemsChange(Sender: TObject);
@@ -298,6 +302,12 @@ type
     // Setters
     procedure SetItems(const Value: TStringList);
     procedure SetSelectedItem(const Value: integer);
+    procedure SetMatchTextToItem(const Value: boolean);
+    procedure SetMatchTextEmpty(const Value: string);
+
+  protected
+    // Virtual
+    procedure ComponentCreated; override;
 
   published
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
@@ -305,6 +315,9 @@ type
 
     property SelectedItem: integer read FSelectedItem write SetSelectedItem;
     property Items: TStringList read FItems write SetItems;
+
+    property MatchTextToItem: boolean read FMatchTextToItem write SetMatchTextToItem default true;
+    property MatchTextEmpty: string read FMatchTextEmpty write SetMatchTextEmpty;
 
     property Checked;
 
@@ -1314,12 +1327,22 @@ end;
 
 { FXDropdownButton }
 
+procedure FXDropdownButton.ComponentCreated;
+begin
+  inherited;
+  if FMatchTextToItem then
+    SetTextToMatch;
+end;
+
 constructor FXDropdownButton.Create(aOwner: TComponent);
 begin
   inherited;
 
   ButtonKind := FXButtonKind.Dropdown;
   LayoutHorizontal := TLayout.Beginning;
+
+  FMatchTextToItem := true;
+  FMatchTextEmpty := '';
 
   // Items
   FItems := TStringList.Create;
@@ -1350,6 +1373,8 @@ end;
 
 procedure FXDropdownButton.PopupOnBeforePopup(Sender: TObject; var CanPopup: boolean; Point: TPoint);
 begin
+  ThemeManager.ProcessSystemMenu(FDropdown);
+
   CanPopup := FItems.Count > 0;
 
   FDropdown.MinimumWidth := Width;
@@ -1375,7 +1400,12 @@ end;
 
 procedure FXDropdownButton.SelectorItemsChange(Sender: TObject);
 begin
-  StandardUpdateLayout;
+  // Adjust
+  SelectedItem := EnsureRange(SelectedItem, -1, FItems.Count-1); //
+
+  // Match
+  if not IsReading and FMatchTextToItem then
+    SetTextToMatch;
 end;
 
 procedure FXDropdownButton.SetItems(const Value: TStringList);
@@ -1383,6 +1413,28 @@ begin
   FItems.Assign(Value);
 
   StandardUpdateLayout;
+end;
+
+procedure FXDropdownButton.SetMatchTextEmpty(const Value: string);
+begin
+  if FMatchTextEmpty = Value then
+    Exit;
+  FMatchTextEmpty := Value;
+
+  // Match
+  if not IsReading and (SelectedItem = -1) and FMatchTextToItem then
+    SetTextToMatch;
+end;
+
+procedure FXDropdownButton.SetMatchTextToItem(const Value: boolean);
+begin
+  if FMatchTextToItem = Value then
+    Exit;
+  FMatchTextToItem := Value;
+
+  // Match
+  if not IsReading and FMatchTextToItem then
+    SetTextToMatch;
 end;
 
 procedure FXDropdownButton.SetSelectedItem(const Value: integer);
@@ -1399,6 +1451,18 @@ begin
 
   // Draw
   StandardUpdateDraw;
+
+  // Match
+  if not IsReading and FMatchTextToItem then
+    SetTextToMatch;
+end;
+
+procedure FXDropdownButton.SetTextToMatch;
+begin
+  if SelectedItem = -1 then
+    SetText(FMatchTextEmpty)
+  else
+    SetText(FItems[SelectedItem]);
 end;
 
 end.

@@ -10,7 +10,7 @@ unit CFX.Types;
 
 interface
 uses
-  UITypes, Types, CFX.Constants, VCl.GraphUtil, Winapi.Windows,
+  UITypes, Types, VCl.GraphUtil, Winapi.Windows,
   Classes, Vcl.Themes, Vcl.Controls, Vcl.Graphics, Math,
   SysUtils, Winapi.GDIPAPI, Winapi.GDIPOBJ, System.Generics.Defaults;
 

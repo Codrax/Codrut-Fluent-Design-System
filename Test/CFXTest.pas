@@ -107,6 +107,8 @@ procedure TForm1.FormCreate(Sender: TObject);
 begin
   FXPopupMenu1.Items[1].Text := '-';
   AllowThemeChangeAnimation := true;
+
+  ThemeManager.SystemMenuEnableRadius := false;
 end;
 
 procedure TForm1.FXAppManager1UpdateChecked(Sender: TObject);

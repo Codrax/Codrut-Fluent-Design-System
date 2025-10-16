@@ -43,6 +43,11 @@ type
     FFormFontHeight: integer;
     FLargeFontHeight: integer;
 
+    FSystemMenuAnimation: FXAnimateSelection;
+    FSystemMenuFlat: boolean;
+    FSystemMenuEnableRadius: boolean;
+    FSystemMenuEnableBorder: boolean;
+
     FAccentColor: TColor;
     FAutoAccentColor: boolean;
 
@@ -80,6 +85,12 @@ type
     property LargeFontHeight: integer read FLargeFontHeight write FLargeFontHeight;
     property IconFont: string read FIconFont write FIconFont;
 
+    (* System Menus *)
+    property SystemMenuAnimation: FXAnimateSelection read FSystemMenuAnimation write FSystemMenuAnimation;
+    property SystemMenuFlat: boolean read FSystemMenuFlat write FSystemMenuFlat;
+    property SystemMenuEnableRadius: boolean read FSystemMenuEnableRadius write FSystemMenuEnableRadius;
+    property SystemMenuEnableBorder: boolean read FSystemMenuEnableBorder write FSystemMenuEnableBorder;
+
     (* Accent Color *)
     property AccentColor: TColor read LoadAccentColor write SaveAccentColor;
     property AutoAccentColor: boolean read FAutoAccentColor write SetAutoAccent;
@@ -106,6 +117,9 @@ type
     procedure LoadColorSet(var ColorSet: FXColorSets); overload;
     procedure LoadColorSet(var ColorSet: FXCompleteColorSet); overload;
     procedure LoadColorSet(var ColorSet: FXCompleteColorSets); overload;
+
+    (* System Menus *)
+    procedure ProcessSystemMenu(Menu: TObject);
 
     (* Functions *)
     function GetThemePrimaryColor: TColor;
@@ -138,7 +152,7 @@ var
 implementation
 
 uses
-  CFX.QuickDialogs, CFX.Dialogs;
+  CFX.QuickDialogs, CFX.Dialogs, CFX.PopupMenu;
 
 // In Design Mode
 function IsDesigning: boolean;
@@ -213,6 +227,12 @@ begin
 
   FHandleApplicationExceptions := true;
   ExceptionDisplayHalt := true;
+
+  // Menu
+  FSystemMenuAnimation := MENU_ANIMATION_SELECTION;
+  FSystemMenuEnableBorder:= MENU_ANIMATION_ENABLE_BORDER;
+  FSystemMenuEnableRadius:= MENU_ANIMATION_ENABLE_RADIUS;
+  FSystemMenuFlat:= MENU_ANIMATION_FLAT;
 
   // Update Time
   LastUpdate := Now;
@@ -342,6 +362,19 @@ begin
     if Screen.Forms[i] <> nil then
       if Supports(Screen.Forms[i], IFXComponent) then
         (Screen.Forms[i] as IFXComponent).UpdateTheme(true);
+end;
+
+procedure FXThemeManager.ProcessSystemMenu(Menu: TObject);
+begin
+  if not (Menu is FXPopupMenu) then
+    Exit;
+  const M = FXPopupMenu(Menu);
+
+  // Set types
+  M.AnimationType := SystemMenuAnimation;
+  M.EnableBorder := SystemMenuEnableBorder;
+  M.EnableRadius := SystemMenuEnableRadius;
+  M.FlatMenu := SystemMenuFlat;
 end;
 
 procedure FXThemeManager.RegMonitorProc(Sender: TObject);
