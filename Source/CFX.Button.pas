@@ -312,7 +312,7 @@ type
     property Image;
     property ImageScale;
     property ImageLayout;
-    property LayoutHorizontal;
+    property LayoutHorizontal default TLayout.Beginning;
     property LayoutVertical;
     property AutomaticCursorPointer;
 
@@ -1319,6 +1319,7 @@ begin
   inherited;
 
   ButtonKind := FXButtonKind.Dropdown;
+  LayoutHorizontal := TLayout.Beginning;
 
   // Items
   FItems := TStringList.Create;
@@ -1388,8 +1389,6 @@ procedure FXDropdownButton.SetSelectedItem(const Value: integer);
 begin
   if (FSelectedItem = Value) or ((Value < 0) and (Value <> -1)) or ((Value >= FItems.Count) and not IsReading) then
     Exit;
-
-  const OldSelectedItem = FSelectedItem;
 
   FSelectedItem := Value;
 
