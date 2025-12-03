@@ -22,10 +22,15 @@ uses
   Vcl.ExtDlgs,
   DateUtils,
   IOUtils,
+  Vcl.Imaging.pngimage,
+  Vcl.Imaging.GIFImg,
+  Vcl.Imaging.jpeg,
+  CFX.QuickDialogs,
   CFX.Utilities,
   CFX.ThemeManager,
   CFX.BlurMaterial,
   CFX.Classes,
+  CFX.ComponentClasses,
   CFX.Constants,
   CFX.Colors,
   CFX.Math,
@@ -35,6 +40,9 @@ uses
   CFX.FontIcons,
   CFX.Version,
   CFX.ButtonDesign,
+  CFX.Lists,
+  CFX.Button,
+  CFX.Edit,
   CFX.PopupMenu,
   CFX.ImageList,
 
@@ -57,7 +65,7 @@ type
     FTitle2: TLabel;
 
     FButtonSave,
-    FButtonClose: FXButtonDesign;
+    FButtonClose: FXButton;
 
     FAllowCancel: boolean;
     FStyled: boolean;
@@ -70,6 +78,9 @@ type
     procedure SetAllowCancel(const Value: boolean);
 
   public
+    const
+      BUTTON_DEFAULT_HEIGHT = 50;
+
     property Title: string read FMainTitle write SetTitle;
     property SubTitle: string read FSubTitle write SetSubTitle;
 
@@ -155,11 +166,25 @@ type
     function PropDrawValueRect(const ARect: TRect): TRect;
   end;
 
-  // FXPictureImages Items
-  TFXPictureImagesProperty = class(TPropertyEditor)
+  // FXPictureList Items
+  TFXPictureListProperty = class(TPropertyEditor)
   private
     Form: FXEditForm;
-    Item: FXPictureImages;
+    Item: FXPictureList;
+
+    FList: FXLinearDrawList;
+    FActionButton: array[0..5] of FXButton;
+
+    procedure UpdateUIInfo;
+
+    procedure ShowPreviewFor(Index: integer);
+
+    procedure DoListDrawItem(Sender: TObject; AIndex: integer; ARect: TRect; Canvas: TCanvas);
+    procedure DoActionButtonPress(Sender: TObject);
+    procedure DoImageActionButtonPress(Sender: TObject);
+    procedure DoListItemSelect(Sender: TObject);
+    procedure DoListKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure DoListDoubleClick(Sender: TObject);
 
   public
     procedure Edit; override;
@@ -179,14 +204,17 @@ type
 
     ImagePicture,
     ImageBitmap: TImage;
-    FontIcon: TEdit;
+    FontIcon: FXEdit;
 
     const
       IMAGEBOX_SIZE = 150;
 
+    procedure DoNumberEditChange(Sender: TObject);
+
   public
     procedure Edit; override;
     function GetAttributes: TPropertyAttributes; override;
+    procedure GetProperties(Proc: TGetPropProc); override;
     function GetValue: string; override;
     procedure SetValue(const Value: string); override;
 
@@ -260,7 +288,7 @@ end;
 
 procedure TFXIconSelectProperty.ButtonImageAction(Sender: TObject);
 begin
-  case FXButtonDesign(Sender).Tag of
+  case FXButton(Sender).Tag of
     (* TPicture *)
     1: begin
       with TOpenPictureDialog.Create(nil) do
@@ -275,13 +303,18 @@ begin
             end;
     end;
     2: begin
-      with TSavePictureDialog.Create(nil) do
-        begin
-          FileName := 'Image.png';
-          if Execute then
-            if not Item.SelectPicture.Graphic.Empty then
-              Item.SelectPicture.SaveToFile(FileName);
-        end;
+      if (Item.SelectPicture.Graphic = nil) or Item.SelectPicture.Graphic.Empty then
+        Exit;
+      const Img = Item.SelectPicture.Graphic;
+      with TSavePictureDialog.Create(nil) do begin
+        FileName := 'Image';
+        if Img is TPNGImage then FileName := FileName + '.png';
+        if Img is TJPEGImage then FileName := FileName + '.jpeg';
+        if Img is TGifImage then FileName := FileName + '.gif';
+        if Img is TBitMap then FileName := FileName + '.bmp';
+        if Execute then
+          Img.SaveToFile(FileName);
+      end;
     end;
     3: begin
       Item.SelectPicture.Free;
@@ -294,30 +327,30 @@ begin
 
     (* TBitMap *)
     4: begin
-      with TOpenPictureDialog.Create(nil) do
-        begin
-          Filter := 'Bitmaps (*.bmp)|*.bmp|All Files|*';
-          if Execute then
-            if TFile.Exists(FileName) then
-              begin
-                Item.SelectBitmap.LoadFromFile(FileName);
+      with TOpenPictureDialog.Create(nil) do begin
+        Filter := 'Bitmaps (*.bmp)|*.bmp|All Files|*';
+        if Execute then
+          if TFile.Exists(FileName) then
+            begin
+              Item.SelectBitmap.LoadFromFile(FileName);
 
-                ImageBitMap.Picture.Assign( Item.SelectBitmap );
+              ImageBitMap.Picture.Assign( Item.SelectBitmap );
 
-                LB2.Hide;
-              end;
-        end;
+              LB2.Hide;
+            end;
+      end;
     end;
     5: begin
-      with TSavePictureDialog.Create(nil) do
-        begin
-          FileName := 'Bitmap.bmp';
-          Filter := 'Bitmaps (*.bmp)|*.bmp|All Files|*';
+      if (Item.SelectBitmap = nil) or Item.SelectBitmap.Empty then
+        Exit;
+      with TSavePictureDialog.Create(nil) do begin
+        FileName := 'Bitmap.bmp';
+        Filter := 'Bitmaps (*.bmp)|*.bmp|All Files|*';
 
-          if Execute then
-            if not Item.SelectBitmap.Empty then
-              Item.SelectBitmap.SaveToFile(FileName);
-        end;
+        if Execute then
+          if not Item.SelectBitmap.Empty then
+            Item.SelectBitmap.SaveToFile(FileName);
+      end;
     end;
     6: begin
       Item.SelectBitmap.Free;
@@ -334,462 +367,502 @@ procedure TFXIconSelectProperty.ButtonSelect(Sender: TObject);
 var
   I: integer;
 begin
-  Item.IconType := FXIconType(FXButtonDesign(Sender).Tag);
+  Item.IconType := FXIconType(FXButton(Sender).Tag);
 
-  for I := 0 to FXButtonDesign(Sender).Parent.ControlCount - 1 do
-    if FXButtonDesign(Sender).Parent.Controls[I] is FXButtonDesign then
-      FXButtonDesign(FXButtonDesign(Sender).Parent.Controls[I]).FlatButton := false;
+  for I := 0 to FXButton(Sender).Parent.ControlCount - 1 do
+    if FXButton(Sender).Parent.Controls[I] is FXButton then
+      FXButton(FXButton(Sender).Parent.Controls[I]).Checked := false;
 
-  FXButtonDesign(Sender).FlatButton := true;
+  FXButton(Sender).Checked := true;
 
-  ShowPanel( FXButtonDesign(Sender).Tag );
+  ShowPanel( FXButton(Sender).Tag );
+end;
+
+procedure TFXIconSelectProperty.DoNumberEditChange(Sender: TObject);
+begin
+  Item.SelectImageIndex := FXNumberEdit(Sender).ValueInt;
 end;
 
 procedure TFXIconSelectProperty.Edit;
 var
   ListPanel, Panel: TPanel;
   I: integer;
-  ItemOrig: FXIconSelect;
 begin
   inherited;
   // Item
-  ItemOrig := FXIconSelect(Self.GetOrdValue);
+  const Original = FXIconSelect(Self.GetOrdValue);
   Item := FXIconSelect.Create(nil);
-  Item.Assign(ItemOrig);
+  Item.Assign(Original);
 
   // Form
   Form := FXEditForm.CreateNew(Application);
   try
-    with Form do
-      begin
-        Caption := 'Editing Icon Item';
+    with Form do begin
+      // Data
+      Width := 500;
+      Height := 450;
+      Caption := 'Editing Icon Item';
 
-        Title := 'Edit Selected Image';
-        SubTitle := 'Choose a icon';
+      Title := 'Edit Selected Image';
+      SubTitle := 'Choose a icon';
 
-        Form.Height := Form.Height + 100;
+      // Create Components
+      ListPanel := TPanel.Create(Form);
+      with ListPanel do
+        begin
+          Parent := Form;
 
-        // Create Components
-        ListPanel := TPanel.Create(Form);
-        with ListPanel do
+          Top := Form.ComponentsZone.Top;
+          Left := Form.ComponentsZone.Left;
+          Width := Form.ComponentsZone.Width;
+          Height := 100;
+
+          BevelOuter := bvNone;
+          ParentColor := true;
+        end;
+
+      with FXButton.Create(ListPanel) do
+        begin
+          Parent := ListPanel;
+          ButtonKind := FXButtonKind.Toggle;
+          Left := 0;
+
+          Image.SelectSegoe := #$E711;
+          Text := 'None';
+          Tag := 0;
+        end;
+
+      with FXButton.Create(ListPanel) do
+        begin
+          Parent := ListPanel;
+          ButtonKind := FXButtonKind.Toggle;
+          Left := 0;
+
+          Image.SelectSegoe := #$EB9F;
+          Text := 'Picture';
+          Tag := 1;
+        end;
+
+      with FXButton.Create(ListPanel) do
+        begin
+          Parent := ListPanel;
+          ButtonKind := FXButtonKind.Toggle;
+          Left := 0;
+
+          Image.SelectSegoe := #$E8BA;
+          Text := 'Bitmap';
+          Tag := 2;
+        end;
+
+      with FXButton.Create(ListPanel) do
+        begin
+          Parent := ListPanel;
+          ButtonKind := FXButtonKind.Toggle;
+          Left := 0;
+
+          Image.SelectSegoe := #$E8B9;
+          Text := 'Image List';
+          Tag := 3;
+        end;
+
+      with FXButton.Create(ListPanel) do
+        begin
+          Parent := ListPanel;
+          ButtonKind := FXButtonKind.Toggle;
+          Left := 0;
+
+          Image.SelectSegoe := #$F714;
+          Text := 'Font Icon';
+          Tag := 4;
+        end;
+
+        // Create Panels
+        (* TPicture *)
+        Panel := TPanel.Create(Form);
+        with Panel do
           begin
             Parent := Form;
-
-            Top := Form.ComponentsZone.Top;
-            Left := Form.ComponentsZone.Left;
-            Width := Form.ComponentsZone.Width;
-            Height := 100;
+            Tag := 1;
 
             BevelOuter := bvNone;
-            ParentColor := true;
-          end;
-
-        with FXButtonDesign.Create(ListPanel) do
-          begin
-            Parent := ListPanel;
-            Left := 0;
-
-            Image.SelectSegoe := #$E711;
-            Text := 'None';
-            Tag := 0;
-          end;
-
-        with FXButtonDesign.Create(ListPanel) do
-          begin
-            Parent := ListPanel;
-            Left := 0;
-
-            Image.SelectSegoe := #$EB9F;
-            Text := 'Picture';
-            Tag := 1;
-          end;
-
-        with FXButtonDesign.Create(ListPanel) do
-          begin
-            Parent := ListPanel;
-            Left := 0;
-
-            Image.SelectSegoe := #$E8BA;
-            Text := 'Bitmap';
-            Tag := 2;
-          end;
-
-        with FXButtonDesign.Create(ListPanel) do
-          begin
-            Parent := ListPanel;
-            Left := 0;
-
-            Image.SelectSegoe := #$E8B9;
-            Text := 'Image List';
-            Tag := 3;
-          end;
-
-        with FXButtonDesign.Create(ListPanel) do
-          begin
-            Parent := ListPanel;
-            Left := 0;
-
-            Image.SelectSegoe := #$F714;
-            Text := 'Font Icon';
-            Tag := 4;
-          end;
-
-          // Create Panels
-          (* TPicture *)
-          Panel := TPanel.Create(Form);
-          with Panel do
-            begin
-              Parent := Form;
-              Tag := 1;
-
-              BevelOuter := bvNone;
-              ParentBackground := false;
-              Color := ThemeManager.SystemColor.BackGroundInterior;
-
-              Top := ListPanel.BoundsRect.Bottom + Form.MarginTiny;
-              Left := Form.ComponentsZone.Left;
-              Width := Form.ComponentsZone.Width;
-              Height := Form.ComponentsZone.Bottom - Top;
-
-              LB1 := TLabel.Create(Panel);
-              with LB1 do
-                begin
-                  Parent := Panel;
-
-                  AutoSize := false;
-                  Transparent := false;
-                  Color := ThemeManager.SystemColor.Accent;
-
-                  Layout := tlCenter;
-                  Alignment := taCenter;
-
-
-                  //Font.Name := ThemeManager.IconFont;
-                  Caption := 'No image loaded';
-
-                  Top := Form.MarginTiny;
-                  Left := Form.MarginTiny;
-
-                  Width := IMAGEBOX_SIZE;
-                  Height := IMAGEBOX_SIZE;
-                end;
-
-              ImagePicture := TImage.Create(Panel);
-              with ImagePicture do
-                begin
-                  Parent := Panel;
-
-                  Proportional := true;
-                  Center := true;
-
-                  Top := Form.MarginTiny;
-                  Left := Form.MarginTiny;
-
-                  Width := IMAGEBOX_SIZE;
-                  Height := IMAGEBOX_SIZE;
-
-                  // Update Image
-                  Picture.Assign( Item.SelectPicture );
-
-                  LB1.Visible := (Item.SelectPicture.Graphic = nil) or Item.SelectPicture.Graphic.Empty;
-                end;
-
-              with FXButtonDesign.Create(Panel) do
-                begin
-                  Parent := Panel;
-
-                  Top := Form.MarginTiny;
-                  Left := Form.MarginTiny + IMAGEBOX_SIZE + Form.Margin;
-
-                  Width := IMAGEBOX_SIZE;
-
-                  Text := 'Browse';
-
-                  Image.Enabled := true;
-                  Image.IconType := FXIconType.SegoeIcon;
-                  Image.SelectSegoe := #$E7C5;
-
-                  ParentColor := true;
-
-                  Tag := 1;
-                  OnClick := ButtonImageAction;
-                end;
-
-              with FXButtonDesign.Create(Panel) do
-                begin
-                  Parent := Panel;
-
-                  Top := Form.MarginTiny + Height + Form.MarginTiny;
-                  Left := Form.MarginTiny + IMAGEBOX_SIZE + Form.Margin;
-
-                  Width := IMAGEBOX_SIZE;
-
-                  Text := 'Save';
-
-                  Image.Enabled := true;
-                  Image.IconType := FXIconType.SegoeIcon;
-                  Image.SelectSegoe:= #$EA35;
-
-                  ParentColor := true;
-
-                  Tag := 2;
-                  OnClick := ButtonImageAction;
-                end;
-
-              with FXButtonDesign.Create(Panel) do
-                begin
-                  Parent := Panel;
-
-                  Top := Form.MarginTiny + (Height + Form.MarginTiny) * 2;
-                  Left := Form.MarginTiny + IMAGEBOX_SIZE + Form.Margin;
-
-                  Width := IMAGEBOX_SIZE;
-
-                  Text := 'Clear';
-
-                  Image.Enabled := true;
-                  Image.IconType := FXIconType.SegoeIcon;
-                  Image.SelectSegoe := #$ED62;
-
-                  ParentColor := true;
-
-                  Tag := 3;
-                  OnClick := ButtonImageAction;
-                end;
-            end;
-
-          (* TBitMap *)
-          Panel := TPanel.Create(Form);
-          with Panel do
-            begin
-              Parent := Form;
-              Tag := 2;
-
-              BevelOuter := bvNone;
-              ParentBackground := false;
-              Color := ThemeManager.SystemColor.BackGroundInterior;
-
-              Top := ListPanel.BoundsRect.Bottom + Form.MarginTiny;
-              Left := Form.ComponentsZone.Left;
-              Width := Form.ComponentsZone.Width;
-              Height := Form.ComponentsZone.Bottom - Top;
-
-              LB2 := TLabel.Create(Panel);
-              with LB2 do
-                begin
-                  Parent := Panel;
-
-                  AutoSize := false;
-                  Transparent := false;
-                  Color := ThemeManager.SystemColor.Accent;
-
-                  Layout := tlCenter;
-                  Alignment := taCenter;
-
-
-                  //Font.Name := ThemeManager.IconFont;
-                  Caption := 'No bitmap loaded';
-
-                  Top := Form.MarginTiny;
-                  Left := Form.MarginTiny;
-
-                  Width := IMAGEBOX_SIZE;
-                  Height := IMAGEBOX_SIZE;
-                end;
-
-              ImageBitmap := TImage.Create(Panel);
-              with ImageBitmap do
-                begin
-                  Parent := Panel;
-
-                  Proportional := true;
-                  Center := true;
-
-                  Top := Form.MarginTiny;
-                  Left := Form.MarginTiny;
-
-                  Width := IMAGEBOX_SIZE;
-                  Height := IMAGEBOX_SIZE;
-
-                  // Update Image
-                  Picture.Assign( Item.SelectBitmap );
-
-                  LB2.Visible := Item.SelectBitmap.Empty;
-                end;
-
-              with FXButtonDesign.Create(Panel) do
-                begin
-                  Parent := Panel;
-
-                  Top := Form.MarginTiny;
-                  Left := Form.MarginTiny + IMAGEBOX_SIZE + Form.Margin;
-
-                  Width := IMAGEBOX_SIZE;
-
-                  Text := 'Browse';
-
-                  Image.Enabled := true;
-                  Image.IconType := FXIconType.SegoeIcon;
-                  Image.SelectSegoe := #$E7C5;
-
-                  ParentColor := true;
-
-                  Tag := 4;
-                  OnClick := ButtonImageAction;
-                end;
-
-              with FXButtonDesign.Create(Panel) do
-                begin
-                  Parent := Panel;
-
-                  Top := Form.MarginTiny + Height + Form.MarginTiny;
-                  Left := Form.MarginTiny + IMAGEBOX_SIZE + Form.Margin;
-
-                  Width := IMAGEBOX_SIZE;
-
-                  Text := 'Save';
-
-                  Image.Enabled := true;
-                  Image.IconType := FXIconType.SegoeIcon;
-                  Image.SelectSegoe := #$EA35;
-
-                  ParentColor := true;
-
-                  Tag := 5;
-                  OnClick := ButtonImageAction;
-                end;
-
-              with FXButtonDesign.Create(Panel) do
-                begin
-                  Parent := Panel;
-
-                  Top := Form.MarginTiny + (Height + Form.MarginTiny) * 2;
-                  Left := Form.MarginTiny + IMAGEBOX_SIZE + Form.Margin;
-
-                  Width := IMAGEBOX_SIZE;
-
-                  Text := 'Clear';
-
-                  Image.Enabled := true;
-                  Image.IconType := FXIconType.SegoeIcon;
-                  Image.SelectSegoe := #$ED62;
-
-                  ParentColor := true;
-
-                  Tag := 6;
-                  OnClick := ButtonImageAction;
-                end;
-            end;
-
-        (* Image List *)
-        Panel := TPanel.Create(Form);
-          with Panel do
-            begin
-              Parent := Form;
-              Tag := 3;
-
-              BevelOuter := bvNone;
-              ParentBackground := false;
-              Color := ThemeManager.SystemColor.BackGroundInterior;
-
-              Top := ListPanel.BoundsRect.Bottom + Form.MarginTiny;
-              Left := Form.ComponentsZone.Left;
-              Width := Form.ComponentsZone.Width;
-              Height := Form.ComponentsZone.Bottom - Top;
-
-              Caption := 'Work in progress...';
-            end;
-
-        (* Font Icon *)
-        Panel := TPanel.Create(Form);
-          with Panel do
-            begin
-              Parent := Form;
-              Tag := 4;
-
-              BevelOuter := bvNone;
-              ParentBackground := false;
-              Color := ThemeManager.SystemColor.BackGroundInterior;
-
-              Top := ListPanel.BoundsRect.Bottom + Form.MarginTiny;
-              Left := Form.ComponentsZone.Left;
-              Width := Form.ComponentsZone.Width;
-              Height := Form.ComponentsZone.Bottom - Top;
-
-              Caption := '';
-
-              with TLabel.Create(Panel) do
-                begin
-                  Parent := Panel;
-
-                  Left := Form.MarginTiny;
-                  Top := Form.MarginTiny;
-
-                  Width := Panel.Width - Left * 2;
-
-                  AutoSize := false;
-                  WordWrap := true;
-                  Caption := 'Paste the Font Unicode Character below, or enter the Unicode Point and press enter. You may paste multiple characters to overlay them';
-
-                  Height := Form.Margin * 4 - Top;
-
-                  OnKeyUp := EditInteract;
-                end;
-
-              FontIcon := TEdit.Create(Panel);
-              with FontIcon do
-                begin
-                  Parent := Panel;
-
-                  Left := Form.MarginTiny;
-                  Top := Form.Margin * 4;
-
-                  Color := ThemeManager.SystemColor.BackGround;
-
-                  Width := Panel.Width - Left * 2;
-                  Alignment := taCenter;
-
-                  Font.Size := 50;
-                  Font.Name := ThemeManager.IconFont;
-
-                  OnKeyUp := EditInteract;
-
-                  // Load Icon
-                  Text := Item.SelectSegoe;
-                end;
-            end;
-
-        // Prepare Buttons
-        for I := 0 to ListPanel.ControlCount - 1 do
-          if ListPanel.Controls[I] is FXButtonDesign then
-            with FXButtonDesign(ListPanel.Controls[I]) do
+            ParentBackground := false;
+            Color := ThemeManager.SystemColor.BackGroundInterior;
+
+            Top := ListPanel.BoundsRect.Bottom + Form.MarginTiny;
+            Left := Form.ComponentsZone.Left;
+            Width := Form.ComponentsZone.Width;
+            Height := Form.ComponentsZone.Bottom - Top;
+
+            LB1 := TLabel.Create(Panel);
+            with LB1 do
               begin
-                Align := alLeft;
-                AlignWithMargins := true;
+                Parent := Panel;
+
+                AutoSize := false;
+                Transparent := false;
+                Color := ThemeManager.SystemColor.Accent;
+
+                Layout := tlCenter;
+                Alignment := taCenter;
+
+
+                //Font.Name := ThemeManager.IconFont;
+                Caption := 'No image loaded';
+
+                Top := Form.MarginTiny;
+                Left := Form.MarginTiny;
+
+                Width := IMAGEBOX_SIZE;
+                Height := IMAGEBOX_SIZE;
+              end;
+
+            ImagePicture := TImage.Create(Panel);
+            with ImagePicture do
+              begin
+                Parent := Panel;
+
+                Proportional := true;
+                Center := true;
+
+                Top := Form.MarginTiny;
+                Left := Form.MarginTiny;
+
+                Width := IMAGEBOX_SIZE;
+                Height := IMAGEBOX_SIZE;
+
+                // Update Image
+                Picture.Assign( Item.SelectPicture );
+
+                LB1.Visible := (Item.SelectPicture.Graphic = nil) or Item.SelectPicture.Graphic.Empty;
+              end;
+
+            with FXButton.Create(Panel) do
+              begin
+                Parent := Panel;
+
+                Top := Form.MarginTiny;
+                Left := Form.MarginTiny + IMAGEBOX_SIZE + Form.Margin;
+
+                Width := IMAGEBOX_SIZE;
+
+                Text := 'Browse';
+
                 Image.Enabled := true;
                 Image.IconType := FXIconType.SegoeIcon;
+                Image.SelectSegoe := #$E7C5;
 
                 ParentColor := true;
 
-                ImageLayout := cpTop;
-
-                Width := ListPanel.Width div 5 - Margins.Left * 2;
-
-                OnClick := ButtonSelect;
-
-                FlatButton := (Tag = integer(Item.IconType));
-
-                if FlatButton then
-                  ShowPanel( Tag );
+                Tag := 1;
+                OnClick := ButtonImageAction;
               end;
 
-      end;
+            with FXButton.Create(Panel) do
+              begin
+                Parent := Panel;
 
-      // Save?
-      if Form.ShowModal = mrOk then
-        Self.SetOrdValue(Integer(Item));
+                Top := Form.MarginTiny + Height + Form.MarginTiny;
+                Left := Form.MarginTiny + IMAGEBOX_SIZE + Form.Margin;
+
+                Width := IMAGEBOX_SIZE;
+
+                Text := 'Save';
+
+                Image.Enabled := true;
+                Image.IconType := FXIconType.SegoeIcon;
+                Image.SelectSegoe:= #$EA35;
+
+                ParentColor := true;
+
+                Tag := 2;
+                OnClick := ButtonImageAction;
+              end;
+
+            with FXButton.Create(Panel) do
+              begin
+                Parent := Panel;
+
+                Top := Form.MarginTiny + (Height + Form.MarginTiny) * 2;
+                Left := Form.MarginTiny + IMAGEBOX_SIZE + Form.Margin;
+
+                Width := IMAGEBOX_SIZE;
+
+                Text := 'Clear';
+
+                Image.Enabled := true;
+                Image.IconType := FXIconType.SegoeIcon;
+                Image.SelectSegoe := #$ED62;
+
+                ParentColor := true;
+
+                Tag := 3;
+                OnClick := ButtonImageAction;
+              end;
+          end;
+
+        (* TBitMap *)
+        Panel := TPanel.Create(Form);
+        with Panel do
+          begin
+            Parent := Form;
+            Tag := 2;
+
+            BevelOuter := bvNone;
+            ParentBackground := false;
+            Color := ThemeManager.SystemColor.BackGroundInterior;
+
+            Top := ListPanel.BoundsRect.Bottom + Form.MarginTiny;
+            Left := Form.ComponentsZone.Left;
+            Width := Form.ComponentsZone.Width;
+            Height := Form.ComponentsZone.Bottom - Top;
+
+            LB2 := TLabel.Create(Panel);
+            with LB2 do
+              begin
+                Parent := Panel;
+
+                AutoSize := false;
+                Transparent := false;
+                Color := ThemeManager.SystemColor.Accent;
+
+                Layout := tlCenter;
+                Alignment := taCenter;
+
+
+                //Font.Name := ThemeManager.IconFont;
+                Caption := 'No bitmap loaded';
+
+                Top := Form.MarginTiny;
+                Left := Form.MarginTiny;
+
+                Width := IMAGEBOX_SIZE;
+                Height := IMAGEBOX_SIZE;
+              end;
+
+            ImageBitmap := TImage.Create(Panel);
+            with ImageBitmap do
+              begin
+                Parent := Panel;
+
+                Proportional := true;
+                Center := true;
+
+                Top := Form.MarginTiny;
+                Left := Form.MarginTiny;
+
+                Width := IMAGEBOX_SIZE;
+                Height := IMAGEBOX_SIZE;
+
+                // Update Image
+                Picture.Assign( Item.SelectBitmap );
+
+                LB2.Visible := Item.SelectBitmap.Empty;
+              end;
+
+            with FXButton.Create(Panel) do
+              begin
+                Parent := Panel;
+
+                Top := Form.MarginTiny;
+                Left := Form.MarginTiny + IMAGEBOX_SIZE + Form.Margin;
+
+                Width := IMAGEBOX_SIZE;
+
+                Text := 'Browse';
+
+                Image.Enabled := true;
+                Image.IconType := FXIconType.SegoeIcon;
+                Image.SelectSegoe := #$E7C5;
+
+                ParentColor := true;
+
+                Tag := 4;
+                OnClick := ButtonImageAction;
+              end;
+
+            with FXButton.Create(Panel) do
+              begin
+                Parent := Panel;
+
+                Top := Form.MarginTiny + Height + Form.MarginTiny;
+                Left := Form.MarginTiny + IMAGEBOX_SIZE + Form.Margin;
+
+                Width := IMAGEBOX_SIZE;
+
+                Text := 'Save';
+
+                Image.Enabled := true;
+                Image.IconType := FXIconType.SegoeIcon;
+                Image.SelectSegoe := #$EA35;
+
+                ParentColor := true;
+
+                Tag := 5;
+                OnClick := ButtonImageAction;
+              end;
+
+            with FXButton.Create(Panel) do
+              begin
+                Parent := Panel;
+
+                Top := Form.MarginTiny + (Height + Form.MarginTiny) * 2;
+                Left := Form.MarginTiny + IMAGEBOX_SIZE + Form.Margin;
+
+                Width := IMAGEBOX_SIZE;
+
+                Text := 'Clear';
+
+                Image.Enabled := true;
+                Image.IconType := FXIconType.SegoeIcon;
+                Image.SelectSegoe := #$ED62;
+
+                ParentColor := true;
+
+                Tag := 6;
+                OnClick := ButtonImageAction;
+              end;
+          end;
+
+      (* Image List *)
+      Panel := TPanel.Create(Form);
+        with Panel do
+          begin
+            Parent := Form;
+            Tag := 3;
+
+            BevelOuter := bvNone;
+            ParentBackground := false;
+            Color := ThemeManager.SystemColor.BackGroundInterior;
+
+            Top := ListPanel.BoundsRect.Bottom + Form.MarginTiny;
+            Left := Form.ComponentsZone.Left;
+            Width := Form.ComponentsZone.Width;
+            Height := Form.ComponentsZone.Bottom - Top;
+
+            with TLabel.Create(Panel) do
+              begin
+                Parent := Panel;
+
+                Left := Form.MarginTiny;
+                Top := Form.MarginTiny;
+
+                Width := Panel.Width - Left * 2;
+
+                AutoSize := false;
+                WordWrap := true;
+                Caption := 'Image index';
+
+                Height := Form.Margin * 4 - Top;
+              end;
+
+            with FXNumberEdit.Create(Panel) do begin
+              Parent := Panel;
+
+              Left := Form.MarginTiny;
+              Top := Form.MarginTiny + 30;
+
+              Width := Panel.Width - Left * 2;
+
+              ValueInt :=  Item.SelectImageIndex;
+
+              Range.Min := -1;
+              Range.Max := integer.MaxValue;
+              Range.Enabled := true;
+
+              OnChange := DoNumberEditChange;
+              //OnExit := DoNumberEditChange;
+            end;
+          end;
+
+      (* Font Icon *)
+      Panel := TPanel.Create(Form);
+        with Panel do
+          begin
+            Parent := Form;
+            Tag := 4;
+
+            BevelOuter := bvNone;
+            ParentBackground := false;
+            Color := ThemeManager.SystemColor.BackGroundInterior;
+
+            Top := ListPanel.BoundsRect.Bottom + Form.MarginTiny;
+            Left := Form.ComponentsZone.Left;
+            Width := Form.ComponentsZone.Width;
+            Height := Form.ComponentsZone.Bottom - Top;
+
+            Caption := '';
+
+            with TLabel.Create(Panel) do
+              begin
+                Parent := Panel;
+
+                Left := Form.MarginTiny;
+                Top := Form.MarginTiny;
+
+                Width := Panel.Width - Left * 2;
+
+                AutoSize := false;
+                WordWrap := true;
+                Caption := 'Paste the Font Unicode Character below, or enter the Unicode Point and press enter. You may paste multiple characters to overlay them';
+
+                Height := Form.Margin * 4 - Top;
+              end;
+
+            FontIcon := FXEdit.Create(Panel);
+            with FontIcon do
+              begin
+                Parent := Panel;
+
+                Left := Form.MarginTiny;
+                Top := Form.Margin * 4;
+
+                Color := ThemeManager.SystemColor.BackGround;
+
+                Width := Panel.Width - Left * 2;
+                LayoutHorizontal := TLayout.Center;
+
+                Font.Size := 50;
+                Font.Name := ThemeManager.IconFont;
+
+                OnKeyUp := EditInteract;
+
+                // Load Icon
+                Text := Item.SelectSegoe;
+              end;
+          end;
+
+      // Prepare Buttons
+      for I := 0 to ListPanel.ControlCount - 1 do
+        if ListPanel.Controls[I] is FXButton then
+          with FXButton(ListPanel.Controls[I]) do
+            begin
+              Align := alLeft;
+              AlignWithMargins := true;
+              Image.Enabled := true;
+              Image.IconType := FXIconType.SegoeIcon;
+
+              ParentColor := true;
+
+              ImageLayout := FXDrawLayout.Top;
+
+              Width := ListPanel.Width div 5 - Margins.Left * 2;
+
+              OnClick := ButtonSelect;
+
+              Checked := (Tag = integer(Item.IconType));
+
+              if Checked then
+                ShowPanel( Tag );
+            end;
+
+    end;
+
+    // Save
+    if Form.ShowModal = mrOk then
+      Original.Assign(Item);
   finally
     Form.Free;
+    Item.Free;
   end;
 end;
 
@@ -841,12 +914,29 @@ end;
 
 function TFXIconSelectProperty.GetAttributes: TPropertyAttributes;
 begin
-  Result := inherited GetAttributes + [paDialog];
+  Result := [paDialog, paMultiSelect, paSubProperties, paReadOnly];
+end;
+
+procedure TFXIconSelectProperty.GetProperties(Proc: TGetPropProc);
+var
+  I: Integer;
+  J: Integer;
+  Components: IDesignerSelections;
+begin
+  Components := TDesignerSelections.Create;
+  for I := 0 to PropCount - 1 do
+  begin
+    J := GetOrdValueAt(I);
+    if J <> 0 then
+      Components.Add(TComponent(GetOrdValueAt(I)));
+  end;
+  if Components.Count > 0 then
+    GetComponentProperties(Components, tkProperties, Designer, Proc);
 end;
 
 function TFXIconSelectProperty.GetValue: string;
 begin
-  Result := '(FXIconSelect)';
+  FmtStr(Result, '(%s)', [GetTypeName(GetPropType)]);
 end;
 
 procedure TFXIconSelectProperty.SetValue(const Value: string);
@@ -897,12 +987,10 @@ begin
   Caption := 'Class Editor';
 
   // Theme
-  if Styled then
-    if ThemeManager.DarkTheme then
-      begin
-        Color := ThemeManager.SystemColor.BackGround;
-        Font.Color := ThemeManager.SystemColor.ForeGround;
-      end;
+  if Styled then begin
+      Color := ThemeManager.SystemColor.BackGround;
+      Font.Color := ThemeManager.SystemColor.ForeGround;
+    end;
 
   // Labels
   FTitle1 := TLabel.Create(Self);
@@ -930,10 +1018,12 @@ begin
     end;
 
   // Buttons
-  FButtonSave := FXButtonDesign.Create(Self);
+  FButtonSave := FXButton.Create(Self);
   with FButtonSave do
     begin
       Parent  := Self;
+
+      Height := BUTTON_DEFAULT_HEIGHT;
 
       Left := Self.ClientWidth - Width - ZONE_MARGIN;
       Top := Self.ClientHeight - Height - ZONE_MARGIN div 2;
@@ -946,16 +1036,19 @@ begin
       ParentColor := true;
 
       Default := true;
+      ButtonKind := FXButtonKind.Accent;
 
       ModalResult := mrOk;
 
       Anchors := [akBottom, akRight];
     end;
 
-  FButtonClose := FXButtonDesign.Create(Self);
+  FButtonClose := FXButton.Create(Self);
   with FButtonClose do
     begin
       Parent  := Self;
+
+      Height := BUTTON_DEFAULT_HEIGHT;
 
       Left := Self.ClientWidth - Width - ZONE_MARGIN - FButtonSave.Width - 10;
       Top := Self.ClientHeight - Height - ZONE_MARGIN div 2;
@@ -963,13 +1056,11 @@ begin
       Text := 'Close';
       Image.Enabled := true;
       Image.IconType := FXIconType.SegoeIcon;
-      Image.SelectSegoe := #$E8BB;
+      Image.SelectSegoe := #$E711;
 
       ParentColor := true;
 
       Cancel := true;
-
-      FlatButton := true;
 
       ModalResult := mrCancel;
 
@@ -977,8 +1068,8 @@ begin
     end;
 
   // Size
-  Width := 500;
-  Height := 350;
+  Width := 700;
+  Height := 500;
 
   // Update
   UpdateUI;
@@ -1028,45 +1119,499 @@ begin
   FButtonClose.Visible := FAllowCancel;
 end;
 
-{ TFXPictureImagesProperty }
+{ TFXPictureListProperty }
 
-procedure TFXPictureImagesProperty.Edit;
+procedure TFXPictureListProperty.DoActionButtonPress(Sender: TObject);
 begin
-  inherited;
-  // Item
-  Item := FXPictureImages(Self.GetOrdValue);
+  case TComponent(Sender).Tag of
+    1: begin
+      with TOpenPictureDialog.Create(nil) do begin
+        Options := [TOpenOption.ofAllowMultiSelect];
+        if Execute then begin
+          for var I := 0 to Files.Count-1 do begin
+            try
+              Item.AddNewFromFile(Files[I]);
+            except
+            end;
+          end;
 
-  Modified;
-  Form := FXEditForm.CreateNew(Application);
-  try
-    // Edit
-    Item.AddNewFromFile('F:\Assets\By Me\Arrow Left.png');
+          // UI
+          UpdateUIInfo;
+        end;
+      end;
+    end;
+    2: begin
+      Item.Clear;
 
-    // Data
-    Form.Title := 'Edit Image list';
-    Form.SubTitle := 'Pictures Count: ' + Item.Count.ToString;
-
-    // Form
-    Form.ShowModal;
-  finally
-    Form.Free;
+      // UI
+      UpdateUIInfo;
+    end;
   end;
 end;
 
-function TFXPictureImagesProperty.GetAttributes: TPropertyAttributes;
+procedure TFXPictureListProperty.DoImageActionButtonPress(Sender: TObject);
 begin
-  Result := inherited GetAttributes + [paDialog];
+  case TComponent(Sender).Tag of
+    // Delete
+    1: begin
+      const Selected = FList.GetSelectedItems;
+      for var I := High(Selected) downto 0 do
+        Item.Delete(Selected[I]);
+
+      // UI
+      UpdateUIInfo;
+    end;
+    // Save
+    2: begin
+      const Img = Item.Pictures[FList.ItemIndex].Graphic;
+      if Img = nil then Exit;
+      with TSavePictureDialog.Create(nil) do begin
+        FileName := Format('Image %d', [FList.ItemIndex]);
+        if Img is TPNGImage then FileName := FileName + '.png';
+        if Img is TJPEGImage then FileName := FileName + '.jpeg';
+        if Img is TGifImage then FileName := FileName + '.gif';
+        if Img is TBitMap then FileName := FileName + '.bmp';
+        if Execute then
+          Img.SaveToFile(FileName);
+      end;
+    end;
+    // Replace
+    3: begin
+      with TOpenPictureDialog.Create(nil) do
+        if Execute then
+          if TFile.Exists(FileName) then begin
+            const P = TPicture.Create;
+            try
+              P.LoadFromFile(FileName);
+
+              Item.Pictures[FList.ItemIndex].Assign(P);
+            finally
+              P.Free;
+            end;
+          end;
+
+      // UI
+      FList.Redraw;
+    end;
+    // View
+    4: ShowPreviewFor(FList.ItemIndex);
+    // Duplicate
+    5: begin
+      Item.AddNew( Item[FList.ItemIndex] );
+
+      // UI
+      UpdateUIInfo;
+    end;
+    // Scale (down)
+    6: begin
+      const Selected = FList.GetSelectedItems;
+      if Length(Selected) = 0 then Exit;
+      var ScaleBy := OpenDialog('Scale by', 'What should the minimum size scale factor be?', ['Cancel', 'Width', 'Height', 'Both', 'Both (fit 1:1)', 'Both (fill 1:1)']);
+      if ScaleBy = 0 then Exit;
+
+      var AScaleMin: integer := 256;
+      var Img := Item.Pictures[Selected[0]].Graphic;
+      if (Img <> nil) and not Img.Empty then
+        case ScaleBy of
+          1: AScaleMin := Img.Width;
+          2: AScaleMin := Img.Height;
+          3, 4, 5: AScaleMin := Max(Img.Height, Img.Width);
+        end;
+
+      if not OpenInput('Scale down', 'Scale to the following value (px).', AScaleMin) then
+        Exit;
+
+      // Scale down
+      for var I := 0 to High(Selected) do begin
+        Img := Item.Pictures[Selected[I]].Graphic;
+        var NewW := Img.Width;
+        var NewH := Img.Height;
+        var LocalScale := ScaleBy;
+
+        // New graphic
+        if LocalScale = 3 then begin
+          // NewW > NewH
+          if NewW > NewH then begin
+            if NewH > AScaleMin then
+              LocalScale := 2
+            else
+              LocalScale := 1;
+          end else
+          // NewH > NewW or equal
+          begin
+            if NewW > AScaleMin then
+              LocalScale := 1
+            else
+              LocalScale := 2;
+          end;
+        end;
+
+        case LocalScale of
+          1: if NewW > AScaleMin then begin
+            NewH := round(AScaleMin / NewW * NewH);
+            NewW := AScaleMin;
+          end;
+          2: if NewH > AScaleMin then begin
+            NewW := round(AScaleMin / NewH * NewW);
+            NewH := AScaleMin;
+          end;
+          4, 5: if (NewW <> NewH) or (NewW > AScaleMin) or (NewH > AScaleMin) then begin
+            NewW := AScaleMin;
+            NewH := AScaleMin;
+          end;
+        end;
+
+        // Render
+        if (NewW <> Img.Width) or (NewH <> Img.Height) then begin
+          // Draw
+          var B := TBitmap.Create;
+          try
+            // Select format
+            if ((Img is TBitMap) and (TBitMap(Img).PixelFormat = pf24bit)) or
+              (Img is TJPEGImage) then
+                B.PixelFormat := pf24bit
+                  else
+                    B.PixelFormat := pf32bit;
+            B.Transparent := Img.Transparent;
+
+            // Generate
+            B.SetSize(NewW, NewH);
+
+            // New aspect ratio?
+            if LocalScale >= 4 then begin
+              if LocalScale = 4 then
+                DrawImageInRect(B.Canvas, B.Canvas.ClipRect, Img, TDrawMode.CenterFit)
+              else
+                DrawImageInRect(B.Canvas, B.Canvas.ClipRect, Img, TDrawMode.CenterFill);
+            end else begin
+              B.Canvas.StretchDraw(Rect(0,0,NewW,NewH), Img);
+            end;
+
+            // Re-assign to preserve correct format
+            try
+              Img.Assign(B);
+              Item.Pictures[Selected[I]].Graphic := Img;
+            except
+              // Nevermind, keep bitmap! :))
+              Item.Pictures[Selected[I]].Graphic := B;
+            end;
+          finally
+            B.Free;
+          end;
+        end;
+      end;
+
+      // UI
+      UpdateUIInfo;
+    end;
+  end;
 end;
 
-function TFXPictureImagesProperty.GetValue: string;
+procedure TFXPictureListProperty.DoListDoubleClick(Sender: TObject);
 begin
-  // Return the current value of the property as a string
-  Result := '(FXPictureImages)';
+  ShowPreviewFor( FList.ItemIndex );
 end;
 
-procedure TFXPictureImagesProperty.SetValue(const Value: string);
+procedure TFXPictureListProperty.DoListDrawItem(Sender: TObject;
+  AIndex: integer; ARect: TRect; Canvas: TCanvas);
+var
+  R: TRect;
+  Img: TGraphic;
+begin
+  with Canvas do begin
+    R := ARect;
+    R.Height := R.Width;
+
+    // Draw
+    try
+      Img := Item.Pictures[AIndex].Graphic;
+      if Img <> nil then
+        DrawImageInRect(Canvas, R, Img, TDrawMode.CenterFit);
+    except
+      Img := nil;
+      DrawTextRect(Canvas, R, 'An error occured previewing the image', [
+        FXTextFlag.Center, FXTextFlag.VerticalCenter, FXTextFlag.WordWrap]);
+    end;
+
+    // Info
+    R := ARect;
+    R.Top := R.Top + R.Width;
+    R.Inflate(-4, -4);
+    Canvas.Brush.Color := ThemeManager.SystemColor.BackGround;
+    Canvas.FillRect(R);
+    R.Inflate(-4, 0);
+
+    if Img = nil then
+      DrawTextRect(Canvas, R, 'Information cannot be displayed.', [
+        FXTextFlag.Center, FXTextFlag.VerticalCenter, FXTextFlag.WordWrap])
+    else
+      DrawTextRect(Canvas, R, Format(
+        'Width: %d'#13+
+        'Height: %d'#13+
+        'Type: %s'
+        , [Img.Width, Img.Height, Img.ClassName]),
+        [FXTextFlag.VerticalCenter, FXTextFlag.WordWrap]);
+  end;
+end;
+
+procedure TFXPictureListProperty.DoListItemSelect(Sender: TObject);
+begin
+  UpdateUIInfo;
+end;
+
+procedure TFXPictureListProperty.DoListKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+  const Selected = FList.GetSelectedItems;
+  case Key of
+    VK_DELETE: begin
+      for var I := High(Selected) downto 0 do
+        Item.Delete(Selected[I]);
+
+      // UI
+      UpdateUIInfo;
+    end;
+  end;
+end;
+
+procedure TFXPictureListProperty.Edit;
 begin
   inherited;
+  // Item
+  const Original = FXPictureList(Self.GetOrdValue);
+  Item := FXPictureList.Create;
+  Item.Assign(Original);
+
+  // Form
+  Form := FXEditForm.CreateNew(Application);
+  try
+    // Edit
+    //Item.AddNewFromFile('F:\Assets\By Me\Arrow Left.png');
+    Form.Height := 500;
+
+    // Data
+    Form.Title := 'Edit Image list';
+
+    // Controls
+    FList := FXLinearDrawList.Create(Form);
+    with FList do begin
+      Parent := Form;
+
+      //DragMode := dmAutomatic;
+      CanDeselect := true;
+
+      FullLine := true;
+      Orientation := FXOrientation.Horizontal;
+
+      Top := Form.ComponentsZone.Top;
+      Left := Form.ComponentsZone.Left;
+      Width := Form.ComponentsZone.Width;
+      Height := 250;
+
+      ScrollExtendX := 0;
+
+      MultiSelect := true;
+
+      OnDrawItem := DoListDrawItem;
+      OnItemSelect := DoListItemSelect;
+      OnKeyDown := DoListKeyDown;
+      OnItemDoubleClick := DoListDoubleClick;
+
+      NoItemsOutputText := 'No images. Add some to begin';
+    end;
+
+    // Btns-action
+    var CurLeft: integer := Form.ZONE_MARGIN;
+    FActionButton[0] := FXButton.Create(Form);
+    with FActionButton[0] do begin
+      Parent := Form;
+
+      Width := 60; Text := '';
+      Top := FList.BoundsRect.Bottom+5;
+      Left := CurLeft; Inc(CurLeft, Width+10);
+
+      Image.IconType := FXIconType.SegoeIcon;
+      Image.SelectSegoe := #$E74D;
+
+      Tag := 1;
+      OnClick := DoImageActionButtonPress;
+    end;
+    FActionButton[3] := FXButton.Create(Form);
+    with FActionButton[3] do begin
+      Parent := Form;
+
+      Width := 60; Text := '';
+      Top := FList.BoundsRect.Bottom+5;
+      Left := CurLeft; Inc(CurLeft, Width+10);
+
+      Image.IconType := FXIconType.SegoeIcon;
+      Image.SelectSegoe := #$E7B3;
+
+      Tag := 4;
+      OnClick := DoImageActionButtonPress;
+    end;
+    FActionButton[5] := FXButton.Create(Form);
+    with FActionButton[5] do begin
+      Parent := Form;
+
+      Width := 110;
+      Top := FList.BoundsRect.Bottom+5;
+      Left := CurLeft; Inc(CurLeft, Width+10);
+
+      Image.IconType := FXIconType.SegoeIcon;
+      Image.SelectSegoe := #$E61F;
+      Text := 'Scale';
+
+      Tag := 6;
+      OnClick := DoImageActionButtonPress;
+    end;
+    FActionButton[1] := FXButton.Create(Form);
+    with FActionButton[1] do begin
+      Parent := Form;
+
+      Width := 110;
+      Top := FList.BoundsRect.Bottom+5;
+      Left := CurLeft; Inc(CurLeft, Width+10);
+
+      Image.IconType := FXIconType.SegoeIcon;
+      Image.SelectSegoe := #$E78C;
+      Text := 'Save';
+
+      Tag := 2;
+      OnClick := DoImageActionButtonPress;
+    end;
+    FActionButton[2] := FXButton.Create(Form);
+    with FActionButton[2] do begin
+      Parent := Form;
+
+      Width := 110;
+      Top := FList.BoundsRect.Bottom+5;
+      Left := CurLeft; Inc(CurLeft, Width+10);
+
+      Image.IconType := FXIconType.SegoeIcon;
+      Image.SelectSegoe := #$E8EE ;
+      Text := 'Replace';
+
+      Tag := 3;
+      OnClick := DoImageActionButtonPress;
+    end;
+    FActionButton[4] := FXButton.Create(Form);
+    with FActionButton[4] do begin
+      Parent := Form;
+
+      Width := 110;
+      Top := FList.BoundsRect.Bottom+5;
+      Left := CurLeft; Inc(CurLeft, Width+10);
+
+      Image.IconType := FXIconType.SegoeIcon;
+      Image.SelectSegoe := #$E8C8;
+      Text := 'Clone';
+
+      Tag := 5;
+      OnClick := DoImageActionButtonPress;
+    end;
+
+    // Btns-bottom
+    with FXButton.Create(Form) do begin
+      Parent := Form;
+
+      ButtonKind := FXButtonKind.Flat;
+      Height := Form.BUTTON_DEFAULT_HEIGHT;
+
+      Top := Form.FButtonClose.Top;
+      Left := Form.ZONE_MARGIN;
+
+      Image.IconType := FXIconType.SegoeIcon;
+      Image.SelectSegoe := #$E7C5;
+      Text := 'Add pictures...';
+
+      Tag := 1;
+      OnClick := DoActionButtonPress;
+    end;
+     with FXButton.Create(Form) do begin
+      Parent := Form;
+
+      ButtonKind := FXButtonKind.Flat;
+      Height := Form.BUTTON_DEFAULT_HEIGHT;
+
+      Top := Form.FButtonClose.Top;
+      Left := Form.ZONE_MARGIN + (10+Width);
+
+      Image.IconType := FXIconType.SegoeIcon;
+      Image.SelectSegoe := #$E8E6;
+      Text := 'Clear';
+
+      Tag := 2;
+      OnClick := DoActionButtonPress;
+    end;
+
+    //
+    UpdateUIInfo;
+
+    // Save
+    if Form.ShowModal = mrOk then
+      Original.Assign(Item);
+  finally
+    Form.Free;
+    Item.Free;
+  end;
+end;
+
+function TFXPictureListProperty.GetAttributes: TPropertyAttributes;
+begin
+  Result := [paDialog];
+end;
+
+function TFXPictureListProperty.GetValue: string;
+begin
+  FmtStr(Result, '(%s)', [GetTypeName(GetPropType)]);
+end;
+
+procedure TFXPictureListProperty.SetValue(const Value: string);
+begin
+  inherited;
+end;
+
+procedure TFXPictureListProperty.ShowPreviewFor(Index: integer);
+begin
+  const Img = Item.Pictures[Index].Graphic;
+  if Img = nil then Exit;
+  const F = TForm.Create(nil);
+  with F do
+    try
+      Position := poScreenCenter;
+      Color := 0;
+
+      Caption := Format('Image preview - %dx%d (%s)', [Img.Width, Img.Height, Img.ClassName]);
+      with TImage.Create(F) do begin
+        Parent := F;
+        Align := alClient;
+        Center := true;
+
+        Picture.Assign(Img);
+      end;
+
+      ShowModal;
+    finally
+      Free;
+    end;
+end;
+
+procedure TFXPictureListProperty.UpdateUIInfo;
+begin
+  Form.SubTitle := 'Picture Count: ' + Item.Count.ToString;
+  if (FList.ItemIndex = 1) and (FList.SelectedItemCount>0) then
+    Form.SubTitle := Form.SubTitle + Format(', image %d', [FList.ItemIndex]);
+  FList.ItemCount := Item.Count;
+
+  const HasSel = FList.SelectedItemCount>0;
+  const HasOneSel = FList.SelectedItemCount=1;
+  FActionButton[0].Enabled := HasSel;
+  FActionButton[1].Enabled := HasOneSel;
+  FActionButton[2].Enabled := HasOneSel;
+  FActionButton[3].Enabled := HasOneSel;
+  FActionButton[4].Enabled := HasOneSel;
+  FActionButton[5].Enabled := HasSel;
 end;
 
 { TFXPercentProperty }
@@ -1290,7 +1835,7 @@ initialization
   RegisterPropertyEditor(TypeInfo(FXIconSelect), nil, '', TFXIconSelectProperty);
 
   RegisterPropertyEditor(TypeInfo(FXPopupItems), nil, '', TFXPopupItemsProperty);
-  RegisterPropertyEditor(TypeInfo(FXPictureImages), nil, '', TFXPictureImagesProperty);
+  RegisterPropertyEditor(TypeInfo(FXPictureList), nil, '', TFXPictureListProperty);
 
   RegisterPropertyEditor(TypeInfo(FXPercent), nil, '', TFXPercentProperty);
   RegisterPropertyEditor(TypeInfo(FXAngle), nil, '', TFXAngleProperty);

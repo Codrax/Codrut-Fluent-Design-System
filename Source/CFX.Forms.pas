@@ -26,6 +26,7 @@ uses
   Vcl.ExtCtrls,
   CFX.TitlebarPanel,
   CFX.Classes,
+  CFX.ComponentClasses,
   CFX.Types,
   CFX.Messages,
   CFX.Linker;

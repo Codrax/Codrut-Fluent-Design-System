@@ -409,7 +409,7 @@ end;
 procedure FXAppManager.ApplicationOpen;
 begin
   // Other instance
-  if FSingleInstance and not ((FXAppSetting.PermitOverrideSingleInstance in FSettings) and (HasParameter('override-single-instance'))) then
+  if FSingleInstance and not ((FXAppSetting.PermitOverrideSingleInstance in FSettings) and (HasParameter(APP_PARAMETER_OVERRIDE_SINGLEINSTANCE))) then
     begin
       SetSemafor( AppManager.AppIdentifier );
 

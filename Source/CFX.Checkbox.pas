@@ -17,6 +17,7 @@ uses
   CFX.Constants,
   SysUtils,
   CFX.Classes,
+  CFX.ComponentClasses,
   CFX.Types,
   CFX.VarHelpers,
   CFX.Linker,

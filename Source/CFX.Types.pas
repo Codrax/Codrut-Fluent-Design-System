@@ -861,7 +861,6 @@ function RectangleLayouts(const Element: TSize; Parent: TRect; Layout: TRectLayo
 /// <summary>Get the rectangle layouts of a element in a parent rectangle using specified layout settings.</summary>
 function RectangleLayouts(const Element: TRect; Parent: TRect; Layout: TRectLayout): TArray<TRect>; overload;
 
-
 { Conversion }
 function DecToHex(Dec: int64): string;
 

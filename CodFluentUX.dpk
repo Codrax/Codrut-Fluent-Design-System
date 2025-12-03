@@ -25,21 +25,21 @@ package CodFluentUX;
 {$EXTENDEDSYNTAX ON}
 {$IMPORTEDDATA ON}
 {$IOCHECKS ON}
-{$LOCALSYMBOLS ON}
+{$LOCALSYMBOLS OFF}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
-{$OPTIMIZATION OFF}
+{$OPTIMIZATION ON}
 {$OVERFLOWCHECKS OFF}
 {$RANGECHECKS OFF}
-{$REFERENCEINFO ON}
+{$REFERENCEINFO OFF}
 {$SAFEDIVIDE OFF}
-{$STACKFRAMES ON}
+{$STACKFRAMES OFF}
 {$TYPEDADDRESS OFF}
 {$VARSTRINGCHECKS ON}
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DEFINE DEBUG}
+{$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
 {$IMPLICITBUILD ON}
 
@@ -127,7 +127,8 @@ contains
   CFX.Layouts in 'Source\CFX.Layouts.pas',
   CFX.Components in 'Source\CFX.Components.pas',
   CFX.Windows.DarkmodeApi in 'Source\CFX.Windows.DarkmodeApi.pas',
-  CFX.Windows.DarkmodeApi.Types in 'Source\CFX.Windows.DarkmodeApi.Types.pas';
+  CFX.Windows.DarkmodeApi.Types in 'Source\CFX.Windows.DarkmodeApi.Types.pas',
+  CFX.ComponentClasses in 'Source\CFX.ComponentClasses.pas';
 
 end.
 

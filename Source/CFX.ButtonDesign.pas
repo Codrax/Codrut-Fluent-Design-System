@@ -20,6 +20,7 @@ uses
   CFX.Constants,
   CFX.Graphics,
   CFX.Classes,
+  CFX.ComponentClasses,
   CFX.Controls,
   CFX.Linker,
   System.UITypes;

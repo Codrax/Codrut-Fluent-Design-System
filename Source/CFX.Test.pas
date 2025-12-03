@@ -2,7 +2,11 @@ unit CFX.Test;
 
 interface
 uses
-  Vcl.Controls, Classes, Types, CFX.Classes;
+  Vcl.Controls,
+  Classes,
+  Types,
+  CFX.Classes,
+  CFX.ComponentClasses;
 
 type
   TTest = class(TControl)

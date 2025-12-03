@@ -4,7 +4,7 @@ interface
 uses
   Vcl.Graphics, Classes, Types, CFX.Types, CFX.Constants, SysUtils,
   CFX.Graphics, CFX.VarHelpers, CFX.ThemeManager, Vcl.Controls,
-  TypInfo, CFX.Linker, CFX.Colors, Math;
+  TypInfo, CFX.Linker, CFX.Colors, Math, Vcl.Dialogs;
 
 type
   // Persistent
@@ -18,491 +18,48 @@ type
     procedure Assign(Source: TPersistent); override;
   end;
 
-  // Corner settings
-  FXCornerSettings = class(FXPersistent)
+  // Picture List
+  FXPictureList = class(FXPersistent)
   private
-    FTopLeft,
-    FTopRight,
-    FBottomRight,
-    FBottomLeft,
-    FAround,
-    FDiagonalPrimary,
-    FDiagonalSecondary: single;
+    FPictures: TArray<TPicture>;
 
     FOnChange: TNotifyEvent;
 
-    // Setters
-    procedure SetTopLeft(const Value: single);
-    procedure SetTopRight(const Value: single);
-    procedure SetBottomRight(const Value: single);
-    procedure SetBottomLeft(const Value: single);
-    procedure SetAround(const Value: single);
-    procedure SetDiagonalPrimary(const Value: single);
-    procedure SetDiagonalSecondary(const Value: single);
+    function CreateNewSpot: integer;
+
+    function GetPicture(AIndex: Integer): TPicture;
+    procedure SetPicture(AIndex: Integer; const Value: TPicture);
 
   protected
     procedure Updated; virtual;
 
-  published
-    property TopLeft: single read FTopLeft write SetTopLeft;
-    property TopRight: single read FTopRight write SetTopRight;
-    property BottomRight: single read FBottomRight write SetBottomRight;
-    property BottomLeft: single read FBottomLeft write SetBottomLeft;
-
-    property Around: single read FAround write SetAround;
-    property DiagonalPrimary: single read FDiagonalPrimary write SetDiagonalPrimary;
-    property DiagonalSecondary: single read FDiagonalSecondary write SetDiagonalSecondary;
-
-    // Events
-    property OnChange: TNotifyEvent read FOnChange write FOnChange;
-    procedure ScaleChanged(Scaling: single);
-
-  public
-    constructor Create(AOwner : TPersistent); override;
-
-    // Assignment
-    procedure AssignTo(Dest: TPersistent); override;
-
-    // Data
-    function AbsoluteTopLeft: single;
-    function AbsoluteTopRight: single;
-    function AbsoluteBottomRight: single;
-    function AbsoluteBottomLeft: single;
-  end;
-
-  FXRoundEllipseSettings = class(FXPersistent)
-  private
-    FRoundWidth,
-    FRoundHeight: integer;
-
-    FOnChange: TNotifyEvent;
-
-    // Setters
-    procedure SetRoundWidth(const Value: integer);
-    procedure SetRoundHeight(const Value: integer);
-
-  protected
-    procedure Updated; virtual;
-
-  published
-    property RoundWidth: integer read FRoundWidth write SetRoundWidth;
-    property RoundHeight: integer read FRoundHeight write SetRoundHeight;
-
-    // Events
-    property OnChange: TNotifyEvent read FOnChange write FOnChange;
-    procedure ScaleChanged(Scaling: single);
-
-  public
-    constructor Create(AOwner : TPersistent); override;
-
-    // Assignment
-    procedure AssignTo(Dest: TPersistent); override;
-  end;
-
-  // Rect layout porting
-
-
-  // Side values
-  FXSideValues = class(FXPersistent)
-  private
-    FLeft,
-    FTop,
-    FRight,
-    FBottom,
-    FAround,
-    FHorizontal,
-    FVertical: integer;
-
-    FOnChange: TNotifyEvent;
-
-    // Setters
-    procedure SetTop(const Value: integer);
-    procedure SetLeft(const Value: integer);
-    procedure SetBottom(const Value: integer);
-    procedure SetRight(const Value: integer);
-    procedure SetAround(const Value: integer);
-    procedure SetHorizontal(const Value: integer);
-    procedure SetVertical(const Value: integer);
-
-  protected
-    procedure Updated; virtual;
-
-  published
-    property Top: integer read FTop write SetTop default 0;
-    property Left: integer read FLeft write SetLeft default 0;
-    property Bottom: integer read FBottom write SetBottom default 0;
-    property Right: integer read FRight write SetRight default 0;
-
-    property Around: integer read FAround write SetAround default 0;
-    property Horizontal: integer read FHorizontal write SetHorizontal default 0;
-    property Vertical: integer read FVertical write SetVertical default 0;
-
-    // Events
-    property OnChange: TNotifyEvent read FOnChange write FOnChange;
-    procedure ScaleChanged(Scaling: single);
-
-  public
-    constructor Create(AOwner : TPersistent); override;
-
-    // Assignment
-    procedure AssignTo(Dest: TPersistent); override;
-
-    // Data
-    function AbsoluteTop: integer;
-    function AbsoluteLeft: integer;
-    function AbsoluteBottom: integer;
-    function AbsoluteRight: integer;
-    function AbsoluteHorizontal: integer;
-    function AbsoluteVertical: integer;
-
-    // Utils
-    function RectangleExpand(ARect: TRect): TRect;
-    function RectangleInflate(ARect: TRect): TRect;
-  end;
-
-  // Margins and paddings
-  FXControlSideValues = class(FXSideValues)
-  protected
-    procedure Updated; override;
-  end;
-
-  FXPadding = FXSideValues;
-  FXMargins = FXSideValues;
-
-  // Number range
-  FNumberRange = class(FXPersistent)
-  private
-    FEnabled: boolean;
-    FMin: Extended;
-    FMax: Extended;
-
-    FOnChange: TNotifyEvent;
-
-    procedure SetEnabled(const Value: boolean);
-    procedure SetMax(const Value: Extended);
-    procedure SetMin(const Value: Extended);
-
-    // Setters
-
-  protected
-    procedure Updated; virtual;
-
-  published
-    property Enabled: boolean read FEnabled write SetEnabled default false;
-    property Min: Extended read FMin write SetMin;
-    property Max: Extended read FMax write SetMax;
-
-    // Events
-    property OnChange: TNotifyEvent read FOnChange write FOnChange;
-
-  public
-    function EnsureRange(Value: Extended): Extended;
-
-    // Constructors
-    constructor Create(AOwner : TPersistent); override;
-  end;
-
-  // Size class
-  FXPointGeneric = class(FXAssignPersistent)
-  private
-    function GetPoint: TPoint; virtual;
-    procedure SetPoint(const Value: TPoint); virtual;
-
-  protected
-    // Getters
-    function GetX: integer; virtual; abstract;
-    function GetY: integer; virtual; abstract;
-
-    // Setters
-    procedure SetX(const Value: integer); virtual; abstract;
-    procedure SetY(const Value: integer); virtual; abstract;
-
-    // Prop types
-    property X: integer read GetX write SetX;
-    property Y: integer read GetY write SetY;
-    property Width: integer read GetX write SetX;
-    property Height: integer read GetY write SetY;
-
-    property Point: TPoint read GetPoint write SetPoint;
-  end;
-
-  // Blur Settings
-  FXBlurSettings = class(FXPersistent)
-  private
-    FEnabled: boolean;
-
-    FBlurVersion: FXBlurVersion;
-
-    FTint: boolean;
-    FTintLightOpacity: byte;
-    FTintDarkOpacity: byte;
-    FTintColors: FXColorSets;
-
-    // Update
-    procedure UpdateParent;
-
-    // Setters
-    procedure SetTintOpacity(const Index: Integer; const Value: byte);
-    procedure SetTint(const Value: boolean);
-
-  published
-    property Enabled: boolean read FEnabled write FEnabled;
-
-    property BlurVersion: FXBlurVersion read FBlurVersion write FBlurVersion;
-
-    property Tint: boolean read FTint write SetTint;
-    property TintLightOpacity: byte index 0 read FTintLightOpacity write SetTintOpacity;
-    property TintDarkOpacity: byte index 1 read FTintDarkOpacity write SetTintOpacity;
-    property TintColors: FXColorSets read FTintColors write FTintColors;
+    // Serialization
+    procedure DefineProperties(Filer: TFiler); override;
+    procedure ReadData(Stream: TStream);
+    procedure WriteData(Stream: TStream);
 
   public
     constructor Create(AOwner : TPersistent); override;
     destructor Destroy; override;
-  end;
 
-  // Icon
-  FXIconSelect = class(FXPersistent)
-  private
-    FType: FXIconType;
-    FPicture: TPicture;
-    FBitMap: TBitMap;
-    FSegoeText: string;
-    FImageIndex: integer;
+    // Images
+    property Pictures[AIndex: Integer]: TPicture read GetPicture write SetPicture; default;
+    function Count: integer;
 
-    FActiveType: FXIconType;
-
-    FOnChange: TNotifyEvent;
-
-    // Internal
-    procedure PictureUpdated(Sender: TObject);
-    procedure BitmapUpdated(Sender: TObject);
-
-    // Settters
-    procedure SetBitMap(const Value: TBitMap);
-    procedure SetPicture(const Value: TPicture);
-    procedure SetImageIndex(const Value: integer);
-    procedure SetSegoe(const Value: string);
-    procedure SetEnabled(const Value: boolean);
-    procedure SetIconType(const Value: FXIconType);
-
-    // Update
-    procedure Updated;
-    function GetEnabled: boolean;
-
-  published
-    property Enabled: boolean read GetEnabled write SetEnabled default False;
-    property IconType: FXIconType read FType write SetIconType default FXIconType.SegoeIcon;
-
-    property SelectPicture: TPicture read FPicture write SetPicture;
-    property SelectBitmap: TBitMap read FBitMap write SetBitMap;
-    property SelectSegoe: string read FSegoeText write SetSegoe;
-    property SelectImageIndex: integer read FImageIndex write SetImageIndex default -1;
-
+    // Events
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
-
-  public
-    // Quick Set
-    procedure SetTo(AType: FXIconType; AEnabled: boolean = true);
 
     // Assign
-    procedure AssignTo(Destination: TPersistent); override;
+    procedure AssignTo(Dest: TPersistent); override;
 
-    // External
-    procedure DrawIcon(Canvas: TCanvas; ARectangle: TRect);
-
-    // Memory
-    procedure FreeUnusedAssets;
-
-    // Constructors
-    constructor Create(AOwner : TPersistent); override;
-    destructor Destroy; override;
+    // Load and Delete
+    procedure Clear;
+    procedure AddNew(Picture: TPicture);
+    procedure Delete(AIndex: integer);
+    procedure AddNewFromFile(FileName: string);
   end;
 
 implementation
-
-{ FXIconSelect }
-
-procedure FXIconSelect.AssignTo(Destination: TPersistent);
-begin
-  with FXIconSelect(Destination) do
-    begin
-      FType := Self.FType;
-
-      FPicture.Assign(Self.FPicture);
-      FBitMap.Assign(Self.FBitMap);
-      FSegoeText := Self.FSegoeText;
-      FImageIndex := Self.FImageIndex;
-
-      Updated;
-    end;
-end;
-
-procedure FXIconSelect.BitmapUpdated(Sender: TObject);
-begin
-  if FType = FXIconType.BitMap then
-    Updated;
-end;
-
-constructor FXIconSelect.Create(AOwner : TPersistent);
-begin
-  inherited;
-  IconType := FXIconType.None;
-  FActiveType := FXIconType.SegoeIcon; // the type before the item got disabled
-
-  FPicture := TPicture.Create;
-  FPicture.OnChange := PictureUpdated;
-  FBitMap := TBitMap.Create;
-  FBitMap.OnChange := BitmapUpdated;
-
-  FSegoeText := SEGOE_UI_STAR;
-end;
-
-destructor FXIconSelect.Destroy;
-begin
-  FreeAndNil(FPicture);
-  FreeAndNil(FBitMap);
-
-  inherited;
-end;
-
-procedure FXIconSelect.DrawIcon(Canvas: TCanvas; ARectangle: TRect);
-var
-  TextDraw: string;
-  FontPrevious: TFont;
-  I: integer;
-begin
-  case IconType of
-    FXIconType.Image:
-    if SelectPicture.Graphic <> nil then
-      DrawImageInRect( Canvas, ARectangle, SelectPicture.Graphic, TDrawMode.CenterFit );
-
-    FXIconType.BitMap:
-    if SelectBitmap <> nil then
-      DrawImageInRect( Canvas, ARectangle, SelectBitmap, TDrawMode.CenterFit );
-
-    FXIconType.ImageList: (* Work In Progress;*);
-
-    FXIconType.SegoeIcon: begin
-      with Canvas do
-        begin
-          FontPrevious := TFont.Create;
-          try
-            FontPrevious.Assign(Font);
-
-            // Draw
-            Font.Name := ThemeManager.IconFont;
-            Font.Height := GetMaxFontHeight(Canvas, Copy(SelectSegoe, 1, 1), ARectangle.Width, ARectangle.Height);
-            for I := Low(SelectSegoe) to High(SelectSegoe) do
-              begin
-                TextDraw := SelectSegoe[I];
-                TextRect( ARectangle, TextDraw, [tfSingleLine, tfCenter, tfVerticalCenter] );
-              end;
-
-            Font.Assign(FontPrevious);
-          finally
-            FontPrevious.Free;
-          end;
-        end;
-    end;
-  end;
-end;
-
-procedure FXIconSelect.FreeUnusedAssets;
-begin
-  if (IconType <> FXIconType.Image) and (FPicture <> nil) and (not FPicture.Graphic.Empty) then
-    FPicture.Free;
-
-  if (IconType <> FXIconType.BitMap) and (FBitMap <> nil) and (not FBitMap.Empty) then
-    FBitMap.Free;
-end;
-
-function FXIconSelect.GetEnabled: boolean;
-begin
-  Result := IconType <> FXIconType.None;
-end;
-
-procedure FXIconSelect.PictureUpdated(Sender: TObject);
-begin
-  if FType = FXIconType.Image then
-    Updated;
-end;
-
-procedure FXIconSelect.SetBitMap(const Value: TBitMap);
-begin
-  if FBitmap = nil then
-    FBitmap := TBitMap.Create;
-
-  FBitmap.Assign(value);
-
-  // Update
-  if IconType = FXIconType.BitMap then
-    Updated;
-end;
-
-procedure FXIconSelect.SetEnabled(const Value: boolean);
-begin
-  if GetEnabled = Value then
-    Exit;
-
-  if Value then
-    FType := FActiveType
-  else begin
-    FActiveType := FType;
-    FType := FXIconType.None;
-  end;
-  Updated;
-end;
-
-procedure FXIconSelect.SetIconType(const Value: FXIconType);
-begin
-  if FType = Value then
-    Exit;
-
-  FType := Value;
-  Updated;
-end;
-
-procedure FXIconSelect.SetImageIndex(const Value: integer);
-begin
-  FImageIndex := Value;
-
-  // Update
-  if IconType = FXIconType.ImageList then
-    Updated;
-end;
-
-procedure FXIconSelect.SetPicture(const Value: TPicture);
-begin
-  if FPicture = nil then
-    FPicture := TPicture.Create;
-
-  FPicture.Assign(Value);
-
-  // Update
-  if IconType = FXIconType.Image then
-    Updated;
-end;
-
-procedure FXIconSelect.SetSegoe(const Value: string);
-begin
-  FSegoeText := Value;
-
-  // Update
-  if IconType = FXIconType.SegoeIcon then
-    Updated;
-end;
-
-procedure FXIconSelect.SetTo(AType: FXIconType; AEnabled: boolean);
-begin
-  IconType := AType;
-  Enabled := AEnabled;
-end;
-
-procedure FXIconSelect.Updated;
-begin
-  if Assigned(FOnChange) then
-    FOnChange(Self);
-end;
 
 { FXPersistent }
 
@@ -539,471 +96,189 @@ begin
     inherited Assign(Source);
 end;
 
-{ FXSideValues }
+{ FXPictureList }
 
-function FXSideValues.AbsoluteTop: integer;
+procedure FXPictureList.AddNew(Picture: TPicture);
+var
+  NewIndex: integer;
 begin
-  Result := FTop + FVertical + FAround;
+  NewIndex := CreateNewSpot;
+
+  FPictures[NewIndex] := TPicture.Create;
+  FPictures[NewIndex].Assign(Picture);
 end;
 
-function FXSideValues.AbsoluteLeft: integer;
+procedure FXPictureList.AddNewFromFile(FileName: string);
+var
+  Pic: TPicture;
 begin
-  Result := FLeft + FHorizontal + FAround;
+  Pic := TPicture.Create;
+  try
+    Pic.LoadFromFile(FileName);
+
+    FPictures[CreateNewSpot] := Pic;
+  except
+    Pic.Free;
+  end;
 end;
 
-function FXSideValues.AbsoluteBottom: integer;
+procedure FXPictureList.AssignTo(Dest: TPersistent);
 begin
-  Result := FBottom + FVertical + FAround;
-end;
+  if Dest is FXPictureList then begin
+    const Destination = FXPictureList(Dest);
 
-function FXSideValues.AbsoluteRight: integer;
-begin
-  Result := FRight + FHorizontal + FAround;
-end;
+    Destination.Clear;
 
-function FXSideValues.AbsoluteHorizontal: integer;
-begin
-  Result := FLeft + FRight + FHorizontal + FAround;
-end;
-
-function FXSideValues.AbsoluteVertical: integer;
-begin
-  Result := FTop + FBottom + FVertical + FAround;
-end;
-
-procedure FXSideValues.AssignTo(Dest: TPersistent);
-begin
-  if Dest is FXSideValues then begin
-    const Destination = FXSideValues(Dest);
-
-    Destination.FLeft := FLeft;
-    Destination.FTop := FTop;
-    Destination.FRight := FRight;
-    Destination.FBottom := FBottom;
-    Destination.FAround := FAround;
-    Destination.FHorizontal := FHorizontal;
-    Destination.FVertical := FVertical;
+    for var I := 0 to Count-1 do
+      Destination.AddNew( Pictures[I] );
 
     // Notify
     Destination.Updated;
   end
   else
-    inherited Assign(Dest);
+    inherited AssignTo(Dest);
 end;
 
-function FXSideValues.RectangleExpand(ARect: TRect): TRect;
+procedure FXPictureList.Clear;
 begin
-  Result := ARect;
-  Result.Inflate(AbsoluteLeft, AbsoluteTop, AbsoluteRight, AbsoluteBottom);
+  for var I := 0 to Count-1 do
+    Delete(0);
 end;
 
-function FXSideValues.RectangleInflate(ARect: TRect): TRect;
+function FXPictureList.Count: integer;
 begin
-  Result := ARect;
-  Result.Inflate(-AbsoluteLeft, -AbsoluteTop, -AbsoluteRight, -AbsoluteBottom);
+  Result := Length(FPictures);
 end;
 
-constructor FXSideValues.Create(AOwner: TPersistent);
+constructor FXPictureList.Create(AOwner: TPersistent);
 begin
-  inherited Create(AOwner);
-  FLeft := 0;
-  FTop := 0;
-  FRight := 0;
-  FBottom := 0;
-
-  FAround := 0;
-  FHorizontal := 0;
-  FVertical := 0;
+  inherited;
+  SetLength(FPictures, 0);
 end;
 
-procedure FXSideValues.ScaleChanged(Scaling: single);
+function FXPictureList.CreateNewSpot: integer;
 begin
-  FLeft := trunc(FLeft * Scaling);
-  FTop := trunc(FTop * Scaling);
-  FRight := trunc(FRight * Scaling);
-  FBottom := trunc(FBottom * Scaling);
-
-  FAround := trunc(FAround * Scaling);
-  FHorizontal := trunc(FHorizontal * Scaling);
-  FVertical := trunc(FVertical * Scaling);
-
-  // Notify
-  Updated;
+  Result := Length(FPictures);
+  SetLength(FPictures, Result + 1);
 end;
 
-procedure FXSideValues.SetTop(const Value: integer);
+procedure FXPictureList.DefineProperties(Filer: TFiler);
 begin
-  if FTop = Value then
-    Exit;
-
-  FTop := Value;
-  Updated;
+  inherited;
+  Filer.DefineBinaryProperty('Pictures', ReadData, WriteData, true);
 end;
 
-procedure FXSideValues.SetLeft(const Value: integer);
+procedure FXPictureList.Delete(AIndex: integer);
+var
+  I: Integer;
 begin
-  if FLeft = Value then
-    Exit;
+  if FPictures[AIndex] <> nil then
+    FPictures[AIndex].Free;
 
-  FLeft := Value;
-  Updated;
+  // Offset
+  for I := AIndex to High(FPictures) - 1 do
+    FPictures[I] := FPictures[I + 1];
+
+  // Len
+  SetLength(FPictures, Length(FPictures)-1);
 end;
 
-procedure FXSideValues.SetBottom(const Value: integer);
+destructor FXPictureList.Destroy;
+var
+  I: Integer;
 begin
-  if FBottom = Value then
-    Exit;
+  // Free Pictures
+  for I := 0 to High(FPictures) do
+    if FPictures[I] <> nil then
+      FPictures[I].Free;
 
-  FBottom := Value;
-  Updated;
+  SetLength(FPictures, 0);
+  inherited;
 end;
 
-procedure FXSideValues.SetRight(const Value: integer);
+function FXPictureList.GetPicture(AIndex: Integer): TPicture;
 begin
-  if FRight = Value then
-    Exit;
-
-  FRight := Value;
-  Updated;
+  Result := FPictures[AIndex];
 end;
 
-procedure FXSideValues.SetAround(const Value: integer);
+procedure FXPictureList.SetPicture(AIndex: Integer; const Value: TPicture);
 begin
-  if FAround = Value then
-    Exit;
-
-  FAround := Value;
-  Updated;
+  Pictures[AIndex].Assign(Value);
 end;
 
-procedure FXSideValues.SetHorizontal(const Value: integer);
-begin
-  if FHorizontal = Value then
-    Exit;
-
-  FHorizontal := Value;
-  Updated;
-end;
-
-procedure FXSideValues.SetVertical(const Value: integer);
-begin
-  if FVertical = Value then
-    Exit;
-
-  FVertical := Value;
-  Updated;
-end;
-
-procedure FXSideValues.Updated;
+procedure FXPictureList.Updated;
 begin
   if Assigned(FOnChange) then
     FOnChange(Self);
 end;
 
-{ FXBlurSettings }
-
-constructor FXBlurSettings.Create(AOwner: TPersistent);
+procedure FXPictureList.WriteData(Stream: TStream);
+var
+  Count: Integer;
+  I: Integer;
+  MS: TMemoryStream;
+  BlobSize: Int64;
 begin
-  inherited;
-  FBlurVersion := FXBlurVersion.WallpaperBlurred;
+  Count := Length(FPictures);
+  Stream.WriteBuffer(Count, SizeOf(Count));
 
-  FTint := true;
-  FTintLightOpacity := LIGHT_TINT_OPACITY;
-  FTintDarkOpacity := DARK_TINT_OPACITY;
+  for I := 0 to Count - 1 do
+  begin
+    MS := TMemoryStream.Create;
+    try
+      if (FPictures[I] <> nil) and (FPictures[I].Graphic <> nil) then
+        FPictures[I].SaveToStream(MS);
 
-  FTintColors := FTintColors.Create(AOwner);
-end;
+      BlobSize := MS.Size;
+      // write the blob size first
+      Stream.WriteBuffer(BlobSize, SizeOf(BlobSize));
 
-destructor FXBlurSettings.Destroy;
-begin
-  FreeAndNil( FTintColors );
-  inherited;
-end;
-
-procedure FXBlurSettings.SetTint(const Value: boolean);
-begin
-  if FTint <> Value then
-    begin
-      FTint := Value;
-
-      UpdateParent;
+      if BlobSize > 0 then
+      begin
+        MS.Position := 0;
+        Stream.CopyFrom(MS, BlobSize);
+      end;
+    finally
+      MS.Free;
     end;
+  end;
 end;
 
-procedure FXBlurSettings.SetTintOpacity(const Index: Integer;
-  const Value: byte);
+procedure FXPictureList.ReadData(Stream: TStream);
+var
+  Count: Integer;
+  I: Integer;
+  MS: TMemoryStream;
+  BlobSize: Int64;
 begin
-  if Index = 1 then
-    FTintDarkOpacity := Value
-  else
-    FTintLightOpacity := Value;
+  Stream.ReadBuffer(Count, SizeOf(Count));
+  SetLength(FPictures, Count);
 
-  UpdateParent;
-end;
+  for I := 0 to Count - 1 do
+  begin
+    FPictures[I] := TPicture.Create;
 
-procedure FXBlurSettings.UpdateParent;
-begin
-  if Owner is TControl then
-    TControl(Owner).Invalidate;
-end;
+    // read blob size
+    Stream.ReadBuffer(BlobSize, SizeOf(BlobSize));
 
-{ FXPointGeneric }
-
-function FXPointGeneric.GetPoint: TPoint;
-begin
-  Result := TPoint.Create(X, Y);
-end;
-
-procedure FXPointGeneric.SetPoint(const Value: TPoint);
-begin
-  X := Value.X;
-  Y := Value.Y;
-end;
-
-{ FXControlSideValues }
-
-procedure FXControlSideValues.Updated;
-begin
-  if (Owner <> nil) and Supports(Owner, IFXComponent) and not (csReading in TComponent(Owner).ComponentState) then
-    (TComponent(Owner) as IFXComponent).UpdateTheme(true);
-
-  inherited;
-end;
-
-{ FXCornerSettings }
-
-function FXCornerSettings.AbsoluteTopLeft: single;
-begin
-  Result := FTopLeft + FDiagonalPrimary + FAround;
-end;
-
-function FXCornerSettings.AbsoluteTopRight: single;
-begin
-  Result := FTopRight + FDiagonalSecondary + FAround;
-end;
-
-function FXCornerSettings.AbsoluteBottomRight: single;
-begin
-  Result := FBottomRight + FDiagonalSecondary + FAround;
-end;
-
-function FXCornerSettings.AbsoluteBottomLeft: single;
-begin
-  Result := FBottomLeft + FDiagonalPrimary + FAround;
-end;
-
-procedure FXCornerSettings.AssignTo(Dest: TPersistent);
-begin
-  if Dest is FXCornerSettings then begin
-    const Destination = FXCornerSettings(Dest);
-
-    Destination.FTopLeft := FTopLeft;
-    Destination.FTopRight := FTopRight;
-    Destination.FBottomRight := FBottomRight;
-    Destination.BottomLeft := BottomLeft;
-    Destination.FAround := FAround;
-    Destination.FDiagonalPrimary := FDiagonalPrimary;
-    Destination.FDiagonalSecondary := FDiagonalSecondary;
-
-    // Notify
-    Destination.Updated;
-  end
-  else
-    inherited Assign(Dest);
-end;
-
-constructor FXCornerSettings.Create(AOwner: TPersistent);
-begin
-  inherited;
-
-end;
-
-procedure FXCornerSettings.ScaleChanged(Scaling: single);
-begin
-  FTopLeft := trunc(FTopLeft * Scaling);
-  FTopRight := trunc(FTopRight * Scaling);
-  FBottomRight := trunc(FBottomRight * Scaling);
-  FBottomLeft := trunc(FBottomLeft * Scaling);
-
-  FAround := trunc(FAround * Scaling);
-  FDiagonalPrimary := trunc(FDiagonalPrimary * Scaling);
-  FDiagonalSecondary := trunc(FDiagonalSecondary * Scaling);
-
-  // Notify
-  Updated;
-end;
-
-procedure FXCornerSettings.SetTopLeft(const Value: single);
-begin
-  if FTopLeft = Value then
-    Exit;
-
-  FTopLeft := Value;
-  Updated;
-end;
-
-procedure FXCornerSettings.SetTopRight(const Value: single);
-begin
-  if FTopRight = Value then
-    Exit;
-
-  FTopRight := Value;
-  Updated;
-end;
-
-procedure FXCornerSettings.SetBottomRight(const Value: single);
-begin
-  if FBottomRight = Value then
-    Exit;
-
-  FBottomRight := Value;
-  Updated;
-end;
-
-procedure FXCornerSettings.SetBottomLeft(const Value: single);
-begin
-  if FBottomLeft = Value then
-    Exit;
-
-  FBottomLeft := Value;
-  Updated;
-end;
-
-procedure FXCornerSettings.SetAround(const Value: single);
-begin
-  if FAround = Value then
-    Exit;
-
-  FAround := Value;
-  Updated;
-end;
-
-procedure FXCornerSettings.SetDiagonalPrimary(const Value: single);
-begin
-  if FDiagonalPrimary = Value then
-    Exit;
-
-  FDiagonalPrimary := Value;
-  Updated;
-end;
-
-procedure FXCornerSettings.SetDiagonalSecondary(const Value: single);
-begin
-  if FDiagonalSecondary = Value then
-    Exit;
-
-  FDiagonalSecondary := Value;
-  Updated;
-end;
-
-procedure FXCornerSettings.Updated;
-begin
-  if Assigned(FOnChange) then
-    FOnChange(Self);
-end;
-
-{ FNumberRange }
-
-constructor FNumberRange.Create(AOwner: TPersistent);
-begin
-  inherited;
-  FEnabled := false;
-  FMin := 0;
-  FMax := 0;
-end;
-
-function FNumberRange.EnsureRange(Value: Extended): Extended;
-begin
-  Result := Math.EnsureRange(Value, FMin, FMax);
-end;
-
-procedure FNumberRange.SetEnabled(const Value: boolean);
-begin
-  FEnabled := Value;
-
-  Updated;
-end;
-
-procedure FNumberRange.SetMax(const Value: Extended);
-begin
-  FMax := Value;
-
-  if FMax < FMin then
-    FMin := FMax;
-
-  Updated;
-end;
-
-procedure FNumberRange.SetMin(const Value: Extended);
-begin
-  FMin := Value;
-
-  if FMax < FMin then
-    FMax := FMin;
-
-  Updated;
-end;
-
-procedure FNumberRange.Updated;
-begin
-  if Assigned(FOnChange) then
-    FOnChange(Self);
-end;
-
-{ FXRoundEllipseSettings }
-
-procedure FXRoundEllipseSettings.AssignTo(Dest: TPersistent);
-begin
-  if Dest is FXRoundEllipseSettings then begin
-    const Destination = FXRoundEllipseSettings(Dest);
-
-    Destination.FRoundWidth := FRoundWidth;
-    Destination.FRoundHeight := FRoundHeight;
-
-    // Notify
-    Destination.Updated;
-  end
-  else
-    inherited Assign(Dest);
-end;
-
-constructor FXRoundEllipseSettings.Create(AOwner: TPersistent);
-begin
-  inherited;
-
-end;
-
-procedure FXRoundEllipseSettings.ScaleChanged(Scaling: single);
-begin
-  FRoundWidth := trunc(FRoundWidth * Scaling);
-  FRoundHeight := trunc(FRoundHeight * Scaling);
-
-  // Notify
-  Updated;
-end;
-
-procedure FXRoundEllipseSettings.SetRoundHeight(const Value: integer);
-begin
-  if FRoundHeight = Value then
-    Exit;
-
-  FRoundHeight := Value;
-  Updated;
-end;
-
-procedure FXRoundEllipseSettings.SetRoundWidth(const Value: integer);
-begin
-  if FRoundWidth = Value then
-    Exit;
-
-  FRoundWidth := Value;
-  Updated;
-end;
-
-procedure FXRoundEllipseSettings.Updated;
-begin
-  if Assigned(FOnChange) then
-    FOnChange(Self);
+    if BlobSize > 0 then
+    begin
+      MS := TMemoryStream.Create;
+      try
+        MS.SetSize(BlobSize);
+        MS.Position := 0;
+        Stream.ReadBuffer(MS.Memory^, BlobSize);
+        MS.Position := 0;
+        FPictures[I].LoadFromStream(MS);
+      finally
+        MS.Free;
+      end;
+    end
+    else
+    begin
+      // no image stored -> leave TPicture empty (0x0)
+    end;
+  end;
 end;
 
 end.

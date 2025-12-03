@@ -23,6 +23,7 @@ uses
   SysUtils,
   CFX.Utilities,
   CFX.Classes,
+  CFX.ComponentClasses,
   CFX.PopupMenu,
   CFX.Types,
   CFX.Linker,
@@ -329,10 +330,8 @@ type
     property LayoutVertical;
     property AutomaticCursorPointer;
 
-    property HyperLinkURL;
     property DropDown;
     property Margin;
-    property RepeatWhenPressed;
     property AutomaticCheck;
 
     property StateText;

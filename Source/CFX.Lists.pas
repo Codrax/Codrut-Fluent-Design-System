@@ -25,6 +25,7 @@ uses
   CFX.Scrollbar,
   SysUtils,
   CFX.Classes,
+  CFX.ComponentClasses,
   CFX.Types,
   CFX.Utilities,
   CFX.VarHelpers,

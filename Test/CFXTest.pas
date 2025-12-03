@@ -26,7 +26,8 @@ uses
   Vcl.Dialogs, Vcl.Menus, Vcl.Controls, Vcl.Imaging.pngimage, Vcl.ControlList,
   Vcl.ExtDlgs, System.ImageList, UITypes, Vcl.ComCtrls, Vcl.Mask,
   Vcl.Themes, System.Generics.Collections,
-  Vcl.NumberBox, CFX.Components, CFX.Picture, CFX.Animation.Component;
+  Vcl.NumberBox, CFX.Components, CFX.Picture, CFX.Animation.Component,
+  Vcl.BaseImageCollection, Vcl.ImageCollection, Vcl.ImgList;
 
 type
   TForm1 = class(FXForm)
@@ -71,12 +72,14 @@ type
     FXTextBox1: FXTextBox;
     FXButton6: FXButton;
     FXBlurMaterial1: FXBlurMaterial;
-    FXButton13: FXButton;
     FXRadioButton1: FXRadioButton;
     FXRadioButton2: FXRadioButton;
     FXSlider1: FXSlider;
     FXRatingControl3: FXRatingControl;
     FXDropdownButton1: FXDropdownButton;
+    FXPicture2: FXPicture;
+    FXImageList1: FXImageList;
+    FXButton13: FXButton;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);

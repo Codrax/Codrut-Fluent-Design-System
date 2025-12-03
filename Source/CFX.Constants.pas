@@ -21,6 +21,9 @@ const
   // THEME MANAGER
   ACCENT_DIFFERENTIATE_CONST = 25;
 
+  // APP
+  APP_PARAMETER_OVERRIDE_SINGLEINSTANCE = 'override-single-instance';
+
   // API
   DEFAULT_API = 'https://api.codrutsoft.com/';
   DEFAULT_UPDATE_NAME = 'updateurl';

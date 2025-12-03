@@ -20,7 +20,8 @@ uses
   CFX.Types,
   CFX.VarHelpers,
   CFX.Linker,
-  CFX.Controls;
+  CFX.Controls,
+  CFX.ComponentClasses;
 
 type
   FXTemplate = class(FXWindowsControl)

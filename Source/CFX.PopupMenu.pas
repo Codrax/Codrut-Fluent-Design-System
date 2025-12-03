@@ -28,6 +28,7 @@ uses
   CFX.Utilities,
   CFX.ThemeManager,
   CFX.Classes,
+  CFX.ComponentClasses,
   CFX.Constants,
   CFX.Colors,
   CFX.Math,

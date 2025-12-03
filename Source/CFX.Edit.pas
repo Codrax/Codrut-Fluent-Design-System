@@ -16,6 +16,7 @@ uses
   CFX.Constants,
   SysUtils,
   CFX.Classes,
+  CFX.ComponentClasses,
   CFX.GDI,
   CFX.VarHelpers,
   CFX.Types,
@@ -950,11 +951,20 @@ begin
     65: if ssCtrl in ShiftState then
       SelectAll;
     67: if ssCtrl in ShiftState then
-      CopyToClipBoard;
+      try
+        CopyToClipBoard;
+      except
+      end;
     86: if CanEdit and (ssCtrl in ShiftState) then
-      PasteFromClipBoard;
+      try
+        PasteFromClipBoard;
+      except
+      end;
     88: if CanEdit and (ssCtrl in ShiftState) then
-        CutToClipBoard;
+        try
+          CutToClipBoard;
+        except
+        end;
     90: if CanEdit and (ssCtrl in ShiftState) then
       Undo;
   end;
@@ -1233,9 +1243,21 @@ procedure FXCustomEdit.PopupItemClick(Sender: TObject; Item: FXPopupComponent;
   Index: integer);
 begin
   case Index of
-    0: CutToClipboard;
-    1: CopyToClipboard;
-    2: PasteFromClipboard;
+    0:
+    try
+      CutToClipboard;
+    except
+    end;
+    1:
+    try
+      CopyToClipboard;
+    except
+    end;
+    2:
+    try
+      PasteFromClipboard;
+    except
+    end;
     3: Undo;
     4: SelectAll;
   end;
@@ -1675,10 +1697,16 @@ end;
 
 procedure FXNumberEdit.ChangeText(AText: string);
 begin
-  inherited;
+  //inherited;
+  // we do not call inheirted and we just do what it would normally do here, because OnChange must be called AFTER TextUpdated;
+  ChangeTextValue(AText);
 
   // Test if valid
   TextUpdated;
+
+  // Notify
+  if Assigned(OnChange) then
+    OnChange(Self);
 end;
 
 constructor FXNumberEdit.Create(aOwner: TComponent);

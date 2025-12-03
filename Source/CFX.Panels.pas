@@ -16,6 +16,7 @@ uses
   CFX.Animation.Component,
   CFX.Constants,
   CFX.Classes,
+  CFX.ComponentClasses,
   CFX.Types,
   CFX.Linker,
   CFX.Messages,
