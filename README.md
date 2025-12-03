@@ -74,7 +74,7 @@ Some of the most usefull units to use are:
 - `CFX.FormClasses`, This unit contains all classes for Full-Screen dialogs. Such as confirmations, status
 
 ## Image Gallery
-> The following images are ALPHA versions of the component suite, the components are expected to change in the future.
+> The following images are early versions of the component suite, the components are expected to change in the future.
 
 ![Screenshot 2023-09-25 210750](https://github.com/Codrax/CodrutFluentDesignSystem/assets/68193064/7df7f666-a793-4b96-bb77-b3ab9a0fe7c0)
 ![Screenshot 2023-07-25 103550](https://github.com/Codrax/CodrutFluentDesignSystem/assets/68193064/d5245fdc-d226-40df-8d70-424012c3326c)
