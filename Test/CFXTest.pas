@@ -112,6 +112,14 @@ begin
   AllowThemeChangeAnimation := true;
 
   ThemeManager.SystemMenuEnableRadius := false;
+
+  //
+  with FXTabStrip1.Tabs.Add do begin
+    Text := 'Tab1';
+  end;
+  with FXTabStrip1.Tabs.Add do begin
+    Text := 'Tab2';
+  end;
 end;
 
 procedure TForm1.FXAppManager1UpdateChecked(Sender: TObject);
