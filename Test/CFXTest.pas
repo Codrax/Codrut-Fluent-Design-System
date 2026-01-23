@@ -16,8 +16,8 @@ uses
   CFX.PopupConnector, Vcl.Buttons, CFX.IconView, CFX.ScrollText, CFX.FormClasses,
   CFX.Messages, CFX.VarHelpers, CFX.Graphics, CFX.RatingControl, CFX.Effects,
   CFX.Progress, CFX.GDI, CFX.Utilities, CFX.QuickDialogs, CFX.Instances,
-  CFX.PaintBox, CFX.Lists, CFX.TabStrip, CFX.AppManager, CFX.Shapes,
-  CFX.Layouts, CFX.TitlebarPanel, CFX.FormTemplates,
+  CFX.PaintBox, CFX.Lists, CFX.AppManager, CFX.Shapes, CFX.Translations,
+  CFX.Layouts, CFX.TitlebarPanel, CFX.FormTemplates, CFX.TabStrip,
 
   // Cod Windows Runtime
 
@@ -55,10 +55,7 @@ type
     FXPopupMenu1: FXPopupMenu;
     FXButton14: FXButton;
     FXButton16: FXButton;
-    PaintBox1: TPaintBox;
-    FXTextBox8: FXTextBox;
     FXIconView1: FXIconView;
-    FXTabStrip1: FXTabStrip;
     FXTitleBarPanel1: FXTitleBarPanel;
     FXBlurMaterial2: FXBlurMaterial;
     FXButton9: FXButton;
@@ -77,22 +74,23 @@ type
     FXSlider1: FXSlider;
     FXRatingControl3: FXRatingControl;
     FXDropdownButton1: FXDropdownButton;
-    FXPicture2: FXPicture;
     FXImageList1: FXImageList;
     FXButton13: FXButton;
+    FXTabStrip1: FXTabStrip;
+    FXLinearStringsList1: FXLinearStringsList;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);
     procedure FXButton14Click(Sender: TObject);
     procedure FXButton16Click(Sender: TObject);
-    procedure PaintBox1Paint(Sender: TObject);
-    procedure FXSlider1Change(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FXAppManager1UpdateChecked(Sender: TObject);
     procedure FXPaintBox1Draw(Sender: TObject);
     procedure FXButton2Click(Sender: TObject);
     procedure FXButton4Click(Sender: TObject);
     procedure FXButton13Click(Sender: TObject);
+    procedure FXTabStrip1ClosePressed(Sender: TObject; Value: Integer);
+    procedure FXTabStrip1PlusClicked(Sender: TObject);
   private
     { Private declarations }
   public
@@ -108,18 +106,41 @@ implementation
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  FXPopupMenu1.Items[1].Text := '-';
-  AllowThemeChangeAnimation := true;
-
-  ThemeManager.SystemMenuEnableRadius := false;
+  AllowThemeChangeAnimation := True;
 
   //
+  FXTabStrip1.ShowCloseButton := true;
+  FXTabStrip1.ShowPlusButton := true;
+  FXTabStrip1.EnableReordering := true;
+
   with FXTabStrip1.Tabs.Add do begin
-    Text := 'Tab1';
+    Text := 'Bon fiscal 1';
+
+    Image.IconType := FXIconType.SegoeIcon;
+    Image.SelectSegoe := #$E8A5;
   end;
   with FXTabStrip1.Tabs.Add do begin
-    Text := 'Tab2';
+    Text := 'Bon fiscal 2';
+
+    Image.IconType := FXIconType.SegoeIcon;
+    Image.SelectSegoe := #$E8A5;
   end;
+  with FXTabStrip1.Tabs.Add do begin
+    Text := 'Bon fiscal 3';
+
+    Image.IconType := FXIconType.SegoeIcon;
+    Image.SelectSegoe := #$E8A5;
+  end;
+  with FXTabStrip1.Tabs.Add do begin
+    Text := 'Bon fiscal 4';
+
+    Image.IconType := FXIconType.SegoeIcon;
+    Image.SelectSegoe := #$E8A5;
+  end;
+
+  FXLinearStringsList1.ItemVisible[1] := false;
+  FXLinearStringsList1.ItemVisible[3] := false;
+  FXLinearStringsList1.ItemVisible[5] := false;
 end;
 
 procedure TForm1.FXAppManager1UpdateChecked(Sender: TObject);
@@ -278,27 +299,19 @@ begin
     end;
 end;
 
-procedure TForm1.FXSlider1Change(Sender: TObject);
+procedure TForm1.FXTabStrip1ClosePressed(Sender: TObject; Value: Integer);
 begin
-  PaintBox1.Tag := round(FXSlider(Sender).Value / 100 * 360);
-  PaintBox1.Repaint;
+  FXTabStrip(Sender).Tabs.Delete(Value);
 end;
 
-procedure TForm1.PaintBox1Paint(Sender: TObject);
-var
-  R: TRect;
+procedure TForm1.FXTabStrip1PlusClicked(Sender: TObject);
 begin
-  with TPaintBox(Sender).Canvas do
-    begin
-      R := ClipRect;
+  with FXTabStrip(Sender).Tabs.Add do begin
+    Text := 'Fila noua';
 
-      Font.Height := 22;
-
-      GDIText('Hello world! This is truly incredibile, text rotating! :)',
-        R, [FXTextFlag.WordWrap, FXTextFlag.NoClip, FXTextFlag.VerticalCenter,
-          FXTextFlag.Center],
-        TPaintBox(Sender).Tag);
-    end;
+    Image.IconType := FXIconType.SegoeIcon;
+    Image.SelectSegoe := #$E8A5;
+  end;
 end;
 
 end.

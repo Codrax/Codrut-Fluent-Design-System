@@ -398,6 +398,8 @@ begin
           try
             FontPrevious.Assign(Font);
 
+            Brush.Style := bsClear;
+
             // Draw
             Font.Name := ThemeManager.IconFont;
             Font.Height := GetMaxFontHeight(Canvas, Copy(SelectSegoe, 1, 1), ARectangle.Width, ARectangle.Height);

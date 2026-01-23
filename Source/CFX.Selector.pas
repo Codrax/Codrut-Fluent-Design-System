@@ -163,16 +163,15 @@ procedure FXSelector.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
   Y: integer);
 begin
   inherited;
-  if (FHoverOver <> SelectedItem) and (FHoverOver <> -1) then
-    begin
-      SelectedItem := FHoverOver;
+  if (FHoverOver <> SelectedItem) and (FHoverOver <> -1) then begin
+    SelectedItem := FHoverOver;
 
-      // Notify
-      if Assigned(FOnChange) then
-        FOnChange(Self);
+    // Notify
+    if Assigned(FOnChange) then
+      FOnChange(Self);
 
-      Redraw;
-    end;
+    Redraw;
+  end;
 end;
 
 procedure FXSelector.MouseMove(Shift: TShiftState; X, Y: Integer);
@@ -194,7 +193,6 @@ begin
   // Changed
   if AItem <> FHoverOver then
     Redraw;
-
 end;
 
 procedure FXSelector.UpdateColors;

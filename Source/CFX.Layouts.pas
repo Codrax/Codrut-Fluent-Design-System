@@ -141,14 +141,14 @@ type
     FKeepScrollClientWhenBarHidden: boolean;
     FScrollAnimation: boolean;
 
-    FResetScrollPositionToTopOn: boolean;
+    FResetScrollValueToTopOn: boolean;
 
     LastScroll: TPoint;
 
     procedure UpdateRange;
 
     procedure CalculateRange; // update scroll bar values
-    procedure UpdateScrollbars; // update actual position & size of scroll bars!
+    procedure UpdateScrollbars; // update actual value & size of scroll bars!
 
     procedure ScrollByEx(DeltaX, DeltaY: Integer);
 
@@ -159,8 +159,8 @@ type
     procedure ScrollChangedValue(Sender: TObject); // any
 
     // Getters
-    function GetPositionX: integer;
-    function GetPositionY: integer;
+    function GetValueX: integer;
+    function GetValueY: integer;
     function GetRangeX: integer;
     function GetRangeY: integer;
 
@@ -170,8 +170,8 @@ type
     procedure SetShowScrollbars(const Value: boolean);
     procedure SetEnableHorizontal(const Value: boolean);
     procedure SetEnableVertical(const Value: boolean);
-    procedure SetPositionX(const Value: integer);
-    procedure SetPositionY(const Value: integer);
+    procedure SetValueX(const Value: integer);
+    procedure SetValueY(const Value: integer);
 
   protected
     procedure Sized; override;
@@ -208,11 +208,11 @@ type
     property KeepScrollClientWhenBarHidden: boolean read FKeepScrollClientWhenBarHidden write FKeepScrollClientWhenBarHidden default false;
     (* Scroll smoothly *)
     property ScrollAnimation: boolean read FScrollAnimation write FScrollAnimation default true;
-    (* When the scrollbox is created, reset the position to 0,0 (usefull when editing stuff in design mode) *)
-    property ResetScrollPositionToTopOn: boolean read FResetScrollPositionToTopOn write FResetScrollPositionToTopOn default true;
+    (* When the scrollbox is created, reset the value to 0,0 (usefull when editing stuff in design mode) *)
+    property ResetScrollValueToTopOn: boolean read FResetScrollValueToTopOn write FResetScrollValueToTopOn default true;
 
-    property PositionX: integer read GetPositionX write SetPositionX;
-    property PositionY: integer read GetPositionY write SetPositionY;
+    property ValueX: integer read GetValueX write SetValueX;
+    property ValueY: integer read GetValueY write SetValueY;
     property RangeX: integer read GetRangeX;
     property RangeY: integer read GetRangeY;
 
@@ -332,7 +332,7 @@ begin
   UpdateRange;
 
   // Result Rect
-  Rect := Bounds(-FHorzScroll.Position, -FVertScroll.Position,
+  Rect := Bounds(-FHorzScroll.Value, -FVertScroll.Value,
     Max(FHorzScroll.Max, ClientWidth), Max(ClientHeight,
     FVertScroll.Max));
 
@@ -355,10 +355,10 @@ procedure FXScrollLayout.AnimationStep(Sender: TObject; Step,
 begin
   if Sender = FAnimX then begin
     // Horizontal
-    FHorzScroll.Position := FXIntAnim(Sender).CurrentValue;
+    FHorzScroll.Value := FXIntAnim(Sender).CurrentValue;
   end else begin
     // Vertical
-    FVertScroll.Position := FXIntAnim(Sender).CurrentValue;
+    FVertScroll.Value := FXIntAnim(Sender).CurrentValue;
   end;
 
   // Process messages in order to detect scroll speed update / stop
@@ -373,7 +373,7 @@ begin
   FEnableVertical := true;
   FKeepScrollClientWhenBarHidden := false;
   FScrollAnimation := true;
-  FResetScrollPositionToTopOn := true;
+  FResetScrollValueToTopOn := true;
 
   FExtendX := 100;
   FExtendY := 100;
@@ -433,7 +433,7 @@ begin
     OnStep := AnimationStep;
   end;
 
-  // Update Position
+  // Update Value
   LastScroll := TPoint.Zero;
 end;
 
@@ -465,17 +465,17 @@ begin
     // HORIZONTAL
     begin
       if not Animate then begin
-        FHorzScroll.Position := FHorzScroll.Position+ScrollAmount;
+        FHorzScroll.Value := FHorzScroll.Value+ScrollAmount;
         Exit;
       end;
 
       // Horizontal
-      FAnimX.StartValue := FHorzScroll.Position;
+      FAnimX.StartValue := FHorzScroll.Value;
 
       if FAnimX.Running then
         FAnimX.EndValue := FAnimX.EndValue + ScrollAmount
       else
-        FAnimX.EndValue := FHorzScroll.Position+ScrollAmount;
+        FAnimX.EndValue := FHorzScroll.Value+ScrollAmount;
       FAnimX.EndValue := EnsureRange(FAnimX.EndValue, FHorzScroll.Min, FHorzScroll.Max);
 
       FAnimX.Stop;
@@ -487,17 +487,17 @@ begin
     if FEnableVertical then
     begin
       if not Animate then begin
-        FVertScroll.Position := FVertScroll.Position+ScrollAmount;
+        FVertScroll.Value := FVertScroll.Value+ScrollAmount;
         Exit;
       end;
 
       // Vertical
-      FAnimY.StartValue := FVertScroll.Position;
+      FAnimY.StartValue := FVertScroll.Value;
 
       if FAnimY.Running then
         FAnimY.EndValue := FAnimY.EndValue + ScrollAmount
       else
-        FAnimY.EndValue := FVertScroll.Position+ScrollAmount;
+        FAnimY.EndValue := FVertScroll.Value+ScrollAmount;
       FAnimY.EndValue := EnsureRange(FAnimY.EndValue, FVertScroll.Min, FVertScroll.Max);
 
       FAnimY.Stop;
@@ -521,14 +521,14 @@ begin
     Result.Width := Result.Width - FVertScroll.Width;
 end;
 
-function FXScrollLayout.GetPositionX: integer;
+function FXScrollLayout.GetValueX: integer;
 begin
-  Result := FHorzScroll.Position;
+  Result := FHorzScroll.Value;
 end;
 
-function FXScrollLayout.GetPositionY: integer;
+function FXScrollLayout.GetValueY: integer;
 begin
-  Result := FVertScroll.Position;
+  Result := FVertScroll.Value;
 end;
 
 function FXScrollLayout.GetRangeX: integer;
@@ -546,9 +546,9 @@ begin
   inherited;
 
   // Reset scroll
-  if FResetScrollPositionToTopOn then begin
-    FVertScroll.Position := 0;
-    FHorzScroll.Position := 0;
+  if FResetScrollValueToTopOn then begin
+    FVertScroll.Value := 0;
+    FHorzScroll.Value := 0;
   end;
 end;
 
@@ -644,7 +644,7 @@ begin
   if IsReading then
     Exit;
 
-  NewScroll := Point(FHorzScroll.Position, FVertScroll.Position);
+  NewScroll := Point(FHorzScroll.Value, FVertScroll.Value);
 
   // Scroll
   Delta := LastScroll.Subtract(NewScroll);
@@ -692,22 +692,22 @@ begin
   UpdateRects;
 end;
 
-procedure FXScrollLayout.SetPositionX(const Value: integer);
+procedure FXScrollLayout.SetValueX(const Value: integer);
 begin
   if IsReading and (FHorzScroll.Max < Value) then begin
     FHorzScroll.Max := Value;
     LastScroll.X := Value;
   end;
-  FHorzScroll.Position := Value;
+  FHorzScroll.Value := Value;
 end;
 
-procedure FXScrollLayout.SetPositionY(const Value: integer);
+procedure FXScrollLayout.SetValueY(const Value: integer);
 begin
   if IsReading and (FVertScroll.Max < Value) then begin
     FVertScroll.Max := Value;
     LastScroll.Y := Value;
   end;
-  FVertScroll.Position := Value;
+  FVertScroll.Value := Value;
 end;
 
 procedure FXScrollLayout.SetShowScrollbars(const Value: boolean);
@@ -808,7 +808,7 @@ procedure ProcessHorz(Control: TControl);
       case Control.Align of
         alLeft, alNone:
           if (Control.Align = alLeft) or (Control.Anchors * [akLeft, akRight] = [akLeft]) then
-            NewRange := Math.Max(NewRange, Position + Control.Left + Control.Width);
+            NewRange := Math.Max(NewRange, Value + Control.Left + Control.Width);
         alRight: Inc(AlignMargin, Control.Width);
       end;
   end;
@@ -819,7 +819,7 @@ procedure ProcessVert(Control: TControl);
       case Control.Align of
         alTop, alNone:
           if (Control.Align = alTop) or (Control.Anchors * [akTop, akBottom] = [akTop]) then
-            NewRange := Math.Max(NewRange, Position + Control.Top + Control.Height);
+            NewRange := Math.Max(NewRange, Value + Control.Top + Control.Height);
         alBottom: Inc(AlignMargin, Control.Height);
       end;
   end;
@@ -856,11 +856,11 @@ begin
       NewRange := NewRange + AlignMargin - ControlSize;
 
       // Extra Range, cancel if controls fit
-      if (Position = 0) and (ControlSize >= ZoneSize) then
+      if (Value = 0) and (ControlSize >= ZoneSize) then
         NewRange := 0;
 
-      // Larger than position
-      if NewRange >= Position then
+      // Larger than value
+      if NewRange >= Value then
         NewRange := Math.Max(NewRange, 0);
 
       // Extend range

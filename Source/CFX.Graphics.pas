@@ -15,6 +15,7 @@ uses
   Vcl.Graphics,
   CFX.VarHelpers,
   CFX.Types,
+  CFX.Colors,
   CFX.BlurFunctions,
   CFX.ThemeManager,
   Math,
@@ -77,7 +78,10 @@ procedure GradVertical(Canvas:TCanvas; Rect:TRect; FromColor, ToColor:TColor);
 procedure FastBlur(Bitmap: TBitmap; Radius: Real; BlurScale: Integer; HighQuality: Boolean = True);
 
 // Icon drawing
-procedure DrawFontIcon(Canvas: TCanvas; Icon: string; Color: TColor; Rect: TRect);
+procedure DrawFontIcon(Canvas: TCanvas; Icon: string; Color: TColor; ARect: TRect);
+
+// Icon button drawing
+procedure DrawFXIconButton(Canvas: TCanvas; ARect: TRect; Icon: string; ABackground, AForeground: TColor);
 
 const
   HAlignments: Array[TAlignment] of Longint = (DT_LEFT, DT_RIGHT, DT_CENTER);
@@ -301,7 +305,7 @@ begin
 end;
 
 
-procedure DrawFontIcon(Canvas: TCanvas; Icon: string; Color: TColor; Rect: TRect);
+procedure DrawFontIcon(Canvas: TCanvas; Icon: string; Color: TColor; ARect: TRect);
 var
   FontPrevious: TFont;
   TextDraw: string;
@@ -310,20 +314,39 @@ begin
     FontPrevious := TFont.Create;
     try
       FontPrevious.Assign(Font);
+      Brush.Style := bsClear;
 
       // Draw
       Font.Color := Color;
       Font.Name := ThemeManager.IconFont;
-      Font.Height := GetMaxFontHeight(Canvas, Copy(Icon, 1, 1), Rect.Width, Rect.Height);
+      Font.Height := GetMaxFontHeight(Canvas, Copy(Icon, 1, 1), ARect.Width, ARect.Height);
       for var I := Low(Icon) to High(Icon) do begin
         TextDraw := Icon[I];
-        TextRect( Rect, TextDraw, [tfSingleLine, tfCenter, tfVerticalCenter] );
+        TextRect( ARect, TextDraw, [tfSingleLine, tfCenter, tfVerticalCenter] );
       end;
 
       Font.Assign(FontPrevious);
     finally
       FontPrevious.Free;
     end;
+  end;
+end;
+
+procedure DrawFXIconButton(Canvas: TCanvas; ARect: TRect; Icon: string; ABackground, AForeground: TColor);
+begin
+  with Canvas do begin
+    // Background
+    GDIRoundRect( MakeRoundRect(ARect, BUTTON_ROUNDNESS),
+      GetRGB(ABackground).MakeGDIBrush, nil);
+
+    // Icon
+    Brush.Style := bsClear;
+
+    Font.Height := ThemeManager.SmallFontHeight;
+    Font.Color := AForeground;
+    Font.Name := ThemeManager.IconFont;
+
+    TextRect( ARect, Icon, [tfSingleLine, tfCenter, tfVerticalCenter] );
   end;
 end;
 

@@ -150,7 +150,7 @@ begin
     inherited
   else
     begin
-      Rect := Bounds(-FHorzScroll.Position, -FVertScroll.Position,
+      Rect := Bounds(-FHorzScroll.Value, -FVertScroll.Value,
         Max(FHorzScroll.Max, ClientWidth), Max(ClientHeight,
         FVertScroll.Max));
 
@@ -174,14 +174,14 @@ begin
   FAnimY := FAnimY - Y;
 
   // Scroll
-  FVertScroll.Position := FVertScroll.Position + Y;
-  FHorzScroll.Position := FHorzScroll.Position + X;
+  FVertScroll.Value := FVertScroll.Value + Y;
+  FHorzScroll.Value := FHorzScroll.Value + X;
 
   // Max
-  if (FVertScroll.Position = 0) or (FVertScroll.Position = FVertScroll.Max) then
+  if (FVertScroll.Value = 0) or (FVertScroll.Value = FVertScroll.Max) then
     FAnimY := 0;
 
-  if (FHorzScroll.Position = 0) or (FHorzScroll.Position = FHorzScroll.Max) then
+  if (FHorzScroll.Value = 0) or (FHorzScroll.Value = FHorzScroll.Max) then
     FAnimX := 0;
 
   // Disable
@@ -192,9 +192,9 @@ begin
 
       // Add leftovers
       if FAnimY <> 0 then
-        FVertScroll.Position := FVertScroll.Position + FAnimY;
+        FVertScroll.Value := FVertScroll.Value + FAnimY;
       if FAnimX <> 0 then
-        FHorzScroll.Position := FHorzScroll.Position + FAnimX;
+        FHorzScroll.Value := FHorzScroll.Value + FAnimX;
 
       // Clear data
       FAnimY := 0;
@@ -295,7 +295,7 @@ begin
   // Theme
   UpdateTheme(false);
 
-  // Update Position
+  // Update Value
   UpdateScrollbars;
 end;
 
@@ -365,8 +365,8 @@ begin
         end
         else
           case Prefer of
-            TScrollPrefer.Vertical: FVertScroll.Position := trunc(FVertScroll.Position + WheelDelta / abs(WheelDelta) * -ScrollSpeed);
-            TScrollPrefer.Horizontal: FHorzScroll.Position := trunc(FHorzScroll.Position + WheelDelta / abs(WheelDelta) * -ScrollSpeed);
+            TScrollPrefer.Vertical: FVertScroll.Value := trunc(FVertScroll.Value + WheelDelta / abs(WheelDelta) * -ScrollSpeed);
+            TScrollPrefer.Horizontal: FHorzScroll.Value := trunc(FHorzScroll.Value + WheelDelta / abs(WheelDelta) * -ScrollSpeed);
           end;
     end;
 
@@ -564,7 +564,7 @@ begin
   with FXScrollBar(Sender) do
     case Tag of
       0: begin
-        ANewPos := Position;
+        ANewPos := Value;
         AScrollBy := FPosY-ANewPos;
 
         ScrollByEx(0, AScrollBy);
@@ -572,7 +572,7 @@ begin
         FPosY := ANewPos;
       end;
       1: begin
-        ANewPos := Position;
+        ANewPos := Value;
         AScrollBy := FPosX-ANewPos;
 
         ScrollByEx(AScrollBy, 0);
@@ -603,7 +603,7 @@ procedure ProcessHorz(Control: TControl);
       case Control.Align of
         alLeft, alNone:
           if (Control.Align = alLeft) or (Control.Anchors * [akLeft, akRight] = [akLeft]) then
-            NewRange := Math.Max(NewRange, Position + Control.Left + Control.Width + FControl.ScrollExtendX);
+            NewRange := Math.Max(NewRange, Value + Control.Left + Control.Width + FControl.ScrollExtendX);
         alRight: Inc(AlignMargin, Control.Width);
       end;
   end;
@@ -614,7 +614,7 @@ procedure ProcessVert(Control: TControl);
       case Control.Align of
         alTop, alNone:
           if (Control.Align = alTop) or (Control.Anchors * [akTop, akBottom] = [akTop]) then
-            NewRange := Math.Max(NewRange, Position + Control.Top + Control.Height + FControl.ScrollExtendY);
+            NewRange := Math.Max(NewRange, Value + Control.Top + Control.Height + FControl.ScrollExtendY);
         alBottom: Inc(AlignMargin, Control.Height);
       end;
   end;
@@ -646,11 +646,11 @@ begin
       NewRange := NewRange + AlignMargin - ControlSize;
 
       // Extra Range, cancel if controls fit
-      if (Position = 0) and (ControlSize >= ZoneSize) then
+      if (Value = 0) and (ControlSize >= ZoneSize) then
         NewRange := 0;
 
       // Set Max
-      if NewRange >= Position then
+      if NewRange >= Value then
         Self.Max := Math.Max(NewRange, 0);
 
       // Visible

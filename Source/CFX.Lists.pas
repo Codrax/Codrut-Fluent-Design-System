@@ -43,8 +43,6 @@ type
     constructor Create(aOwner: TComponent); override;
   end;
 
-  FXDrawListOnDraw = procedure(Sender: TObject; AIndex: integer; ARect: TRect; Canvas: TCanvas) of object;
-
   FXDrawList = class(FXWindowsControl)
   private
     procedure SetNoItemsOutputText(const Value: string);
@@ -97,9 +95,8 @@ type
       // row, or select items in the same line, like the snake nokia game
 
     // Notifiers
-    FOnDrawItem,
-    FOnBeforeDrawItem,
-    FOnAfterDrawItem: FXDrawListOnDraw;
+    FOnBeforeDrawItem: FXControlOnDrawRectIndexDrawDefault;
+    FOnDrawItem: FXControlOnDrawRectIndex;
 
     FOnAfterDrawItems: TNotifyEvent;
 
@@ -198,9 +195,8 @@ type
     procedure InteractionStateChanged(AState: FXControlState); override;
 
     // Props
-    property OnDrawItem: FXDrawListOnDraw read FOnDrawItem write FOnDrawItem;
-    property OnBeforeDrawItem: FXDrawListOnDraw read FOnBeforeDrawItem write FOnBeforeDrawItem;
-    property OnAfterDrawItem: FXDrawListOnDraw read FOnAfterDrawItem write FOnAfterDrawItem;
+    property OnBeforeDrawItem: FXControlOnDrawRectIndexDrawDefault read FOnBeforeDrawItem write FOnBeforeDrawItem;
+    property OnDrawItem: FXControlOnDrawRectIndex read FOnDrawItem write FOnDrawItem;
 
     property OnAfterDrawItems: TNotifyEvent read FOnAfterDrawItems write FOnAfterDrawItems;
 
@@ -543,10 +539,10 @@ begin
 
   if Sender = FAnimX then begin
     // Horizontal
-    FHorzScroll.Position := FXIntAnim(Sender).CurrentValue;
+    FHorzScroll.Value := FXIntAnim(Sender).CurrentValue;
   end else begin
     // Vertical
-    FVertScroll.Position := FXIntAnim(Sender).CurrentValue;
+    FVertScroll.Value := FXIntAnim(Sender).CurrentValue;
   end;
 
   // Process messages in order to detect scroll speed update / stop
@@ -742,19 +738,19 @@ begin
     if not ScrollAnimation then begin
       // Instant
       if HorizontalScroll then
-        FHorzScroll.Position:= FHorzScroll.Position +ScrollAmount
+        FHorzScroll.Value:= FHorzScroll.Value +ScrollAmount
       else
-        FVertScroll.Position:= FVertScroll.Position +ScrollAmount
+        FVertScroll.Value:= FVertScroll.Value +ScrollAmount
     end else begin
       // Animate
       if HorizontalScroll then begin
         // Horizontal
-        FAnimX.StartValue := FHorzScroll.Position;
+        FAnimX.StartValue := FHorzScroll.Value;
 
         if FAnimX.Running then
           FAnimX.EndValue := FAnimX.EndValue + ScrollAmount
         else
-          FAnimX.EndValue := FHorzScroll.Position+ScrollAmount;
+          FAnimX.EndValue := FHorzScroll.Value+ScrollAmount;
         FAnimX.EndValue := EnsureRange(FAnimX.EndValue, FHorzScroll.Min, FHorzScroll.Max);
 
         FAnimX.Stop;
@@ -763,12 +759,12 @@ begin
           FAnimX.Start;
       end else begin
         // Vertical
-        FAnimY.StartValue := FVertScroll.Position;
+        FAnimY.StartValue := FVertScroll.Value;
 
         if FAnimY.Running then
           FAnimY.EndValue := FAnimY.EndValue + ScrollAmount
         else
-          FAnimY.EndValue := FVertScroll.Position+ScrollAmount;
+          FAnimY.EndValue := FVertScroll.Value+ScrollAmount;
         FAnimY.EndValue := EnsureRange(FAnimY.EndValue, FVertScroll.Min, FVertScroll.Max);
 
         FAnimY.Stop;
@@ -784,11 +780,14 @@ begin
 end;
 
 procedure FXDrawList.DrawItem(Index: integer; ARect: TRect; Canvas: TCanvas);
+var
+  DrawDefault: boolean;
 begin
+  DrawDefault := FDefaultDraw;
   if Assigned(OnBeforeDrawItem) then
-    OnBeforeDrawItem(Self, Index, ARect, Canvas);
+    OnBeforeDrawItem(Self, Index, ARect, Canvas, DrawDefault);
 
-  if FDefaultDraw then
+  if DrawDefault then
     with Canvas do begin
       Brush.Color := GetItemBackgroundColor(Index);
 
@@ -820,15 +819,15 @@ begin
 
   // Vertical scrolling
   if Bounds.Top < Client.Top then
-    FVertScroll.Position := FVertScroll.Position + (Bounds.Top - Client.Top);
+    FVertScroll.Value := FVertScroll.Value + (Bounds.Top - Client.Top);
   if Bounds.Bottom > Client.Bottom then
-    FVertScroll.Position := FVertScroll.Position + (Bounds.Bottom - Client.Bottom);
+    FVertScroll.Value := FVertScroll.Value + (Bounds.Bottom - Client.Bottom);
 
   // Horizontal scrolling
   if Bounds.Left < Client.Left then
-    FHorzScroll.Position := FHorzScroll.Position + (Bounds.Left - Client.Left);
+    FHorzScroll.Value := FHorzScroll.Value + (Bounds.Left - Client.Left);
   if Bounds.Right > Client.Right then
-    FHorzScroll.Position := FHorzScroll.Position + (Bounds.Right - Client.Right);
+    FHorzScroll.Value := FHorzScroll.Value + (Bounds.Right - Client.Right);
 end;
 
 function FXDrawList.GetClientRect: TRect;
@@ -880,7 +879,7 @@ function FXDrawList.GetItemDisplayRect(Index: integer): TRect;
 begin
   Result := GetItemRect(Index);
 
-  Result.Offset( -FHorzScroll.Position, -FVertScroll.Position )
+  Result.Offset( -FHorzScroll.Value, -FVertScroll.Value )
 end;
 
 function FXDrawList.GetItemRect(Index: integer): TRect;
@@ -1140,10 +1139,6 @@ begin
     // Draw out of bound?
     if (not FNoOutOfBoundsDraw or InBounds) then
       DrawItem(I, Display, Buffer);
-
-    // Event notifier
-    if Assigned(OnAfterDrawItem) then
-      OnAfterDrawItem(Self, I, Display, Canvas);
   end;
 
   // No items
@@ -1163,8 +1158,8 @@ begin
   StopScrollAnimations;
 
   // Set scroll
-  FVertScroll.Position := 0;
-  FHorzScroll.Position := 0;
+  FVertScroll.Value := 0;
+  FHorzScroll.Value := 0;
 
   // updated by scrollbars
 end;
@@ -1192,11 +1187,11 @@ begin
 
   // Set maxes
   MaxX := Max(0, MaxX-Client.Width);
-  if (MaxX > 0) or (FHorzScroll.Position > 0) then
+  if (MaxX > 0) or (FHorzScroll.Value > 0) then
     FHorzScroll.Max := MaxX + FExtendX;
 
   MaxY := Max(0, MaxY-Client.Height);
-  if (MaxY > 0) or (FVertScroll.Position > 0) then
+  if (MaxY > 0) or (FVertScroll.Value > 0) then
     FVertScroll.Max := MaxY + FExtendY;
 end;
 

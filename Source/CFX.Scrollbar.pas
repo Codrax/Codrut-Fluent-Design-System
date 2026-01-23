@@ -34,7 +34,7 @@ type
     FOnChangeValue: TNotifyEvent;
     FOrientation: FXOrientation;
     FRoundness: integer;
-    FPosition, FMin, FMax: int64;
+    FValue, FMin, FMax: int64;
     FSmallChange,
     FScrollBarHeight,
     FCustomScrollBarHeight: integer;
@@ -58,7 +58,7 @@ type
     Contains1, Contains2: boolean;
 
     // Internal
-    procedure InteractSetPosition(Value: integer);
+    procedure InteractSetValue(const AValue: integer);
 
     // Timer
     procedure RepeaterExecute(Sender: TObject);
@@ -80,7 +80,7 @@ type
     procedure SetOrientation(const Value: FXOrientation);
     procedure SetMax(const Value: int64);
     procedure SetMin(const Value: int64);
-    procedure SetPosition(const Value: int64);
+    procedure SetValue(const Value: int64);
     procedure SetEnableButtons(const Value: boolean);
     procedure SetCustomScrollbarSize(const Value: integer);
     procedure SetPageSize(const Value: integer);
@@ -114,7 +114,7 @@ type
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
     property Orientation: FXOrientation read FOrientation write SetOrientation default FXOrientation.Vertical;
-    property Position: int64 read FPosition write SetPosition;
+    property Value: int64 read FValue write SetValue;
     property SmallChange: integer read FSmallChange write SetSmallChange default 1;
     property Min: int64 read FMin write SetMin default 0;
     property Max: int64 read FMax write SetMax default 100;
@@ -182,9 +182,9 @@ begin
   inherited; // draw
 end;
 
-procedure FXScrollbar.InteractSetPosition(Value: integer);
+procedure FXScrollbar.InteractSetValue(const AValue: integer);
 begin
-  Position := Value;
+  Value := AValue;
   if Assigned(OnChange) then
     OnChange(Self);
 end;
@@ -195,9 +195,9 @@ begin
   if (key = '-') or (key = '+') then
     begin
       if Key = '-' then
-        InteractSetPosition( Position - FSmallChange )
+        InteractSetValue( Value - FSmallChange )
       else
-        InteractSetPosition( Position + FSmallChange );
+        InteractSetValue( Value + FSmallChange );
     end;
 end;
 
@@ -261,7 +261,7 @@ begin
             NewPosition := round((Y-DrawRect.Top - FScrollBarHeight / 2) / (DrawRect.Height - FScrollBarHeight) * (FMax - FMin));
         end;
 
-      InteractSetPosition( NewPosition + FMin );
+      InteractSetValue( NewPosition + FMin );
     end;
 end;
 
@@ -399,7 +399,7 @@ begin
   FMinimised := true;
   FCustomScrollBarHeight := 0;
 
-  FPosition := 0;
+  FValue := 0;
   FMin := 0;
   FMax := 100;
 
@@ -463,7 +463,7 @@ end;
 
 function FXScrollbar.GetPercentage: real;
 begin
-  Result := GetPercentageCustom(FPosition);
+  Result := GetPercentageCustom(FValue);
 end;
 
 function FXScrollbar.GetPercentageCustom(Value: int64): real;
@@ -620,9 +620,9 @@ begin
   FRepeater.Interval := 50;
 
   if Contains1 then
-    InteractSetPosition( Position - SmallChange );
+    InteractSetValue( FValue - SmallChange );
   if Contains2 then
-    InteractSetPosition( Position + SmallChange );
+    InteractSetValue( FValue + SmallChange );
 end;
 
 procedure FXScrollbar.SetEnableButtons(const Value: boolean);
@@ -646,8 +646,8 @@ begin
       if FMin > FMax then
         FMax := FMax;
 
-      if FPosition > FMax then
-        FPosition := FMax;
+      if FValue > FMax then
+        FValue := FMax;
     end;
 
   // Draw
@@ -663,8 +663,8 @@ begin
 
   if not IsReading then
     begin
-      if FPosition < FMin then
-        FPosition := FMin;
+      if FValue < FMin then
+        FValue := FMin;
 
       if FMax < FMin then
         FMax := FMin;
@@ -721,20 +721,20 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXScrollbar.SetPosition(const Value: int64);
+procedure FXScrollbar.SetValue(const Value: int64);
 begin
-  if FPosition = Value then
+  if FValue = Value then
     Exit;
 
-  FPosition := Value;
+  FValue := Value;
 
   if not IsReading then
     begin
-      if FPosition < FMin then
-        FPosition := FMin;
+      if FValue < FMin then
+        FValue := FMin;
 
-      if FPosition > FMax then
-        FPosition := FMax;
+      if FValue > FMax then
+        FValue := FMax;
 
       if Assigned(OnChangeValue) then
         OnChangeValue(Self);

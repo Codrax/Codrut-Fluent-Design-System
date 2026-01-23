@@ -128,7 +128,8 @@ contains
   CFX.Components in 'Source\CFX.Components.pas',
   CFX.Windows.DarkmodeApi in 'Source\CFX.Windows.DarkmodeApi.pas',
   CFX.Windows.DarkmodeApi.Types in 'Source\CFX.Windows.DarkmodeApi.Types.pas',
-  CFX.ComponentClasses in 'Source\CFX.ComponentClasses.pas';
+  CFX.ComponentClasses in 'Source\CFX.ComponentClasses.pas',
+  CFX.Translations in 'Source\CFX.Translations.pas';
 
 end.
 

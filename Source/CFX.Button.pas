@@ -414,7 +414,6 @@ end;
 procedure FXCustomButton.UpdateColors;
 var
   LoadPreset: FXButtonKind;
-  AOffset, ASmallOffset: integer;
 begin
   // Access theme manager
   FDrawColors.Assign( ThemeManager.SystemColor );
@@ -456,8 +455,8 @@ begin
       end;
 
       // Load from FDrawColors
-      AOffset := BUTTON_COLOR_OFFSET;
-      ASmallOffset := BUTTON_COLOR_SMALL_OFFSET;
+      var AOffset := BUTTON_COLOR_OFFSET;
+      var ASmallOffset := BUTTON_COLOR_SMALL_OFFSET;
 
       if not ThemeManager.DarkTheme then
         begin
@@ -533,6 +532,7 @@ begin
   if not Enabled then
     begin
       FDrawColors.Accent := GetColorGrayscale(FDrawColors.Accent);
+      FDrawColors.ForeGround := GetColorGrayscale(FDrawColors.ForeGround);
       FButtonColors.BackgroundNone := GetColorGrayscale(FButtonColors.BackgroundNone);
       FButtonColors.ForegroundNone := GetColorGrayscale(FButtonColors.ForegroundNone);
       FButtonColors.ForegroundNone := ColorBlend(FButtonColors.BackgroundNone, FButtonColors.ForegroundNone, BUTTON_BLEND_FADE)
@@ -1104,11 +1104,13 @@ end;
 destructor FXCustomButton.Destroy;
 begin
   FAnim.Stop;
-  FreeAndNil( FAnim );
   FreeAndNil( FCustomColors );
   FreeAndNil( FCustomButtonColors );
   FreeAndNil( FDrawColors );
   FreeAndNil( FButtonColors );
+
+  FreeAndNil( FAnim );
+
   FreeAndNil( FImage );
   FreeAndNil( FStateImage );
   FreeAndNil( FAutoStopState );

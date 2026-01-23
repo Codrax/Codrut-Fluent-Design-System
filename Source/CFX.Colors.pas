@@ -825,12 +825,20 @@ begin
       FBackGroundNone := AFrom.DarkBackGroundNone;
       FBackGroundHover := AFrom.DarkBackGroundHover;
       FBackGroundPress := AFrom.DarkBackGroundPress;
+
+      FForeGroundNone := AFrom.DarkForeGroundNone;
+      FForeGroundHover := AFrom.DarkForeGroundHover;
+      FForeGroundPress := AFrom.DarkForeGroundPress;
     end
   else
     begin
       FBackGroundNone := AFrom.LightBackGroundNone;
       FBackGroundHover := AFrom.LightBackGroundHover;
       FBackGroundPress := AFrom.LightBackGroundPress;
+
+      FForeGroundNone := AFrom.LightForeGroundNone;
+      FForeGroundHover := AFrom.LightForeGroundHover;
+      FForeGroundPress := AFrom.LightForeGroundPress;
     end;
 end;
 

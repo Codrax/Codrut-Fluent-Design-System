@@ -10,6 +10,7 @@ uses
   Vcl.Clipbrd,
   Types,
   Math,
+  CFX.Translations,
   CFX.Colors,
   CFX.ThemeManager,
   CFX.Graphics,
@@ -492,6 +493,14 @@ begin
       FText := FHistory[Index];
 
       FHistory.Delete(Index);
+
+      // Notify
+      if Assigned(OnChange) then
+        OnChange(Self);
+
+      // Notify
+      if Assigned(OnChangeValue) then
+        OnChangeValue(Self);
 
       // Update
       StandardUpdateLayout;
@@ -1275,7 +1284,7 @@ begin
           Image.Enabled := true;
           Image.IconType := FXIconType.SegoeIcon;
           Image.SelectSegoe := #$E8C6;
-          Text := 'Cut';
+          Text := CFX_String_Edit_Menu_Cut;
           Shortcut := 'Ctrl+X';
         end;
       Add(M);
@@ -1286,7 +1295,7 @@ begin
           Image.Enabled := true;
           Image.IconType := FXIconType.SegoeIcon;
           Image.SelectSegoe := #$E8C8;
-          Text := 'Copy';
+          Text := CFX_String_Edit_Menu_Copy;
           Shortcut := 'Ctrl+C';
         end;
       Add(M);
@@ -1297,7 +1306,7 @@ begin
           Image.Enabled := true;
           Image.IconType := FXIconType.SegoeIcon;
           Image.SelectSegoe := #$E77F;
-          Text := 'Paste';
+          Text := CFX_String_Edit_Menu_Paste;
           Shortcut := 'Ctrl+V';
         end;
       Add(M);
@@ -1308,7 +1317,7 @@ begin
           Image.Enabled := true;
           Image.IconType := FXIconType.SegoeIcon;
           Image.SelectSegoe := #$E7A7;
-          Text := 'Undo';
+          Text := CFX_String_Edit_Menu_Undo;
           Shortcut := 'Ctrl+Z';
         end;
       Add(M);
@@ -1319,7 +1328,7 @@ begin
           Image.Enabled := true;
           Image.IconType := FXIconType.SegoeIcon;
           Image.SelectSegoe := #$E8B3;
-          Text := 'Select All';
+          Text := CFX_String_Edit_Menu_SelectAll;
           Shortcut := 'Ctrl+A';
         end;
       Add(M);

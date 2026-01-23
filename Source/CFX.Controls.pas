@@ -5,7 +5,8 @@ interface
 uses
   Winapi.Windows,
   Vcl.Graphics,
-  Classes, Types,
+  Classes,
+  Types,
   Winapi.Messages,
   CFX.Types,
   CFX.Constants,
@@ -200,6 +201,7 @@ type
     property OnPaintBuffer: FXControlOnPaint read FOnPaintBuffer write FOnPaintBuffer;
 
     // Background
+    procedure ClearBufferRegion(ARect: TRect);
     procedure DrawBackground(var Background: TBitMap; OnlyFill: boolean); virtual;
     procedure PaintBackground(OnlyFill: boolean=false);
     function GetBackground: TCanvas;
@@ -353,6 +355,7 @@ type
     /// <summary> Return all controls with the same parent above this one. </summary>
     function GetControlsAbove: TArray<TControl>;
     function GetChildControls: TArray<TControl>;
+    function GetChildControlsRecursively: TArray<TControl>;
 
     // Components
     function GetChildComponents: TArray<TComponent>;
@@ -375,6 +378,7 @@ type
     procedure UpdateTheme(const UpdateChildren: Boolean); virtual;
   end;
 
+  /// CONTAINER
   FXContainerWindowsControl = class(FXWindowsControl)
   published
     property PaddingFill;
@@ -481,6 +485,25 @@ begin
   if isDpiChange then begin
     UpdateRects;
     Redraw;
+  end;
+end;
+
+procedure FXWindowsControl.ClearBufferRegion(ARect: TRect);
+begin
+  ARect.Intersect(Buffer.ClipRect);
+  if ARect.IsEmpty then
+    Exit;
+
+  with Buffer do
+  if Transparent then begin
+    // TRANSPARENT
+    Buffer.CopyRect(ARect, FBackground.Canvas, ARect);
+  end else begin
+    // SOLID
+    Brush.Color := Background;
+
+    // Fill
+    FillRect(ARect);
   end;
 end;
 
@@ -921,6 +944,16 @@ begin
   SetLength(Result, ControlCount);
   for var I := 0 to ControlCount-1 do
     Result[I] := Controls[I];
+end;
+
+function FXWindowsControl.GetChildControlsRecursively: TArray<TControl>;
+begin
+  SetLength(Result, ControlCount);
+  for var I := 0 to ControlCount-1 do begin
+    Result[I] := Controls[I];
+    if Controls[I] is FXWindowsControl then
+      Result := Result + FXWindowsControl(Controls[I]).GetChildControlsRecursively;
+  end;
 end;
 
 function FXWindowsControl.GetClientRect: TRect;

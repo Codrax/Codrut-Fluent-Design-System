@@ -144,11 +144,15 @@ type
 
   // Theme Change Detection
   FXThemeType = (Redraw, Colorization, AppTheme);
-  FXThemeChange = procedure(Sender: TObject; ThemeChange: FXThemeType; DarkTheme: boolean; Accent: TColor) of object;
+  FXThemeChange = procedure(Sender: TObject; ThemeChange: FXThemeType) of object;
 
   // Controls
   FXControlState = (None, Hover, Press);
   FXControlOnPaint = procedure(Sender: TObject) of object;
+  FXControlOnIntegerValue = procedure(Sender: TObject; Value: integer) of object;
+  FXControlOnIntegerSourceDestination = procedure(Sender: TObject; Source, Destination: integer) of object;
+  FXControlOnDrawRectIndex = procedure(Sender: TObject; AIndex: integer; ARect: TRect; Canvas: TCanvas) of object;
+  FXControlOnDrawRectIndexDrawDefault = procedure(Sender: TObject; AIndex: integer; ARect: TRect; Canvas: TCanvas; var DrawDefault: boolean) of object;
 
   // Color  // AA RR GG BB
   FXColor = $00000000..$FFFFFFFF;
@@ -182,6 +186,7 @@ type
   public
     class function IfElse(Condition: boolean; IfTrue: T; IfFalse: T): T;
     class procedure Switch(var A, B: T);
+    class procedure SwitchPointer(const A, B: T);
     class function Compare(const A, B: T): TValueRelationship;
   end;
 
@@ -1673,6 +1678,17 @@ begin
   Temp := A;
   A := B;
   B := Temp;
+end;
+
+class procedure TType<T>.SwitchPointer(const A, B: T);
+var
+  Temp: T;
+type
+  PointerT = ^T;
+begin
+  Temp := A;
+  T(Pointer(@A)^) := B;
+  T(Pointer(@B)^) := Temp;
 end;
 
 { TRectLayout }

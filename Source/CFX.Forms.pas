@@ -885,7 +885,7 @@ begin
 
   // Notify Theme Change
   if Assigned(FThemeChange) then
-    FThemeChange(Self, ThemeReason, ThemeManager.DarkTheme, ThemeManager.AccentColor);
+    FThemeChange(Self, ThemeReason);
 
   LockWindowUpdate(0);
 end;
@@ -943,7 +943,7 @@ end;
 procedure FXCustomForm.WM_MOVE(var Msg: TWMMove);
 begin
   if not CanMove(Msg.Pos) then
-    Abort;
+    exit; // abort; was used here, I don't remember why, but I replaced it with exit;
 
   inherited;
   DoMove;

@@ -1501,7 +1501,7 @@ begin
 
       Width := 110;
       Top := FList.BoundsRect.Bottom+5;
-      Left := CurLeft; Inc(CurLeft, Width+10);
+      Left := CurLeft; //Inc(CurLeft, Width+10);
 
       Image.IconType := FXIconType.SegoeIcon;
       Image.SelectSegoe := #$E8C8;

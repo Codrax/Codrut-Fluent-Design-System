@@ -41,6 +41,7 @@ type
     FFormFont,
     FIconFont: string;
     FFormFontHeight: integer;
+    FSmallFontHeight: integer;
     FLargeFontHeight: integer;
 
     FSystemMenuAnimation: FXAnimateSelection;
@@ -82,6 +83,7 @@ type
     (* Global Font Settings *)
     property FormFont: string read FFormFont write FFormFont;
     property FormFontHeight: integer read FFormFontHeight write FFormFontHeight;
+    property SmallFontHeight: integer read FSmallFontHeight write FSmallFontHeight;
     property LargeFontHeight: integer read FLargeFontHeight write FLargeFontHeight;
     property IconFont: string read FIconFont write FIconFont;
 
@@ -343,6 +345,7 @@ begin
 
   FFormFont := FORM_FONT_NAME;
   FFormFontHeight := FORM_FONT_HEIGHT;
+  FSmallFontHeight := SMALL_FONT_HEIGHT;
   FLargeFontHeight := LARGE_FONT_HEIGHT;
 end;
 

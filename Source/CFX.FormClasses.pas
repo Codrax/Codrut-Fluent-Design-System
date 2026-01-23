@@ -322,7 +322,7 @@ begin
 
   // Notify Theme Change
   if Assigned(FThemeChange) then
-    FThemeChange(Self, FXThemeType.AppTheme, ThemeManager.DarkTheme, ThemeManager.AccentColor);
+    FThemeChange(Self, FXThemeType.AppTheme);
 
   // Update children
   if IsContainer and UpdateChildren then
