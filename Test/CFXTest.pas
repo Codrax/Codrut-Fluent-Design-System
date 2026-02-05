@@ -76,8 +76,7 @@ type
     FXDropdownButton1: FXDropdownButton;
     FXImageList1: FXImageList;
     FXButton13: FXButton;
-    FXTabStrip1: FXTabStrip;
-    FXLinearStringsList1: FXLinearStringsList;
+    Ctrl_Pay_Cash: FXNumberEdit;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);
@@ -107,40 +106,6 @@ implementation
 procedure TForm1.FormCreate(Sender: TObject);
 begin
   AllowThemeChangeAnimation := True;
-
-  //
-  FXTabStrip1.ShowCloseButton := true;
-  FXTabStrip1.ShowPlusButton := true;
-  FXTabStrip1.EnableReordering := true;
-
-  with FXTabStrip1.Tabs.Add do begin
-    Text := 'Bon fiscal 1';
-
-    Image.IconType := FXIconType.SegoeIcon;
-    Image.SelectSegoe := #$E8A5;
-  end;
-  with FXTabStrip1.Tabs.Add do begin
-    Text := 'Bon fiscal 2';
-
-    Image.IconType := FXIconType.SegoeIcon;
-    Image.SelectSegoe := #$E8A5;
-  end;
-  with FXTabStrip1.Tabs.Add do begin
-    Text := 'Bon fiscal 3';
-
-    Image.IconType := FXIconType.SegoeIcon;
-    Image.SelectSegoe := #$E8A5;
-  end;
-  with FXTabStrip1.Tabs.Add do begin
-    Text := 'Bon fiscal 4';
-
-    Image.IconType := FXIconType.SegoeIcon;
-    Image.SelectSegoe := #$E8A5;
-  end;
-
-  FXLinearStringsList1.ItemVisible[1] := false;
-  FXLinearStringsList1.ItemVisible[3] := false;
-  FXLinearStringsList1.ItemVisible[5] := false;
 end;
 
 procedure TForm1.FXAppManager1UpdateChecked(Sender: TObject);

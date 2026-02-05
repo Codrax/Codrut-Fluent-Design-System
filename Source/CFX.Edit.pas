@@ -1835,6 +1835,7 @@ var
   I: Int64;
   New: Extended;
 begin
+  Result := false;
   try
     if AText = '' then
       // 0
@@ -1844,16 +1845,16 @@ begin
       case FNumberType of
         FXNumberType.Integer: begin
           if not TryStrToInt64(AText, I) then
-            Exit(false);
+            Exit;
           New := I;
         end;
         FXNumberType.Extended: begin
           if not TryStrToFloat(AText, New) then
-            Exit(false);
+            Exit
         end;
         FXNumberType.Currency: begin
           if not TryStrToFloat(AText, New) then
-            Exit(false);
+            Exit;
         end;
       end;
 
@@ -1912,7 +1913,7 @@ begin
     Value := FRange.EnsureRange(Value);
 
   // Same value?
-  if FValue = Value then
+  if (FValue = Value) and not IsReading then
     Exit;
     
   // Set
