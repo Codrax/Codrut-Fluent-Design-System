@@ -154,6 +154,7 @@ type
     procedure SetImageScale(const Value: single);
     procedure SetDrawIsolationLine(const Value: boolean);
     procedure SetShowPlusButton(const Value: boolean);
+    procedure SetScrollPos(Value: integer);
 
   protected
     procedure PaintBuffer; override;
@@ -209,6 +210,8 @@ type
     // Props
     property ImageScale: single read FImageScale write SetImageScale;
     property Orientation: FXOrientation read FOrientation write SetOrientation default FXOrientation.Horizontal;
+
+    property ScrollPosition: integer read FScrollPos write SetScrollPos;
 
     property RoundTabItems: boolean read FRoundTabItems write SetRoundTabItems default true;
     property DrawIsolationLine: boolean read FDrawIsolationLine write SetDrawIsolationLine default true;
@@ -358,6 +361,8 @@ begin
 end;
 
 procedure FXTabStrip.DoAddScroll(ScrollAmount: integer);
+var
+  NewEndValue: integer;
 begin
   if not FScrollAnimation and not IsDesigning then begin
     FScrollPos := EnsureRange(FScrollPos+ScrollAmount, 0, FScrollMax);
@@ -367,7 +372,6 @@ begin
   // Horizontal
   FAnimScroll.StartValue := FScrollPos;
 
-  var NewEndValue := 0;
   if FAnimScroll.Running then
     NewEndValue := FAnimScroll.EndValue + ScrollAmount
   else
@@ -1130,6 +1134,17 @@ begin
 
   FRoundTabItems := Value;
   StandardUpdateDraw;
+end;
+
+procedure FXTabStrip.SetScrollPos(Value: integer);
+begin
+  Value := EnsureRange(Value, 0, FScrollMax);
+  if Value = FScrollPos then
+    Exit;
+  FScrollPos := Value;
+
+  // Draw
+  StandardUpdateLayout;
 end;
 
 procedure FXTabStrip.SetShowPlusButton(const Value: boolean);

@@ -41,8 +41,10 @@ type
   // Form
   FXCustomForm = class(TForm, IFXComponent, IFXControl)
   private
-    FCustomColors: FXColorSets;
+    FCustomColors,
+    FCustomTitlebarColors: FXColorSets;
     FDrawColors: FXColorSet;
+    FDrawTitlebarColors: FXColorSet;
 
     FWindowUpdateLock: boolean;
 
@@ -60,9 +62,6 @@ type
     // Notify
     FThemeChange: FXThemeChange;
     FOnMove: FXFormProcedure;
-
-    // Status
-    FDestColor: TColor;
 
     // DWM Backdrop
     FBackdrop: FXFormBackdropType;
@@ -148,6 +147,7 @@ type
     property MicaEffect: boolean read FMicaEffect write SetMicaEffect default false;
     property SmokeEffect: boolean read FSmokeEffect write SetSmokeEffect default false;
     property CustomColors: FXColorSets read FCustomColors write FCustomColors;
+    property CustomTitlebarColors: FXColorSets read FCustomTitlebarColors write FCustomTitlebarColors;
     property AllowThemeChangeAnimation: boolean read FAllowThemeChangeAnim write FAllowThemeChangeAnim default false;
 
     // Experimental feature - DO NOT USE
@@ -395,7 +395,9 @@ end;
 destructor FXCustomForm.Destroy;
 begin
   FreeAndNil(FCustomColors);
+  FreeAndNil(FCustomTitlebarColors);
   FreeAndNil(FDrawColors);
+  FreeAndNil(FDrawTitlebarColors);
   FreeAndNil(FCornerPreferenceCustomized);
 
   inherited;
@@ -507,7 +509,9 @@ begin
   inherited;
   // Create Classes
   FCustomColors := FXColorSets.Create(Self);
+  FCustomTitlebarColors := FXColorSets.Create(Self);
   FDrawColors := FXColorSet.Create(ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
+  FDrawTitlebarColors := FXColorSet.Create(ThemeManager.SystemColorSet, ThemeManager.DarkTheme);
 end;
 
 function FXCustomForm.IsContainer: Boolean;
@@ -774,7 +778,6 @@ end;
 
 procedure FXCustomForm.UpdateTheme(const UpdateChildren: Boolean);
 var
-  PrevColor: TColor;
   ThemeReason: FXThemeType;
   BackgroundSelect: FXColorType;
 begin
@@ -789,20 +792,30 @@ begin
   if Succeeded(DwmSetWindowAttribute(Handle, Ord(ImmersiveDarkMode), @Value, SizeOf(Value))) then
     AllowDarkModeForWindow(Handle, ThemeManager.DarkTheme);
 
+  // Previous
+  var PrevColor := FDrawColors.Background;
+  var PrevTitlebarColor := FDrawTitlebarColors.Background;
+
   // Update Colors
   if CustomColors.Enabled then
-    begin
-      FDrawColors.Background := ExtractColor( CustomColors, BackgroundSelect );
-      FDrawColors.Foreground := ExtractColor( CustomColors, FXColorType.Foreground );
-    end
-  else
-    begin
-      FDrawColors.Background := ExtractColor(ThemeManager.SystemColor, BackgroundSelect);
-      FDrawColors.Foreground := ExtractColor(ThemeManager.SystemColor, FXColorType.Foreground);
-    end;
+  begin
+    FDrawColors.Background := ExtractColor( CustomColors, BackgroundSelect );
+    FDrawColors.Foreground := ExtractColor( CustomColors, FXColorType.Foreground );
+  end
+  else begin
+    FDrawColors.Background := ExtractColor(ThemeManager.SystemColor, BackgroundSelect);
+    FDrawColors.Foreground := ExtractColor(ThemeManager.SystemColor, FXColorType.Foreground);
+  end;
 
-  // Transizion Animation
-  PrevColor := FDestColor;
+  // Update Titlebar Colors
+  if CustomTitlebarColors.Enabled then begin
+    FDrawTitlebarColors.Background := ExtractColor( CustomTitlebarColors, BackgroundSelect );
+    FDrawTitlebarColors.Foreground := ExtractColor( CustomTitlebarColors, FXColorType.Foreground );
+  end
+  else begin
+    FDrawTitlebarColors.Background := ExtractColor(ThemeManager.SystemColor, BackgroundSelect);
+    FDrawTitlebarColors.Foreground := ExtractColor(ThemeManager.SystemColor, FXColorType.Foreground);
+  end;
 
   // Theme Change Engine
   if PrevColor <> FDrawColors.Background then
@@ -828,7 +841,6 @@ begin
   end;
 
   // Start Transition
-  FDestColor := FDrawColors.Background;
   if Self.Visible and FAllowThemeChangeAnim then
     with FXAsyncIntAnim.Create do begin
       Duration := 0.1;
@@ -842,9 +854,11 @@ begin
       EndValue := 255;
 
       var NewColor: TColor;
+      var NewTitlebarColor: TColor;
       OnValue := procedure(Value: integer) begin
-        NewColor := ColorBlend(PrevColor, FDestColor, Value);
-        if NewColor = Self.Color then
+        NewColor := ColorBlend(PrevColor, FDrawColors.BackGround, Value);
+        NewTitlebarColor := ColorBlend(PrevTitlebarColor, FDrawTitlebarColors.BackGround, Value);
+        if NewColor = Self.Color then // can't really check titlebar easily, eh
           Exit;
 
         LockWindowUpdate(Handle);
@@ -853,7 +867,7 @@ begin
         Self.Color := NewColor;
 
         if FEnableTitlebar then
-          PrepareCustomTitleBar( TForm( Self ), Self.Color, FDrawColors.Foreground );
+          PrepareCustomTitleBar( TForm( Self ), NewTitlebarColor, FDrawTitlebarColors.Foreground );
 
         // Update chidren
         DoUpdateChildren();
@@ -871,10 +885,10 @@ begin
   else
     // No animation
     begin
-      Color := FDestColor;
+      Color := FDrawColors.BackGround;
       Invalidate;
       if FEnableTitlebar then
-        PrepareCustomTitleBar( TForm( Self ), FDestColor, FDrawColors.Foreground );
+        PrepareCustomTitleBar( TForm( Self ), FDrawTitlebarColors.BackGround, FDrawTitlebarColors.Foreground );
     end;
 
   // Font Color

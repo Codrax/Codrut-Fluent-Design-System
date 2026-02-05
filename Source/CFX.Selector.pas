@@ -34,7 +34,7 @@ type
     FItemAccentColors: FXSingleColorStateSet;
     FDrawColors: FXCompleteColorSet;
     FItems: TStringList;
-    FHoverOver, FSelectedItem: integer;
+    FHoverOver, FValue: integer;
     FDrawPosition: integer;
     FAnimation: boolean;
     FAnim: FXIntAnim;
@@ -55,7 +55,7 @@ type
 
     // Setters
     procedure SetItems(const Value: TStringList);
-    procedure SetSelectedItem(const Value: integer);
+    procedure SetValue(const Value: integer);
 
   protected
     procedure PaintBuffer; override;
@@ -87,7 +87,7 @@ type
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
 
-    property SelectedItem: integer read FSelectedItem write SetSelectedItem;
+    property Value: integer read FValue write SetValue;
     property Items: TStringList read FItems write SetItems;
 
     property Animation: boolean read FAnimation write FAnimation default true;
@@ -163,8 +163,8 @@ procedure FXSelector.MouseUp(Button: TMouseButton; Shift: TShiftState; X,
   Y: integer);
 begin
   inherited;
-  if (FHoverOver <> SelectedItem) and (FHoverOver <> -1) then begin
-    SelectedItem := FHoverOver;
+  if (FHoverOver <> Value) and (FHoverOver <> -1) then begin
+    Value := FHoverOver;
 
     // Notify
     if Assigned(FOnChange) then
@@ -254,10 +254,10 @@ begin
     end;
 
   // Pos
-  if SelectedItem = -1 then
+  if Value = -1 then
     FDrawPosition := -1
   else
-    FDrawPosition := ItemRects[SelectedItem].Left;
+    FDrawPosition := ItemRects[Value].Left;
 end;
 
 constructor FXSelector.Create(aOwner: TComponent);
@@ -277,7 +277,7 @@ begin
 
   FItems.OnChange := SelectorItemsChange;
 
-  FSelectedItem := 0;
+  FValue := 0;
 
   // Anim
   FAnim := FXIntAnim.Create(Self);
@@ -339,12 +339,12 @@ end;
 
 procedure FXSelector.AnimateToPosition;
 begin
-  if SelectedItem = -1 then
+  if Value = -1 then
     Exit;
   FAnim.Stop;
 
   FAnim.StartValue := FDrawPosition;
-  FAnim.EndValue := ItemRects[SelectedItem].Left;
+  FAnim.EndValue := ItemRects[Value].Left;
 
   FAnim.Start;
 end;
@@ -398,7 +398,7 @@ begin
         end;
 
       // Draw foreground Item
-      if FHoverOver = Selecteditem then
+      if FHoverOver = Value then
         AColor := FItemAccentColors.GetColor(InteractionState)
       else
         AColor := FItemAccentColors.None;
@@ -430,8 +430,8 @@ end;
 
 procedure FXSelector.SelectLast;
 begin
-  if SelectedItem > 0 then
-    SelectedItem := SelectedItem - 1;
+  if Value > 0 then
+    Value := Value - 1;
 
   // Notify
   if Assigned(FOnChange) then
@@ -440,8 +440,8 @@ end;
 
 procedure FXSelector.SelectNext;
 begin
-  if SelectedItem < FItems.Count then
-    SelectedItem := SelectedItem + 1;
+  if Value < FItems.Count then
+    Value := Value + 1;
 
   // Notify
   if Assigned(FOnChange) then
@@ -460,21 +460,21 @@ begin
   StandardUpdateLayout;
 end;
 
-procedure FXSelector.SetSelectedItem(const Value: integer);
+procedure FXSelector.SetValue(const Value: integer);
 begin
-  if (FSelectedItem = Value) or ((Value < 0) and (Value <> -1)) or ((Value >= FItems.Count) and not IsReading) then
+  if (FValue = Value) or ((Value < 0) and (Value <> -1)) or ((Value >= FItems.Count) and not IsReading) then
     Exit;
 
-  const OldSelectedItem = FSelectedItem;
+  const OldSelectedItem = FValue;
 
-  FSelectedItem := Value;
+  FValue := Value;
 
   // Update draw pos
   if not IsReading then
-    if Animation and (SelectedItem <> -1) and (OldSelectedItem <> -1) and not IsDesigning then
+    if Animation and (Value <> -1) and (OldSelectedItem <> -1) and not IsDesigning then
       AnimateToPosition
     else begin
-      if SelectedItem = -1 then
+      if Value = -1 then
         FDrawPosition := -1
       else
         FDrawPosition := ItemRects[Value].Left;

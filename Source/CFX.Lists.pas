@@ -1111,6 +1111,7 @@ end;
 procedure FXDrawList.PaintBuffer;
 var
   I: Integer;
+  VisibleTotal: integer;
 begin
   // Background
   case FBackground of
@@ -1121,9 +1122,11 @@ begin
 
   // Draw
   FVisibleList := [];
+  VisibleTotal := 0;
   for I := 0 to High(FItemRects) do begin
     if not FItemVisible[I] then
       Continue;
+    Inc(VisibleTotal);
 
     // Data
     const InBounds = GetInBounds(I);
@@ -1142,7 +1145,7 @@ begin
   end;
 
   // No items
-  if (Length(FItemRects) = 0) and (FNoItemsOutputText <> '') then
+  if (VisibleTotal = 0) and (FNoItemsOutputText <> '') then
     DrawNoItemsText;
 
   // Afte draw

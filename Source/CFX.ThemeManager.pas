@@ -390,6 +390,10 @@ end;
 
 procedure FXThemeManager.SaveAccentColor(const Value: TColor);
 begin
+  if (FAccentColor = Value) and not FAutoAccentColor then
+    Exit;
+
+  // Set & disable auto accent
   FAutoAccentColor := false;
   FAccentColor := Value;
 
@@ -408,6 +412,9 @@ procedure FXThemeManager.SetDarkMode(const Value: FXDarkSetting);
 var
   DarkModeValue: boolean;
 begin
+  if Value = FDarkThemeMode then
+    Exit;
+
   // Set new state
   FDarkThemeMode := Value;
 
