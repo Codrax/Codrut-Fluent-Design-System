@@ -305,6 +305,7 @@ type
     FNumberType: FXNumberType;
     FDecimals: integer;
     FRange: FNumberRange;
+    FAllowPartialTyping: boolean;
 
     FOnNumberChanged: TNotifyEvent;
 
@@ -313,8 +314,9 @@ type
 
     // Internal
     procedure UpdateTextValue;
-    procedure TextUpdated;
-
+    function TextUpdateTrySetValue: boolean; overload;
+    function TextUpdateTrySetValue(AText: string): boolean; overload;
+    
     // Getters
     function GetValueInt: int64;
     function GetValueCurrency: currency;
@@ -350,6 +352,7 @@ type
     property NumberType: FXNumberType read FNumberType write SetNumberType default FXNumberType.Integer;
     property Decimals: integer read FDecimals write SetDecimals default 2;
     property Value: extended read FValue write SetValue stored true;
+    property AllowPartialTyping: boolean read FAllowPartialTyping write FAllowPartialTyping default false;
 
     property Position;
     property SelectionLength;
@@ -1711,7 +1714,7 @@ begin
   ChangeTextValue(AText);
 
   // Test if valid
-  TextUpdated;
+  TextUpdateTrySetValue;
 
   // Notify
   if Assigned(OnChange) then
@@ -1790,15 +1793,31 @@ begin
 end;
 
 procedure FXNumberEdit.SetText(const Value: string);
+var
+  ShouldUpdate: boolean;
 begin
   // Inherit
   inherited;
 
   // Test if valid
-  TextUpdated;
+  ShouldUpdate := not TextUpdateTrySetValue;
+  if AllowPartialTyping then begin
+    // Failed but has potential
+    if ShouldUpdate and Text.EndsWith(FormatSettings.DecimalSeparator) and not Text.StartsWith(FormatSettings.DecimalSeparator) then begin
+      ShouldUpdate := not TextUpdateTrySetValue(Text+'0'); // attempt to validate "1." as "1.0"
+    end;
 
+    // Too large a number of decimals
+    if FNumberType <> FXNumberType.Integer then
+      if Text.Contains(FormatSettings.DecimalSeparator) and 
+        (Text.Substring(Text.IndexOf(FormatSettings.DecimalSeparator)+1).Length > FDecimals) then
+        ShouldUpdate := true;
+  end;
+
+  // Update display
   if not IsReading then
-    UpdateTextValue;
+    if ShouldUpdate or not AllowPartialTyping then
+      UpdateTextValue;
 end;
 
 procedure FXNumberEdit.SetValueInt(Value: int64);
@@ -1811,34 +1830,45 @@ begin
   Self.Value := Value;
 end;
 
-procedure FXNumberEdit.TextUpdated;
+function FXNumberEdit.TextUpdateTrySetValue(AText: string): boolean;
 var
-  Number: string;
   I: Int64;
   New: Extended;
 begin
   try
-    Number := Text;
+    if AText = '' then
+      // 0
+      New := 0
+    else
+      // autp
+      case FNumberType of
+        FXNumberType.Integer: begin
+          if not TryStrToInt64(AText, I) then
+            Exit(false);
+          New := I;
+        end;
+        FXNumberType.Extended: begin
+          if not TryStrToFloat(AText, New) then
+            Exit(false);
+        end;
+        FXNumberType.Currency: begin
+          if not TryStrToFloat(AText, New) then
+            Exit(false);
+        end;
+      end;
 
-    case FNumberType of
-      FXNumberType.Integer: begin
-        if not TryStrToInt64(Number, I) then
-          Exit;
-        New := I;
-      end;
-      FXNumberType.Extended: begin
-        if not TryStrToFloat(Number, New) then
-          Exit;
-      end;
-      FXNumberType.Currency: begin
-        if not TryStrToFloat(Number, New) then
-          Exit;
-      end;
-    end;
-
+    //
     SetValueEx(New, false);
+
+    //
+    Result := New = Value;
   except
   end;
+end;
+
+function FXNumberEdit.TextUpdateTrySetValue: boolean;
+begin
+  Result := TextUpdateTrySetValue(Text);
 end;
 
 procedure FXNumberEdit.UpdateTextValue;

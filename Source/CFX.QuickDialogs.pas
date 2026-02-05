@@ -2,7 +2,7 @@ unit CFX.QuickDialogs;
 
 interface
   uses
-    Winapi.Windows, SysUtils, CFX.Dialogs, Vcl.Forms, System.UITypes;
+    Winapi.Windows, SysUtils, CFX.Dialogs, Vcl.Forms, Vcl.Dialogs, System.UITypes;
 
 // Dialogs
 procedure OpenMessage(AText: string); overload;
@@ -13,6 +13,8 @@ function OpenDialog(AText: string; AKind: FXDialogKind; AButtons: TMsgDlgButtons
 function OpenDialog(ATitle, AText: string; AKind: FXDialogKind; AButtons: TMsgDlgButtons): TModalResult; overload;
 function OpenDialog(ATitle, AText: string; AButtons: TArray<string>): integer; overload;
 function OpenDialog(ATitle, AText: string; AKind: FXDialogKind; AButtons: TArray<string>): integer; overload;
+function OpenConfirm(ATitle, AText: string): boolean; overload;
+function OpenConfirm(ATitle, AText: string; YesIsDefault: boolean): boolean; overload;
 function OpenInput(ATitle, AText: string; var AValue: string): boolean; overload;
 function OpenInput(ATitle, AText: string; var AValue: integer; DefaultValue: integer=0): boolean; overload;
 
@@ -129,6 +131,34 @@ begin
         AddButton(AButtons[I], '');
 
       Result := Execute;
+    finally
+      Free;
+    end;
+end;
+
+function OpenConfirm(ATitle, AText: string): boolean;
+begin
+  Result := OpenConfirm(ATitle, AText, true);
+end;
+
+function OpenConfirm(ATitle, AText: string; YesIsDefault: boolean): boolean; overload;
+begin
+  with FXModalDialog.Create do
+    try
+      Parent := GetActiveForm;
+
+      Title := ATitle;
+      Text := AText;
+
+      ButtonDynamicSizing := true;
+      Buttons := [mbYes, mbNo];
+
+      if YesIsDefault then
+        ButtonsHighlighted := [mbYes]
+      else
+        ButtonsHighlighted := [mbNo];
+
+      Result := Execute = mrYes;
     finally
       Free;
     end;

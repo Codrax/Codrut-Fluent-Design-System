@@ -187,6 +187,9 @@ type
 
     // Drawing internal
     FHoverOver: integer;
+    FScrollOffset: integer;
+    FScrollVisible: boolean;
+    FMaxVisibleItems: integer;
 
     // Settings
     FItemPressed: boolean;
@@ -211,6 +214,11 @@ type
     // Menu
     function IsOpen: boolean;
 
+    // Scrolling
+    procedure UpdateScrolling;
+    procedure ScrollUp;
+    procedure ScrollDown;
+
     // Glass interaction
     procedure GlassUp(Sender: TObject; Button: TMouseButton;
                       Shift: TShiftState; X, Y: Integer);
@@ -218,6 +226,7 @@ type
                         Shift: TShiftState; X, Y: Integer);
     procedure GlassEnter(Sender: TObject);
     procedure GlassMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure GlassMouseWheel(Sender: TObject; Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
 
     // FXPopupMenu Only
     procedure CheckFocusLoss;
@@ -335,6 +344,78 @@ implementation
 
 uses
   CFX.Controls, CFX.BlurMaterial;
+
+const
+  POPUP_SCROLL_BUTTON_HEIGHT = 20;
+
+{ FXPopupComponent }
+
+procedure FXPopupComponent.ScrollUp;
+begin
+  if FScrollOffset > 0 then
+  begin
+    Dec(FScrollOffset);
+    FGlassBlur.Repaint;
+  end;
+end;
+
+procedure FXPopupComponent.ScrollDown;
+var
+  VisibleCount, I: Integer;
+begin
+  // Count visible items from scroll offset
+  VisibleCount := 0;
+  I := FScrollOffset;
+  while (I < GetMenuItemCount) and (VisibleCount < FMaxVisibleItems) do
+  begin
+    if MenuItems[I].Visible then
+      Inc(VisibleCount);
+    Inc(I);
+  end;
+
+  if I < GetMenuItemCount then
+  begin
+    Inc(FScrollOffset);
+    FGlassBlur.Repaint;
+  end;
+end;
+
+procedure FXPopupComponent.GlassMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+begin
+  Handled := true;
+  if WheelDelta > 0 then
+    ScrollUp
+  else
+    ScrollDown;
+end;
+
+procedure FXPopupComponent.UpdateScrolling;
+var
+  I, VisibleCount, CalcHeight, AvailableRoom: Integer;
+begin
+  // Calculate visible items
+  VisibleCount := 0;
+  for I := 0 to GetMenuItemCount - 1 do
+    if MenuItems[I].Visible then
+      Inc(VisibleCount);
+
+  // Calculate max height
+  CalcHeight := VisibleCount * POPUP_ITEM_HEIGHT + POPUP_SPACING_TOPBOTTOM * 2;
+
+  if FAnimGoesUpwards then
+    AvailableRoom := FDropPoint.Y - Screen.WorkAreaRect.Top
+  else
+    AvailableRoom := Screen.WorkAreaRect.Bottom - FDropPoint.Y;
+
+  FScrollVisible := CalcHeight > AvailableRoom;
+
+  if FScrollVisible then
+  begin
+    FMaxVisibleItems := Trunc((AvailableRoom -
+      POPUP_SPACING_TOPBOTTOM * 2) / POPUP_ITEM_HEIGHT);
+  end;
+end;
 
 { FXPopupContainer }
 
@@ -626,6 +707,10 @@ constructor FXPopupComponent.Create(AOwner: TComponent);
 begin
   inherited;
 
+  FScrollOffset := 0;
+  FScrollVisible := false;
+  FMaxVisibleItems := 10;
+
   FAnim := FXIntAnim.Create(nil);
   with FAnim do begin
     OnStep := DoAnimationStep;
@@ -868,7 +953,7 @@ end;
 procedure FXPopupComponent.GlassMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
 var
-  I, FHoverPrevious: Integer;
+  I, FHoverPrevious, VisibleCount: Integer;
   Hover: boolean;
   Item: FXPopupMenu;
 begin
@@ -877,17 +962,25 @@ begin
 
   // Search
   Hover := false;
+  VisibleCount := 0;
   for I := 0 to GetMenuItemCount - 1 do
     if MenuItems[I] is FXPopupItem then
       begin
-        if MenuItems[I].FBounds.Contains(Point(X,Y)) and MenuItems[I].Enabled then
+        if MenuItems[I].Visible then
+        begin
+          if (VisibleCount >= FScrollOffset) and (VisibleCount < FScrollOffset + FMaxVisibleItems) then
           begin
-            SetHover(I);
+            if MenuItems[I].FBounds.Contains(Point(X,Y)) and MenuItems[I].Enabled then
+              begin
+                SetHover(I);
 
-            Hover := true;
+                Hover := true;
 
-            Break;
+                Break;
+              end;
           end;
+          Inc(VisibleCount);
+        end;
       end;
 
   /// None Found
@@ -967,7 +1060,7 @@ end;
 
 procedure FXPopupComponent.OnPaintControl(Sender: TObject);
 var
-  I, X, ActualX, Y, BiggestWidth: integer;
+  I, X, ActualX, Y, BiggestWidth, VisibleCount: integer;
   R: TRect;
   Text: string;
   XPress: boolean;
@@ -1039,14 +1132,21 @@ begin
       // Draw
       var LastWasSeparator := true; // cannot start with separator
       const ACount = GetMenuItemCount;
+      VisibleCount := 0;
       for I := 0 to ACount -1 do
         begin
           // Clear Bound
           MenuItems[I].FBounds := TRect.Empty;
 
-          // Hidden
+          // Hidden or scrolled out of view
           if not MenuItems[I].Visible then
             Continue;
+
+          if FScrollVisible and ((VisibleCount < FScrollOffset) or (VisibleCount >= FScrollOffset + FMaxVisibleItems)) then
+          begin
+            Inc(VisibleCount);
+            Continue;
+          end;
 
           // Analise
           if not MenuItems[I].IsSeparator then
@@ -1206,6 +1306,8 @@ begin
               // Next
               Y := Y + POPUP_SEPARATOR_HEIGHT;
             end;
+
+          Inc(VisibleCount);
         end;
 
       // End
@@ -1275,6 +1377,7 @@ end;
 procedure FXPopupComponent.PopupAtPointS(Point: TPoint);
 begin
   FDropPoint := Point;
+  FScrollOffset := 0; // Reset scrolling
 
   // Create
   if FForm = nil then
@@ -1337,12 +1440,16 @@ begin
               OnMouseDown := GlassDown;
               OnMouseMove := GlassMove;
               OnMouseEnter := GlassEnter;
+              OnMouseWheel := GlassMouseWheel;
 
               SyncroniseImage;
               OnPaintBuffer(FGlassBlur);
             end;
         end;
     end;
+
+  // Update scrolling calculations
+  UpdateScrolling;
 
   // Clear
   FCanCloseWhenLoseFocus := true;
@@ -1517,3 +1624,4 @@ end;
 initialization
   RegisterClass(FXPopupContainer);
 end.
+

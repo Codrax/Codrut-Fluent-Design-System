@@ -261,6 +261,7 @@ type
   private
     FButtons: TMsgDlgButtons;
     FButtonLabels: TButtonLabelsArray;
+    FButtonsHighlighted: TMsgDlgButtons;
 
   public
     // Props
@@ -283,6 +284,7 @@ type
     // Props
     property Buttons: TMsgDlgButtons read FButtons write FButtons;
     property ButtonLabels: TButtonLabelsArray read FButtonLabels write FButtonLabels;
+    property ButtonsHighlighted: TMsgDlgButtons read FButtonsHighlighted write FButtonsHighlighted;
 
     function Execute: TModalResult; overload;
 
@@ -1149,27 +1151,29 @@ end;
 
 function FXModalDialog.Execute: TModalResult;
 var
-  Active: TMsgDlgBtn;
+  Active: TMsgDlgButtons;
 function FailCheckDefault(Btn: TMsgDlgBtn): boolean;
 begin
   Result := not (Btn in Buttons);
   if not Result then
-    Active := Btn;
+    Active := [Btn];
 end;
 begin
   // Add buttons
   ClearButtons;
 
   // Active
-  if FailCheckDefault(mbYes) then
-    if FailCheckDefault(mbOk) then
-      if FailCheckDefault(mbRetry) then
-        if FailCheckDefault(mbAll) then
-          FailCheckDefault(mbYesToAll);
+  Active := ButtonsHighlighted;
+  if Active = [] then
+    if FailCheckDefault(mbYes) then
+      if FailCheckDefault(mbOk) then
+        if FailCheckDefault(mbRetry) then
+          if FailCheckDefault(mbAll) then
+            FailCheckDefault(mbYesToAll);
 
   // Return
   for var B in Buttons do
-    AddButton( FButtonLabels[B], '', B = Active, integer(B) );
+    AddButton( FButtonLabels[B], '', B in Active, integer(B) );
 
   // Exec
   ExecuteDialog;
