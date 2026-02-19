@@ -131,7 +131,7 @@ type
   protected
     procedure PaintBuffer; override;
 
-    //  Internal
+    // Internal
     procedure UpdateColors; override;
     procedure UpdateRects; override;
 
@@ -145,6 +145,9 @@ type
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure KeyUp(var Key: Word; Shift: TShiftState); override;
     procedure KeyPress(var Key: Char); override;
+
+    // Sys events
+    procedure CMDialogKey(var Message: TCMDialogKey); message CM_DIALOGKEY;
 
     // Mouse
     procedure Click; override;
@@ -1211,6 +1214,19 @@ begin
 
   // Check freed by form..?
   inherited;
+end;
+
+procedure FXCustomButton.CMDialogKey(var Message: TCMDialogKey);
+begin
+  with Message do
+    if  (((CharCode = VK_RETURN) and FDefault) or
+      ((CharCode = VK_ESCAPE) and FCancel)) and
+      (KeyDataToShiftState(Message.KeyData) = []) and CanFocus then
+    begin
+      Click;
+      Result := 1;
+    end else
+      inherited;
 end;
 
 procedure FXCustomButton.PaintBuffer;

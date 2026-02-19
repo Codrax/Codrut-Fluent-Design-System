@@ -16,7 +16,7 @@ function OpenDialog(ATitle, AText: string; AKind: FXDialogKind; AButtons: TArray
 function OpenConfirm(ATitle, AText: string): boolean; overload;
 function OpenConfirm(ATitle, AText: string; YesIsDefault: boolean): boolean; overload;
 function OpenInput(ATitle, AText: string; var AValue: string): boolean; overload;
-function OpenInput(ATitle, AText: string; var AValue: integer; DefaultValue: integer=0): boolean; overload;
+function OpenInput(ATitle, AText: string; var AValue: integer; DefaultValueOnEmpty: integer=0): boolean; overload;
 
 implementation
 
@@ -184,7 +184,7 @@ begin
     end;
 end;
 
-function OpenInput(ATitle, AText: string; var AValue: integer; DefaultValue: integer): boolean;
+function OpenInput(ATitle, AText: string; var AValue: integer; DefaultValueOnEmpty: integer): boolean;
 begin
   with FXInputBox.Create do
     try
@@ -201,7 +201,7 @@ begin
       Result := Execute;
       if Result then begin
         if Value = '' then
-          AValue := DefaultValue
+          AValue := DefaultValueOnEmpty
         else
           AValue := Value.ToInteger;
       end;
