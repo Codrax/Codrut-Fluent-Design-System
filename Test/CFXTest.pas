@@ -104,6 +104,8 @@ implementation
 {$R *.dfm}
 
 procedure TForm1.FormCreate(Sender: TObject);
+var
+  C: TAlphaColor;
 begin
   AllowThemeChangeAnimation := True;
 end;

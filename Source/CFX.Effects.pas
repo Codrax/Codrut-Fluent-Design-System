@@ -10,6 +10,7 @@ uses
   Vcl.Graphics,
   Vcl.ExtCtrls,
   Types,
+  UITypes,
   CFX.Colors,
   CFX.ThemeManager,
   CFX.Graphics,
@@ -106,14 +107,14 @@ type
   { Fill with color }
   FXColorEffect = class(FXEffect)
   private
-    FColor: FXColor;
-    procedure SetColor(const Value: FXColor);
+    FColor: TAlphaColor;
+    procedure SetColor(const Value: TAlphaColor);
 
   protected
     procedure ApplyEffect(Background: TBitMap); override;
 
   published
-    property Color: FXColor read FColor write SetColor;
+    property Color: TAlphaColor read FColor write SetColor;
 
   public
     constructor Create(aOwner: TComponent); override;
@@ -338,10 +339,10 @@ end;
 constructor FXColorEffect.Create(aOwner: TComponent);
 begin
   inherited;
-  FColor := FXColors.Aquamarine;
+  FColor := TAlphaColors.Aquamarine;
 end;
 
-procedure FXColorEffect.SetColor(const Value: FXColor);
+procedure FXColorEffect.SetColor(const Value: TAlphaColor);
 begin
   if FColor = Value then
     Exit;
@@ -444,7 +445,7 @@ end;
 
 procedure FXGlowEffect.ApplyEffect(Background: TBitMap);
 begin
-  ApplyGlowEffect(Background, FXColors.Blue, 0);
+  ApplyGlowEffect(Background, TAlphaColors.Blue, 0);
 end;
 
 { FXMaskEffect }

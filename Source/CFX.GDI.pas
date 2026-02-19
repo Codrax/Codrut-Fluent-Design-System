@@ -2,7 +2,7 @@ unit CFX.GDI;
 
 interface
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, UITypes,
   Vcl.Graphics, Vcl.Imaging.pngimage, Vcl.Imaging.GIFImg, Vcl.Imaging.jpeg,
   Winapi.GDIPAPI, Winapi.GDIPOBJ, CFX.Types, CFX.Colors, Math;
 
@@ -18,7 +18,7 @@ type
   TGDIPen = TGPPen;
 
   // Effects
-  procedure TintPicture(Canvas: TCanvas; Rectangle: TRect; Color: FXColor = clBlack; Buffered: boolean = true);
+  procedure TintPicture(Canvas: TCanvas; Rectangle: TRect; Color: TAlphaColor = clBlack; Buffered: boolean = true);
 
   // Drawing functions
   procedure DrawText(Canvas: TCanvas; Text: string; Rectangle: TRect; Font: TGPFont; Format: TGPStringFormat; Brush: TGDIBrush; Angle: single = 0; Buffered: boolean = false);
@@ -42,11 +42,11 @@ type
   // Bitmap
   procedure GrayscaleBitmap(Bitmap: TBitmap);
 
-  procedure ApplyGlowEffect(Bitmap: TBitmap; GlowColor: FXColor; GlowSize: Integer);
+  procedure ApplyGlowEffect(Bitmap: TBitmap; GlowColor: TAlphaColor; GlowSize: Integer);
 
 implementation
 
-procedure ApplyGlowEffect(Bitmap: TBitmap; GlowColor: FXColor; GlowSize: Integer);
+procedure ApplyGlowEffect(Bitmap: TBitmap; GlowColor: TAlphaColor; GlowSize: Integer);
 begin
 
 end;
@@ -98,7 +98,7 @@ begin
   end;
 end;
 
-procedure TintPicture(Canvas: TCanvas; Rectangle: TRect; Color: FXColor; Buffered: boolean);
+procedure TintPicture(Canvas: TCanvas; Rectangle: TRect; Color: TAlphaColor; Buffered: boolean);
 var
   G: TGPGRaphics;
   B: TGDIBrush;

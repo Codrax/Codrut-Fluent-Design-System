@@ -21,9 +21,6 @@ uses
   CFX.Linker;
 
 type
-  { Color }
-  FXColor = CFX.Types.FXColor;
-
   { Persistent Color Class }
   FXPersistentColor = class(TPersistent)
   private
@@ -376,11 +373,11 @@ end;
 
 function ColorBlend(Color1, Color2: TColor; A: Byte): TColor;
 var
-  RGB1, RGB2: FXColor;
+  RGB1, RGB2: TAlphaColor;
   R, G, B: integer;
 begin
-  RGB1 := FXColor.Create(Color1);
-  RGB2 := FXColor.Create(Color2);
+  RGB1 := TAlphaColor.Create(Color1);
+  RGB2 := TAlphaColor.Create(Color2);
 
   R := RGB1.GetR + (RGB2.GetR - RGB1.GetR) * A div 255;
   G := RGB1.GetG + (RGB2.GetG - RGB1.GetG) * A div 255;

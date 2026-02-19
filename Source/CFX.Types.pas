@@ -154,9 +154,6 @@ type
   FXControlOnDrawRectIndex = procedure(Sender: TObject; AIndex: integer; ARect: TRect; Canvas: TCanvas) of object;
   FXControlOnDrawRectIndexDrawDefault = procedure(Sender: TObject; AIndex: integer; ARect: TRect; Canvas: TCanvas; var DrawDefault: boolean) of object;
 
-  // Color  // AA RR GG BB
-  FXColor = $00000000..$FFFFFFFF;
-
   // Thingies
   FXPercent = type Single;
   FXAngle = type Single; // three decimal places
@@ -218,9 +215,7 @@ type
   end;
 
   // FXColor Helper
-  FXColorHelper = record helper for FXColor
-  private
-
+  TAlphaColorHelper = record helper for TAlphaColor
   public
     // Change value
     function GetAlpha: byte;
@@ -240,10 +235,10 @@ type
     property B: byte read GetR write SetB;
 
     // Utilities
-    function ColorGrayscale(ToneDown: integer = 3): FXColor;
-    function ColorInvert: FXColor;
-    function ChangeSaturation(ByIncrement: integer): FXColor;
-    function Blend(WithColor: FXColor; BlendAmoung: byte): FXColor;
+    function ColorGrayscale(ToneDown: integer = 3): TAlphaColor;
+    function ColorInvert: TAlphaColor;
+    function ChangeSaturation(ByIncrement: integer): TAlphaColor;
+    function Blend(WithColor: TAlphaColor; BlendAmoung: byte): TAlphaColor;
     function GetLightValue: byte;
 
     // GDI
@@ -255,10 +250,10 @@ type
     function ToString: string;
 
     // Constructors
-    class function Create(R, G, B: Byte; A: Byte = 255): FXColor; overload; static;
-    class function Create(AColor: TColor; A: Byte = 255): FXColor; overload; static;
-    class function Create(AString: string): FXColor; overload; static;
-    class function RandomColor(RandomAlpha: boolean=false): FXColor; static;
+    class function Create(R, G, B: Byte; A: Byte = 255): TAlphaColor; overload; static;
+    class function Create(AColor: TColor; A: Byte = 255): TAlphaColor; overload; static;
+    class function Create(AString: string): TAlphaColor; overload; static;
+    class function RandomColor(RandomAlpha: boolean=false): TAlphaColor; static;
   end;
 
   // Helper for percentage
@@ -327,504 +322,6 @@ type
     procedure Create(Left, Top, Right, Bottom: integer; Rnd: integer); overload;
   end;
 
-  { List of colors }
-  FXColorID = (None, Red, Green, Blue, Black, White,
-  Yellow, Pink, Aqua,
-
-  Aquamarine, Azure, Beige, Bisque, Blanchedalmond, Blueviolet, Brown,
-  Burlywood, Cadetblue, Chartreuse, Chocolate, Coral, Cornflowerblue, Cornsilk,
-  Crimson, Cyan, DarkBlue, DarkCyan, Darkgoldenrod, Darkgray, Darkgreen,
-  Darkkhaki, Darkmagenta, Darkolivegreen, Darkorange, Darkorchid, Darkred,
-  Darksalmon, Darkseagreen, Darkslateblue, Darkslategray, Darkslategrey,
-  Darkturquoise, Darkviolet, Deeppink, Deepskyblue, Dimgray, Dimgrey,
-  Dodgerblue, Firebrick, Floralwhite, Forestgreen, Fuchsia, Gainsboro,
-  Ghostwhite, Gold, Goldenrod, Gray, Greenyellow, Honeydew, Hotpink, Indianred,
-  Indigo, Ivory, Khaki, Lavender, Lavenderblush, Lawngreen, Lemonchiffon,
-  Lightblue, Lightcoral, Lightcyan, Lightgoldenrodyellow, Lightgray, Lightgreen,
-  Lightgrey, Lightpink, Lightsalmon, Lightseagreen, Lightskyblue,
-  Lightslategray, Lightslategrey, Lightsteelblue, Lightyellow, LtGray, MedGray,
-  DkGray, MoneyGreen, LegacySkyBlue, Cream, Lime, Limegreen, Linen, Magenta,
-  Maroon, Mediumaquamarine, Mediumblue, Mediumorchid, Mediumpurple,
-  Mediumseagreen, Mediumslateblue, Mediumspringgreen, Mediumturquoise,
-  Mediumvioletred, Midnightblue, Mintcream, Mistyrose, Moccasin, Navajowhite,
-  Navy, Oldlace, Olive, Olivedrab, Orange, Orangered, Orchid, Palegoldenrod,
-  Palegreen, Paleturquoise, Palevioletred, Papayawhip, Peachpuff, Peru, Plum,
-  Powderblue, Purple, Rosybrown, Royalblue, Saddlebrown, Salmon, Sandybrown,
-  Seagreen, Seashell, Sienna, Silver, Skyblue, Slateblue, Slategray, Slategrey,
-  Snow, Springgreen, Steelblue, Tan, Teal, Thistle, Tomato, Turquoise, Violet,
-  Wheat, Whitesmoke, Yellowgreen
-  );
-
-  FXColors = record
-    const
-    None = FXColor($00000000);
-    Red = FXColor($FFFF0000);
-    Green = FXColor($FF00FF00);
-    Blue = FXColor($FF0000FF);
-    Black = FXColor($FF000000);
-    White = FXColor($FFFFFFFF);
-
-    Yellow = FXColor($FFFFFF00);
-    Pink = FXColor($FFFF00FF);
-    Aqua = FXColor($FF00FFFF);
-
-    Aquamarine = FXColor($FF7FFFD4);
-    Azure = FXColor($FFF0FFFF);
-    Beige = FXColor($FFF5F5DC);
-    Bisque = FXColor($FFFFE4C4);
-    Blanchedalmond = FXColor($FFFFEBCD);
-    Blueviolet = FXColor($FF8A2BE2);
-    Brown = FXColor($FFA52A2A);
-    Burlywood = FXColor($FFDEB887);
-    Cadetblue = FXColor($FF5F9EA0);
-    Chartreuse = FXColor($FF7FFF00);
-    Chocolate = FXColor($FFD2691E);
-    Coral = FXColor($FFFF7F50);
-    Cornflowerblue = FXColor($FF6495ED);
-    Cornsilk = FXColor($FFFFF8DC);
-    Crimson = FXColor($FFDC143C);
-    Cyan = FXColor($FF00FFFF);
-    DarkBlue = FXColor($FF00008B);
-    DarkCyan = FXColor($FF008B8B);
-    Darkgoldenrod = FXColor($FFB8860B);
-    Darkgray = FXColor($FFA9A9A9);
-    Darkgreen = FXColor($FF006400);
-    Darkkhaki = FXColor($FFBDB76B);
-    Darkmagenta = FXColor($FF8B008B);
-    Darkolivegreen = FXColor($FF556B2F);
-    Darkorange = FXColor($FFFF8C00);
-    Darkorchid = FXColor($FF9932CC);
-    Darkred = FXColor($FF8B0000);
-    Darksalmon = FXColor($FFE9967A);
-    Darkseagreen = FXColor($FF8FBC8F);
-    Darkslateblue = FXColor($FF483D8B);
-    Darkslategray = FXColor($FF2F4F4F);
-    Darkslategrey = FXColor($FF2F4F4F);
-    Darkturquoise = FXColor($FF00CED1);
-    Darkviolet = FXColor($FF9400D3);
-    Deeppink = FXColor($FFFF1493);
-    Deepskyblue = FXColor($FF00BFFF);
-    Dimgray = FXColor($FF696969);
-    Dimgrey = FXColor($FF696969);
-    Dodgerblue = FXColor($FF1E90FF);
-    Firebrick = FXColor($FFB22222);
-    Floralwhite = FXColor($FFFFFAF0);
-    Forestgreen = FXColor($FF228B22);
-    Fuchsia = FXColor($FFFF00FF);
-    Gainsboro = FXColor($FFDCDCDC);
-    Ghostwhite = FXColor($FFF8F8FF);
-    Gold = FXColor($FFFFD700);
-    Goldenrod = FXColor($FFDAA520);
-    Gray = FXColor($FF808080);
-    Greenyellow = FXColor($FFADFF2F);
-    Honeydew = FXColor($FFF0FFF0);
-    Hotpink = FXColor($FFFF69B4);
-    Indianred = FXColor($FFCD5C5C);
-    Indigo = FXColor($FF4B0082);
-    Ivory = FXColor($FFFFFFF0);
-    Khaki = FXColor($FFF0E68C);
-    Lavender = FXColor($FFE6E6FA);
-    Lavenderblush = FXColor($FFFFF0F5);
-    Lawngreen = FXColor($FF7CFC00);
-    Lemonchiffon = FXColor($FFFFFACD);
-    Lightblue = FXColor($FFADD8E6);
-    Lightcoral = FXColor($FFF08080);
-    Lightcyan = FXColor($FFE0FFFF);
-    Lightgoldenrodyellow = FXColor($FFFAFAD2);
-    Lightgray = FXColor($FFD3D3D3);
-    Lightgreen = FXColor($FF90EE90);
-    Lightgrey = FXColor($FFD3D3D3);
-    Lightpink = FXColor($FFFFB6C1);
-    Lightsalmon = FXColor($FFFFA07A);
-    Lightseagreen = FXColor($FF20B2AA);
-    Lightskyblue = FXColor($FF87CEFA);
-    Lightslategray = FXColor($FF778899);
-    Lightslategrey = FXColor($FF778899);
-    Lightsteelblue = FXColor($FFB0C4DE);
-    Lightyellow = FXColor($FFFFFFE0);
-    LtGray = FXColor($FFC0C0C0);
-    MedGray = FXColor($FFA0A0A4);
-    DkGray = FXColor($FF808080);
-    MoneyGreen = FXColor($FFC0DCC0);
-    LegacySkyBlue = FXColor($FFA6CAF0);
-    Cream = FXColor($FFFFFBF0);
-    Lime = FXColor($FF00FF00);
-    Limegreen = FXColor($FF32CD32);
-    Linen = FXColor($FFFAF0E6);
-    Magenta = FXColor($FFFF00FF);
-    Maroon = FXColor($FF800000);
-    Mediumaquamarine = FXColor($FF66CDAA);
-    Mediumblue = FXColor($FF0000CD);
-    Mediumorchid = FXColor($FFBA55D3);
-    Mediumpurple = FXColor($FF9370DB);
-    Mediumseagreen = FXColor($FF3CB371);
-    Mediumslateblue = FXColor($FF7B68EE);
-    Mediumspringgreen = FXColor($FF00FA9A);
-    Mediumturquoise = FXColor($FF48D1CC);
-    Mediumvioletred = FXColor($FFC71585);
-    Midnightblue = FXColor($FF191970);
-    Mintcream = FXColor($FFF5FFFA);
-    Mistyrose = FXColor($FFFFE4E1);
-    Moccasin = FXColor($FFFFE4B5);
-    Navajowhite = FXColor($FFFFDEAD);
-    Navy = FXColor($FF000080);
-    Oldlace = FXColor($FFFDF5E6);
-    Olive = FXColor($FF808000);
-    Olivedrab = FXColor($FF6B8E23);
-    Orange = FXColor($FFFFA500);
-    Orangered = FXColor($FFFF4500);
-    Orchid = FXColor($FFDA70D6);
-    Palegoldenrod = FXColor($FFEEE8AA);
-    Palegreen = FXColor($FF98FB98);
-    Paleturquoise = FXColor($FFAFEEEE);
-    Palevioletred = FXColor($FFDB7093);
-    Papayawhip = FXColor($FFFFEFD5);
-    Peachpuff = FXColor($FFFFDAB9);
-    Peru = FXColor($FFCD853F);
-    Plum = FXColor($FFDDA0DD);
-    Powderblue = FXColor($FFB0E0E6);
-    Purple = FXColor($FF800080);
-    Rosybrown = FXColor($FFBC8F8F);
-    Royalblue = FXColor($FF4169E1);
-    Saddlebrown = FXColor($FF8B4513);
-    Salmon = FXColor($FFFA8072);
-    Sandybrown = FXColor($FFF4A460);
-    Seagreen = FXColor($FF2E8B57);
-    Seashell = FXColor($FFFFF5EE);
-    Sienna = FXColor($FFA0522D);
-    Silver = FXColor($FFC0C0C0);
-    Skyblue = FXColor($FF87CEEB);
-    Slateblue = FXColor($FF6A5ACD);
-    Slategray = FXColor($FF708090);
-    Slategrey = FXColor($FF708090);
-    Snow = FXColor($FFFFFAFA);
-    Springgreen = FXColor($FF00FF7F);
-    Steelblue = FXColor($FF4682B4);
-    Tan = FXColor($FFD2B48C);
-    Teal = FXColor($FF008080);
-    Thistle = FXColor($FFD8BFD8);
-    Tomato = FXColor($FFFF6347);
-    Turquoise = FXColor($FF40E0D0);
-    Violet = FXColor($FFEE82EE);
-    Wheat = FXColor($FFF5DEB3);
-    Whitesmoke = FXColor($FFF5F5F5);
-    Yellowgreen = FXColor($FF9ACD32);
-  end;
-
-  { Color searching }
-const
-  TFXColorNames: array[FXColorID] of string = (
-    'None',
-    'Red',
-    'Green',
-    'Blue',
-    'Black',
-    'White',
-    'Yellow',
-    'Pink',
-    'Aqua',
-
-    'Aquamarine',
-    'Azure',
-    'Beige',
-    'Bisque',
-    'Blanchedalmond',
-    'Blueviolet',
-    'Brown',
-    'Burlywood',
-    'Cadetblue',
-    'Chartreuse',
-    'Chocolate',
-    'Coral',
-    'Cornflowerblue',
-    'Cornsilk',
-    'Crimson',
-    'Cyan',
-    'DarkBlue',
-    'DarkCyan',
-    'Darkgoldenrod',
-    'Darkgray',
-    'Darkgreen',
-    'Darkkhaki',
-    'Darkmagenta',
-    'Darkolivegreen',
-    'Darkorange',
-    'Darkorchid',
-    'Darkred',
-    'Darksalmon',
-    'Darkseagreen',
-    'Darkslateblue',
-    'Darkslategray',
-    'Darkslategrey',
-    'Darkturquoise',
-    'Darkviolet',
-    'Deeppink',
-    'Deepskyblue',
-    'Dimgray',
-    'Dimgrey',
-    'Dodgerblue',
-    'Firebrick',
-    'Floralwhite',
-    'Forestgreen',
-    'Fuchsia',
-    'Gainsboro',
-    'Ghostwhite',
-    'Gold',
-    'Goldenrod',
-    'Gray',
-    'Greenyellow',
-    'Honeydew',
-    'Hotpink',
-    'Indianred',
-    'Indigo',
-    'Ivory',
-    'Khaki',
-    'Lavender',
-    'Lavenderblush',
-    'Lawngreen',
-    'Lemonchiffon',
-    'Lightblue',
-    'Lightcoral',
-    'Lightcyan',
-    'Lightgoldenrodyellow',
-    'Lightgray',
-    'Lightgreen',
-    'Lightgrey',
-    'Lightpink',
-    'Lightsalmon',
-    'Lightseagreen',
-    'Lightskyblue',
-    'Lightslategray',
-    'Lightslategrey',
-    'Lightsteelblue',
-    'Lightyellow',
-    'LtGray',
-    'MedGray',
-    'DkGray',
-    'MoneyGreen',
-    'LegacySkyBlue',
-    'Cream',
-    'Lime',
-    'Limegreen',
-    'Linen',
-    'Magenta',
-    'Maroon',
-    'Mediumaquamarine',
-    'Mediumblue',
-    'Mediumorchid',
-    'Mediumpurple',
-    'Mediumseagreen',
-    'Mediumslateblue',
-    'Mediumspringgreen',
-    'Mediumturquoise',
-    'Mediumvioletred',
-    'Midnightblue',
-    'Mintcream',
-    'Mistyrose',
-    'Moccasin',
-    'Navajowhite',
-    'Navy',
-    'Oldlace',
-    'Olive',
-    'Olivedrab',
-    'Orange',
-    'Orangered',
-    'Orchid',
-    'Palegoldenrod',
-    'Palegreen',
-    'Paleturquoise',
-    'Palevioletred',
-    'Papayawhip',
-    'Peachpuff',
-    'Peru',
-    'Plum',
-    'Powderblue',
-    'Purple',
-    'Rosybrown',
-    'Royalblue',
-    'Saddlebrown',
-    'Salmon',
-    'Sandybrown',
-    'Seagreen',
-    'Seashell',
-    'Sienna',
-    'Silver',
-    'Skyblue',
-    'Slateblue',
-    'Slategray',
-    'Slategrey',
-    'Snow',
-    'Springgreen',
-    'Steelblue',
-    'Tan',
-    'Teal',
-    'Thistle',
-    'Tomato',
-    'Turquoise',
-    'Violet',
-    'Wheat',
-    'Whitesmoke',
-    'Yellowgreen'
-  );
-
-  TFXColorValues: array[FXColorID] of FXColor = (
-    FXColors.None,
-    FXColors.Red,
-    FXColors.Green,
-    FXColors.Blue,
-    FXColors.Black,
-    FXColors.White,
-    FXColors.Yellow,
-    FXColors.Pink,
-    FXColors.Aqua,
-    FXColors.Aquamarine,
-    FXColors.Azure,
-    FXColors.Beige,
-    FXColors.Bisque,
-    FXColors.Blanchedalmond,
-    FXColors.Blueviolet,
-    FXColors.Brown,
-    FXColors.Burlywood,
-    FXColors.Cadetblue,
-    FXColors.Chartreuse,
-    FXColors.Chocolate,
-    FXColors.Coral,
-    FXColors.Cornflowerblue,
-    FXColors.Cornsilk,
-    FXColors.Crimson,
-    FXColors.Cyan,
-    FXColors.DarkBlue,
-    FXColors.DarkCyan,
-    FXColors.Darkgoldenrod,
-    FXColors.Darkgray,
-    FXColors.Darkgreen,
-    FXColors.Darkkhaki,
-    FXColors.Darkmagenta,
-    FXColors.Darkolivegreen,
-    FXColors.Darkorange,
-    FXColors.Darkorchid,
-    FXColors.Darkred,
-    FXColors.Darksalmon,
-    FXColors.Darkseagreen,
-    FXColors.Darkslateblue,
-    FXColors.Darkslategray,
-    FXColors.Darkslategrey,
-    FXColors.Darkturquoise,
-    FXColors.Darkviolet,
-    FXColors.Deeppink,
-    FXColors.Deepskyblue,
-    FXColors.Dimgray,
-    FXColors.Dimgrey,
-    FXColors.Dodgerblue,
-    FXColors.Firebrick,
-    FXColors.Floralwhite,
-    FXColors.Forestgreen,
-    FXColors.Fuchsia,
-    FXColors.Gainsboro,
-    FXColors.Ghostwhite,
-    FXColors.Gold,
-    FXColors.Goldenrod,
-    FXColors.Gray,
-    FXColors.Greenyellow,
-    FXColors.Honeydew,
-    FXColors.Hotpink,
-    FXColors.Indianred,
-    FXColors.Indigo,
-    FXColors.Ivory,
-    FXColors.Khaki,
-    FXColors.Lavender,
-    FXColors.Lavenderblush,
-    FXColors.Lawngreen,
-    FXColors.Lemonchiffon,
-    FXColors.Lightblue,
-    FXColors.Lightcoral,
-    FXColors.Lightcyan,
-    FXColors.Lightgoldenrodyellow,
-    FXColors.Lightgray,
-    FXColors.Lightgreen,
-    FXColors.Lightgrey,
-    FXColors.Lightpink,
-    FXColors.Lightsalmon,
-    FXColors.Lightseagreen,
-    FXColors.Lightskyblue,
-    FXColors.Lightslategray,
-    FXColors.Lightslategrey,
-    FXColors.Lightsteelblue,
-    FXColors.Lightyellow,
-    FXColors.LtGray,
-    FXColors.MedGray,
-    FXColors.DkGray,
-    FXColors.MoneyGreen,
-    FXColors.LegacySkyBlue,
-    FXColors.Cream,
-    FXColors.Lime,
-    FXColors.Limegreen,
-    FXColors.Linen,
-    FXColors.Magenta,
-    FXColors.Maroon,
-    FXColors.Mediumaquamarine,
-    FXColors.Mediumblue,
-    FXColors.Mediumorchid,
-    FXColors.Mediumpurple,
-    FXColors.Mediumseagreen,
-    FXColors.Mediumslateblue,
-    FXColors.Mediumspringgreen,
-    FXColors.Mediumturquoise,
-    FXColors.Mediumvioletred,
-    FXColors.Midnightblue,
-    FXColors.Mintcream,
-    FXColors.Mistyrose,
-    FXColors.Moccasin,
-    FXColors.Navajowhite,
-    FXColors.Navy,
-    FXColors.Oldlace,
-    FXColors.Olive,
-    FXColors.Olivedrab,
-    FXColors.Orange,
-    FXColors.Orangered,
-    FXColors.Orchid,
-    FXColors.Palegoldenrod,
-    FXColors.Palegreen,
-    FXColors.Paleturquoise,
-    FXColors.Palevioletred,
-    FXColors.Papayawhip,
-    FXColors.Peachpuff,
-    FXColors.Peru,
-    FXColors.Plum,
-    FXColors.Powderblue,
-    FXColors.Purple,
-    FXColors.Rosybrown,
-    FXColors.Royalblue,
-    FXColors.Saddlebrown,
-    FXColors.Salmon,
-    FXColors.Sandybrown,
-    FXColors.Seagreen,
-    FXColors.Seashell,
-    FXColors.Sienna,
-    FXColors.Silver,
-    FXColors.Skyblue,
-    FXColors.Slateblue,
-    FXColors.Slategray,
-    FXColors.Slategrey,
-    FXColors.Snow,
-    FXColors.Springgreen,
-    FXColors.Steelblue,
-    FXColors.Tan,
-    FXColors.Teal,
-    FXColors.Thistle,
-    FXColors.Tomato,
-    FXColors.Turquoise,
-    FXColors.Violet,
-    FXColors.Wheat,
-    FXColors.Whitesmoke,
-    FXColors.Yellowgreen
-  );
-
-(* Extract Color is in CFX.ThemeManager! *)
-function GetColor(Color: FXColorID): FXColor;
-function FindColor(Color: FXColor; out AColor:FXColorID ): boolean;
-function FindColorName(Name: string; out AColor: FXColorID): boolean;
-
 { Type Functions }
 function MakeRoundRect(SRect: TRect; Rnd: integer): TRoundRect; overload;
 function MakeRoundRect(SRect: TRect; RndX, RndY: integer): TRoundRect; overload;
@@ -832,12 +329,8 @@ function MakeRoundRect(X1, Y1, X2, Y2: integer; Rnd: integer): TRoundRect; overl
 function Line(Point1, Point2: TPoint): TLine;
 
 { Color Conversion }
-function GetRGB(AColor: TColor; Alpha: Byte = 255): FXColor; overload;
-function GetRGB(R, G, B: Byte; Alpha: Byte = 255): FXColor; overload;
-function FXColorToString(AColor: FXColor): string;
-
-function ColorToStringN(AColor: FXColor): string;
-function StringNToColor(AString: string): FXColor;
+function GetRGB(AColor: TColor; Alpha: Byte = 255): TAlphaColor; overload;
+function GetRGB(R, G, B: Byte; Alpha: Byte = 255): TAlphaColor; overload;
 
 { Point }
 function RotatePointAroundPoint(APoint: TPoint; ACenter: TPoint; ARotateDegree: real; ACustomRadius: real = -1): TPoint;
@@ -871,40 +364,6 @@ function DecToHex(Dec: int64): string;
 
 implementation
 
-function GetColor(Color: FXColorID): FXColor;
-begin
-  Result := TFXColorValues[Color];
-end;
-
-function FindColor(Color: FXColor; out AColor:FXColorID ): boolean;
-var
-  I: FXColorID;
-begin
-  Result := false;
-
-  for I := Low(FXColorID) to High(FXColorID) do
-    if TFXColorValues[I] = Color then
-      begin
-        AColor := I;
-        Exit(true);
-      end;
-end;
-
-function FindColorName(Name: string; out AColor: FXColorID): boolean;
-var
-  I: FXColorID;
-begin
-  Result := false;
-
-  Name := AnsiLowerCase(Name); // ansi stirng
-  for I := Low(FXColorID) to High(FXColorID) do
-    if AnsiLowerCase(TFXColorNames[I]) = Name then
-      begin
-        AColor := I;
-        Exit(true);
-      end;
-end;
-
 function MakeRoundRect(SRect: TRect; Rnd: integer): TRoundRect;
 var
   rec: TRoundRect;
@@ -935,42 +394,14 @@ begin
   Result.Point2 := Point2;
 end;
 
-function GetRGB(AColor: TColor; Alpha: Byte): FXColor;
+function GetRGB(AColor: TColor; Alpha: Byte): TAlphaColor;
 begin
-  Result := FXColor.Create(AColor, Alpha);
+  Result := TAlphaColor.Create(AColor, Alpha);
 end;
 
-function GetRGB(R, G, B: Byte; Alpha: Byte): FXColor;
+function GetRGB(R, G, B: Byte; Alpha: Byte): TAlphaColor;
 begin
-  Result := FXColor.Create(R, G, B, Alpha);
-end;
-
-function FXColorToString(AColor: FXColor): string;
-begin
-  Result := AColor.ToString;
-end;
-
-function ColorToStringN(AColor: FXColor): string;
-var
-  CID: FXColorID;
-begin
-  if FindColor(AColor, CID) then
-    Exit( TFXColorNames[CID] )
-  else
-    Exit( AColor.ToString );
-end;
-
-function StringNToColor(AString: string): FXColor;
-var
-  CID: FXColorID;
-begin
-  if AString[1] = '#' then
-    Exit( StrToIntDef('$' + AString.Remove(0, 1), 0) )
-  else
-    if FindColorName(AString, CID) then
-      Exit( GetColor(CID) )
-  else
-    Exit( AString.ToInteger )
+  Result := TAlphaColor.Create(R, G, B, Alpha);
 end;
 
 function RotatePointAroundPoint(APoint: TPoint; ACenter: TPoint; ARotateDegree: real; ACustomRadius: real): TPoint;
@@ -1489,21 +920,21 @@ begin
   Result := Format('%.'+Decimals.ToString+'f', [Self]);
 end;
 
-{ FXColor }
+{ TAlphaColorHelper }
 
-class function FXColorHelper.Create(AColor: TColor; A: Byte): FXColor;
+class function TAlphaColorHelper.Create(AColor: TColor; A: Byte): TAlphaColor;
 begin
   {$R-}
   Result := (GetBValue(AColor) or (GetGValue(AColor) shl 8) or (GetRValue(AColor) shl 16) or (A shl 24));
   {$R+}
 end;
 
-class function FXColorHelper.Create(R, G, B, A: Byte): FXColor;
+class function TAlphaColorHelper.Create(R, G, B, A: Byte): TAlphaColor;
 begin
   Result := (B or (G shl 8) or (R shl 16) or (A shl 24));
 end;
 
-function FXColorHelper.Blend(WithColor: FXColor; BlendAmoung: byte): FXColor;
+function TAlphaColorHelper.Blend(WithColor: TAlphaColor; BlendAmoung: byte): TAlphaColor;
 begin
   Result := Create(
     R + (WithColor.R - R) * BlendAmoung div 255,
@@ -1512,26 +943,26 @@ begin
   Alpha);
 end;
 
-function FXColorHelper.ChangeSaturation(ByIncrement: integer): FXColor;
+function TAlphaColorHelper.ChangeSaturation(ByIncrement: integer): TAlphaColor;
 begin
   Result := Create(EnsureRange(R+ByIncrement, 0, 255),
     EnsureRange(G+ByIncrement, 0, 255),
     EnsureRange(B+ByIncrement, 0, 255), Alpha);
 end;
 
-function FXColorHelper.ColorGrayscale(ToneDown: integer = 3): FXColor;
+function TAlphaColorHelper.ColorGrayscale(ToneDown: integer = 3): TAlphaColor;
 begin
   const Val = (R + G + B) div ToneDown;
 
-  Result := FXColor.Create(Val, Val, Val, Alpha);
+  Result := TAlphaColor.Create(Val, Val, Val, Alpha);
 end;
 
-function FXColorHelper.ColorInvert: FXColor;
+function TAlphaColorHelper.ColorInvert: TAlphaColor;
 begin
   Result := Create(255-R, 255-G, 255-B, Alpha);
 end;
 
-class function FXColorHelper.Create(AString: string): FXColor;
+class function TAlphaColorHelper.Create(AString: string): TAlphaColor;
 begin
   if AString[1] = '#' then
     Result := StrToInt('$' + Copy(AString, 2, 8))
@@ -1539,27 +970,27 @@ begin
     Exit( AString.ToInteger );
 end;
 
-function FXColorHelper.GetAlpha: byte;
+function TAlphaColorHelper.GetAlpha: byte;
 begin
   Result := (Self and $FF000000) shr 24;
 end;
 
-function FXColorHelper.GetR: byte;
+function TAlphaColorHelper.GetR: byte;
 begin
   Result := (Self and $00FF0000) shr 16;
 end;
 
-function FXColorHelper.MakeGDIBrush: TGPSolidBrush;
+function TAlphaColorHelper.MakeGDIBrush: TGPSolidBrush;
 begin
   Result := TGPSolidBrush.Create( Self );
 end;
 
-function FXColorHelper.MakeGDIPen(Width: Single): TGPPen;
+function TAlphaColorHelper.MakeGDIPen(Width: Single): TGPPen;
 begin
   Result := TGPPen.Create( Self, Width );
 end;
 
-class function FXColorHelper.RandomColor(RandomAlpha: boolean): FXColor;
+class function TAlphaColorHelper.RandomColor(RandomAlpha: boolean): TAlphaColor;
 begin
   if RandomAlpha then
     Result := Create(Random(256), Random(256), Random(256), Random(256))
@@ -1567,48 +998,48 @@ begin
     Result := Create(Random(256), Random(256), Random(256), 255);
 end;
 
-function FXColorHelper.GetG: byte;
+function TAlphaColorHelper.GetG: byte;
 begin
   Result := (Self and $0000FF00) shr 8;
 end;
 
-function FXColorHelper.GetLightValue: byte;
+function TAlphaColorHelper.GetLightValue: byte;
 begin
   Result := (R + B + G) div 3;
 end;
 
-function FXColorHelper.GetB: byte;
+function TAlphaColorHelper.GetB: byte;
 begin
   Result := (Self and $000000FF);
 end;
 
-procedure FXColorHelper.SetAlpha(Value: byte);
+procedure TAlphaColorHelper.SetAlpha(Value: byte);
 begin                              // Typecast value to larger bit size, $00*4
-  Self := (Self and $00FFFFFF) or (FXColor(Value) shl 24);
+  Self := (Self and $00FFFFFF) or (TAlphaColor(Value) shl 24);
 end;
 
-procedure FXColorHelper.SetR(Value: byte);
+procedure TAlphaColorHelper.SetR(Value: byte);
 begin                              // Typecast value to larger bit size, $00*4
-  Self := (Self and $FF00FFFF) or (FXColor(Value) shl 16);
+  Self := (Self and $FF00FFFF) or (TAlphaColor(Value) shl 16);
 end;
 
-function FXColorHelper.ToString: string;
+function TAlphaColorHelper.ToString: string;
 begin
   Result := '#' + IntToHex(Self, 8);
 end;
 
-function FXColorHelper.ToVclColor: TColor;
+function TAlphaColorHelper.ToVclColor: TColor;
 begin
   // Better to use GetRGB, as FXColor is AARRGGBB, while TColor is 00BBGGRR
   Result := RGB(GetR, GetG, GetB);
 end;
 
-procedure FXColorHelper.SetG(Value: byte);
+procedure TAlphaColorHelper.SetG(Value: byte);
 begin                              // Typecast value to larger bit size, $00*4
-  Self := (Self and $FFFF00FF) or (FXColor(Value) shl 8);
+  Self := (Self and $FFFF00FF) or (TAlphaColor(Value) shl 8);
 end;
 
-procedure FXColorHelper.SetB(Value: byte);
+procedure TAlphaColorHelper.SetB(Value: byte);
 begin                              // Typecasting is not required
   Self := (Self and $FFFFFF00) or (Value);
 end;

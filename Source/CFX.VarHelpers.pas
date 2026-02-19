@@ -64,7 +64,7 @@ type
 
     procedure GDIText(Text: string; Rectangle: TRect; Flags: FXTextFlags = [FXTextFlag.WordWrap]; Angle: single = 0);
     procedure GDITint(Rectangle: TRect; Color: TColor; Opacity: byte = 75); overload;
-    procedure GDITint(Rectangle: TRect; Color: FXColor); overload;
+    procedure GDITint(Rectangle: TRect; Color: TAlphaColor); overload;
     procedure GDIRectangle(Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen);
     procedure GDIRoundRect(RoundRect: TRoundRect; Brush: TGDIBrush; Pen: TGDIPen);
     procedure GDICircle(Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen);
@@ -456,7 +456,7 @@ begin
   end;
 end;
 
-procedure TCanvasHelper.GDITint(Rectangle: TRect; Color: FXColor);
+procedure TCanvasHelper.GDITint(Rectangle: TRect; Color: TAlphaColor);
 begin
   TintPicture(Self, Rectangle, Color);
 end;

@@ -9,6 +9,7 @@ uses
   Vcl.Controls,
   Vcl.Graphics,
   Vcl.ExtCtrls,
+  UITypes,
   Types,
   Math,
   CFX.Colors,
@@ -36,7 +37,7 @@ type
     FDrawBrush: boolean;
 
     FColorPen,
-    FColorBrush: FXColor;
+    FColorBrush: TAlphaColor;
 
     FPenSize: single;
 
@@ -48,8 +49,8 @@ type
     procedure Updated;
 
     // Setters
-    procedure SetColorBrush(const Value: FXColor);
-    procedure SetColorPen(const Value: FXColor);
+    procedure SetColorBrush(const Value: TAlphaColor);
+    procedure SetColorPen(const Value: TAlphaColor);
     procedure SetDrawBrush(const Value: boolean);
     procedure SetDrawPen(const Value: boolean);
     procedure SetPenSize(const Value: single);
@@ -58,8 +59,8 @@ type
     property DrawPen: boolean read FDrawPen write SetDrawPen default true;
     property DrawBrush: boolean read FDrawBrush write SetDrawBrush default true;
 
-    property ColorPen: FXColor read FColorPen write SetColorPen;
-    property ColorBrush: FXColor read FColorBrush write SetColorBrush;
+    property ColorPen: TAlphaColor read FColorPen write SetColorPen;
+    property ColorBrush: TAlphaColor read FColorBrush write SetColorBrush;
 
     property PenSize: single read FPenSize write SetPenSize;
 
@@ -461,8 +462,8 @@ begin
 
   // Default
   FPenSize := 1;
-  FColorPen := FXColors.Blue;
-  FColorBrush := FXColors.Lightblue;
+  FColorPen := TAlphaColors.Blue;
+  FColorBrush := TAlphaColors.Lightblue;
 
   // Create
   FBrush := TGPSolidBrush.Create( FColorBrush );
@@ -477,7 +478,7 @@ begin
   inherited;
 end;
 
-procedure FXShapeDrawingSettings.SetColorBrush(const Value: FXColor);
+procedure FXShapeDrawingSettings.SetColorBrush(const Value: TAlphaColor);
 begin
   FColorBrush := Value;
 
@@ -486,7 +487,7 @@ begin
   Updated;
 end;
 
-procedure FXShapeDrawingSettings.SetColorPen(const Value: FXColor);
+procedure FXShapeDrawingSettings.SetColorPen(const Value: TAlphaColor);
 begin
   FColorPen := Value;
 
