@@ -10,9 +10,13 @@ unit CFX.Types;
 
 interface
 uses
+  {$IFDEF MSWINDOWS}
+  Winapi.GDIPOBJ,
+  Winapi.GDIPAPI,
+  {$ENDIF}
   UITypes, Types, VCl.GraphUtil, Winapi.Windows,
   Classes, Vcl.Themes, Vcl.Controls, Vcl.Graphics, Math,
-  SysUtils, Winapi.GDIPAPI, Winapi.GDIPOBJ, System.Generics.Defaults;
+  SysUtils, System.Generics.Defaults;
 
 type
   // File Type
@@ -214,7 +218,7 @@ type
     class function New: TRectLayout; static;
   end;
 
-  // FXColor Helper
+  // TAlphaColor Helper
   TAlphaColorHelper = record helper for TAlphaColor
   public
     // Change value
@@ -238,22 +242,29 @@ type
     function ColorGrayscale(ToneDown: integer = 3): TAlphaColor;
     function ColorInvert: TAlphaColor;
     function ChangeSaturation(ByIncrement: integer): TAlphaColor;
-    function Blend(WithColor: TAlphaColor; BlendAmoung: byte): TAlphaColor;
+    function Blend(WithColor: TAlphaColor; BlendAmount: byte): TAlphaColor;
     function GetLightValue: byte;
 
     // GDI
+    {$IFDEF MSWINDOWS}
     function MakeGDIBrush: TGPSolidBrush;
     function MakeGDIPen(Width: Single = 1): TGPPen;
+    {$ENDIF}
 
     // Convert
     function ToVclColor: TColor;
     function ToString: string;
 
+    // Write utils
+    procedure WriteTo(R, G, B, A: PByte); overload;
+    procedure WriteTo(var R, G, B, A: Byte); overload;
+
     // Constructors
     class function Create(R, G, B: Byte; A: Byte = 255): TAlphaColor; overload; static;
     class function Create(AColor: TColor; A: Byte = 255): TAlphaColor; overload; static;
     class function Create(AString: string): TAlphaColor; overload; static;
-    class function RandomColor(RandomAlpha: boolean=false): TAlphaColor; static;
+    class function RandomColor(RandomAlpha: boolean=false): TAlphaColor; overload; static;
+    class function RandomColor(RangeMin, RangeMax: Byte; RandomAlpha: boolean=false): TAlphaColor; overload; static;
   end;
 
   // Helper for percentage
@@ -934,12 +945,12 @@ begin
   Result := (B or (G shl 8) or (R shl 16) or (A shl 24));
 end;
 
-function TAlphaColorHelper.Blend(WithColor: TAlphaColor; BlendAmoung: byte): TAlphaColor;
+function TAlphaColorHelper.Blend(WithColor: TAlphaColor; BlendAmount: byte): TAlphaColor;
 begin
   Result := Create(
-    R + (WithColor.R - R) * BlendAmoung div 255,
-    G + (WithColor.G - G) * BlendAmoung div 255,
-    B + (WithColor.B - B) * BlendAmoung div 255,
+    R + (WithColor.R - R) * BlendAmount div 255,
+    G + (WithColor.G - G) * BlendAmount div 255,
+    B + (WithColor.B - B) * BlendAmount div 255,
   Alpha);
 end;
 
@@ -954,7 +965,7 @@ function TAlphaColorHelper.ColorGrayscale(ToneDown: integer = 3): TAlphaColor;
 begin
   const Val = (R + G + B) div ToneDown;
 
-  Result := TAlphaColor.Create(Val, Val, Val, Alpha);
+  Result := Create(Val, Val, Val);
 end;
 
 function TAlphaColorHelper.ColorInvert: TAlphaColor;
@@ -980,6 +991,7 @@ begin
   Result := (Self and $00FF0000) shr 16;
 end;
 
+{$IFDEF MSWINDOWS}
 function TAlphaColorHelper.MakeGDIBrush: TGPSolidBrush;
 begin
   Result := TGPSolidBrush.Create( Self );
@@ -989,6 +1001,16 @@ function TAlphaColorHelper.MakeGDIPen(Width: Single): TGPPen;
 begin
   Result := TGPPen.Create( Self, Width );
 end;
+class function TAlphaColorHelper.RandomColor(RangeMin, RangeMax: Byte;
+  RandomAlpha: boolean): TAlphaColor;
+begin
+  if RandomAlpha then
+    Result := Create(RandomRange(RangeMin, RangeMax+1), RandomRange(RangeMin, RangeMax+1), RandomRange(RangeMin, RangeMax+1), RandomRange(RangeMin, RangeMax+1))
+  else
+    Result := Create(RandomRange(RangeMin, RangeMax+1), RandomRange(RangeMin, RangeMax+1), RandomRange(RangeMin, RangeMax+1), RandomRange(RangeMin, RangeMax+1));
+end;
+
+{$ENDIF}
 
 class function TAlphaColorHelper.RandomColor(RandomAlpha: boolean): TAlphaColor;
 begin
@@ -1032,6 +1054,26 @@ function TAlphaColorHelper.ToVclColor: TColor;
 begin
   // Better to use GetRGB, as FXColor is AARRGGBB, while TColor is 00BBGGRR
   Result := RGB(GetR, GetG, GetB);
+end;
+
+procedure TAlphaColorHelper.WriteTo(var R, G, B, A: Byte);
+begin
+  R := GetR;
+  G := GetG;
+  B := GetB;
+  A := GetAlpha;
+end;
+
+procedure TAlphaColorHelper.WriteTo(R, G, B, A: PByte);
+begin
+  if R <> nil then
+    R^ := GetR;
+  if G <> nil then
+    G^ := GetG;
+  if B <> nil then
+    B^ := GetB;
+  if A <> nil then
+    A^ := GetAlpha;
 end;
 
 procedure TAlphaColorHelper.SetG(Value: byte);
