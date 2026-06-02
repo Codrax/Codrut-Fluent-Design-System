@@ -1357,7 +1357,11 @@ begin
       FCutPosition := FCutPosition + ADrawPosition-TxtRect.Width + LineSize * 2;
     end;
 
-  ATextWidth := TextW(DrawText);
+  const ADrawText = DrawText;
+  if ADrawText = '' then
+    ATextWidth := TextW(FTextHint)
+  else
+    ATextWidth := TextW(ADrawText);
   if ATextWidth <= TxtRect.Width  then
     case LayoutHorizontal of
       TLayout.Center: FCutPosition := -(TxtRect.Width - ATextWidth) div 2;
