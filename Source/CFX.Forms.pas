@@ -33,7 +33,7 @@ uses
 
 type
   // Proc
-  FXFormProcedure = procedure(Sender: TObject) of object;
+  FXOnFillFormVisibility = procedure(Sender: TObject; AVisible: boolean) of object;
 
   // Types define
   FXThemeType = CFX.Types.FXThemeType;
@@ -61,7 +61,8 @@ type
 
     // Notify
     FThemeChange: FXThemeChange;
-    FOnMove: FXFormProcedure;
+    FOnMove: TNotifyEvent;
+    FOnFillFormVisibility: FXOnFillFormVisibility;
 
     // DWM Backdrop
     FBackdrop: FXFormBackdropType;
@@ -167,7 +168,8 @@ type
     property BackgroundColor: FXBackgroundColor read FBackground write SetBackgroundColor;
 
     // On Change...
-    property OnMove: FXFormProcedure read FOnMove write FOnMove;
+    property OnMove: TNotifyEvent read FOnMove write FOnMove;
+    property OnFillFormVisibility: FXOnFillFormVisibility read FOnFillFormVisibility write FOnFillFormVisibility;
 
     // Theming Engine
     property OnThemeChange: FXThemeChange read FThemeChange write FThemeChange;
@@ -985,21 +987,36 @@ end;
 { FXDialogForm }
 
 function FXDialogForm.CanMove(Position: TPoint): boolean;
-function IsWindowSnapped(Form: TForm): boolean;
+function IsWindowSnapped(Form: TForm): Boolean;
 var
   P: TWindowPlacement;
   BoundsRect: TRect;
+  NormalRect: TRect;
+  Monitor: TMonitor;
 begin
-  Result := false;
+  Result := False;
 
-  // Get rect
+  if not Form.HandleAllocated or not IsWindow(Form.Handle) then
+    Exit;
+
   GetWindowRect(Form.Handle, BoundsRect);
 
-  // Compare normals
-  if Form.HandleAllocated and IsWindow(Form.Handle) and GetWindowPlacement(Form.Handle, P) then
-    Result := (Form.WindowState <> wsNormal)
-      or ((P.rcNormalPosition.Left <> BoundsRect.Left) and (P.rcNormalPosition.Right <> BoundsRect.Right)) or
-        ((P.rcNormalPosition.Top <> BoundsRect.Top) and (P.rcNormalPosition.Bottom <> BoundsRect.Bottom));
+  P.Length := SizeOf(P);
+  if not GetWindowPlacement(Form.Handle, @P) then
+    Exit;
+
+  // rcNormalPosition is relative to the monitor's work area.
+  Monitor := Screen.MonitorFromWindow(Form.Handle);
+
+  NormalRect := P.rcNormalPosition;
+  OffsetRect(
+    NormalRect,
+    Monitor.WorkareaRect.Left,
+    Monitor.WorkareaRect.Top);
+
+  Result :=
+    (Form.WindowState <> wsNormal) or
+    not EqualRect(NormalRect, BoundsRect);
 end;
 begin
   Result := inherited;
@@ -1190,6 +1207,7 @@ procedure FXPopupForm.WMActivate(var Msg: TWMActivate);
 begin
   inherited;
   if Msg.Active = WA_INACTIVE then
+  if FLightDismiss then
     Close;
 end;
 

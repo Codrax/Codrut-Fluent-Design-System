@@ -166,6 +166,7 @@ type
     FMinimumWidth: integer;
 
     FCanCloseWhenLoseFocus: boolean;
+    FPopupInitializing: boolean;
 
     // Parent
     FParentPopup: FXPopupComponent;
@@ -261,8 +262,8 @@ type
 
     // Close
     procedure CloseMenu(FreeMem: boolean = false);
-    procedure CloseWindowsBackwards;
-    procedure CloseWindowsForward(CloseSelf: boolean = false);
+    procedure CloseWindowsBackwards(CloseSelf: boolean=true; FreeMem: boolean=false);
+    procedure CloseWindowsForward(CloseSelf: boolean=true; FreeMem: boolean=false);
 
     // Interface
     procedure UpdateTheme(const UpdateChildren: Boolean); override;
@@ -414,7 +415,9 @@ begin
   begin
     FMaxVisibleItems := Trunc((AvailableRoom -
       POPUP_SPACING_TOPBOTTOM * 2) / POPUP_ITEM_HEIGHT);
-  end;
+  end
+  else
+    FMaxVisibleItems := VisibleCount;
 end;
 
 { FXPopupContainer }
@@ -645,48 +648,51 @@ end;
 
 procedure FXPopupComponent.CheckFocusLoss;
 var
-  Focused: boolean;
   Item: FXPopupComponent;
 begin
   if not FCanCloseWhenLoseFocus then
     Exit;
 
-  // Focus
+  // Find the parent menu
+  if Assigned(FParentPopup) and (FParentPopup is FXPopupComponent) then begin
+    FParentPopup.CheckFocusLoss;
+    Exit;
+  end;
+
+  // Check if self or any child is focused
   Item := Self;
-  Focused := FForm.Focused;
+  if FForm.Focused or Item.FPopupInitializing then
+    Exit;
 
   while Item.HasChildOpen do
     begin
       Item := Item.Items[Item.GetOpenChildIndex];
-
-      if Item.FForm.Focused then
-        begin
-          Focused := true;
-          Break;
-        end;
+      if Item.FForm.Focused or Item.FPopupInitializing then
+        Exit;
     end;
 
-  if not Focused then
-    Item.CloseWindowsBackwards;
+  // It seems not one from the menu is focused, close menu
+  Item.CloseWindowsBackwards;
 end;
 
-procedure FXPopupComponent.CloseWindowsBackwards;
+procedure FXPopupComponent.CloseWindowsBackwards(CloseSelf: boolean; FreeMem: boolean);
 begin
-  CloseMenu(false);
-
-  if FParentPopup is FXPopupComponent then
-    FParentPopup.CloseWindowsBackwards;
-end;
-
-procedure FXPopupComponent.CloseWindowsForward(CloseSelf: boolean);
-begin
-  // Close
   if CloseSelf then
     CloseMenu(false);
 
-  // Parent
+  // Prev
+  if FParentPopup is FXPopupComponent then
+    FParentPopup.CloseWindowsBackwards(true, FreeMem);
+end;
+
+procedure FXPopupComponent.CloseWindowsForward(CloseSelf, FreeMem: boolean);
+begin
+  if CloseSelf then
+    CloseMenu(FreeMem);
+
+  // Next
   if HasChildOpen then
-    Items[GetOpenChildIndex].CloseWindowsForward(true);
+    Items[GetOpenChildIndex].CloseWindowsForward(true, FreeMem);
 end;
 
 procedure FXPopupComponent.CloseMenu(FreeMem: boolean);
@@ -699,8 +705,9 @@ begin
     end;
 
   // Close
-  if IsOpen then
+  if IsOpen then begin
     FForm.Close;
+  end;
 end;
 
 constructor FXPopupComponent.Create(AOwner: TComponent);
@@ -782,6 +789,9 @@ begin
 
     if FAnimType <> FXAnimateSelection.Opacity then
       FForm.AlphaBlendValue := 255;
+
+    // Update scroll
+    UpdateScrolling;
   end;
 end;
 
@@ -833,6 +843,13 @@ end;
 
 procedure FXPopupComponent.FormGainFocus(Sender: TObject);
 begin
+  // TMP FIX for STUPID BUG I HAVE NO CLOUE HOW TO FIX
+  if Assigned(FParentPopup) and not FParentPopup.IsOpen then begin
+    ShowWindow(FForm.Handle, SW_HIDE);
+    Exit;
+  end;
+
+  //
   if HasChildOpen then
     CloseWindowsForward(false);
 end;
@@ -880,8 +897,7 @@ end;
 
 procedure FXPopupComponent.FormLoseFocus(Sender: TObject);
 begin
-  if not HasChildOpen then
-    FParentMenu.CheckFocusLoss;
+  FParentMenu.CheckFocusLoss;
 end;
 
 procedure FXPopupComponent.FormOnShow(Sender: TObject);
@@ -993,7 +1009,11 @@ begin
       FCanCloseWhenLoseFocus := false;
       try
         // Focus
-        FForm.SetFocus;
+        if FForm.Visible then begin
+          FPopupInitializing := true;
+          FForm.SetFocus;
+          FPopupInitializing := false;
+        end;
 
         // Get Item
         Item := FXPopupMenu(MenuItems[FHoverOver]);
@@ -1011,7 +1031,7 @@ begin
           OpenItem( FHoverOver );
 
         // Focus - good measure
-        if not HasChildOpen then
+        if not HasChildOpen and FForm.Visible then
           FForm.SetFocus;
       finally
         FCanCloseWhenLoseFocus := true;
@@ -1106,7 +1126,7 @@ begin
       B := GetRGB( Font.Color, LineOpacity ).MakeGDIBrush;
 
       // Text Output
-      TextDrawFlags := [tfSingleLine, tfCenter, tfVerticalCenter];
+      TextDrawFlags := [tfSingleLine, tfCenter, tfVerticalCenter, tfNoPrefix];
 
       // Default Round
       RoundR.SetRoundness( POPUP_SELECTION_ROUND );
@@ -1313,6 +1333,25 @@ begin
       // End
       Y := Y + POPUP_SPACING_TOPBOTTOM;
 
+      // Scroll ofsets?
+      if FScrollOffset > 0 then begin
+        Font.Assign( FForm.Font );
+
+        R := ClipRect;
+        R.Bottom := R.Top + POPUP_ITEM_HEIGHT div 2;
+
+        DrawFontIcon(FXBlurMaterial(FGlassBlur).Buffer, #$E70E, FDrawColors.ForeGround, R);
+      end;
+      if (FMaxVisibleItems < VisibleCount) and (FScrollOffset+FMaxVisibleItems <> GetMenuItemCount) then begin
+        Font.Assign( FForm.Font );
+
+        R := ClipRect;
+        R.Top := R.Bottom - POPUP_ITEM_HEIGHT div 2;
+
+        DrawFontIcon(FXBlurMaterial(FGlassBlur).Buffer, #$E70D, FDrawColors.ForeGround, R);
+      end;
+
+
       // Resize
       if (FForm.Height <> Y) and (FAnim = nil) then
         FForm.Height := Y;
@@ -1458,7 +1497,9 @@ begin
   FForm.AlphaBlendValue := 0;
 
   // Show
+  FPopupInitializing := true;
   FForm.Show;
+  FPopupInitializing := false;
 end;
 
 procedure FXPopupComponent.SetHover(Index: integer);
@@ -1534,9 +1575,8 @@ procedure FXPopupItems.Clear(AndFree: boolean);
 var
   I: Integer;
 begin
-  if AndFree then
-    for I := High(FItems) downto 0 do
-      Delete(I);
+  for I := High(FItems) downto 0 do
+    Delete(I, AndFree);
 end;
 
 procedure FXPopupItems.Clear;

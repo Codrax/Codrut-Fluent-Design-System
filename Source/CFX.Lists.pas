@@ -77,6 +77,8 @@ type
     FHandleScrolling: boolean;
     FScrollAnimation: boolean;
 
+    FPageSize: integer;
+
     FExtendX, FExtendY: integer;
     FAnimX, FAnimY: FXIntAnim;
 
@@ -200,6 +202,8 @@ type
 
     property OnAfterDrawItems: TNotifyEvent read FOnAfterDrawItems write FOnAfterDrawItems;
 
+    property PageSize: integer read FPageSize write FPageSize;
+
   published
     // Custom Colors
     property CustomColors: FXColorSets read FCustomColors write FCustomColors stored true;
@@ -244,6 +248,7 @@ type
     property ShowHint;
     property TabStop;
     property TabOrder;
+    property AllowUseKeys;
     property FocusFlags;
     property DragKind;
     property DragCursor;
@@ -310,6 +315,7 @@ type
     FJustifyContent: FXContentJustify;
     FFullLine: boolean;
     FActualSize: TPoint;
+    FPageSizeAutoCalc: boolean;
 
     //  Internal
     procedure RecalculateRects;
@@ -323,6 +329,7 @@ type
     procedure SetItemWidth(const Value: integer);
     procedure SetJustifyContent(const Value: FXContentJustify);
     procedure SetFullLine(const Value: boolean);
+    procedure SetPageSizeAutoCalc(const Value: boolean);
 
   protected
     // Internal
@@ -337,6 +344,9 @@ type
     // Props
     property OnDrawItem;
     property OnBeforeDrawItem;
+
+    property PageSize;
+    property PageSizeAutoCalc: boolean read FPageSizeAutoCalc write SetPageSizeAutoCalc;
 
     property Orientation: FXOrientation read FOrientation write SetOrientation default FXOrientation.Vertical;
     property JustifyContent: FXContentJustify read FJustifyContent write SetJustifyContent default FXContentJustify.Start;
@@ -362,6 +372,9 @@ type
   published
     property OnDrawItem;
     property OnBeforeDrawItem;
+
+    property PageSize;
+    property PageSizeAutoCalc;
 
     property Orientation;
     property JustifyContent;
@@ -402,6 +415,9 @@ type
     // Props
     property Items: TStringList read FStrings write SetStrings;
     property ItemMargins: FXMargins read FItemMargins write FItemMargins;
+
+    property PageSize;
+    property PageSizeAutoCalc;
 
     property Font;
 
@@ -498,6 +514,9 @@ type
   published
     property OnDrawItem;
     property OnBeforeDrawItem;
+
+    property PageSize;
+    property PageSizeAutoCalc;
 
     property Orientation;
     property JustifyContent;
@@ -614,6 +633,8 @@ begin
   FShowScrollbars := true;
   FNoOutOfBoundsDraw := true;
   FDefaultDraw := true;
+
+  FPageSize := 1;
 
   FExtendX := 100;
   FExtendY := 100;
@@ -918,7 +939,7 @@ begin
 
   until FItemVisible[Result];
 end;
-procedure IncreaseCursorPosition(AFrom, ATo: integer; Select: boolean; InBetweenSelection: boolean);
+procedure IncreaseCursorPosition(AFrom, ATo: integer; Select: boolean; SelectRangeBetweenFromAndTo: boolean);
 begin
   if AFrom = ATo then
     Exit;
@@ -928,7 +949,9 @@ begin
 
   // Sel mode
   if Select then begin
-    if InBetweenSelection then begin
+    ///  MODE
+    // Select a range AFrom-ATo
+    if SelectRangeBetweenFromAndTo then begin
       const Direction = Sign(ATo-AFrom);
       const AToState = FItemSelected[ATo];
       var Cursor := AFrom;
@@ -953,8 +976,8 @@ begin
       // Draw
       StandardUpdateDraw;
     end
+    // Select just "To" item
     else begin
-      // Select just "To" item
       if FItemSelected[ATo] then
         ItemSelected[AFrom] := false
       else
@@ -971,26 +994,38 @@ begin
 end;
 begin
   inherited;
+  const KeySpecial = FXSpecialUsageKey.FromKeyCode(Key);
+  if (KeySpecial <> FXSpecialUsageKey.Unknown) and not (KeySpecial in AllowUseKeys) then
+    Exit;
+
   if FKeyboardNavigation and CanHandle then
     case Key of
-      VK_LEFT, VK_UP, VK_RIGHT, VK_DOWN: begin
+      VK_LEFT, VK_UP, VK_RIGHT, VK_DOWN, VK_PRIOR, VK_NEXT: begin
         CanHandle := false;
 
         var Dir := 1;
-        if Key in [VK_LEFT, VK_UP] then Dir := -1;
+        if Key in [VK_LEFT, VK_UP, VK_PRIOR] then Dir := -1;
 
         // Next
         var Next := FItemIndex;
-        var SingleMovement := Key in [VK_LEFT, VK_RIGHT];
-        if FSelectLineIsColumn then SingleMovement := not SingleMovement;
 
-        if SingleMovement or (FSelectLineItemCount <= 1) then
-          // Move by one
-          Next := GetNextVisible(Next, Dir)
-        else
-          // Move by row
+        const SingleMovement = (Key in [VK_LEFT, VK_RIGHT]) xor FSelectLineIsColumn;
+
+        /// SELECT/MOVE TO
+        // Entire page
+        if Key in [VK_PRIOR, VK_NEXT] then begin
+          for var I := 1 to FPageSize do
+            Next := GetNextVisible(Next, Dir);
+        end else
+        // Single item
+        if SingleMovement then begin
+          Next := GetNextVisible(Next, Dir);
+        end else
+        // Entire row
+        begin
           for var I := 1 to FSelectLineItemCount do
             Next := GetNextVisible(Next, Dir);
+        end;
 
         // Increase
         IncreaseCursorPosition(FItemIndex, Next, (ssShift in Shift) and MultiSelect, FKeyboardUpDownSelectRow and not SingleMovement);
@@ -1539,6 +1574,8 @@ begin
   FItemWidth := 150;
   FItemHeight := 100;
 
+  FPageSizeAutoCalc := true;
+
   FWrap := true;
   FSpacingRow := 8;
   FSpacingColumn := 8;
@@ -1727,6 +1764,14 @@ begin
   StandardUpdateLayout;
 end;
 
+procedure FXCustomLinearDrawList.SetPageSizeAutoCalc(const Value: boolean);
+begin
+  if FPageSizeAutoCalc = Value then
+    Exit;
+  FPageSizeAutoCalc := Value;
+  UpdateRects;
+end;
+
 procedure FXCustomLinearDrawList.SetSpacingColumn(const Value: integer);
 begin
   if FSpacingColumn = Value then
@@ -1756,12 +1801,32 @@ end;
 
 procedure FXCustomLinearDrawList.UpdateRects;
 begin
+  const Client = GetClientRect;
+
   FActualSize := Point(FItemWidth, FItemHeight);
 
   RecalculateRects; // calc rects
 
   FHorzScroll.SmallChange := ItemWidth + SpacingRow;
   FVertScroll.SmallChange := ItemHeight + SpacingColumn;
+
+  // Calculate page size
+  if FPageSizeAutoCalc then begin
+    PageSize := 1;
+
+    var RowsPerPage:= 1;
+    var ColsPerPage:= 1;
+    if ItemWidth > 0 then RowsPerPage := Max(1, (Client.Height + SpacingRow) div (ItemHeight + SpacingRow));
+    if ItemWidth > 0 then ColsPerPage := Max(1, (Client.Width + SpacingColumn) div (ItemWidth + SpacingColumn));
+
+    if FullLine then begin
+      case Orientation of
+        FXOrientation.Horizontal: PageSize := ColsPerPage;
+        FXOrientation.Vertical: PageSize := RowsPerPage;
+      end;
+    end else
+      PageSize := RowsPerPage*ColsPerPage;
+  end;
 
   inherited;
 end;

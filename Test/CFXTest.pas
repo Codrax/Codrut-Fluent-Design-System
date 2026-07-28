@@ -76,7 +76,7 @@ type
     FXDropdownButton1: FXDropdownButton;
     FXImageList1: FXImageList;
     FXButton13: FXButton;
-    Ctrl_Pay_Cash: FXNumberEdit;
+    FXButton10: FXButton;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);
@@ -90,6 +90,7 @@ type
     procedure FXButton13Click(Sender: TObject);
     procedure FXTabStrip1ClosePressed(Sender: TObject; Value: Integer);
     procedure FXTabStrip1PlusClicked(Sender: TObject);
+    procedure FXButton10Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -116,6 +117,79 @@ begin
     OpenMessage('Update checking failed')
   else
     OpenMessage('Latest server version: ' + AppManager.ServerVersion.ToString)
+end;
+
+procedure TForm1.FXButton10Click(Sender: TObject);
+var
+  I, I1, I2, I3: FXPopupItem;
+begin
+  const M = FXPopupMenu.Create(nil);
+
+  I := FXPopupItem.Create(nil);
+  I.Text := 'Item 1';
+  M.Items.Add(I);
+
+  I := FXPopupItem.Create(nil);
+  I.Text := 'Item 2';
+  M.Items.Add(I);
+
+  I := FXPopupItem.Create(nil);
+  I.Text := 'Item 3';
+  M.Items.Add(I);
+
+  I1 := FXPopupItem.Create(M);
+  I1.Text := 'Submenu 4';
+  M.Items.Add(I1);
+
+    I := FXPopupItem.Create(nil);
+    I.Text := 'Item 1';
+    I1.Items.Add(I);
+
+    I2 := FXPopupItem.Create(M);
+    I2.Text := 'Submenu 2';
+    I1.Items.Add(I2);
+
+      I := FXPopupItem.Create(nil);
+      I.Text := 'Item 1';
+      I2.Items.Add(I);
+
+      I := FXPopupItem.Create(nil);
+      I.Text := 'Item 2';
+      I2.Items.Add(I);
+
+      I := FXPopupItem.Create(nil);
+      I.Text := 'Item 3';
+      I2.Items.Add(I);
+
+//      I3 := FXPopupItem.Create(nil);
+//      I3.Text := 'Submenu 4';
+//      I2.Items.Add(I3);
+//
+//        I := FXPopupItem.Create(nil);
+//        I.Text := 'Item 1';
+//        I3.Items.Add(I);
+//
+//        I := FXPopupItem.Create(nil);
+//        I.Text := 'Item 2';
+//        I3.Items.Add(I);
+//
+//        I := FXPopupItem.Create(nil);
+//        I.Text := 'Item 3';
+//        I3.Items.Add(I);
+
+    I := FXPopupItem.Create(nil);
+    I.Text := 'Item 3';
+    I1.Items.Add(I);
+
+    I := FXPopupItem.Create(nil);
+    I.Text := 'Item 4';
+    I1.Items.Add(I);
+
+  I := FXPopupItem.Create(nil);
+  I.Text := 'Item 5';
+  M.Items.Add(I);
+
+  M.PopupAtCursor;
 end;
 
 procedure TForm1.FXButton12Click(Sender: TObject);

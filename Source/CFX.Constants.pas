@@ -55,6 +55,13 @@ const
   PRIMARY_COLOR_TINT_VALUE = 100;
   PRIMARY_COLOR_TINT_GRAY_VALUE = 30;
 
+  SPECIAL_KEYS_SET_ALL = [
+    FXSpecialUsageKey.Left, FXSpecialUsageKey.Up, FXSpecialUsageKey.Right,
+    FXSpecialUsageKey.Down, FXSpecialUsageKey.PageUp, FXSpecialUsageKey.PageDown,
+    FXSpecialUsageKey.Tab, FXSpecialUsageKey.Ctrl, FXSpecialUsageKey.Shift,
+    FXSpecialUsageKey.Alt, FXSpecialUsageKey.Enter, FXSpecialUsageKey.Esc,
+    FXSpecialUsageKey.ToHome, FXSpecialUsageKey.ToEnd, FXSpecialUsageKey.Insert];
+
   (* Functionality *)
   REPEAT_START_DELAY = 500;
   HOLD_REPEAT_INTERVAL = 50; // used for buttons and holding them pressed accross controls

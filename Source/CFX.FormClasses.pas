@@ -61,6 +61,8 @@ type
     procedure BuildControls; virtual;
     procedure Resize; override;
 
+    procedure DoShow; override;
+    procedure DoHide; override;
     procedure DoClose(var Action: TCloseAction); override;
 
     procedure ApplyFillMode;
@@ -198,8 +200,29 @@ begin
     FXFormCloseAction.Hide: Action := TCloseAction.caHide;
     else Action := TCloseAction.caFree;
   end;
-
+  if ParentForm is FXForm then
+    with FXForm(ParentForm) do
+      if Assigned(OnFillFormVisibility) then
+        OnFillFormVisibility(ParentForm, false);
   inherited;
+end;
+
+procedure FXFillForm.DoHide;
+begin
+  inherited;
+  if ParentForm is FXForm then
+    with FXForm(ParentForm) do
+      if Assigned(OnFillFormVisibility) then
+        OnFillFormVisibility(ParentForm, false);
+end;
+
+procedure FXFillForm.DoShow;
+begin
+  inherited;
+  if ParentForm is FXForm then
+    with FXForm(ParentForm) do
+      if Assigned(OnFillFormVisibility) then
+        OnFillFormVisibility(ParentForm, true);
 end;
 
 procedure FXFillForm.InitForm;

@@ -433,20 +433,34 @@ type
 // Utils
 function ButtonToModal(Btn: TMsgDlgBtn): integer;
 
+resourcestring
+  DIALOG_BUTTON_TEXT_YES = 'Yes';
+  DIALOG_BUTTON_TEXT_NO = 'No';
+  DIALOG_BUTTON_TEXT_OK = 'Ok';
+  DIALOG_BUTTON_TEXT_CANCEL = 'Cancel';
+  DIALOG_BUTTON_TEXT_ABORT = 'Abort';
+  DIALOG_BUTTON_TEXT_RETRY = 'Retry';
+  DIALOG_BUTTON_TEXT_IGNORE = 'Ignore';
+  DIALOG_BUTTON_TEXT_ALL = 'All';
+  DIALOG_BUTTON_TEXT_YES_TO_ALL = 'Yes to All';
+  DIALOG_BUTTON_TEXT_NO_TO_ALL = 'No to All';
+  DIALOG_BUTTON_TEXT_HELP = 'Help';
+  DIALOG_BUTTON_TEXT_CLOSE = 'Close';
+
 var
   GlobalButtonLabels: TButtonLabelsArray = (
-    'Yes',        // Yes
-    'No',         // No
-    'Ok',         // Ok
-    'Cancel',     // Cancel
-    'Abort',      // Abort
-    'Retry',      // Retry
-    'Ignore',     // Ignore
-    'All',        // All
-    'Yes to All', // YesAll
-    'No to All',  // NoAll
-    'Help',       // Help
-    'Close'       //Close
+    DIALOG_BUTTON_TEXT_YES,        // Yes
+    DIALOG_BUTTON_TEXT_NO,         // No
+    DIALOG_BUTTON_TEXT_OK,         // Ok
+    DIALOG_BUTTON_TEXT_CANCEL,     // Cancel
+    DIALOG_BUTTON_TEXT_ABORT,      // Abort
+    DIALOG_BUTTON_TEXT_RETRY,      // Retry
+    DIALOG_BUTTON_TEXT_IGNORE,     // Ignore
+    DIALOG_BUTTON_TEXT_ALL,        // All
+    DIALOG_BUTTON_TEXT_YES_TO_ALL, // YesAll
+    DIALOG_BUTTON_TEXT_NO_TO_ALL,  // NoAll
+    DIALOG_BUTTON_TEXT_HELP,       // Help
+    DIALOG_BUTTON_TEXT_CLOSE       //Close
     );
 
 implementation
@@ -485,7 +499,7 @@ end;
 constructor FXMessageBox.Create;
 begin
   inherited;
-  AddButton('OK', '', true);
+  AddButton(GlobalButtonLabels[mbOk], '', true);
   ButtonDefault := 0;
 end;
 
@@ -499,8 +513,8 @@ end;
 constructor FXInputBox.Create;
 begin
   inherited;
-  AddButton('OK', '', true);
-  AddButton('Cancel', '', false);
+  AddButton(GlobalButtonLabels[mbOk], '', true);
+  AddButton(GlobalButtonLabels[mbCancel], '', false);
   ButtonDefault := 0;
   ButtonCancel := 1;
 

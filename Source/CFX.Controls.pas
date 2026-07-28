@@ -96,6 +96,7 @@ type
     FHitTest: boolean;
     FTransparent: boolean;
     FDoubleClickInProgress: boolean;
+    FAllowUseKeys: FXSpecialUsageKeySet;
 
     //FPadding: FXPadding;
     FInnerMargins: FXPadding;
@@ -281,6 +282,7 @@ type
     property AutoFocusLine: boolean read FAutoFocusLine write FAutoFocusLine;
 
     property FocusFlags: FXFocusFlags read FFocusFlags write FFocusFlags default [];
+    property AllowUseKeys: FXSpecialUsageKeySet read FAllowUseKeys write FAllowUseKeys default SPECIAL_KEYS_SET_ALL;
 
     property PreviousInteractionState: FXControlState read FPreviousInteraction write FPreviousInteraction;
 
@@ -613,6 +615,7 @@ begin
   // Navigation
   TabStop := true;
   ParentColor := false;
+  AllowUseKeys := SPECIAL_KEYS_SET_ALL;
 
   // Style
   ControlStyle := ControlStyle + [csOpaque, csCaptureMouse];

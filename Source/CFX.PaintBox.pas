@@ -216,23 +216,31 @@ end;
 
 procedure FXPaintBox.SetDarkTint(const Value: integer);
 begin
-  FDarkTintOpacity := Value;
+  if FDarkTintOpacity = Value then
+    Exit;
 
-  Invalidate;
+  FDarkTintOpacity := Value;
+  if FEnableTinting then
+    Invalidate;
 end;
 
 procedure FXPaintBox.SetTinting(const Value: boolean);
 begin
-  FEnableTinting := Value;
+  if FEnableTinting = Value then
+    Exit;
 
+  FEnableTinting := Value;
   Invalidate;
 end;
 
 procedure FXPaintBox.SetWhiteTint(const Value: integer);
 begin
-  FWhiteTintOpacity := Value;
+  if FWhiteTintOpacity = Value then
+    Exit;
 
-  Invalidate;
+  FWhiteTintOpacity := Value;
+  if FEnableTinting then
+    Invalidate;
 end;
 
 end.

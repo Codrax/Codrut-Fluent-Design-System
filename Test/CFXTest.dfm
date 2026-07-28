@@ -2880,7 +2880,6 @@ object Form1: TForm1
     CustomColors.LightForeGround = 1776410
     CustomColors.DarkBackGround = clBlack
     CustomColors.DarkForeGround = clWhite
-    ExplicitTop = 24
   end
   object FXRadioButton1: FXRadioButton
     Left = 236
@@ -3265,18 +3264,19 @@ object Form1: TForm1
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
   end
-  object Ctrl_Pay_Cash: FXNumberEdit
-    Left = 504
-    Top = 392
-    Width = 250
-    Height = 47
+  object FXButton10: FXButton
+    Left = 512
+    Top = 197
+    Width = 129
+    Height = 60
     Margins.Left = 0
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    Size.X = 250
-    Size.Y = 47
-    Position = 0
+    Size.X = 129
+    Size.Y = 60
+    Position.X = 512
+    Position.Y = 197
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -3285,31 +3285,36 @@ object Form1: TForm1
     CustomColors.DarkForeGround = clWhite
     CustomColors.LightBackGroundInterior = 16514043
     CustomColors.DarkBackGroundInterior = 2829099
-    CustomEditColors.Enabled = False
-    CustomEditColors.Accent = clBlack
-    CustomEditColors.LightNone = clBlack
-    CustomEditColors.LightHover = clBlack
-    CustomEditColors.LightPress = clBlack
-    CustomEditColors.DarkNone = clBlack
-    CustomEditColors.DarkHover = clBlack
-    CustomEditColors.DarkPress = clBlack
+    CustomButtonColors.Enabled = False
+    CustomButtonColors.Accent = clBlack
+    CustomButtonColors.LightBackgroundNone = clBlack
+    CustomButtonColors.LightBackgroundHover = clBlack
+    CustomButtonColors.LightBackgroundPress = clBlack
+    CustomButtonColors.LightForeGroundNone = clBlack
+    CustomButtonColors.LightForeGroundHover = clBlack
+    CustomButtonColors.LightForeGroundPress = clBlack
+    CustomButtonColors.DarkBackGroundNone = clBlack
+    CustomButtonColors.DarkBackGroundHover = clBlack
+    CustomButtonColors.DarkBackGroundPress = clBlack
+    CustomButtonColors.DarkForeGroundNone = clBlack
+    CustomButtonColors.DarkForeGroundHover = clBlack
+    CustomButtonColors.DarkForeGroundPress = clBlack
+    Text = 'Test Popup Menu'
+    LineWidth = 3.000000000000000000
     Font.Charset = DEFAULT_CHARSET
-    Font.Color = 1776410
-    Font.Height = 35
+    Font.Color = clWindowText
+    Font.Height = 22
     Font.Name = 'Segoe UI'
     Font.Style = []
     TabOrder = 41
-    ParentColor = False
-    Range.Enabled = True
-    Range.Max = 999999.000000000000000000
-    NumberType = Currency
-    Value = 0.000000000000000000
-    AllowPartialTyping = True
-    SelectionLength = 0
-    ReadOnly = False
-    TextMarginX = 5
-    TextMarginY = 5
-    Detail = Outline
+    OnClick = FXButton10Click
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    Image.SelectImageIndex = 0
+    ImageScale = 1.250000000000000000
+    StateImage.IconType = None
+    StateImage.SelectSegoe = #59188
+    StateImage.SelectImageIndex = 0
   end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False
@@ -66839,7 +66844,7 @@ object Form1: TForm1
       C441E416E0902E374260693C0DA26D7294C8D3504FE90F052C2A3682198E0D81
       439EF5DC5779C191EFFB5D1AFED5F3DC94BF10E220F0FF018B1CBF2A18CE7662
       0000000049454E44AE426082}
-    Left = 520
-    Top = 208
+    Left = 440
+    Top = 320
   end
 end

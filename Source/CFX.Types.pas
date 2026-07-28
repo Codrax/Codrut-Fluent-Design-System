@@ -57,6 +57,17 @@ type
     //DWMSBT_TABBEDWINDOW = 4     // Tabbed
   );
 
+  // Special keys
+  FXSpecialUsageKey = (Unknown=0, Left=1, Up=2, Right=3, Down=4, PageUp=5,
+    PageDown=6, Tab=7, Ctrl=8, Shift=9, Alt=10, Enter=11, Esc=12, ToHome=13,
+    ToEnd=14, Insert=15);
+  FXSpecialUsageKeySet = set of FXSpecialUsageKey;
+
+  FXSpecialUsageKeyHelper = record helper for FXSpecialUsageKey
+    function ToKeyCode: word;
+    class function FromKeyCode(Code: word): FXSpecialUsageKey; static;
+  end;
+
   // Animation
   FXTaskStatus = (Stopped, Running, Paused);
   FXAnimationKind = (Linear, Exponential, ReverseExpo, Random, Spring, Sinus,
@@ -1181,6 +1192,53 @@ begin
   Result.MarginTile := 0;
   Result.MarginParent := 0;
   Result.MarginsELF := 0;
+end;
+
+{ FXSpecialUsageKeyHelper }
+
+class function FXSpecialUsageKeyHelper.FromKeyCode(
+  Code: word): FXSpecialUsageKey;
+begin
+  case Code of
+    VK_LEFT: Exit(FXSpecialUsageKey.Left);
+    VK_UP: Exit(FXSpecialUsageKey.Up);
+    VK_RIGHT: Exit(FXSpecialUsageKey.Right);
+    VK_DOWN: Exit(FXSpecialUsageKey.Down);
+    VK_PRIOR: Exit(FXSpecialUsageKey.PageUp);
+    VK_NEXT: Exit(FXSpecialUsageKey.PageDown);
+    VK_TAB: Exit(FXSpecialUsageKey.Tab);
+    VK_CONTROL: Exit(FXSpecialUsageKey.Ctrl);
+    VK_SHIFT: Exit(FXSpecialUsageKey.Shift);
+    VK_MENU: Exit(FXSpecialUsageKey.Alt);
+    VK_RETURN: Exit(FXSpecialUsageKey.Enter);
+    VK_ESCAPE: Exit(FXSpecialUsageKey.Esc);
+    VK_HOME: Exit(FXSpecialUsageKey.ToHome);
+    VK_END: Exit(FXSpecialUsageKey.ToEnd);
+    VK_INSERT: Exit(FXSpecialUsageKey.Insert);
+    else Exit(FXSpecialUsageKey.Unknown);
+  end;
+end;
+
+function FXSpecialUsageKeyHelper.ToKeyCode: word;
+begin
+  case Self of
+    FXSpecialUsageKey.Left: Exit(VK_LEFT);
+    FXSpecialUsageKey.Up: Exit(VK_UP);
+    FXSpecialUsageKey.Right: Exit(VK_RIGHT);
+    FXSpecialUsageKey.Down: Exit(VK_DOWN);
+    FXSpecialUsageKey.PageUp: Exit(VK_PRIOR);
+    FXSpecialUsageKey.PageDown: Exit(VK_NEXT);
+    FXSpecialUsageKey.Tab: Exit(VK_TAB);
+    FXSpecialUsageKey.Ctrl: Exit(VK_CONTROL);
+    FXSpecialUsageKey.Shift: Exit(VK_SHIFT);
+    FXSpecialUsageKey.Alt: Exit(VK_MENU);
+    FXSpecialUsageKey.Enter: Exit(VK_RETURN);
+    FXSpecialUsageKey.Esc: Exit(VK_ESCAPE);
+    FXSpecialUsageKey.ToHome: Exit(VK_HOME);
+    FXSpecialUsageKey.ToEnd: Exit(VK_END);
+    FXSpecialUsageKey.Insert: Exit(VK_INSERT);
+    else Exit(0);
+  end;
 end;
 
 end.
