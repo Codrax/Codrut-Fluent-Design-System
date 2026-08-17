@@ -118,7 +118,7 @@ begin
       AppName := AppManager.ApplicationName;
 
       DownloadURL := URL;
-      InstallParameters := '-auto-delete -start';
+      InstallParameters := '--auto-delete --start';
 
       Show;
     finally
