@@ -270,6 +270,7 @@ type
   private
     FLightDismiss: boolean;
     FFreeOnClose: boolean;
+    FWindowModalLevel: integer;
 
   protected
     // Initialization (after form creation)
@@ -529,20 +530,33 @@ end;
 function FXCustomForm.IsWindowSnapped: boolean;
 var
   P: TWindowPlacement;
+  BoundsRect: TRect;
+  NormalRect: TRect;
+  Monitor: TMonitor;
 begin
-  Result := false;
+  Result := False;
 
-  // Get the window placement
-  if not GetWindowPlacement(Handle, P) then
+  if not HandleAllocated or not IsWindow(Handle) then
     Exit;
 
-  // Check if the window is maximized or has different normal position
-  if (P.showCmd = SW_SHOWMAXIMIZED) or
-     ((P.rcNormalPosition.Left <> BoundsRect.Left) and (P.rcNormalPosition.Right <> BoundsRect.Right)) or
-     ((P.rcNormalPosition.Top <> BoundsRect.Top) and (P.rcNormalPosition.Bottom <> BoundsRect.Bottom)) then
-  begin
-    Result := True; // The window is snapped
-  end;
+  GetWindowRect(Handle, BoundsRect);
+
+  P.Length := SizeOf(P);
+  if not GetWindowPlacement(Handle, @P) then
+    Exit;
+
+  // rcNormalPosition is relative to the monitor's work area.
+  Monitor := Screen.MonitorFromWindow(Handle);
+
+  NormalRect := P.rcNormalPosition;
+  OffsetRect(
+    NormalRect,
+    Monitor.WorkareaRect.Left,
+    Monitor.WorkareaRect.Top);
+
+  Result :=
+    (WindowState <> wsNormal) or
+    not EqualRect(NormalRect, BoundsRect);
 end;
 
 procedure FXCustomForm.FormCloseIgnore(Sender: TObject; var CanClose: Boolean);
@@ -1207,8 +1221,8 @@ procedure FXPopupForm.WMActivate(var Msg: TWMActivate);
 begin
   inherited;
   if Msg.Active = WA_INACTIVE then
-  if FLightDismiss then
-    Close;
+    if FLightDismiss and (Application.ModalLevel = FWindowModalLevel) then
+      Close;
 end;
 
 procedure FXPopupForm.WMKeyDown(var Msg: TWMKeyDown);
@@ -1223,8 +1237,7 @@ end;
 
 procedure FXPopupForm.WMKillFocus(var Msg: TWMKillFocus);
 begin
-  if FLightDismiss then
-    Close; // or Hide, depending on your behavior
+  // no NOT handle this (it's internally for when controls catch focus)
 end;
 
 {procedure FXPopupForm.DisableFormBorder;
@@ -1262,6 +1275,8 @@ procedure FXPopupForm.DoShow;
 begin
   inherited;
 
+  FWindowModalLevel := Application.ModalLevel;
+
   // Re-inforce, in case the border style changed, etc.
   //DisableFormBorder;
 end;
@@ -1280,7 +1295,7 @@ begin
   CustomTitleBar.SystemButtons := false;
   CustomTitleBar.SystemHeight := false;
   CustomTitleBar.SystemColors := false;
-  CustomTitleBar.Height := 1;
+  CustomTitleBar.Height := CustomTitleBar.Height+1;
 
   // Props
   FLightDismiss := true;

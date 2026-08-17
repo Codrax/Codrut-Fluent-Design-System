@@ -164,10 +164,10 @@ type
   // Controls
   FXControlState = (None, Hover, Press);
   FXControlOnPaint = procedure(Sender: TObject) of object;
-  FXControlOnIntegerValue = procedure(Sender: TObject; Value: integer) of object;
-  FXControlOnIntegerSourceDestination = procedure(Sender: TObject; Source, Destination: integer) of object;
-  FXControlOnDrawRectIndex = procedure(Sender: TObject; AIndex: integer; ARect: TRect; Canvas: TCanvas) of object;
-  FXControlOnDrawRectIndexDrawDefault = procedure(Sender: TObject; AIndex: integer; ARect: TRect; Canvas: TCanvas; var DrawDefault: boolean) of object;
+  FXControlOnIntegerValue = procedure(Sender: TObject; const Value: integer) of object;
+  FXControlOnIntegerSourceDestination = procedure(Sender: TObject; const Source, Destination: integer) of object;
+  FXControlOnDrawRectIndex = procedure(Sender: TObject; const AIndex: integer; var ARect: TRect; const Canvas: TCanvas) of object;
+  FXControlOnDrawRectIndexDrawDefault = procedure(Sender: TObject; const AIndex: integer; var ARect: TRect; const Canvas: TCanvas; var DrawDefault: boolean) of object;
 
   // Thingies
   FXPercent = type Single;

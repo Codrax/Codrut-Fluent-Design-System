@@ -105,8 +105,6 @@ implementation
 {$R *.dfm}
 
 procedure TForm1.FormCreate(Sender: TObject);
-var
-  C: TAlphaColor;
 begin
   AllowThemeChangeAnimation := True;
 end;
@@ -121,7 +119,7 @@ end;
 
 procedure TForm1.FXButton10Click(Sender: TObject);
 var
-  I, I1, I2, I3: FXPopupItem;
+  I, I1, I2: FXPopupItem;
 begin
   const M = FXPopupMenu.Create(nil);
 

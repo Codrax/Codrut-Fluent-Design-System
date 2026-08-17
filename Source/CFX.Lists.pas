@@ -46,6 +46,8 @@ type
   FXDrawList = class(FXWindowsControl)
   private
     procedure SetNoItemsOutputText(const Value: string);
+    function GetItemTag(Index: integer): integer;
+    procedure SetItemTag(Index: integer; const Value: integer);
     type TRectSet = record
       Index: integer;
       Rectangle: TRect;
@@ -86,6 +88,7 @@ type
     FItemRects: TArray<TRect>;
     FItemVisible: TArray<boolean>;
     FItemSelected: TArray<boolean>;
+    FItemTag: TArray<integer>;
     FItemHoverLocalPosition: TPoint;
 
     // Data
@@ -159,8 +162,8 @@ type
     procedure UpdateRects; override;
 
     // Draw
-    function GetItemBackgroundColor(Index: integer): TColor; virtual;
-    procedure DrawItem(Index: integer; ARect: TRect; Canvas: TCanvas); virtual;
+    function GetItemBackgroundColor(const Index: integer): TColor; virtual;
+    procedure DrawItem(const Index: integer; var ARect: TRect; const Canvas: TCanvas); virtual;
     procedure DrawNoItemsText; virtual;
 
     // Animation
@@ -285,6 +288,7 @@ type
     property ItemRect[Index: integer]: TRect read GetItemRect;
     property ItemDisplayRect[Index: integer]: TRect read GetItemDisplayRect;
     property ItemVisible[Index: integer]: boolean read GetItemVisible write SetItemVisible;
+    property ItemTag[Index: integer]: integer read GetItemTag write SetItemTag;
 
     property KeyboardNavigation: boolean read FKeyboardNavigation write FKeyboardNavigation;
     property KeyboardUpDownSelectRow: boolean read FKeyboardUpDownSelectRow write FKeyboardUpDownSelectRow;
@@ -409,7 +413,7 @@ type
 
   protected
     // Draw
-    procedure DrawItem(Index: integer; ARect: TRect; Canvas: TCanvas); override;
+    procedure DrawItem(const Index: integer; var ARect: TRect; const Canvas: TCanvas); override;
 
   published
     // Props
@@ -494,14 +498,14 @@ type
     // Internal
     procedure UpdateRects; override;
 
-    procedure DrawItem(Index: integer; ARect: TRect; Canvas: TCanvas); override;
+    procedure DrawItem(const Index: integer; var ARect: TRect; const Canvas: TCanvas); override;
     procedure DrawNoItemsText; override;
 
     function GetChildParent: TComponent; override; // set the loaded children parent
 
     // Send messages to contrls
     function GetHoverControl: FXWindowsControl;
-    function UpdateControlsState(Index: integer): boolean;
+    function UpdateControlsState(const Index: integer): boolean;
 
     // Inherited Mouse Detection
     procedure MouseDown(Button : TMouseButton; Shift: TShiftState; X, Y : integer); override;
@@ -800,7 +804,7 @@ begin
     Result := inherited;
 end;
 
-procedure FXDrawList.DrawItem(Index: integer; ARect: TRect; Canvas: TCanvas);
+procedure FXDrawList.DrawItem(const Index: integer; var ARect: TRect; const Canvas: TCanvas);
 var
   DrawDefault: boolean;
 begin
@@ -872,7 +876,7 @@ begin
   Result := ARect.IntersectsWith( Client );
 end;
 
-function FXDrawList.GetItemBackgroundColor(Index: integer): TColor;
+function FXDrawList.GetItemBackgroundColor(const Index: integer): TColor;
 var
   Interior: TColor;
 begin
@@ -911,6 +915,11 @@ end;
 function FXDrawList.GetItemSelected(Index: integer): boolean;
 begin
   Result := FItemSelected[Index];
+end;
+
+function FXDrawList.GetItemTag(Index: integer): integer;
+begin
+  Result := FItemTag[Index];
 end;
 
 function FXDrawList.GetItemVisible(Index: integer): boolean;
@@ -994,17 +1003,20 @@ begin
 end;
 begin
   inherited;
-  const KeySpecial = FXSpecialUsageKey.FromKeyCode(Key);
-  if (KeySpecial <> FXSpecialUsageKey.Unknown) and not (KeySpecial in AllowUseKeys) then
-    Exit;
+  if FKeyboardNavigation and CanHandle then begin
+    // Allowed to handle key
+    const KeySpecial = FXSpecialUsageKey.FromKeyCode(Key);
+    if (KeySpecial <> FXSpecialUsageKey.Unknown) and not (KeySpecial in AllowUseKeys) then begin
+      Exit;
+    end;
 
-  if FKeyboardNavigation and CanHandle then
+    // Process
     case Key of
-      VK_LEFT, VK_UP, VK_RIGHT, VK_DOWN, VK_PRIOR, VK_NEXT: begin
+      VK_LEFT, VK_UP, VK_RIGHT, VK_DOWN, VK_PRIOR, VK_NEXT, VK_HOME, VK_END: begin
         CanHandle := false;
 
         var Dir := 1;
-        if Key in [VK_LEFT, VK_UP, VK_PRIOR] then Dir := -1;
+        if Key in [VK_LEFT, VK_UP, VK_PRIOR, VK_HOME] then Dir := -1;
 
         // Next
         var Next := FItemIndex;
@@ -1016,6 +1028,14 @@ begin
         if Key in [VK_PRIOR, VK_NEXT] then begin
           for var I := 1 to FPageSize do
             Next := GetNextVisible(Next, Dir);
+        end else
+        // Home/End
+        if Key in [VK_HOME, VK_END] then begin
+          var I: integer;
+          repeat
+            I := Next;
+            Next := GetNextVisible(Next, Dir);
+          until I = Next;
         end else
         // Single item
         if SingleMovement then begin
@@ -1031,11 +1051,19 @@ begin
         IncreaseCursorPosition(FItemIndex, Next, (ssShift in Shift) and MultiSelect, FKeyboardUpDownSelectRow and not SingleMovement);
       end;
 
-      VK_ESCAPE: if CanDeselect then ClearSelection;
+      VK_ESCAPE: begin
+        CanHandle := false;
 
-      Ord('A'): if (ssCtrl in Shift) and MultiSelect then
+        if CanDeselect then ClearSelection;
+      end;
+
+      Ord('A'): if (ssCtrl in Shift) and MultiSelect then begin
+        CanHandle := false;
+
         SelectAll;
+      end;
     end
+  end;
 end;
 
 procedure FXDrawList.InteractionStateChanged(AState: FXControlState);
@@ -1165,7 +1193,7 @@ begin
 
     // Data
     const InBounds = GetInBounds(I);
-    const Display = GetItemDisplayRect(I);
+    var Display := GetItemDisplayRect(I);
 
     // In Bounds
     if InBounds then
@@ -1389,7 +1417,8 @@ end;
 
 procedure FXDrawList.SetItemCount(const Value: integer);
 begin
-  if ItemCount = Value then
+  const PrevItemCount = ItemCount;
+  if PrevItemCount = Value then
     Exit;
 
   // Selected
@@ -1414,7 +1443,11 @@ begin
   SetLength(FItemRects, Value);
   SetLength(FItemSelected, Value);
   SetLength(FItemVisible, Value);
+  SetLength(FItemTag, Value);
 
+  // Initialize
+  for var I := PrevItemCount to Value-1 do
+    FItemTag[I] := 0;
   ClearHiddenInternal;
 
   // Draw
@@ -1454,6 +1487,11 @@ begin
   FItemSelected[Index] := Value;
 
   StandardUpdateDraw;
+end;
+
+procedure FXDrawList.SetItemTag(Index: integer; const Value: integer);
+begin
+  FItemTag[Index] := Value;
 end;
 
 procedure FXDrawList.SetItemVisible(Index: integer; const Value: boolean);
@@ -1905,8 +1943,8 @@ begin
     UpdateControlsState(ItemIndexHover);
 end;
 
-procedure FXLinearControlList.DrawItem(Index: integer; ARect: TRect;
-  Canvas: TCanvas);
+procedure FXLinearControlList.DrawItem(const Index: integer; var ARect: TRect;
+  const Canvas: TCanvas);
 begin
   // Set the background before drawing occurs
   FContainer.FBackgroundColor := GetItemBackgroundColor(Index);
@@ -2058,7 +2096,7 @@ begin
   FContainer.PaddingFill.Assign(Value);
 end;
 
-function FXLinearControlList.UpdateControlsState(Index: integer): boolean;
+function FXLinearControlList.UpdateControlsState(const Index: integer): boolean;
 begin
   Result := false;
 
@@ -2179,8 +2217,8 @@ begin
   inherited;
 end;
 
-procedure FXLinearStringsList.DrawItem(Index: integer; ARect: TRect;
-  Canvas: TCanvas);
+procedure FXLinearStringsList.DrawItem(const Index: integer; var ARect: TRect;
+  const Canvas: TCanvas);
 var
   S: string;
 begin

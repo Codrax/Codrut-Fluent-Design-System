@@ -141,7 +141,7 @@ type
 
     procedure ShowPreviewFor(Index: integer);
 
-    procedure DoListDrawItem(Sender: TObject; AIndex: integer; ARect: TRect; Canvas: TCanvas);
+    procedure DoListDrawItem(Sender: TObject; const AIndex: integer; var ARect: TRect; const Canvas: TCanvas);
     procedure DoActionButtonPress(Sender: TObject);
     procedure DoImageActionButtonPress(Sender: TObject);
     procedure DoListItemSelect(Sender: TObject);
@@ -1275,7 +1275,7 @@ begin
 end;
 
 procedure TFXPictureListProperty.DoListDrawItem(Sender: TObject;
-  AIndex: integer; ARect: TRect; Canvas: TCanvas);
+  const AIndex: integer; var ARect: TRect; const Canvas: TCanvas);
 var
   R: TRect;
   Img: TGraphic;

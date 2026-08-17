@@ -237,7 +237,7 @@ type
 
     procedure FormLoseFocus(Sender: TObject);
     procedure FormGainFocus(Sender: TObject);
-    procedure FormKeyPress(ender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormOnShow(Sender: TObject);
 
     // Paint Glass
@@ -854,7 +854,7 @@ begin
     CloseWindowsForward(false);
 end;
 
-procedure FXPopupComponent.FormKeyPress(ender: TObject; var Key: Word;
+procedure FXPopupComponent.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 var
   Direction, NewPos: integer;
@@ -1421,7 +1421,7 @@ begin
   // Create
   if FForm = nil then
     begin
-      FForm := TForm.Create(Self);
+      FForm := TForm.CreateNew(Self);
 
       with FForm do
         begin
@@ -1445,7 +1445,9 @@ begin
           OnShow := FormOnShow;
           OnDeactivate := FormLoseFocus;
           OnActivate := FormGainFocus;
-          OnKeyDown := FormKeyPress;
+          OnKeyDown := FormKeyDown;
+
+          KeyPreview := true;
 
           // Math
           NormalHeight := 0;
@@ -1459,6 +1461,8 @@ begin
             begin
               Parent := FForm;
               Align := alClient;
+
+              TabStop := false;
 
               Version := FXBlurVersion.Screenshot;
               if FParentMenu.FFlatMenu then
