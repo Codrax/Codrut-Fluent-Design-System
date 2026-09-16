@@ -17,6 +17,7 @@ uses
   CFX.Constants,
   CFX.Classes,
   CFX.ComponentClasses,
+  CFX.Accessibility,
   CFX.Types,
   CFX.Linker,
   CFX.Messages,

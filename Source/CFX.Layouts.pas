@@ -21,6 +21,8 @@ uses
   CFX.Scrollbar,
   SysUtils,
   CFX.Classes,
+  CFX.ComponentClasses,
+  CFX.Accessibility,
   CFX.Animation.Component,
   CFX.Types,
   CFX.VarHelpers,
@@ -47,6 +49,10 @@ type
 
   protected
     procedure PaintBuffer; override;
+
+    // Accesibility
+    function AccessibilityGetControlType: Integer; override;
+    function AccessibilityGetControlTypeName: string; override;
 
     //  Internal
     procedure UpdateColors; override;
@@ -227,6 +233,16 @@ type
 
 implementation
 
+function FXCustomLayout.AccessibilityGetControlType: Integer;
+begin
+  Result := inherited;
+end;
+
+function FXCustomLayout.AccessibilityGetControlTypeName: string;
+begin
+  Result := 'panel';
+end;
+
 function FXCustomLayout.Background: TColor;
 begin
   Result := FDrawColors.BackGround;
@@ -332,9 +348,9 @@ begin
   UpdateRange;
 
   // Result Rect
-  Rect := Bounds(-FHorzScroll.Value, -FVertScroll.Value,
-    Max(FHorzScroll.Max, ClientWidth), Max(ClientHeight,
-    FVertScroll.Max));
+  Rect := Bounds(-FHorzScroll.Value + Padding.Left, -FVertScroll.Value + Padding.Top,
+    Max(FHorzScroll.Max + Padding.Left + Padding.Right, ClientWidth - Padding.Left - Padding.Right),
+    Max(ClientHeight - Padding.Top - Padding.Bottom, FVertScroll.Max + Padding.Top + Padding.Bottom));
 
   // Remove scrollbars from client
   if not FVertScroll.Visible and FKeepScrollClientWhenBarHidden and FEnableVertical then

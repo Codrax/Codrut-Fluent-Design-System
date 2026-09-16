@@ -359,7 +359,7 @@ end;
 
 procedure TCanvasHelper.GDITint(Rectangle: TRect; Color: TColor; Opacity: byte = 75);
 begin
-  TintPicture(Self, Rectangle, GetRGB(Color, Opacity));
+  TintPicture(Self, Rectangle, TAlphaColor.Create(Color, Opacity));
 end;
 
 procedure TCanvasHelper.GDIRectangle(Rectangle: TRect; Brush: TGDIBrush; Pen: TGDIPen);
@@ -449,7 +449,7 @@ begin
       end;
 
     // Draw
-    DrawText(Self, Text, Rectangle, AFont, AFormat, GetRGB(Font.Color).MakeGDIBrush, Angle);
+    DrawText(Self, Text, Rectangle, AFont, AFormat, TAlphaColor.Create(Font.Color).MakeGDIBrush, Angle);
   finally
     AFont.Free;
     AFormat.Free;

@@ -17,6 +17,8 @@ uses
   CFX.Constants,
   SysUtils,
   CFX.Classes,
+  CFX.ComponentClasses,
+  CFX.Accessibility,
   CFX.Types,
   CFX.VarHelpers,
   CFX.Linker,
@@ -57,6 +59,22 @@ type
 
   protected
     procedure PaintBuffer; override;
+
+    // Accesibility
+    function AccessibilityGetControlType: Integer; override;
+    function AccessibilityGetControlTypeName: string; override;
+
+    function AccessibilityGetName: string; override;
+
+    function AccessibilityGetPattern(PatternId: Integer): IUnknown; override;
+
+    function AccessibilityIsReadOnly: Boolean; override;
+    function AccessibilityGetRangeValue: Double; override;
+    function AccessibilityGetRangeMinimum: Double; override;
+    function AccessibilityGetRangeMaximum: Double; override;
+    function AccessibilityGetRangeSmallChange: Double; override;
+    function AccessibilityGetRangeLargeChange: Double; override;
+    function AccessibilitySetRangeValue(Value: Double): Boolean; override;
 
     // Internal
     procedure UpdateColors; override;
@@ -133,6 +151,74 @@ type
   end;
 
 implementation
+
+function FXRatingControl.AccessibilityGetControlType: Integer;
+begin
+  Result := UIA_SliderControlTypeId;
+end;
+
+function FXRatingControl.AccessibilityGetControlTypeName: string;
+begin
+  Result := 'star rating slider';
+end;
+
+function FXRatingControl.AccessibilityGetName: string;
+begin
+  Result := Value.ToString + '/' + MAX_VALUE.ToString;
+end;
+
+function FXRatingControl.AccessibilityGetPattern(PatternId: Integer): IUnknown;
+begin
+  Result := nil;
+
+  case PatternId of
+    UIA_RangeValuePatternId:
+      Result := TFXRangeValueProvider.Create(Self);
+  else
+    Result := inherited AccessibilityGetPattern(PatternId);
+  end;
+end;
+
+function FXRatingControl.AccessibilityGetRangeLargeChange: Double;
+begin
+  Result := 1/StarCount*AccessibilityGetRangeMaximum;
+end;
+
+function FXRatingControl.AccessibilityGetRangeMaximum: Double;
+begin
+  Result := MAX_VALUE;
+end;
+
+function FXRatingControl.AccessibilityGetRangeMinimum: Double;
+begin
+  Result := 0;
+end;
+
+function FXRatingControl.AccessibilityGetRangeSmallChange: Double;
+begin
+  Result := FValueIncrement;
+end;
+
+function FXRatingControl.AccessibilityGetRangeValue: Double;
+begin
+  Result := Value;
+end;
+
+function FXRatingControl.AccessibilityIsReadOnly: Boolean;
+begin
+  Result := ReadOnly;
+end;
+
+function FXRatingControl.AccessibilitySetRangeValue(Value: Double): Boolean;
+begin
+  if ReadOnly then
+    Exit(false);
+  if not InRange(round(Value), AccessibilityGetRangeMinimum, AccessibilityGetRangeMaximum) then
+    Exit(false);
+
+  Self.Value := round(Value);
+  Result := true;
+end;
 
 function FXRatingControl.Background: TColor;
 begin

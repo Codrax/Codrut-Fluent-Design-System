@@ -17,6 +17,8 @@ uses
   CFX.Constants,
   SysUtils,
   CFX.Classes,
+  CFX.ComponentClasses,
+  CFX.Accessibility,
   CFX.Types,
   CFX.VarHelpers,
   CFX.Linker,
@@ -56,6 +58,12 @@ type
 
   protected
     procedure PaintBuffer; override;
+
+    // Accesibility
+    function AccessibilityGetControlType: Integer; override;
+    function AccessibilityGetControlTypeName: string; override;
+
+    function AccessibilityGetName: string; override;
 
     // Override
     procedure ApplyInnerMargins; override;
@@ -485,6 +493,21 @@ begin
 
   UpdateRects;
   Redraw;
+end;
+
+function FXCustomTextBox.AccessibilityGetControlType: Integer;
+begin
+  Result := UIA_TextControlTypeId;
+end;
+
+function FXCustomTextBox.AccessibilityGetControlTypeName: string;
+begin
+  Result := 'text';
+end;
+
+function FXCustomTextBox.AccessibilityGetName: string;
+begin
+  Result := Text;
 end;
 
 procedure FXCustomTextBox.ApplyInnerMargins;

@@ -9,6 +9,7 @@ uses
   Vcl.Graphics,
   Vcl.Dialogs,
   Types,
+  UITypes,
   Math,
   CFX.Colors,
   CFX.ThemeManager,
@@ -16,6 +17,8 @@ uses
   CFX.Constants,
   SysUtils,
   CFX.Classes,
+  CFX.ComponentClasses,
+  CFX.Accessibility,
   CFX.VarHelpers,
   CFX.Types,
   CFX.Linker,
@@ -59,6 +62,14 @@ type
 
   protected
     procedure PaintBuffer; override;
+
+    // Accesibility
+    function AccessibilityGetControlType: Integer; override;
+    function AccessibilityGetControlTypeName: string; override;
+
+    function AccessibilityGetPattern(PatternId: Integer): IUnknown; override;
+
+    function AccessibilityGetName: string; override;
 
     // Internal
     procedure UpdateColors; override;
@@ -337,6 +348,36 @@ begin
   end;
 end;
 
+function FXSelector.AccessibilityGetControlType: Integer;
+begin
+  Result := UIA_ListControlTypeId;
+end;
+
+function FXSelector.AccessibilityGetControlTypeName: string;
+begin
+  Result := 'select list';
+end;
+
+function FXSelector.AccessibilityGetName: string;
+begin
+  if Value = -1 then
+    Result := 'no item selected'
+  else
+    Result := Items[Value];
+end;
+
+function FXSelector.AccessibilityGetPattern(PatternId: Integer): IUnknown;
+begin
+  Result := nil;
+
+  case PatternId of
+    UIA_SelectionPatternId:
+      Result := TFXSelectionProvider.Create(Self);
+  else
+    Result := inherited AccessibilityGetPattern(PatternId);
+  end;
+end;
+
 procedure FXSelector.AnimateToPosition;
 begin
   if Value = -1 then
@@ -378,7 +419,7 @@ begin
   with Buffer do
     begin
       // Main Rectangle
-      GDIRoundRect(MakeRoundRect(DrawRect, GetRoundness(false)), GetRGB(FDrawColors.BackGroundInterior).MakeGDIBrush, nil);
+      GDIRoundRect(MakeRoundRect(DrawRect, GetRoundness(false)), TAlphaColor.Create(FDrawColors.BackGroundInterior).MakeGDIBrush, nil);
 
       // Draw Backgrounds
       ARound := GetRoundness(true);
@@ -393,7 +434,7 @@ begin
               
               AColor := ChangeColorLight(FDrawColors.backGroundInterior, 10);
 
-              GDIRoundRect(MakeRoundRect(ARect, ARound), GetRGB(AColor).MakeGDIBrush, nil);
+              GDIRoundRect(MakeRoundRect(ARect, ARound), TAlphaColor.Create(AColor).MakeGDIBrush, nil);
             end;
         end;
 
@@ -405,7 +446,7 @@ begin
       ARect := MakeDrawPositionRect;
 
       if FDrawPosition <> -1 then
-        GDIRoundRect(MakeRoundRect(ARect, ARound), GetRGB(AColor).MakeGDIBrush, nil);
+        GDIRoundRect(MakeRoundRect(ARect, ARound), TAlphaColor.Create(AColor).MakeGDIBrush, nil);
 
       // Draw Texts
       for I := 0 to High(ItemRects) do

@@ -18,6 +18,7 @@ uses
   CFX.Progress, CFX.GDI, CFX.Utilities, CFX.QuickDialogs, CFX.Instances,
   CFX.PaintBox, CFX.Lists, CFX.AppManager, CFX.Shapes, CFX.Translations,
   CFX.Layouts, CFX.TitlebarPanel, CFX.FormTemplates, CFX.TabStrip,
+  CFX.Accessibility,
 
   // Cod Windows Runtime
 
@@ -77,6 +78,7 @@ type
     FXImageList1: FXImageList;
     FXButton13: FXButton;
     FXButton10: FXButton;
+    FXCheckBox1: FXCheckBox;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);
@@ -91,6 +93,7 @@ type
     procedure FXTabStrip1ClosePressed(Sender: TObject; Value: Integer);
     procedure FXTabStrip1PlusClicked(Sender: TObject);
     procedure FXButton10Click(Sender: TObject);
+    procedure Button1Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -103,6 +106,11 @@ var
 implementation
 
 {$R *.dfm}
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  //FXLinearStringsList1.Items.Add( char(random(20)+integer('A')) );
+end;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin

@@ -16,6 +16,7 @@ uses
   SysUtils,
   CFX.Classes,
   CFX.ComponentClasses,
+  CFX.Accessibility,
   CFX.Types,
   CFX.Linker,
   CFX.Controls;
@@ -38,6 +39,7 @@ type
     FImageScale: single;
     FLayout: FXDrawLayout;
     FTextLayout: TLayout;
+    FReadOnly: boolean;
 
     // Internal
     procedure ImageUpdated(Sender: TObject);
@@ -63,6 +65,17 @@ type
   protected
     procedure PaintBuffer; override;
 
+    // Accesibility
+    function AccessibilityGetControlType: Integer; override;
+    function AccessibilityGetControlTypeName: string; override;
+
+    function AccessibilityGetName: string; override;
+
+    function AccessibilityGetPattern(PatternId: Integer): IUnknown; override;
+
+    function AccessibilityGetToggleState: Integer; override;
+    function AccessibilityToggle: Boolean; override;
+
     //  Internal
     procedure UpdateColors; override;
     procedure UpdateRects; override;
@@ -84,6 +97,7 @@ type
     property IconScale: single read FIconScale write FIconScale;
     property TextSpacing: Integer read FTextSpacing write SetTextSpacing default RADIO_TEXT_SPACE;
     property Checked: Boolean read GetChecked write SetChecked default false;
+    property ReadOnly: boolean read FReadOnly write FReadOnly;
     property OnCheck: TNotifyEvent read FOnCheck write FOnCheck;
     property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default false;
 
@@ -142,9 +156,10 @@ implementation
 procedure FXRadioButton.KeyPress(var Key: Char);
 begin
   inherited;
-  if (Key = #13) or (Key = #32) then
-    if not Checked then
-      Checked := true;
+  if not ReadOnly then
+    if (Key = #13) or (Key = #32) then
+      if not Checked then
+        Checked := true;
 end;
 
 procedure FXRadioButton.MouseMove(Shift: TShiftState; X, Y: Integer);
@@ -390,7 +405,7 @@ end;
 procedure FXRadioButton.Click;
 begin
   inherited;
-  if not Enabled then
+  if ReadOnly or not Enabled then
     Exit;
 
   if not Checked then
@@ -434,6 +449,50 @@ begin
   FreeAndNil( FIconAccentColors );
   FreeAndNil( FImage );
   inherited;
+end;
+
+function FXRadioButton.AccessibilityGetControlType: Integer;
+begin
+  Result := UIA_RadioButtonControlTypeId;
+end;
+
+function FXRadioButton.AccessibilityGetControlTypeName: string;
+begin
+  Result := 'radio box';
+end;
+
+function FXRadioButton.AccessibilityGetName: string;
+begin
+  Result := Text;
+end;
+
+function FXRadioButton.AccessibilityGetPattern(PatternId: Integer): IUnknown;
+begin
+  Result := nil;
+
+  case PatternId of
+    UIA_TogglePatternId:
+      Result := TFXToggleProvider.Create(Self as IFXAccessibilityControl);
+  else
+    Result := inherited AccessibilityGetPattern(PatternId);
+  end;
+end;
+
+function FXRadioButton.AccessibilityGetToggleState: Integer;
+begin
+  if Checked then
+    Result := ToggleState_On
+  else
+    Result := ToggleState_Off;
+end;
+
+function FXRadioButton.AccessibilityToggle: Boolean;
+begin
+  if ReadOnly then
+    Exit(False);
+
+  Checked := not Checked;
+  Result := True;
 end;
 
 function FXRadioButton.Background: TColor;

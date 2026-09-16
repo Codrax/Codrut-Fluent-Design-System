@@ -10,6 +10,7 @@ uses
   Vcl.Clipbrd,
   Types,
   Math,
+  UITypes,
   CFX.Translations,
   CFX.Colors,
   CFX.ThemeManager,
@@ -18,6 +19,7 @@ uses
   SysUtils,
   CFX.Classes,
   CFX.ComponentClasses,
+  CFX.Accessibility,
   CFX.GDI,
   CFX.VarHelpers,
   CFX.Types,
@@ -120,6 +122,18 @@ type
 
   protected
     procedure PaintBuffer; override;
+
+    // Accesibility
+    function AccessibilityGetControlType: Integer; override;
+    function AccessibilityGetControlTypeName: string; override;
+
+    function AccessibilityGetName: string; override;
+
+    function AccessibilityGetPattern(PatternId: Integer): IUnknown; override;
+
+    function AccessibilityGetValue: string; override;
+    function AccessibilityIsReadOnly: Boolean; override;
+    function AccessibilitySetValue(const Value: string): Boolean; override;
 
     // Text
     procedure SetText(const Value: string); virtual;
@@ -1007,6 +1021,52 @@ begin
   inherited;
 end;
 
+function FXCustomEdit.AccessibilityGetControlType: Integer;
+begin
+  Result := UIA_EditControlTypeId;
+end;
+
+function FXCustomEdit.AccessibilityGetControlTypeName: string;
+begin
+  Result := 'edit';
+end;
+
+function FXCustomEdit.AccessibilityGetName: string;
+begin
+  Result := TextHint;
+end;
+
+function FXCustomEdit.AccessibilityGetPattern(PatternId: Integer): IUnknown;
+begin
+  Result := nil;
+
+  case PatternId of
+    UIA_ValuePatternId:
+      Result := TFXValueProvider.Create(Self);
+  else
+    Result := inherited AccessibilityGetPattern(PatternId);
+  end;
+end;
+
+function FXCustomEdit.AccessibilityGetValue: string;
+begin
+  Result := Text;
+end;
+
+function FXCustomEdit.AccessibilityIsReadOnly: Boolean;
+begin
+  Result := ReadOnly;
+end;
+
+function FXCustomEdit.AccessibilitySetValue(const Value: string): Boolean;
+begin
+  if ReadOnly then
+    Exit(False);
+
+  Text := Value;
+  Result := True;
+end;
+
 function FXCustomEdit.AnalizeCharSolid(C: char): boolean;
 begin
   Result := CharInSet(C, ['A'..'Z', 'a'..'z', '0'..'9']);
@@ -1120,13 +1180,13 @@ begin
 
       // Fill
       GDIRoundRect(MakeRoundRect(DrawRect, Roundness),
-        GetRGB(FillColor).MakeGDIBrush, nil);
+        TAlphaColor.Create(FillColor).MakeGDIBrush, nil);
 
       // Outline
       FPen := nil;
       case Detail of
-        FXDetailType.None, FXDetailType.Underline: FPen := GetRGB(ChangeColorLight(FDrawColors.BackGround, EDIT_BORDER_FADE) ).MakeGDIPen(1);
-        FXDetailType.Outline: FPen := GetRGB(ChangeColorLight(FLineColor, EDIT_BORDER_FADE) ).MakeGDIPen(LineSize);
+        FXDetailType.None, FXDetailType.Underline: FPen := TAlphaColor.Create(ChangeColorLight(FDrawColors.BackGround, EDIT_BORDER_FADE) ).MakeGDIPen(1);
+        FXDetailType.Outline: FPen := TAlphaColor.Create(ChangeColorLight(FLineColor, EDIT_BORDER_FADE) ).MakeGDIPen(LineSize);
       end;
 
       ARect := DrawRect;
@@ -1139,7 +1199,7 @@ begin
 
       // Line
       if Detail = FXDetailType.Underline then
-        GDIRoundRect(MakeRoundRect(LineRect, LineSize), GetRGB(FLineColor).MakeGDIBrush, nil);
+        GDIRoundRect(MakeRoundRect(LineRect, LineSize), TAlphaColor.Create(FLineColor).MakeGDIBrush, nil);
 
       // Selection
 
@@ -1177,7 +1237,7 @@ begin
       ARect.Left := TxtRect.Left + FDrawPosition;
       ARect.Right := ARect.Left + TextWidth(ASelect);
 
-      GDIRectangle(ARect, GetRGB(FDrawColors.Accent).MakeGDIBrush, nil);
+      GDIRectangle(ARect, TAlphaColor.Create(FDrawColors.Accent).MakeGDIBrush, nil);
 
       // Text
       Brush.Style := bsClear;

@@ -18,6 +18,7 @@ uses
   SysUtils,
   CFX.Classes,
   CFX.ComponentClasses,
+  CFX.Accessibility,
   CFX.Types,
   CFX.VarHelpers,
   CFX.Linker,
@@ -73,6 +74,12 @@ type
 
   protected
     procedure PaintBuffer; override;
+
+    // Accesibility
+    function AccessibilityGetControlType: Integer; override;
+    function AccessibilityGetControlTypeName: string; override;
+
+    function AccessibilityGetName: string; override;
 
     // Internal
     procedure UpdateColors; override;
@@ -373,6 +380,21 @@ end;
 procedure FXScrollText.InteractionStateChanged(AState: FXControlState);
 begin
   // do not update
+end;
+
+function FXScrollText.AccessibilityGetControlType: Integer;
+begin
+  Result := UIA_TextControlTypeId;
+end;
+
+function FXScrollText.AccessibilityGetControlTypeName: string;
+begin
+  Result := 'text';
+end;
+
+function FXScrollText.AccessibilityGetName: string;
+begin
+  Result := Text;
 end;
 
 procedure FXScrollText.AnimationProgress(Sender: TObject);

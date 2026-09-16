@@ -350,10 +350,6 @@ function MakeRoundRect(SRect: TRect; RndX, RndY: integer): TRoundRect; overload;
 function MakeRoundRect(X1, Y1, X2, Y2: integer; Rnd: integer): TRoundRect; overload;
 function Line(Point1, Point2: TPoint): TLine;
 
-{ Color Conversion }
-function GetRGB(AColor: TColor; Alpha: Byte = 255): TAlphaColor; overload;
-function GetRGB(R, G, B: Byte; Alpha: Byte = 255): TAlphaColor; overload;
-
 { Point }
 function RotatePointAroundPoint(APoint: TPoint; ACenter: TPoint; ARotateDegree: real; ACustomRadius: real = -1): TPoint;
 
@@ -414,16 +410,6 @@ function Line(Point1, Point2: TPoint): TLine;
 begin
   Result.Point1 := Point1;
   Result.Point2 := Point2;
-end;
-
-function GetRGB(AColor: TColor; Alpha: Byte): TAlphaColor;
-begin
-  Result := TAlphaColor.Create(AColor, Alpha);
-end;
-
-function GetRGB(R, G, B: Byte; Alpha: Byte): TAlphaColor;
-begin
-  Result := TAlphaColor.Create(R, G, B, Alpha);
 end;
 
 function RotatePointAroundPoint(APoint: TPoint; ACenter: TPoint; ARotateDegree: real; ACustomRadius: real): TPoint;

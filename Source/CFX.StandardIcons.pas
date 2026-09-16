@@ -230,7 +230,7 @@ begin
 
     // Circle
     Pen.Style := psClear;
-    GDICircle(DrawRect, GetRGB(Brush.Color).MakeGDIBrush, nil);
+    GDICircle(DrawRect, TAlphaColor.Create(Brush.Color).MakeGDIBrush, nil);
 
     // Data
     AWidth := ContentRect.Width;

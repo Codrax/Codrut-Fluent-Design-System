@@ -1026,7 +1026,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    TabStop = True
     Size.X = 52
     Size.Y = 42
     Position.X = 237
@@ -2902,6 +2901,7 @@ object Form1: TForm1
     CustomColors.DarkForeGround = clWhite
     IconScale = 0.500000000000000000
     Checked = True
+    ReadOnly = False
     Text = 'Fluent Radio Button'
     Image.IconType = None
     Image.SelectSegoe = #59188
@@ -2934,6 +2934,7 @@ object Form1: TForm1
     CustomColors.DarkBackGround = 2105376
     CustomColors.DarkForeGround = clWhite
     IconScale = 0.500000000000000000
+    ReadOnly = False
     Text = 'Fluent Radio Button'
     Image.IconType = None
     Image.SelectSegoe = #59188
@@ -2969,6 +2970,7 @@ object Form1: TForm1
     CustomColors.DarkBackGroundInterior = 2829099
     AutomaticCursorPointer = False
     Value = 0
+    ReadOnly = False
     ParentColor = False
     ShowHint = True
     ParentShowHint = False
@@ -3315,6 +3317,39 @@ object Form1: TForm1
     StateImage.IconType = None
     StateImage.SelectSegoe = #59188
     StateImage.SelectImageIndex = 0
+  end
+  object FXCheckBox1: FXCheckBox
+    Left = 237
+    Top = 657
+    Width = 180
+    Height = 30
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Size.X = 180
+    Size.Y = 30
+    Position.X = 237
+    Position.Y = 657
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    IconScale = 0.500000000000000000
+    ReadOnly = False
+    AutomaticCursorPointer = False
+    Text = 'Fluent Checkbox'
+    Image.IconType = None
+    Image.SelectSegoe = #59188
+    ImageScale = 1.500000000000000000
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = 22
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    TabOrder = 42
   end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False

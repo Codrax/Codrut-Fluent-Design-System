@@ -19,6 +19,7 @@ uses
   SysUtils,
   CFX.Classes,
   CFX.ComponentClasses,
+  CFX.Accessibility,
   CFX.Types,
   CFX.VarHelpers,
   CFX.ArrayHelpers,
@@ -107,6 +108,10 @@ type
     var Points: TArray<TPoint>;
 
     procedure PaintBuffer; override;
+
+    // Accesibility
+    function AccessibilityGetControlType: Integer; override;
+    function AccessibilityGetControlTypeName: string; override;
 
     // Internal
     procedure UpdateColors; override;
@@ -226,6 +231,16 @@ type
 
 
 implementation
+
+function FXShape.AccessibilityGetControlType: Integer;
+begin
+  Result := UIA_ImageControlTypeId;
+end;
+
+function FXShape.AccessibilityGetControlTypeName: string;
+begin
+ Result := 'shape';
+end;
 
 function FXShape.Background: TColor;
 begin

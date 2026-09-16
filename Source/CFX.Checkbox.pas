@@ -10,6 +10,7 @@ uses
   Vcl.Graphics,
   Vcl.ExtCtrls,
   Types,
+  UITypes,
   Math,
   CFX.Colors,
   CFX.ThemeManager,
@@ -18,6 +19,7 @@ uses
   SysUtils,
   CFX.Classes,
   CFX.ComponentClasses,
+  CFX.Accessibility,
   CFX.Types,
   CFX.VarHelpers,
   CFX.Linker,
@@ -46,6 +48,7 @@ type
     FImageScale: single;
     FLayout: FXDrawLayout;
     FTextLayout: TLayout;
+    FReadOnly: boolean;
 
     // Internal
     procedure ImageUpdated(Sender: TObject);
@@ -76,6 +79,17 @@ type
   protected
     procedure PaintBuffer; override;
 
+    // Accesibility
+    function AccessibilityGetControlType: Integer; override;
+    function AccessibilityGetControlTypeName: string; override;
+
+    function AccessibilityGetName: string; override;
+
+    function AccessibilityGetPattern(PatternId: Integer): IUnknown; override;
+
+    function AccessibilityGetToggleState: Integer; override;
+    function AccessibilityToggle: Boolean; override;
+
     //  Internal
     procedure UpdateColors; override;
     procedure UpdateRects; override;
@@ -99,6 +113,7 @@ type
     property State: FXCheckBoxState read FState write SetState default FXCheckBoxState.Unchecked;
     property TextSpacing: Integer read FTextSpacing write SetTextSpacing default CHECKBOX_TEXT_SPACE;
     property Checked: Boolean read GetChecked write SetChecked default false;
+    property ReadOnly: boolean read FReadOnly write FReadOnly;
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
     property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
     property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default true;
@@ -156,8 +171,9 @@ implementation
 procedure FXCheckBox.KeyPress(var Key: Char);
 begin
   inherited;
-  if (Key = #13) or (Key = #32) then
-    ProgressState;
+  if not ReadOnly then
+    if (Key = #13) or (Key = #32) then
+      ProgressState;
 end;
 
 procedure FXCheckBox.MouseMove(Shift: TShiftState; X, Y: Integer);
@@ -408,8 +424,8 @@ end;
 procedure FXCheckBox.Click;
 begin
   inherited;
-
-  if not Enabled then exit;
+  if ReadOnly or not Enabled then
+    Exit;
 
   ProgressState;
 end;
@@ -462,6 +478,52 @@ begin
   FreeAndNil( FDrawColors );
   FreeAndNil( FIconAccentColors );
   inherited;
+end;
+
+function FXCheckBox.AccessibilityGetControlType: Integer;
+begin
+  Result := UIA_CheckBoxControlTypeId;
+end;
+
+function FXCheckBox.AccessibilityGetControlTypeName: string;
+begin
+  Result := 'check box';
+end;
+
+function FXCheckBox.AccessibilityGetName: string;
+begin
+  Result := Text;
+end;
+
+function FXCheckBox.AccessibilityGetPattern(PatternId: Integer): IUnknown;
+begin
+  Result := nil;
+
+  case PatternId of
+    UIA_TogglePatternId:
+      Result := TFXToggleProvider.Create(Self as IFXAccessibilityControl);
+  else
+    Result := inherited AccessibilityGetPattern(PatternId);
+  end;
+end;
+
+function FXCheckBox.AccessibilityGetToggleState: Integer;
+begin
+  Result := 0;
+  case State of
+    FXCheckBoxState.Checked: Result := ToggleState_On;
+    FXCheckBoxState.Unchecked: Result := ToggleState_Off;
+    FXCheckBoxState.Grayed: Result := ToggleState_Indeterminate;
+  end;
+end;
+
+function FXCheckBox.AccessibilityToggle: Boolean;
+begin
+  if ReadOnly then
+    Exit(False);
+
+  Checked := not Checked;
+  Result := True;
 end;
 
 procedure FXCheckBox.AnimationProgress(Sender: TObject);
@@ -556,14 +618,14 @@ begin
                 else
                   ALine.SetPercentage(100);
 
-                GDILine(ALine, GetRGB(FDrawColors.BackGround).MakeGDIPen(1.8));
+                GDILine(ALine, TAlphaColor.Create(FDrawColors.BackGround).MakeGDIPen(1.8));
 
                 // Second segment: P2 - P3
                 if FAnimationStatus > 50 then
                 begin
                   ALine := Line(P2, P3);
                   ALine.SetPercentage((FAnimationStatus - 50) / 50 * 100);
-                  GDILine(ALine, GetRGB(FDrawColors.BackGround).MakeGDIPen(1.8));
+                  GDILine(ALine, TAlphaColor.Create(FDrawColors.BackGround).MakeGDIPen(1.8));
                 end;
               end
             else
@@ -598,7 +660,7 @@ begin
                 ALine.SetPercentage(FAnimationStatus);
 
                 // Draw
-                GDILine(ALine, GetRGB(FDrawColors.BackGround).MakeGDIPen(2));
+                GDILine(ALine, TAlphaColor.Create(FDrawColors.BackGround).MakeGDIPen(2));
             end else
               begin
                 DrawFontIcon(Buffer, CHECKBOX_GRAYED, FDrawColors.BackGround, ARect);

@@ -20,6 +20,8 @@ uses
   CFX.Constants,
   SysUtils,
   CFX.Classes,
+  CFX.ComponentClasses,
+  CFX.Accessibility,
   CFX.Types,
   CFX.Linker,
   CFX.Controls,

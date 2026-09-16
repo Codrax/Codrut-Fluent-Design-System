@@ -337,7 +337,7 @@ begin
   with Canvas do begin
     // Background
     GDIRoundRect( MakeRoundRect(ARect, BUTTON_ROUNDNESS),
-      GetRGB(ABackground).MakeGDIBrush, nil);
+      TAlphaColor.Create(ABackground).MakeGDIBrush, nil);
 
     // Icon
     Brush.Style := bsClear;

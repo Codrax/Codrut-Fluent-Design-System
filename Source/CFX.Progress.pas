@@ -10,6 +10,7 @@ uses
   Vcl.Graphics,
   Vcl.ExtCtrls,
   Types,
+  UITypes,
   SyncObjs,
   Math,
   Threading,
@@ -19,6 +20,8 @@ uses
   CFX.Constants,
   SysUtils,
   CFX.Classes,
+  CFX.ComponentClasses,
+  CFX.Accessibility,
   CFX.Threading,
   CFX.Types,
   CFX.VarHelpers,
@@ -76,6 +79,10 @@ type
 
   protected
     procedure PaintBuffer; override;
+
+    // Accesibility
+    function AccessibilityGetControlType: Integer; override;
+    function AccessibilityGetControlTypeName: string; override;
 
     // Internal
     procedure UpdateColors; override;
@@ -148,6 +155,16 @@ type
   end;
 
 implementation
+
+function FXProgress.AccessibilityGetControlType: Integer;
+begin
+  Result := UIA_ProgressBarControlTypeId;
+end;
+
+function FXProgress.AccessibilityGetControlTypeName: string;
+begin
+  Result := 'progress bar';
+end;
 
 procedure FXProgress.AnimateValue(From: single);
 var
@@ -316,7 +333,7 @@ begin
 
           AColor := FDrawColors.BackGroundInterior;
 
-          Buffer.GDIRoundRect(ARectRound, GetRGB(AColor).MakeGDIBrush, nil);
+          Buffer.GDIRoundRect(ARectRound, TAlphaColor.Create(AColor).MakeGDIBrush, nil);
         end;
 
       // Draw Main
@@ -325,7 +342,7 @@ begin
 
       AColor := GetFrontColor;
 
-      Buffer.GDIRoundRect(ARectRound, GetRGB(AColor).MakeGDIBrush, nil);
+      Buffer.GDIRoundRect(ARectRound, TAlphaColor.Create(AColor).MakeGDIBrush, nil);
     end;
 
   // Inherit

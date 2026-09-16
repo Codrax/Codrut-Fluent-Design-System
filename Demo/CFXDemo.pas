@@ -473,7 +473,6 @@ procedure TForm1.FXButtonDesign4Click(Sender: TObject);
 var
   A: FXInputBox;
   D: FXModalDialog;
-  S: string;
 begin
   A := FXInputBox.Create;
 
@@ -517,7 +516,7 @@ end;
 
 procedure TForm1.FXSlider1Change(Sender: TObject);
 begin
-  PaintBox1.Tag := round(FXSlider(Sender).Position / 100 * 360);
+  PaintBox1.Tag := round(FXSlider(Sender).Value / 100 * 360);
   PaintBox1.Repaint;
 end;
 

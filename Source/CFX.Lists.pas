@@ -26,6 +26,7 @@ uses
   SysUtils,
   CFX.Classes,
   CFX.ComponentClasses,
+  CFX.Accessibility,
   CFX.Types,
   CFX.Utilities,
   CFX.VarHelpers,
@@ -153,6 +154,12 @@ type
 
   protected
     procedure PaintBuffer; override;
+
+    // Accesibility
+    function AccessibilityGetControlType: Integer; override;
+    function AccessibilityGetControlTypeName: string; override;
+
+    function AccessibilityGetPattern(PatternId: Integer): IUnknown; override;
 
     // Size
     procedure Resize; override;
@@ -407,9 +414,11 @@ type
 
     // Getters
     function GetItemCountEx: integer;
+    function GetSorted: boolean;
 
     // Setters
     procedure SetStrings(const Value: TStringList);
+    procedure SetSorted(const Value: boolean);
 
   protected
     // Draw
@@ -424,6 +433,7 @@ type
     property PageSizeAutoCalc;
 
     property Font;
+    property Sorted: boolean read GetSorted write SetSorted default false;
 
     property OnDrawItem;
     property OnBeforeDrawItem;
@@ -554,6 +564,28 @@ type
   end;
 
 implementation
+
+function FXDrawList.AccessibilityGetControlType: Integer;
+begin
+  Result := UIA_ListControlTypeId;
+end;
+
+function FXDrawList.AccessibilityGetControlTypeName: string;
+begin
+  Result := 'list';
+end;
+
+function FXDrawList.AccessibilityGetPattern(PatternId: Integer): IUnknown;
+begin
+  Result := nil;
+
+  case PatternId of
+    UIA_SelectionPatternId:
+      Result := TFXSelectionProvider.Create(Self);
+  else
+    Result := inherited AccessibilityGetPattern(PatternId);
+  end;
+end;
 
 procedure FXDrawList.AnimationStep(Sender: TObject; Step, TotalSteps: integer);
 begin
@@ -2244,9 +2276,19 @@ begin
   Result := inherited ItemCount;
 end;
 
+function FXLinearStringsList.GetSorted: boolean;
+begin
+  Result := FStrings.Sorted;
+end;
+
 procedure FXLinearStringsList.MarginsChanged(Sender: TObject);
 begin
   StandardUpdateDraw;
+end;
+
+procedure FXLinearStringsList.SetSorted(const Value: boolean);
+begin
+  FStrings.Sorted := Value;
 end;
 
 procedure FXLinearStringsList.SetStrings(const Value: TStringList);

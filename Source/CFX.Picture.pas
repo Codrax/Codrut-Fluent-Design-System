@@ -16,6 +16,8 @@ uses
   CFX.Constants,
   SysUtils,
   CFX.Classes,
+  CFX.ComponentClasses,
+  CFX.Accessibility,
   CFX.Types,
   CFX.VarHelpers,
   CFX.Linker,
@@ -43,6 +45,8 @@ type
     FTileFlags: TRectLayoutTileFlags;
     FTileMargins: integer;
 
+    FAltText: string;
+
     // Internal
     procedure ImageUpdated(Sender: TObject);
 
@@ -59,6 +63,12 @@ type
 
   protected
     procedure PaintBuffer; override;
+
+    // Accesibility
+    function AccessibilityGetControlType: Integer; override;
+    function AccessibilityGetControlTypeName: string; override;
+
+    function AccessibilityGetName: string; override;
 
     // Internal
     procedure UpdateColors; override;
@@ -88,6 +98,7 @@ type
     property Tile: boolean read FTile write SetTile default false;
     property TileFlags: TRectLayoutTileFlags read FTileFlags write SetTileFlags;
     property TileMargins: integer read FTileMargins write SetTileMargins default 0;
+    property AltText: string read FAltText write FAltText;
 
     // Default props
     property Align;
@@ -132,6 +143,21 @@ type
   end;
 
 implementation
+
+function FXPicture.AccessibilityGetControlType: Integer;
+begin
+  Result := UIA_ImageControlTypeId;
+end;
+
+function FXPicture.AccessibilityGetControlTypeName: string;
+begin
+  Result := 'image';
+end;
+
+function FXPicture.AccessibilityGetName: string;
+begin
+  Result := FAltText;
+end;
 
 function FXPicture.Background: TColor;
 begin

@@ -12,6 +12,7 @@ uses
   Types,
   Threading,
   Math,
+  UITypes,
   CFX.GDI,
   CFX.Colors,
   CFX.VarHelpers,
@@ -24,6 +25,7 @@ uses
   CFX.Utilities,
   CFX.Classes,
   CFX.ComponentClasses,
+  CFX.Accessibility,
   CFX.PopupMenu,
   CFX.Types,
   CFX.Linker,
@@ -130,6 +132,16 @@ type
 
   protected
     procedure PaintBuffer; override;
+
+    // Accesibility
+    function AccessibilityGetControlType: Integer; override;
+    function AccessibilityGetControlTypeName: string; override;
+
+    function AccessibilityGetPattern(PatternId: Integer): IUnknown; override;
+
+    function AccessibilityGetName: string; override;
+
+    function AccessibilityInvoke: Boolean; override;
 
     // Internal
     procedure UpdateColors; override;
@@ -1149,6 +1161,39 @@ begin
   Redraw;
 end;
 
+function FXCustomButton.AccessibilityGetControlType: Integer;
+begin
+  Result := UIA_ButtonControlTypeId;
+end;
+
+function FXCustomButton.AccessibilityGetControlTypeName: string;
+begin
+  Result := 'button';
+end;
+
+function FXCustomButton.AccessibilityGetName: string;
+begin
+  Result := Text;
+end;
+
+function FXCustomButton.AccessibilityGetPattern(PatternId: Integer): IUnknown;
+begin
+  Result := nil;
+
+  case PatternId of
+    UIA_InvokePatternId:
+      Result := TFXInvokeProvider.Create(Self);
+  else
+    Result := inherited AccessibilityGetPattern(PatternId);
+  end;
+end;
+
+function FXCustomButton.AccessibilityInvoke: Boolean;
+begin
+  Click;
+  Result := true;
+end;
+
 function FXCustomButton.Background: TColor;
 begin
   Result := FDrawColors.Background;
@@ -1268,15 +1313,15 @@ begin
       case Detail of
         FXDetailType.None: begin
           if FBorderWidth <> 0 then
-            FPen := GetRGB(FDrawColors.BackGroundInterior).MakeGDIPen(FBorderWidth);
+            FPen := TAlphaColor.Create(FDrawColors.BackGroundInterior).MakeGDIPen(FBorderWidth);
           AWidth := trunc(FBorderWidth);
         end;
         FXDetailType.Outline: begin
-          FPen := GetRGB(FDrawColors.BackGroundInterior).MakeGDIPen(LineWidth);
+          FPen := TAlphaColor.Create(FDrawColors.BackGroundInterior).MakeGDIPen(LineWidth);
           AWidth := round(LineWidth);
         end;
         FXDetailType.Underline: begin
-          GDIRoundRect(MakeRoundRect(ARect, Roundness), GetRGB(FDrawColors.Accent).MakeGDIBrush, nil);
+          GDIRoundRect(MakeRoundRect(ARect, Roundness), TAlphaColor.Create(FDrawColors.Accent).MakeGDIBrush, nil);
 
           // Offset
           ARect.Bottom := round(ARect.Bottom - LineWidth);
@@ -1286,7 +1331,7 @@ begin
       ARect.Inflate(-trunc(AWidth), -trunc(AWidth));
       if ARect.Width > 0 then
         GDIRoundRect( MakeRoundRect(ARect, Roundness),
-          GetRGB(FBackground).MakeGDIBrush, FPen);
+          TAlphaColor.Create(FBackground).MakeGDIBrush, FPen);
 
       // Text
       if FShowText then
@@ -1335,7 +1380,7 @@ begin
         ARect.Offset(0, (DrawRect.Height-ARect.Height) div 2);
 
         GDIRoundRect( MakeRoundRect(ARect, 3),
-          GetRGB(FDrawColors.Accent).MakeGDIBrush, nil);
+          TAlphaColor.Create(FDrawColors.Accent).MakeGDIBrush, nil);
       end;
     end;
 

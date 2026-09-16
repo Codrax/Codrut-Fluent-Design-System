@@ -17,6 +17,8 @@ uses
   SysUtils,
   Vcl.ExtCtrls,
   CFX.Classes,
+  CFX.ComponentClasses,
+  CFX.Accessibility,
   CFX.Hint,
   CFX.Animation.Component,
   CFX.Controls,
@@ -87,6 +89,10 @@ type
 
   protected
     procedure PaintBuffer; override;
+
+    // Accesibility
+    function AccessibilityGetControlType: Integer; override;
+    function AccessibilityGetControlTypeName: string; override;
 
     // Internal
     procedure UpdateColors; override;
@@ -516,7 +522,7 @@ begin
 
       // Slider Background
       AColor := ColorBlend(FDrawColors.BackGround, FDrawColors.BackGroundInterior, FAnim.CurrentValue);
-      GDIRoundRect(MakeRoundRect(DrawRect, FRoundness*2), GetRGB(AColor).MakeGDIBrush, nil);
+      GDIRoundRect(MakeRoundRect(DrawRect, FRoundness*2), TAlphaColor.Create(AColor).MakeGDIBrush, nil);
 
       // Full
       ARect := SliderRect;
@@ -540,7 +546,7 @@ begin
             end;
         end;
 
-      GDIRoundRect(MakeRoundRect(ARect, FRoundness), GetRGB(Brush.Color).MakeGDIBrush, nil);
+      GDIRoundRect(MakeRoundRect(ARect, FRoundness), TAlphaColor.Create(Brush.Color).MakeGDIBrush, nil);
     end;
 
   // Draw Buttons
@@ -769,6 +775,17 @@ end;
 function FXScrollbar.StoreMinimised: Boolean;
 begin
   Result := FAutoMinimise = false;
+end;
+
+
+function FXScrollbar.AccessibilityGetControlType: Integer;
+begin
+  Result := UIA_ScrollBarControlTypeId;
+end;
+
+function FXScrollbar.AccessibilityGetControlTypeName: string;
+begin
+  Result := 'scroll bar';
 end;
 
 procedure FXScrollbar.AnimationStep(Sender: TObject; Step, TotalSteps: integer);

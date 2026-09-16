@@ -16,11 +16,13 @@ uses
   CFX.ThemeManager,
   Vcl.Controls,
   CFX.Linker,
+  UITypes,
   Vcl.Forms,
   CFX.PopupMenu,
   Vcl.Dialogs,
   CFX.Classes,
   CFX.ComponentClasses,
+  CFX.Accessibility,
   Math,
   DateUtils,
   CFX.ArrayHelpers,
@@ -77,8 +79,11 @@ type
   end;
 
   // Control
-  FXWindowsControl = class(FXCustomControl, IFXComponent, IFXControl)
+  FXWindowsControl = class(FXCustomControl, IFXComponent, IFXControl, IFXAccessibilityControl)
   private
+    // Accessibility
+    FAccessibilityProvider: IRawElementProviderSimple;
+
     FPopupMenu: FXPopupMenu;
     FBufferedComponent: boolean;
     FFocusRect: TRect;
@@ -153,6 +158,61 @@ type
     procedure SetInvisibile(const Value: boolean);
 
   protected
+    // Accessibility
+    function AccessibilityGetControlType: Integer; virtual;
+    function AccessibilityGetControlTypeName: string; virtual;
+
+    function AccessibilityGetName: string; virtual;
+    function AccessibilityGetDescription: string; virtual;
+    function AccessibilityGetHelp: string; virtual;
+    function AccessibilityGetAutomationId: string; virtual;
+
+    function AccessibilityIsEnabled: Boolean; virtual;
+    function AccessibilityIsKeyboardFocusable: Boolean; virtual;
+    function AccessibilityHasKeyboardFocus: Boolean; virtual;
+    function AccessibilityIsOffscreen: Boolean; virtual;
+
+    function AccessibilityIsControlElement: Boolean; virtual;
+    function AccessibilityIsContentElement: Boolean; virtual;
+
+    function AccessibilityGetBoundingRectangle: TRect; virtual;
+    function AccessibilityGetClassName: string; virtual;
+
+    function AccessibilityGetHandle: HWND; virtual;
+
+    //
+    function AccessibilityGetPattern(PatternId: Integer): IUnknown; virtual;
+
+    //
+    function AccessibilityIsReadOnly: Boolean; virtual;
+
+    //
+    function AccessibilityInvoke: boolean; virtual;
+
+    //
+    function AccessibilityGetValue: string; virtual;
+    function AccessibilitySetValue(const Value: string): Boolean; virtual;
+
+    //
+    function AccessibilityGetToggleState: Integer; virtual;
+    function AccessibilityToggle: Boolean; virtual;
+
+    //
+    function AccessibilityGetSelectionCount: Integer; virtual;
+    function AccessibilityGetSelectedIndex: Integer; virtual;
+    function AccessibilitySelectIndex(Index: Integer): Boolean; virtual;
+    function AccessibilityGetSelectionItem(Index: Integer): IRawElementProviderSimple; virtual;
+    function AccessibilityGetSelectionContainer: IRawElementProviderSimple; virtual;
+    function AccessibilityIsSelectionRequired: Boolean; virtual;
+
+    //
+    function AccessibilityGetRangeValue: Double; virtual;
+    function AccessibilityGetRangeMinimum: Double; virtual;
+    function AccessibilityGetRangeMaximum: Double; virtual;
+    function AccessibilityGetRangeSmallChange: Double; virtual;
+    function AccessibilityGetRangeLargeChange: Double; virtual;
+    function AccessibilitySetRangeValue(Value: Double): Boolean; virtual;
+
     // Paint
     procedure Paint; override;
     procedure DoPaint; virtual;
@@ -361,6 +421,7 @@ type
 
     // Components
     function GetChildComponents: TArray<TComponent>;
+    function FindChildControlOfClass(const ControlClass: TClass; After: TControl=nil): TControl;
 
     // Handles
     procedure AllocateHandles;
@@ -410,6 +471,192 @@ begin
     Result := (Control.Parent as IFXControl).Background
       else
         Result := Default;
+end;
+
+function FXWindowsControl.AccessibilityGetName: string;
+begin
+  Result := '';
+end;
+
+
+function FXWindowsControl.AccessibilityGetDescription: string;
+begin
+  Result := '';
+end;
+
+
+function FXWindowsControl.AccessibilityGetHelp: string;
+begin
+  Result := Hint;
+end;
+
+
+function FXWindowsControl.AccessibilityGetAutomationId: string;
+begin
+  Result := Name;
+end;
+
+
+function FXWindowsControl.AccessibilityGetControlType: Integer;
+begin
+  Result := UIA_CustomControlTypeId;
+end;
+
+
+function FXWindowsControl.AccessibilityGetControlTypeName: string;
+begin
+  Result := 'control';
+end;
+
+function FXWindowsControl.AccessibilityIsEnabled: Boolean;
+begin
+  Result := Enabled;
+end;
+
+
+function FXWindowsControl.AccessibilityIsKeyboardFocusable: Boolean;
+begin
+  Result := CanFocus and TabStop;
+end;
+
+
+function FXWindowsControl.AccessibilityHasKeyboardFocus: Boolean;
+begin
+  Result := Focused;
+end;
+
+
+function FXWindowsControl.AccessibilityIsOffscreen: Boolean;
+begin
+  Result := not Visible;
+end;
+
+function FXWindowsControl.AccessibilityIsReadOnly: Boolean;
+begin
+  Result := false;
+end;
+
+function FXWindowsControl.AccessibilityIsSelectionRequired: Boolean;
+begin
+  Result := false;
+end;
+
+function FXWindowsControl.AccessibilitySelectIndex(Index: Integer): Boolean;
+begin
+  Result := false;
+end;
+
+function FXWindowsControl.AccessibilitySetRangeValue(Value: Double): Boolean;
+begin
+  Result := false;
+end;
+
+function FXWindowsControl.AccessibilitySetValue(const Value: string): Boolean;
+begin
+  Result := false;
+end;
+
+function FXWindowsControl.AccessibilityToggle: Boolean;
+begin
+  Result := false;
+end;
+
+function FXWindowsControl.AccessibilityIsControlElement: Boolean;
+begin
+  Result := True;
+end;
+
+
+function FXWindowsControl.AccessibilityInvoke: boolean;
+begin
+  Result := false;
+end;
+
+function FXWindowsControl.AccessibilityIsContentElement: Boolean;
+begin
+  Result := True;
+end;
+
+
+function FXWindowsControl.AccessibilityGetBoundingRectangle: TRect;
+begin
+  GetWindowRect(Handle, Result);
+end;
+
+
+function FXWindowsControl.AccessibilityGetClassName: string;
+begin
+  Result := ClassName;
+end;
+
+
+function FXWindowsControl.AccessibilityGetPattern(
+  PatternId: Integer
+): IUnknown;
+begin
+  Result := nil;
+end;
+
+
+function FXWindowsControl.AccessibilityGetRangeLargeChange: Double;
+begin
+  Result := 0;
+end;
+
+function FXWindowsControl.AccessibilityGetRangeMaximum: Double;
+begin
+  Result := 0;
+end;
+
+function FXWindowsControl.AccessibilityGetRangeMinimum: Double;
+begin
+  Result := 0;
+end;
+
+function FXWindowsControl.AccessibilityGetRangeSmallChange: Double;
+begin
+  Result := 0;
+end;
+
+function FXWindowsControl.AccessibilityGetRangeValue: Double;
+begin
+  Result := 0;
+end;
+
+function FXWindowsControl.AccessibilityGetSelectedIndex: Integer;
+begin
+  Result := -1;
+end;
+
+function FXWindowsControl.AccessibilityGetSelectionContainer: IRawElementProviderSimple;
+begin
+  Result := nil;
+end;
+
+function FXWindowsControl.AccessibilityGetSelectionCount: Integer;
+begin
+  Result := 0;
+end;
+
+function FXWindowsControl.AccessibilityGetSelectionItem(
+  Index: Integer): IRawElementProviderSimple;
+begin
+  Result := nil;
+end;
+
+function FXWindowsControl.AccessibilityGetToggleState: Integer;
+begin
+  Result := 0;
+end;
+
+function FXWindowsControl.AccessibilityGetValue: string;
+begin
+  Result := '';
+end;
+
+function FXWindowsControl.AccessibilityGetHandle: HWND;
+begin
+  Result := Handle;
 end;
 
 procedure FXWindowsControl.AlignControls(AControl: TControl; var Rect: TRect);
@@ -730,7 +977,7 @@ begin
 
       Canvas.GDIRoundRect(MakeRoundRect(ARect, FOCUS_LINE_ROUND, FOCUS_LINE_ROUND),
         nil,
-        GetRGB(ThemeManager.SystemColor.ForeGround).MakeGDIPen(FOCUS_LINE_SIZE))
+        TAlphaColor.Create(ThemeManager.SystemColor.ForeGround).MakeGDIPen(FOCUS_LINE_SIZE))
     end;
 
   // Notify
@@ -883,6 +1130,20 @@ end;
 procedure FXWindowsControl.DrawTo(ACanvas: TCanvas; Destination: TRect);
 begin    // Draw absolute rect, as we need to capture control clipping of the "inner margin"
   DrawTo(AbsoluteRect, ACanvas, Destination);
+end;
+
+function FXWindowsControl.FindChildControlOfClass(const ControlClass: TClass;
+  After: TControl): TControl;
+var
+  AfterSatisfied: boolean;
+begin
+  Result := nil;
+  AfterSatisfied := After = nil;
+  for var I := 0 to ControlCount-1 do
+    if AfterSatisfied and (Controls[I].ClassType = ControlClass) then begin
+      Result := Controls[I];
+      Exit;
+    end;
 end;
 
 procedure FXWindowsControl.FocusChanged(Focused: boolean);
@@ -1199,6 +1460,11 @@ end;
 procedure FXWindowsControl.PaddingUpdated(Sender: TObject);
 begin
   Realign;
+
+  Padding.Top := FPadding.AbsoluteTop;
+  Padding.Bottom := FPadding.Bottom;
+  Padding.Left := FPadding.AbsoluteLeft;
+  Padding.Right := FPadding.AbsoluteRight;
 
   // Rects
   ApplyPadding;
@@ -1600,9 +1866,27 @@ end;
 
 procedure FXWindowsControl.WndProc(var Message: TMessage);
 begin
+  if (Message.Msg = WM_GETOBJECT) and
+     (Message.LParam = UiaRootObjectId) then
+  begin
+    if FAccessibilityProvider = nil then
+      FAccessibilityProvider :=
+        TFXAccessibilityProvider.Create(Self);
+
+    Message.Result := UiaReturnRawElementProvider(
+      Handle,
+      Message.WParam,
+      Message.LParam,
+      FAccessibilityProvider
+    );
+
+    Exit;
+  end;
+
   inherited;
+
   if InRange(Message.Msg, WM_CFX_MESSAGES, WM_CFX_MESSAGES_END) then
-    Broadcast( Message );
+    Broadcast(Message);
 end;
 
 { FXControlSize }

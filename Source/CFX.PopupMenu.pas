@@ -1123,7 +1123,7 @@ begin
         LineOpacity := 20;
 
       // Brush
-      B := GetRGB( Font.Color, LineOpacity ).MakeGDIBrush;
+      B := TAlphaColor.Create( Font.Color, LineOpacity ).MakeGDIBrush;
 
       // Text Output
       TextDrawFlags := [tfSingleLine, tfCenter, tfVerticalCenter, tfNoPrefix];

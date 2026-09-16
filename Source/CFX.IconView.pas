@@ -17,6 +17,7 @@ uses
   SysUtils,
   CFX.Classes,
   CFX.ComponentClasses,
+  CFX.Accessibility,
   CFX.Types,
   CFX.VarHelpers,
   CFX.Linker,
@@ -48,6 +49,10 @@ type
 
   protected
     procedure PaintBuffer; override;
+
+    // Accesibility
+    function AccessibilityGetControlType: Integer; override;
+    function AccessibilityGetControlTypeName: string; override;
 
     // Internal
     procedure UpdateColors; override;
@@ -115,6 +120,16 @@ type
   end;
 
 implementation
+
+function FXIconView.AccessibilityGetControlType: Integer;
+begin
+  Result := UIA_ImageControlTypeId;
+end;
+
+function FXIconView.AccessibilityGetControlTypeName: string;
+begin
+  Result := 'image';
+end;
 
 function FXIconView.Background: TColor;
 begin

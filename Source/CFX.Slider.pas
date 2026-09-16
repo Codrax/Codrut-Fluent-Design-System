@@ -8,6 +8,8 @@ uses
   Vcl.Controls,
   Vcl.Graphics,
   Types,
+  Math,
+  UITypes,
   CFX.Colors,
   CFX.ThemeManager,
   CFX.Graphics,
@@ -15,6 +17,8 @@ uses
   SysUtils,
   Vcl.ExtCtrls,
   CFX.Classes,
+  CFX.ComponentClasses,
+  CFX.Accessibility,
   CFX.Hint,
   CFX.Controls,
   CFX.Linker,
@@ -56,6 +60,8 @@ type
     FDrawColors,
     FIconColors: FXCompleteColorSet;
 
+    FReadOnly: boolean;
+
     // Timer Proc
     procedure FillTickChange(Sender: TObject);
 
@@ -87,6 +93,20 @@ type
   protected
     procedure PaintBuffer; override;
 
+    // Accesibility
+    function AccessibilityGetControlType: Integer; override;
+    function AccessibilityGetControlTypeName: string; override;
+
+    function AccessibilityGetPattern(PatternId: Integer): IUnknown; override;
+
+    function AccessibilityIsReadOnly: Boolean; override;
+    function AccessibilityGetRangeValue: Double; override;
+    function AccessibilityGetRangeMinimum: Double; override;
+    function AccessibilityGetRangeMaximum: Double; override;
+    function AccessibilityGetRangeSmallChange: Double; override;
+    function AccessibilityGetRangeLargeChange: Double; override;
+    function AccessibilitySetRangeValue(Value: Double): Boolean; override;
+
     // Update
     procedure UpdateColors; override;
     procedure UpdateRects; override;
@@ -114,6 +134,7 @@ type
     property SliderHeight: integer read FSliderHeight write SetSliderHeight default 6;
     property IconSize: integer read FIconSize write SetIconSize default CHECKBOX_ICON_SIZE;
     property Value: int64 read FValue write SetValue;
+    property ReadOnly: boolean read FReadOnly write FReadOnly;
     property SmallChange: integer read FSmallChange write SetSmallChange default 1;
     property Min: int64 read FMin write SetMin default 0;
     property Max: int64 read FMax write SetMax default 100;
@@ -183,6 +204,7 @@ end;
 procedure FXSlider.KeyPress(var Key: Char);
 begin
   inherited;
+  if not FReadOnly then
   if (key = '-') or (key = '+') or (key = '=') then
     begin
       if Key = '-' then
@@ -236,7 +258,7 @@ begin
       Self.Cursor := crDefault;
 
   // Change Position
-  if InteractionState = FXControlState.Press then
+  if not FReadOnly and (InteractionState = FXControlState.Press) then
     begin
       if FMax = FMin then
         NewValue := FMin
@@ -520,6 +542,7 @@ var
   C: char;
 begin
   inherited;
+  if not FReadOnly then
   if Orientation = FXOrientation.Horizontal then
     case Key of
       VK_LEFT: begin
@@ -649,15 +672,15 @@ begin
   with Buffer do
     begin
       GDICircle(IconRect,
-        GetRGB(FIconColors.Backgroundinterior).MakeGDIBrush,
-        GetRGB(FIconColors.Background).MakeGDIPen(0.2)
+        TAlphaColor.Create(FIconColors.Backgroundinterior).MakeGDIBrush,
+        TAlphaColor.Create(FIconColors.Background).MakeGDIPen(0.2)
         );
 
       InnerRect := IconRect;
       InnerValue := (FIconSize-trunc((FCenterFill) / 100 * FIconSize)) div 2;
       InnerRect.Inflate(-InnerValue, -Innervalue);
       GDICircle(InnerRect,
-        GetRGB(FIconColors.Accent).MakeGDIBrush, nil);
+        TAlphaColor.Create(FIconColors.Accent).MakeGDIBrush, nil);
     end;
 
   inherited;
@@ -843,6 +866,69 @@ begin
 
       FHint.Show;
     end;
+end;
+
+function FXSlider.AccessibilityGetControlType: Integer;
+begin
+  Result := UIA_SliderControlTypeId;
+end;
+
+function FXSlider.AccessibilityGetControlTypeName: string;
+begin
+  Result := 'slider';
+end;
+
+function FXSlider.AccessibilityGetPattern(PatternId: Integer): IUnknown;
+begin
+  Result := nil;
+
+  case PatternId of
+    UIA_RangeValuePatternId:
+      Result := TFXRangeValueProvider.Create(Self);
+  else
+    Result := inherited AccessibilityGetPattern(PatternId);
+  end;
+end;
+
+function FXSlider.AccessibilityGetRangeLargeChange: Double;
+begin
+  Result := FSmallChange;
+end;
+
+function FXSlider.AccessibilityGetRangeMaximum: Double;
+begin
+  Result := FMax;
+end;
+
+function FXSlider.AccessibilityGetRangeMinimum: Double;
+begin
+  Result := FMin;
+end;
+
+function FXSlider.AccessibilityGetRangeSmallChange: Double;
+begin
+  Result := FSmallChange;
+end;
+
+function FXSlider.AccessibilityGetRangeValue: Double;
+begin
+  Result := Value;
+end;
+
+function FXSlider.AccessibilityIsReadOnly: Boolean;
+begin
+  Result := ReadOnly;
+end;
+
+function FXSlider.AccessibilitySetRangeValue(Value: Double): Boolean;
+begin
+  if ReadOnly then
+    Exit(False);
+  if not InRange(Value, FMin, FMax) then
+    Exit(False);
+
+  Self.Value := trunc(Value);
+  Result := true;
 end;
 
 procedure FXSlider.AnimateToFill;

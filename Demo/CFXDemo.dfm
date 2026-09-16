@@ -53,6 +53,7 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
+    TabStop = True
     Size.X = 215
     Size.Y = 631
     Position.X = 0
@@ -673,10 +674,10 @@ object Form1: TForm1
     State = mbsLeave
     FlatButton = False
     FlatComplete = False
-    Colors.Enter = 16414947
-    Colors.Leave = 15428052
-    Colors.Down = 13783227
-    Colors.BLine = 12796332
+    Colors.Enter = 16480483
+    Colors.Leave = 15493588
+    Colors.Down = 13848763
+    Colors.BLine = 12861868
     UnderLine.Enable = True
     UnderLine.UnderLineRound = True
     UnderLine.UnderLineThicknes = 6
@@ -1059,10 +1060,10 @@ object Form1: TForm1
     State = mbsLeave
     FlatButton = False
     FlatComplete = False
-    Colors.Enter = 16414947
-    Colors.Leave = 15428052
-    Colors.Down = 13783227
-    Colors.BLine = 12796332
+    Colors.Enter = 16480483
+    Colors.Leave = 15493588
+    Colors.Down = 13848763
+    Colors.BLine = 12861868
     UnderLine.Enable = True
     UnderLine.UnderLineRound = True
     UnderLine.UnderLineThicknes = 6
@@ -1200,7 +1201,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    TabStop = False
     Size.X = 186
     Size.Y = 50
     Position.X = 15
@@ -1238,7 +1238,8 @@ object Form1: TForm1
     Margins.Bottom = 0
     Size.X = 234
     Size.Y = 49
-    Position = 12
+    Position.X = 237
+    Position.Y = 203
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1248,6 +1249,8 @@ object Form1: TForm1
     CustomColors.LightBackGroundInterior = 16514043
     CustomColors.DarkBackGroundInterior = 2829099
     OnChange = FXSlider1Change
+    Value = 12
+    ReadOnly = False
     TotalTicks = 6
     ParentColor = False
     ShowHint = True
@@ -1273,14 +1276,11 @@ object Form1: TForm1
     CustomColors.LightForeGround = 1776410
     CustomColors.DarkBackGround = 2105376
     CustomColors.DarkForeGround = clWhite
-    IconFont.Charset = DEFAULT_CHARSET
-    IconFont.Color = clWindowText
-    IconFont.Height = -21
-    IconFont.Name = 'Segoe Fluent Icons'
-    IconFont.Style = []
     AllowGrayed = True
+    IconScale = 0.500000000000000000
     State = Checked
     Checked = True
+    ReadOnly = False
     AutomaticCursorPointer = False
     Text = 'Fluent Checkbox'
     WordWrap = False
@@ -1306,7 +1306,8 @@ object Form1: TForm1
     Margins.Bottom = 0
     Size.X = 233
     Size.Y = 13
-    Position = 0
+    Position.X = 231
+    Position.Y = 271
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352
     CustomColors.LightBackGround = 15987699
@@ -1316,6 +1317,7 @@ object Form1: TForm1
     CustomColors.LightBackGroundInterior = 16514043
     CustomColors.DarkBackGroundInterior = 2829099
     Orientation = Horizontal
+    Value = 0
     Animation = True
     CustomScrollbarSize = 0
     TabOrder = 17
@@ -1339,12 +1341,9 @@ object Form1: TForm1
     CustomColors.LightForeGround = 1776410
     CustomColors.DarkBackGround = 2105376
     CustomColors.DarkForeGround = clWhite
-    IconFont.Charset = DEFAULT_CHARSET
-    IconFont.Color = clWindowText
-    IconFont.Height = -19
-    IconFont.Name = 'Segoe Fluent Icons'
-    IconFont.Style = []
+    IconScale = 0.500000000000000000
     Checked = True
+    ReadOnly = False
     AutomaticCursorPointer = True
     Text = 'Option 1'
     Image.IconType = None
@@ -1377,11 +1376,8 @@ object Form1: TForm1
     CustomColors.LightForeGround = 1776410
     CustomColors.DarkBackGround = 2105376
     CustomColors.DarkForeGround = clWhite
-    IconFont.Charset = DEFAULT_CHARSET
-    IconFont.Color = clWindowText
-    IconFont.Height = -19
-    IconFont.Name = 'Segoe Fluent Icons'
-    IconFont.Style = []
+    IconScale = 0.500000000000000000
+    ReadOnly = False
     AutomaticCursorPointer = True
     Text = 'Option 2'
     Image.IconType = None
@@ -2084,6 +2080,7 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
+    TabStop = True
     Size.X = 116
     Size.Y = 60
     Position.X = 49
@@ -2156,7 +2153,7 @@ object Form1: TForm1
     CustomColors.DarkForeGround = clWhite
     CustomColors.LightBackGroundInterior = 16514043
     CustomColors.DarkBackGroundInterior = 2829099
-    SelectedItem = 0
+    Value = 0
     Items.Strings = (
       'Item1'
       'Item2'
@@ -2187,6 +2184,39 @@ object Form1: TForm1
     CustomColors.LightForeGround = 1776410
     CustomColors.DarkBackGround = 2105376
     CustomColors.DarkForeGround = clWhite
+    CustomColors.LightBackGroundInterior = 16514043
+    CustomColors.DarkBackGroundInterior = 2829099
+    CustomTabColors.Enabled = False
+    CustomTabColors.Accent = clBlack
+    CustomTabColors.LightBackgroundNone = clBlack
+    CustomTabColors.LightBackgroundHover = clBlack
+    CustomTabColors.LightBackgroundPress = clBlack
+    CustomTabColors.LightForeGroundNone = clBlack
+    CustomTabColors.LightForeGroundHover = clBlack
+    CustomTabColors.LightForeGroundPress = clBlack
+    CustomTabColors.DarkBackGroundNone = clBlack
+    CustomTabColors.DarkBackGroundHover = clBlack
+    CustomTabColors.DarkBackGroundPress = clBlack
+    CustomTabColors.DarkForeGroundNone = clBlack
+    CustomTabColors.DarkForeGroundHover = clBlack
+    CustomTabColors.DarkForeGroundPress = clBlack
+    CustomButtonColors.Enabled = False
+    CustomButtonColors.Accent = clBlack
+    CustomButtonColors.LightBackgroundNone = clBlack
+    CustomButtonColors.LightBackgroundHover = clBlack
+    CustomButtonColors.LightBackgroundPress = clBlack
+    CustomButtonColors.LightForeGroundNone = clBlack
+    CustomButtonColors.LightForeGroundHover = clBlack
+    CustomButtonColors.LightForeGroundPress = clBlack
+    CustomButtonColors.DarkBackGroundNone = clBlack
+    CustomButtonColors.DarkBackGroundHover = clBlack
+    CustomButtonColors.DarkBackGroundPress = clBlack
+    CustomButtonColors.DarkForeGroundNone = clBlack
+    CustomButtonColors.DarkForeGroundHover = clBlack
+    CustomButtonColors.DarkForeGroundPress = clBlack
+    ImageScale = 1.100000023841858000
+    ScrollPosition = 0
+    Value = -1
     TabOrder = 39
   end
   object FXScrollText1: FXScrollText
@@ -2198,7 +2228,6 @@ object Form1: TForm1
     Margins.Top = 0
     Margins.Right = 0
     Margins.Bottom = 0
-    TabStop = False
     Size.X = 125
     Size.Y = 68
     Position.X = 519
@@ -2247,6 +2276,7 @@ object Form1: TForm1
       Margins.Top = 0
       Margins.Right = 0
       Margins.Bottom = 0
+      TabStop = True
       Size.X = 215
       Size.Y = 30
       Position.X = 0
@@ -2267,6 +2297,7 @@ object Form1: TForm1
     CustomColors.LightForeGround = 1776410
     CustomColors.DarkBackGround = 2105376
     CustomColors.DarkForeGround = clWhite
+    MinimumWidth = 0
     Items.Item = {
       05000000545046300B4658506F7075704974656D0004546578740604436F7079
       0D496D6167652E456E61626C65640911496D6167652E53656C6563745365676F
@@ -2299,6 +2330,7 @@ object Form1: TForm1
     ApplicationName = 'Codrut Fluent Design Test'
     HasAppData = True
     AppVersion = '1.0.0.0'
+    APIName = 'timely'
     SingleInstance = True
     OnUpdateChecked = FXAppManager1UpdateChecked
     AppDataStructure.Strings = (

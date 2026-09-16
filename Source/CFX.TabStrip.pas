@@ -13,6 +13,7 @@ uses
   Vcl.Graphics,
   Vcl.ExtCtrls,
   Types,
+  UITypes,
   CFX.Translations,
   CFX.Colors,
   CFX.ThemeManager,
@@ -576,7 +577,7 @@ procedure FXTabStrip.PaintBuffer;
       FPen := nil;
 
       if Selected then begin
-        FPen := GetRGB(ColorBlend(FDrawColors.BackGroundInterior, clGray, 40)).MakeGDIPen(TABSTRIP_TAB_LINE_WIDTH);
+        FPen := TAlphaColor.Create(ColorBlend(FDrawColors.BackGroundInterior, clGray, 40)).MakeGDIPen(TABSTRIP_TAB_LINE_WIDTH);
         AWidth := round(TABSTRIP_TAB_LINE_WIDTH);
       end;
 
@@ -588,7 +589,7 @@ procedure FXTabStrip.PaintBuffer;
           RR.RoundBR := 1;
         end;
         GDIRoundRect( RR,
-          GetRGB(FBackground).MakeGDIBrush, FPen);
+          TAlphaColor.Create(FBackground).MakeGDIBrush, FPen);
       end;
 
       // Client
@@ -662,7 +663,7 @@ procedure FXTabStrip.PaintBuffer;
 
         // Draw
         GDIRoundRect( MakeRoundRect(ARect, TABSTRIP_TAB_ITEM_ROUND),
-          GetRGB(ABackground).MakeGDIBrush, nil);
+          TAlphaColor.Create(ABackground).MakeGDIBrush, nil);
 
         // Text
         ARect.Inflate(-5, -5);
@@ -722,7 +723,7 @@ begin
 
   // Isolation line
   if FDrawIsolationLine then begin
-    FPen := GetRGB(ColorBlend(FDrawColors.BackGroundInterior, clGray, 40)).MakeGDIPen(TABSTRIP_TAB_LINE_WIDTH);
+    FPen := TAlphaColor.Create(ColorBlend(FDrawColors.BackGroundInterior, clGray, 40)).MakeGDIPen(TABSTRIP_TAB_LINE_WIDTH);
     ARect := DrawRect;
     ARect.Offset(0, -TABSTRIP_TAB_LINE_WIDTH);
 

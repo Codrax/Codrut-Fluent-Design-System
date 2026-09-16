@@ -917,7 +917,11 @@ begin
   with GetConfig do
     try
       Section := 'Passive';
-      FLastUpdateCheck := ReadFloat(Section, 'Last update', LastUpdateCheck);
+      try
+        FLastUpdateCheck := ReadFloat(Section, 'Last update', LastUpdateCheck);
+      except
+        FLastUpdateCheck := 0;
+      end;
       FLastInstalledVersion := FXVersion.Create(
         ReadString(Section, 'Last installed version', AppVersion.ToString)
         );
