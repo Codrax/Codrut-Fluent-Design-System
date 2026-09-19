@@ -90,6 +90,7 @@ type
     property ParentShowHint;
     property TabStop default false;
     property TabOrder;
+    property ControlFlags;
     property FocusFlags;
     property DragKind;
     property DragCursor;

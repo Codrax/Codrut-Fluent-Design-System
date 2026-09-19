@@ -39,8 +39,11 @@ begin
     FXRadioButton,
     FXScrollbar,
     FXSelector,
+
     FXEdit,
     FXNumberEdit,
+    FXTextArea,
+
     FXIconView,
     FXPicture,
     FXProgress,

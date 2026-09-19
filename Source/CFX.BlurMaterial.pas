@@ -87,6 +87,8 @@ type
     property Enabled;
     property ParentShowHint;
     property TabStop default false;
+    property TabOrder;
+    property ControlFlags;
     property PopupMenu;
     property ShowHint;
     property Touch;

@@ -84,6 +84,8 @@ type
     // Accessibility
     FAccessibilityProvider: IRawElementProviderSimple;
 
+    FOnWindowProc: FXControlOnWindowProc;
+
     FPopupMenu: FXPopupMenu;
     FBufferedComponent: boolean;
     FFocusRect: TRect;
@@ -98,6 +100,7 @@ type
     FOnPaintBuffer: FXControlOnPaint;
     FTextFont: TFont;
     FFocusFlags: FXFocusFlags;
+    FControlFlags: FXControlFlags;
     FHitTest: boolean;
     FTransparent: boolean;
     FDoubleClickInProgress: boolean;
@@ -261,6 +264,8 @@ type
     property OnPaint: FXControlOnPaint read FOnPaint write FOnPaint;
     property OnPaintBuffer: FXControlOnPaint read FOnPaintBuffer write FOnPaintBuffer;
 
+    property OnWindowProc: FXControlOnWindowProc read FOnWindowProc write FOnWindowProc;
+
     // Background
     procedure ClearBufferRegion(ARect: TRect);
     procedure DrawBackground(var Background: TBitMap; OnlyFill: boolean); virtual;
@@ -341,7 +346,9 @@ type
     property FocusRect: TRect read FFocusRect write FFocusRect;
     property AutoFocusLine: boolean read FAutoFocusLine write FAutoFocusLine;
 
+    ///  <summary> Stops the control from using these keys for navigation. </summary>
     property FocusFlags: FXFocusFlags read FFocusFlags write FFocusFlags default [];
+    ///  <summary> Allows the control to handle this key interally for it's own needs. It will not reach OnKeyDown if handled </summary>
     property AllowUseKeys: FXSpecialUsageKeySet read FAllowUseKeys write FAllowUseKeys default SPECIAL_KEYS_SET_ALL;
 
     property PreviousInteractionState: FXControlState read FPreviousInteraction write FPreviousInteraction;
@@ -349,6 +356,7 @@ type
     property Font: TFont read FTextFont write FTextFont;
 
   published
+    property ControlFlags: FXControlFlags read FControlFlags write FControlFlags default [];
     property Transparent: boolean read FTransparent write SetTransparent default true;
     property Invisible: boolean read GetInvisibile write SetInvisibile stored true default false; // helps FOpacity
     property Opacity: FXPercent read FOpacity write SetOpacity stored IsOpacityStored;
@@ -1866,6 +1874,9 @@ end;
 
 procedure FXWindowsControl.WndProc(var Message: TMessage);
 begin
+  if Assigned(FOnWindowProc) then
+    FOnWindowProc(Self, Message);
+
   if (Message.Msg = WM_GETOBJECT) and
      (Message.LParam = UiaRootObjectId) then
   begin

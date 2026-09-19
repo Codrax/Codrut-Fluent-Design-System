@@ -1275,6 +1275,7 @@ object Form1: TForm1
       Position.X = 0
       Position.Y = 0
       Align = alLeft
+      TabOrder = 0
       CustomColors.Enabled = False
       CustomColors.Accent = 5789570
       CustomColors.LightBackGround = clWhite
@@ -2873,6 +2874,7 @@ object Form1: TForm1
     Position.X = 0
     Position.Y = 29
     Align = alLeft
+    TabOrder = 40
     CustomColors.Enabled = False
     CustomColors.Accent = 5789570
     CustomColors.LightBackGround = clWhite

@@ -60,6 +60,7 @@ type
 
     property Transparent;
     property PaddingFill;
+    property ControlFlags;
     property OnMouseEnter;
     property OnMouseLeave;
     property OnMouseDown;

@@ -94,6 +94,8 @@ type
     procedure FXTabStrip1PlusClicked(Sender: TObject);
     procedure FXButton10Click(Sender: TObject);
     procedure Button1Click(Sender: TObject);
+    procedure FXButton54KeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     { Private declarations }
   public
@@ -287,6 +289,13 @@ begin
     finally
       Free;
     end;
+end;
+
+procedure TForm1.FXButton54KeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+
+  ShowMessage( Key.ToString );
 end;
 
 procedure TForm1.FXButton5Click(Sender: TObject);

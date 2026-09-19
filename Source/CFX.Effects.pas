@@ -69,6 +69,7 @@ type
     property Anchors;
     property OnEnter;
     property OnExit;
+    property ControlFlags;
     property OnClick;
     property OnMouseUp;
     property OnMouseDown;

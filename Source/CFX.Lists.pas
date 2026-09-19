@@ -258,8 +258,8 @@ type
     property ShowHint;
     property TabStop;
     property TabOrder;
-    property AllowUseKeys;
     property FocusFlags;
+    property AllowUseKeys;
     property DragKind;
     property DragCursor;
     property DragMode;

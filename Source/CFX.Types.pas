@@ -13,6 +13,7 @@ uses
   {$IFDEF MSWINDOWS}
   Winapi.GDIPOBJ,
   Winapi.GDIPAPI,
+  Winapi.Messages,
   {$ENDIF}
   UITypes, Types, VCl.GraphUtil, Winapi.Windows,
   Classes, Vcl.Themes, Vcl.Controls, Vcl.Graphics, Math,
@@ -36,8 +37,13 @@ type
   FXColorType = (Accent, Foreground, Background, Content, Custom);
 
   // Component
-  FXFocusFlag = (CatchTab, CatchLeft, CatchUp, CatchRight, CatchDown);
+  FXFocusFlag = (CatchTab, CatchLeft, CatchUp, CatchRight, CatchDown); // catch keyboard
   FXFocusFlags = set of FXFocusFlag;
+
+  FXControlFlag = (
+    Fixed // stay fixed in place when in scrolling controls
+  );
+  FXControlFlags = set of FXControlFlag;
 
   // FXForm
   FXFormFill = (TitleBar, Complete);
@@ -168,6 +174,7 @@ type
   FXControlOnIntegerSourceDestination = procedure(Sender: TObject; const Source, Destination: integer) of object;
   FXControlOnDrawRectIndex = procedure(Sender: TObject; const AIndex: integer; var ARect: TRect; const Canvas: TCanvas) of object;
   FXControlOnDrawRectIndexDrawDefault = procedure(Sender: TObject; const AIndex: integer; var ARect: TRect; const Canvas: TCanvas; var DrawDefault: boolean) of object;
+  FXControlOnWindowProc = procedure(Sender: TObject; var Message: TMessage) of object;
 
   // Thingies
   FXPercent = type Single;
