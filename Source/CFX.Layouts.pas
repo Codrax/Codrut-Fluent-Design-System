@@ -165,7 +165,6 @@ type
 
     procedure ScrollByEx(DeltaX, DeltaY: Integer);
 
-    function ContentRect: TRect;
     function ScrollbarThickness: integer;
 
     // Scroll notifiers
@@ -636,12 +635,6 @@ procedure FXScrollLayout.ComponentCreated;
 begin
   inherited;
   UpdateRange;
-end;
-
-function FXScrollLayout.ContentRect: TRect;
-begin
-  // ClientRect already excludes the visible scrollbars
-  Result := ClientRect;
 end;
 
 procedure FXScrollLayout.Resize;

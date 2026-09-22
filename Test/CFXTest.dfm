@@ -3353,6 +3353,49 @@ object Form1: TForm1
     Font.Style = []
     TabOrder = 42
   end
+  object FXEdit3: FXEdit
+    Left = 488
+    Top = 400
+    Width = 241
+    Height = 33
+    Margins.Left = 0
+    Margins.Top = 0
+    Margins.Right = 0
+    Margins.Bottom = 0
+    Size.X = 241
+    Size.Y = 33
+    Position = 0
+    CustomColors.Enabled = False
+    CustomColors.Accent = 13924352
+    CustomColors.LightBackGround = 15987699
+    CustomColors.LightForeGround = 1776410
+    CustomColors.DarkBackGround = 2105376
+    CustomColors.DarkForeGround = clWhite
+    CustomColors.LightBackGroundInterior = 16514043
+    CustomColors.DarkBackGroundInterior = 2829099
+    CustomEditColors.Enabled = False
+    CustomEditColors.Accent = clBlack
+    CustomEditColors.LightNone = clBlack
+    CustomEditColors.LightHover = clBlack
+    CustomEditColors.LightPress = clBlack
+    CustomEditColors.DarkNone = clBlack
+    CustomEditColors.DarkHover = clBlack
+    CustomEditColors.DarkPress = clBlack
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = 1776410
+    Font.Height = 22
+    Font.Name = 'Segoe UI'
+    Font.Style = []
+    TabOrder = 43
+    ParentColor = False
+    Text = 'Hello World!'
+    PasswordChar = #0
+    Value = 0
+    SelectionLength = 0
+    ReadOnly = False
+    TextMarginX = 5
+    TextMarginY = 5
+  end
   object FXPopupMenu1: FXPopupMenu
     CustomColors.Enabled = False
     CustomColors.Accent = 13924352

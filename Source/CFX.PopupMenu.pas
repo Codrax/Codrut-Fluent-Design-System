@@ -628,13 +628,13 @@ begin
         FXAnimateSelection.Linear: begin
           Width := NormalWidth;
 
-          FAnimGoesUpwards := FDropPoint.Y > Top;
+          FAnimGoesUpwards := FDropPoint.Y >= FForm.Top;
 
           FAnim.StartValue := NormalHeight div 8;
           FAnim.EndValue := NormalHeight;
         end;
         FXAnimateSelection.Square: begin
-          FAnimGoesUpwards := FDropPoint.Y > Top;
+          FAnimGoesUpwards := FDropPoint.Y > FForm.Top;
 
           FAnim.StartValue := NormalHeight div 8;
           FAnim.EndValue := NormalHeight;

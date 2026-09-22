@@ -1426,8 +1426,9 @@ begin
               end
             else
               begin
-                DeleteChar(Position);
+                const Current = Position; // we do this as DeleteChar would perform out of bounds validations
                 IncPosition(-1);
+                DeleteChar(Current);
 
                 Redraw;
                 CanHandle := false;

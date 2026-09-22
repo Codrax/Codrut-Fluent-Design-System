@@ -36,7 +36,8 @@ uses
   IOUTils;
 
 type
-  FXOnVersionChanged = procedure(PreviousVersion: FXVersion; ActiveVersion: FXVersion) of object;
+  FXOnVersionChanged = procedure(Sender: TObject; PreviousVersion: FXVersion; ActiveVersion: FXVersion) of object;
+  FXOnUpdateStartCheck = procedure(Sender: TObject; var CanContinue: boolean) of object;
 
   { Background App Manager Class }
   FXAppManagerClass = class(TObject)
@@ -59,6 +60,8 @@ type
     FServerVersion: FXVersion;
     FAPIName,
     FAPiEndpoint: string;
+
+    FIsWindowsStoreOverride: boolean;
 
     // Update
     FUpdateResult: TValueRelationship;
@@ -124,8 +127,12 @@ type
     property APIName: string read FAPIName write FAPIName;
     property APIEndpoint: string read FAPiEndpoint write FAPiEndpoint;
 
+    // Store
+    property IsWindowsStoreOverride: boolean read FIsWindowsStoreOverride write FIsWindowsStoreOverride;
+
     // Status
     function NewVersion: boolean;
+    function IsWindowsStoreApp: boolean;
 
     // Data
     procedure Initialize;
@@ -179,6 +186,7 @@ type
   private
     const
       DEFAULT_TASKS = [FXAppTask.WindowLoadForm, FXAppTask.WindowSaveForm];
+      DEFAULT_SETTINGS = [FXAppSetting.LoadAutoUpdateInterval];
       DEFAULT_USER_UPDATE_DELAY = 2000;
     procedure SetAPIName(const Value: string);
     procedure SetUpdateCheckInterval(const Value: integer);
@@ -200,7 +208,7 @@ type
 
     FUpdateCheckUserInitiated: boolean;
     FOnUpdateChecked: TNotifyEvent;
-    FOnUpdateStartCheck: TNotifyEvent;
+    FOnUpdateStartCheck: FXOnUpdateStartCheck;
     FOnApplicationLoaded: TNotifyEvent;
     FOnOtherInstance: FXOnOtherInstance;
     FOnVersionUpgraded: FXOnVersionChanged;
@@ -273,7 +281,7 @@ type
 
     // Events
     property OnUpdateChecked: TNotifyEvent read FOnUpdateChecked write FOnUpdateChecked;
-    property OnUpdateStartCheck: TNotifyEvent read FOnUpdateStartCheck write FOnUpdateStartCheck;
+    property OnUpdateStartCheck: FXOnUpdateStartCheck read FOnUpdateStartCheck write FOnUpdateStartCheck;
     property OnApplicationLoaded: TNotifyEvent read FOnApplicationLoaded write FOnApplicationLoaded;
     property OnOtherInstance: FXOnOtherInstance read FOnOtherInstance write FOnOtherInstance;
     property OnVersionUpgraded: FXOnVersionChanged read FOnVersionUpgraded write FOnVersionUpgraded;
@@ -281,7 +289,7 @@ type
 
     // Tasks
     property AutomaticTasks: FXAppTasks read FTasks write FTasks default DEFAULT_TASKS;
-    property Settings: FXAppSettings read FSettings write FSettings default [];
+    property Settings: FXAppSettings read FSettings write FSettings default DEFAULT_SETTINGS;
     property AppDataStructure: TStringList read FAppDataStructure write SetDataStructure;
 
     property UserUpdateWaitDelay: cardinal read FUserUpdateWaitDelay write FUserUpdateWaitDelay;
@@ -352,13 +360,18 @@ var
 { FXAppManager }
 
 procedure FXAppManager.AppCheckUpdates;
+var
+  CanContinue: boolean;
 begin
   if AppManager.CheckingForUpdates then
     Exit;
 
   // Notify
+  CanContinue := true;
   if Assigned(FOnUpdateStartCheck) then
-    FOnUpdateStartCheck(Self);
+    FOnUpdateStartCheck(Self, CanContinue);
+  if not CanContinue then
+    Exit;
 
   // Server
   AppManager.CheckForUpdates;
@@ -452,9 +465,9 @@ begin
 
   // Version upgraded
   if AppManager.LastInstalledVersion.NewerThan(AppManager.AppVersion) and Assigned(FOnVersionUpgraded) then
-    FOnVersionUpgraded(AppManager.LastInstalledVersion, AppManager.AppVersion);
+    FOnVersionUpgraded(Self, AppManager.LastInstalledVersion, AppManager.AppVersion);
   if AppManager.LastInstalledVersion.NewerThan(AppManager.AppVersion) and Assigned(FOnVersionUpgraded) then
-    FOnVersionDowngraded(AppManager.LastInstalledVersion, AppManager.AppVersion);
+    FOnVersionDowngraded(Self, AppManager.LastInstalledVersion, AppManager.AppVersion);
 
   // Automatic Update Check
   CheckUpdateCheckInterval;
@@ -500,7 +513,7 @@ begin
   PrimaryDisplayForm := true;
   FUpdateCheckInterval := -1;
   FTasks := DEFAULT_TASKS;
-  FSettings := [];
+  FSettings := DEFAULT_SETTINGS;
   ApplicationIdentifier := GenerateString(10, [TStrGenFlag.LowercaseLetters, TStrGenFlag.Numbers]);
     FIdentifierValueSet := false;
   PublisherName := DEFAULT_COMPANY;
@@ -636,7 +649,8 @@ begin
   with TIniFile.Create(AppManager.FolderPackage + 'formappmgr.ini') do
     try
       Section := 'Update';
-      FUpdateCheckInterval := ReadInteger(Section, 'Check interval', FUpdateCheckInterval);
+      if FXAppSetting.LoadAutoUpdateInterval in Settings then
+        FUpdateCheckInterval := ReadInteger(Section, 'Check interval', FUpdateCheckInterval);
     finally
       Free;
     end;
@@ -836,6 +850,21 @@ begin
 
   // Init
   FInitialized := true;
+end;
+
+function FXAppManagerClass.IsWindowsStoreApp: boolean;
+var
+  WindowsStoreAppsPath: string;
+  AppPath: string;
+begin
+  if FIsWindowsStoreOverride then
+    Exit(true);
+
+  // Paths
+  AppPath := ParamStr(0).ToUpper;
+  WindowsStoreAppsPath := (IncludeTrailingPathDelimiter(ReplaceWinPath('%PROGRAMFILES%'))+'WindowsApps').ToUpper;
+
+  Result := AppPath.StartsWith(WindowsStoreAppsPath);
 end;
 
 procedure FXAppManagerClass.LoadFormData(Form: TForm);

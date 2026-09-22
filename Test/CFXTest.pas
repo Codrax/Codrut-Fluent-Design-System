@@ -79,6 +79,7 @@ type
     FXButton13: FXButton;
     FXButton10: FXButton;
     FXCheckBox1: FXCheckBox;
+    FXEdit3: FXEdit;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);

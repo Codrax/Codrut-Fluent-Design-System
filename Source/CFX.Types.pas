@@ -109,7 +109,7 @@ type
   FXAppFormAssistTask = (WindowSaveForm, WindowLoadForm);
   FXAppFormAssistTasks = set of FXAppFormAssistTask;
 
-  FXAppSetting = (PermitOverrideSingleInstance);
+  FXAppSetting = (PermitOverrideSingleInstance, LoadAutoUpdateInterval);
   FXAppSettings = set of FXAppSetting;
 
   // FXBlurMaterial
