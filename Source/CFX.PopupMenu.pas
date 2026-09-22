@@ -111,6 +111,7 @@ type
     function GetIndex: integer;
     function GetSeparator: boolean;
     procedure SetSeparator(const Value: boolean);
+    function GetIdealContentHeight: integer;
 
   protected
     // Notify Event
@@ -450,6 +451,18 @@ begin
   inherited;
 end;
 
+function FXPopupContainer.GetIdealContentHeight: integer;
+var
+  I, VisibleCount: integer;
+begin
+  VisibleCount := 0;
+  for I := 0 to GetMenuItemCount - 1 do
+    if MenuItems[I].Visible then
+      Inc(VisibleCount);
+
+  Result := VisibleCount * POPUP_ITEM_HEIGHT + POPUP_SPACING_TOPBOTTOM * 2;
+end;
+
 function FXPopupContainer.GetIndex: integer;
 var
   I: Integer;
@@ -612,7 +625,9 @@ begin
   // Prepare
   with FForm do
     begin
-      // Prepare
+      // NOTE: FAnimGoesUpwards is no longer decided here — it's already
+      // correct (set in PopupAtPointS before layout happened), so we don't
+      // recompute it off FForm.Top anymore.
       case FAnimType of
         FXAnimateSelection.Instant: begin
           Height := NormalHeight;
@@ -628,14 +643,10 @@ begin
         FXAnimateSelection.Linear: begin
           Width := NormalWidth;
 
-          FAnimGoesUpwards := FDropPoint.Y >= FForm.Top;
-
           FAnim.StartValue := NormalHeight div 8;
           FAnim.EndValue := NormalHeight;
         end;
         FXAnimateSelection.Square: begin
-          FAnimGoesUpwards := FDropPoint.Y > FForm.Top;
-
           FAnim.StartValue := NormalHeight div 8;
           FAnim.EndValue := NormalHeight;
         end;
@@ -916,29 +927,31 @@ procedure FXPopupComponent.FormPosition;
 var
   AHeight, AWidth: integer;
 begin
-  // Get Supposed values
   AHeight := NormalHeight;
   AWidth := NormalWidth;
 
-  // Left
   with FForm do
     begin
       Left := FDropPoint.X;
-      Top := FDropPoint.Y;
 
-      // Set Position
+      if FAnimGoesUpwards then
+        Top := FDropPoint.Y - AHeight
+      else
+        Top := FDropPoint.Y;
+
+      // Clamp horizontally, anchored on FDropPoint rather than the mouse
+      // cursor (the popup may not have been opened by a mouse click at all,
+      // e.g. submenus opened via OpenItem)
+      if Left + AWidth > Screen.DesktopRect.Right then
+        Left := FDropPoint.X - AWidth;
       if Left < Screen.DesktopRect.Left then
         Left := Screen.DesktopRect.Left;
+
+      // Clamp vertically as a safety net only; direction was already decided
       if Top < Screen.DesktopRect.Top then
         Top := Screen.DesktopRect.Top;
-
-      OutputDebugString( PChar(FForm.Left.ToString) );
-      if Left + AWidth > Screen.DesktopRect.Right then
-        Left := Mouse.CursorPos.X - AWidth;
-      OutputDebugString( PChar(FForm.Left.ToString) );
-
       if Top + AHeight > Screen.DesktopRect.Bottom then
-        Top := Mouse.CursorPos.Y - AHeight;
+        Top := Screen.DesktopRect.Bottom - AHeight;
     end;
 end;
 
@@ -1417,6 +1430,16 @@ procedure FXPopupComponent.PopupAtPointS(Point: TPoint);
 begin
   FDropPoint := Point;
   FScrollOffset := 0; // Reset scrolling
+
+
+  // Decide the opening direction BEFORE anything else (control creation,
+  // scrolling calculations, sizing) so they all agree on it. Deciding this
+  // late (as before, via FDropPoint.Y >= FForm.Top inside Animation) let
+  // earlier steps compute sizes for the wrong direction, which is what
+  // produced the "tiny menu" when opening upwards.
+  FAnimGoesUpwards :=
+    (Screen.WorkAreaRect.Bottom - FDropPoint.Y < GetIdealContentHeight) and
+    (FDropPoint.Y - Screen.WorkAreaRect.Top > Screen.WorkAreaRect.Bottom - FDropPoint.Y);
 
   // Create
   if FForm = nil then

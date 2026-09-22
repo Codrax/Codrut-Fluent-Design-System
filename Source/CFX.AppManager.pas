@@ -186,7 +186,7 @@ type
   private
     const
       DEFAULT_TASKS = [FXAppTask.WindowLoadForm, FXAppTask.WindowSaveForm];
-      DEFAULT_SETTINGS = [FXAppSetting.LoadAutoUpdateInterval];
+      DEFAULT_SETTINGS = [FXAppSetting.LoadAutoUpdateInterval, FXAppSetting.SaveAutoUpdateInterval];
       DEFAULT_USER_UPDATE_DELAY = 2000;
     procedure SetAPIName(const Value: string);
     procedure SetUpdateCheckInterval(const Value: integer);
@@ -680,7 +680,8 @@ begin
   with TIniFile.Create(AppManager.FolderPackage + 'formappmgr.ini') do
     try
       Section := 'Update';
-      WriteInteger(Section, 'Check interval', FUpdateCheckInterval);
+      if FXAppSetting.SaveAutoUpdateInterval in Settings then
+        WriteInteger(Section, 'Check interval', FUpdateCheckInterval);
     finally
       Free;
     end;
