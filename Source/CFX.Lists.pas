@@ -171,6 +171,7 @@ type
     // Draw
     function GetItemBackgroundColor(const Index: integer): TColor; virtual;
     procedure DrawItem(const Index: integer; var ARect: TRect; const Canvas: TCanvas); virtual;
+    procedure DrawItemDefault(const Index: integer; var ARect: TRect; const Canvas: TCanvas); virtual;
     procedure DrawNoItemsText; virtual;
 
     // Animation
@@ -423,6 +424,7 @@ type
   protected
     // Draw
     procedure DrawItem(const Index: integer; var ARect: TRect; const Canvas: TCanvas); override;
+    procedure DrawItemDefault(const Index: integer; var ARect: TRect; const Canvas: TCanvas); override;
 
   published
     // Props
@@ -452,6 +454,9 @@ type
   public
     // Public props
     property ItemCount: integer read GetItemCountEx;
+
+    // Delete
+    procedure DeleteSelected;
 
     // Constructor
     constructor Create(aOwner: TComponent); override;
@@ -845,15 +850,21 @@ begin
     OnBeforeDrawItem(Self, Index, ARect, Canvas, DrawDefault);
 
   if DrawDefault then
-    with Canvas do begin
-      Brush.Color := GetItemBackgroundColor(Index);
-
-      Fillrect(ARect);
-      //DrawTextRect(Canvas, ARect, Index.ToString, [], 10);
-    end;
+    DrawItemDefault(Index, ARect, Canvas);
 
   if Assigned(OnDrawItem) then
     OnDrawItem(Self, Index, ARect, Canvas);
+end;
+
+procedure FXDrawList.DrawItemDefault(const Index: integer; var ARect: TRect;
+  const Canvas: TCanvas);
+begin
+  with Canvas do begin
+    Brush.Color := GetItemBackgroundColor(Index);
+
+    Fillrect(ARect);
+    //DrawTextRect(Canvas, ARect, Index.ToString, [], 10);
+  end;
 end;
 
 procedure FXDrawList.DrawNoItemsText;
@@ -2116,6 +2127,12 @@ begin
     FContainer.Width := FActualSize.X;
     FContainer.Height := FActualSize.Y;
   end;
+
+  // Set focus back to hovered control
+  if EnableControlInteraction and (FItemIndexHover <> -1) then begin
+    var R: TRect := GetItemDisplayRect(FItemIndexHover);
+    DrawItem(FItemIndexHover, R, Buffer);
+  end;
 end;
 
 procedure FXLinearControlList.SetItemInnerMarginsFill(const Value: FXMargins);
@@ -2242,6 +2259,23 @@ begin
   UpdateCount;
 end;
 
+procedure FXLinearStringsList.DeleteSelected;
+var
+  DeleteItems: TArray<integer>;
+  I: integer;
+begin
+  for I := 0 to High(FItemSelected) do
+    if FItemSelected[I] then
+      DeleteItems := DeleteItems + [I];
+
+  // Del type
+  if Length(DeleteItems) = ItemCount then
+    Items.Clear
+  else
+    for I := High(DeleteItems) downto 0 do
+      Items.Delete(DeleteItems[I]);
+end;
+
 destructor FXLinearStringsList.Destroy;
 begin
   FreeAndNil(FStrings);
@@ -2251,6 +2285,12 @@ end;
 
 procedure FXLinearStringsList.DrawItem(const Index: integer; var ARect: TRect;
   const Canvas: TCanvas);
+begin
+  inherited;
+end;
+
+procedure FXLinearStringsList.DrawItemDefault(const Index: integer;
+  var ARect: TRect; const Canvas: TCanvas);
 var
   S: string;
 begin

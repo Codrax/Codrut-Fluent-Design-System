@@ -361,9 +361,12 @@ function Line(Point1, Point2: TPoint): TLine;
 function RotatePointAroundPoint(APoint: TPoint; ACenter: TPoint; ARotateDegree: real; ACustomRadius: real = -1): TPoint;
 
 { Rectangles }
-///  <summary>Translate a rectangle that is positioned in a bigger client rectangle (parent rect)
-///  to a new rectangle. Or: Translate CHILD positions from PARENT1 to PARENT2. </summary>
-function TranslateRect(const Rect, Client, Dest: TRect): TRect;
+///  <summary>Translate an entire rect (Rect) from a client parent to a dest parent. </summary>
+function TranslateRect(const Rect, SourceClient, DestClient: TRect): TRect; overload;
+function TranslateRect(const Rect, SourceClient, DestClient: TRectF): TRectF; overload;
+///  <summary>Rebase a rectangle's positions that is positioned in a bigger client rectangle (parent rect)
+///  to a smaller dest rectangle. Or: Translate CHILD POSITIONS (not size) from PARENT1 to PARENT2. </summary>
+function RebaseRectPositions(const Rect, SourceClient, DestClient: TRect): TRect;
 function GetValidRect(Point1, Point2: TPoint): TRect; overload;
 function GetValidRect(Points: TArray<TPoint>): TRect; overload;
 function GetValidRect(Points: TArray<TPointF>): TRectF; overload;
@@ -449,13 +452,56 @@ begin
     end;
 end;
 
-function TranslateRect(const Rect, Client, Dest: TRect): TRect;
+
+function TranslateRect(const Rect, SourceClient, DestClient: TRect): TRect;
+{$IFDEF MSWINDOWS}
+var
+  SourceWidth, SourceHeight: Integer;
+  DestWidth, DestHeight: Integer;
+begin
+  SourceWidth := SourceClient.Right - SourceClient.Left;
+  SourceHeight := SourceClient.Bottom - SourceClient.Top;
+  DestWidth := DestClient.Right - DestClient.Left;
+  DestHeight := DestClient.Bottom - DestClient.Top;
+
+  if (SourceWidth = 0) or (SourceHeight = 0) then
+    Exit(System.Types.Rect(0, 0, 0, 0));
+
+  Result.Left := DestClient.Left +
+    MulDiv(Rect.Left - SourceClient.Left, DestWidth, SourceWidth);
+  Result.Top := DestClient.Top +
+    MulDiv(Rect.Top - SourceClient.Top, DestHeight, SourceHeight);
+  Result.Right := DestClient.Left +
+    MulDiv(Rect.Right - SourceClient.Left, DestWidth, SourceWidth);
+  Result.Bottom := DestClient.Top +
+    MulDiv(Rect.Bottom - SourceClient.Top, DestHeight, SourceHeight);
+{$ELSE}
+  Result := TRect.Create(
+    round(Rect.Left / SourceClient.Width * DestClient.Width),
+    round(Rect.Top / SourceClient.Height * DestClient.Height),
+    round(Rect.Right / SourceClient.Width * DestClient.Width),
+    round(Rect.Bottom / SourceClient.Height * DestClient.Height)
+  );
+{$ENDIF}
+end;
+
+function TranslateRect(const Rect, SourceClient, DestClient: TRectF): TRectF;
+begin
+  Result := TRect.Create(
+    round(Rect.Left / SourceClient.Width * DestClient.Width),
+    round(Rect.Top / SourceClient.Height * DestClient.Height),
+    round(Rect.Right / SourceClient.Width * DestClient.Width),
+    round(Rect.Bottom / SourceClient.Height * DestClient.Height)
+  );
+end;
+
+function RebaseRectPositions(const Rect, SourceClient, DestClient: TRect): TRect;
 var
   OffsetX, OffsetY: Integer;
 begin
   // Calculate the offset between the top-left corners of Client and Dest
-  OffsetX := Dest.Left - Client.Left;
-  OffsetY := Dest.Top - Client.Top;
+  OffsetX := DestClient.Left - SourceClient.Left;
+  OffsetY := DestClient.Top - SourceClient.Top;
 
   // Apply the offset to the coordinates of Rect
   Result.Left := Rect.Left + OffsetX;

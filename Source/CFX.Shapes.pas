@@ -215,7 +215,7 @@ type
 
   FXShapeCircle = class(FXShape)
   protected
-
+    procedure CreatePath; override;
   end;
 
   FXShapeTriangle = class(FXShapeLines)
@@ -641,6 +641,58 @@ destructor FXShapeRoundedSquare.Destroy;
 begin
   FreeAndNil( FCornerRadius );
   inherited;
+end;
+
+{ FXShapeCircle }
+
+procedure FXShapeCircle.CreatePath;
+begin
+  inherited; // Resets the path
+
+  if (DrawRect.Width < 1) or (DrawRect.Height < 1) then
+    Exit;
+
+  var HalfW: Single := DrawRect.Width / 2;
+  var HalfH: Single := DrawRect.Height / 2;
+  const CenterX: Single = DrawRect.Left + HalfW;
+  const CenterY: Single = DrawRect.Top + HalfH;
+
+  // Shrink the ellipse so its rotated bounds still fit inside the control
+  if FControlRotation and (Single(FRotation) <> 0) then begin
+    const Rad = DegToRad(Single(FRotation));
+    const SinA = Sin(Rad);
+    const CosA = Cos(Rad);
+
+    // Half-extents of the rotated ellipse's bounding box
+    const ExtX = Sqrt(Sqr(HalfW * CosA) + Sqr(HalfH * SinA));
+    const ExtY = Sqrt(Sqr(HalfW * SinA) + Sqr(HalfH * CosA));
+
+    var Scale: Single := 1;
+    if ExtX > 0 then
+      Scale := Min(Scale, HalfW / ExtX);
+    if ExtY > 0 then
+      Scale := Min(Scale, HalfH / ExtY);
+
+    HalfW := HalfW * Scale;
+    HalfH := HalfH * Scale;
+  end;
+
+  FPath.AddEllipse(CenterX - HalfW, CenterY - HalfH, HalfW * 2, HalfH * 2);
+
+  // Rotation (only visible when the shape isn't a perfect circle)
+  if Single(FRotation) <> 0 then begin
+    const Matrix = TGPMatrix.Create;
+    try
+      var Center: TGPPointF;
+      Center.X := CenterX;
+      Center.Y := CenterY;
+
+      Matrix.RotateAt(FRotation, Center);
+      FPath.Transform(Matrix);
+    finally
+      Matrix.Free;
+    end;
+  end;
 end;
 
 end.

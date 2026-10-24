@@ -1125,7 +1125,7 @@ begin
       Local.Bottom := SelfClient.Bottom;
 
     // Translate dest
-    TranslateDest := TranslateRect(Local, Client, Destination);
+    TranslateDest := RebaseRectPositions(Local, Client, Destination);
 
     // Translate local
     Local.Offset(-Local.Left, -Local.Top);

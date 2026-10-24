@@ -422,24 +422,34 @@ end;
 procedure FXAppManager.ApplicationOpen;
 begin
   // Other instance
-  if FSingleInstance and not ((FXAppSetting.PermitOverrideSingleInstance in FSettings) and (HasParameter(APP_PARAMETER_OVERRIDE_SINGLEINSTANCE))) then
-    begin
-      SetSemafor( AppManager.AppIdentifier );
+  if FSingleInstance
+    and not ((FXAppSetting.PermitOverrideSingleInstance in FSettings)
+    and (HasParameter(APP_PARAMETER_OVERRIDE_SINGLEINSTANCE))) then begin
+      // Create instance
+      SetSemaphore( AppManager.AppIdentifier );
+      InitializeInstance(true, false);
 
+      // Action
       var Action: FXOtherInstanceAction;
-      if HasOtherInstances then
-        begin
-          Action := FXOtherInstanceAction.Close;
+      if HasOtherInstance then begin
+        Action := FXOtherInstanceAction.Close;
 
-          // On Other instance
-          if Assigned(OnOtherInstance) then
-            OnOtherInstance(Self, Action);
+        // On Other instance
+        if Assigned(OnOtherInstance) then
+          OnOtherInstance(Self, Action);
 
-          case Action of
-            FXOtherInstanceAction.Close: Application.Terminate; // force stop
-            FXOtherInstanceAction.KillProcess: Halt;
-          end;
+        case Action of
+          FXOtherInstanceAction.Close: Application.Terminate; // force stop
+          FXOtherInstanceAction.KillProcess: Halt;
         end;
+      end else begin
+        // Write main form handle
+        if Assigned(AppManagerInstance) then
+          if Assigned(AppManagerInstance.ParentForm) then begin
+            AppManagerInstance.ParentForm.HandleNeeded;
+            PutAppInfo(AppManagerInstance.ParentForm.Handle);
+          end;
+      end;
     end;
 
   // Form is created

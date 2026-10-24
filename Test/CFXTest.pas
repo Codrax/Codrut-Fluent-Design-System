@@ -80,6 +80,8 @@ type
     FXButton10: FXButton;
     FXCheckBox1: FXCheckBox;
     FXEdit3: FXEdit;
+    FXCheckBox2: FXCheckBox;
+    FXRadioButton3: FXRadioButton;
     procedure FXButton5Click(Sender: TObject);
     procedure FXButton12Click(Sender: TObject);
     procedure FXButtonDesign4Click(Sender: TObject);

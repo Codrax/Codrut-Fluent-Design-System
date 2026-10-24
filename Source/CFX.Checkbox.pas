@@ -94,7 +94,7 @@ type
     procedure UpdateColors; override;
     procedure UpdateRects; override;
 
-    // Scaler
+    // Scale
     procedure ScaleChanged(Scaler: single); override;
 
     // Mouse
@@ -336,6 +336,8 @@ begin
 
   // Set
   FState := Value;
+
+  // Change
   if Assigned(OnChangeValue) then
     OnChangeValue(Self);
 
@@ -700,3 +702,4 @@ begin
 end;
 
 end.
+

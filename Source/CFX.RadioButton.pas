@@ -7,7 +7,9 @@ uses
   Winapi.Windows,
   Vcl.Controls,
   Vcl.Graphics,
+  Vcl.ExtCtrls,
   Types,
+  UITypes,
   Math,
   CFX.Colors,
   CFX.ThemeManager,
@@ -18,6 +20,7 @@ uses
   CFX.ComponentClasses,
   CFX.Accessibility,
   CFX.Types,
+  CFX.VarHelpers,
   CFX.Linker,
   CFX.Controls;
 
@@ -28,7 +31,8 @@ type
     FIconScale: single;
     FChecked: boolean;
     FTextSpacing: Integer;
-    FOnCheck: TNotifyEvent;
+    FOnChange: TNotifyEvent;
+    FOnChangeValue: TNotifyEvent;
     FCustomColors: FXColorSets;
     FIconAccentColors: FXSingleColorStateSet;
     FText: string;
@@ -43,6 +47,9 @@ type
 
     // Internal
     procedure ImageUpdated(Sender: TObject);
+
+    // State
+    procedure ProgressState;
 
     // Draw functions
     function GetTextHeight: integer;
@@ -98,8 +105,9 @@ type
     property TextSpacing: Integer read FTextSpacing write SetTextSpacing default RADIO_TEXT_SPACE;
     property Checked: Boolean read GetChecked write SetChecked default false;
     property ReadOnly: boolean read FReadOnly write FReadOnly;
-    property OnCheck: TNotifyEvent read FOnCheck write FOnCheck;
-    property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default false;
+    property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    property OnChangeValue: TNotifyEvent read FOnChangeValue write FOnChangeValue;
+    property AutomaticCursorPointer: boolean read FAutomaticMouseCursor write FAutomaticMouseCursor default true;
 
     property Text: string read FText write SetText;
     property WordWrap: boolean read FWordWrap write SetWordWrap default true;
@@ -159,8 +167,7 @@ begin
   inherited;
   if not ReadOnly then
     if (Key = #13) or (Key = #32) then
-      if not Checked then
-        Checked := true;
+      ProgressState;
 end;
 
 procedure FXRadioButton.MouseMove(Shift: TShiftState; X, Y: Integer);
@@ -311,10 +318,6 @@ begin
           if Parent.Controls[I] <> Self then
             (Parent.Controls[I] as FXRadioButton).Checked := false;
     end;
-
-  // Notify
-  if Assigned(OnCheck) and not IsReading then
-    OnCheck(Self);
 end;
 
 procedure FXRadioButton.SetWordWrap(const Value: boolean);
@@ -343,6 +346,11 @@ begin
   if Value then
     SetToChecked;
 
+  // Notify
+  if Assigned(OnChangeValue) then
+    OnChangeValue(Self);
+
+  // Draw
   StandardUpdateLayout;
 end;
 
@@ -409,8 +417,7 @@ begin
   if ReadOnly or not Enabled then
     Exit;
 
-  if not Checked then
-    Checked := true;
+  ProgressState;
 end;
 
 constructor FXRadioButton.Create(aOwner: TComponent);
@@ -561,4 +568,15 @@ begin
   inherited;
 end;
 
+procedure FXRadioButton.ProgressState;
+begin
+  if not Checked then
+    Checked := true;
+
+  // Notify
+  if Assigned(OnChange) then
+    OnChange(Self);
+end;
+
 end.
+
