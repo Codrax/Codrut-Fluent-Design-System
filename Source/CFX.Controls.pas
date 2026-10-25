@@ -669,8 +669,8 @@ end;
 
 procedure FXWindowsControl.AlignControls(AControl: TControl; var Rect: TRect);
 begin
-  // Adjust align rectange
-  Rect := FPadding.RectangleInflate(Rect);
+  // Do not apply padding rect entirely to Rect here, as Vcl TControl.Padding
+  // is already applied once.
 
   // Inherit
   inherited;
@@ -1470,7 +1470,7 @@ begin
   Realign;
 
   Padding.Top := FPadding.AbsoluteTop;
-  Padding.Bottom := FPadding.Bottom;
+  Padding.Bottom := FPadding.AbsoluteBottom;
   Padding.Left := FPadding.AbsoluteLeft;
   Padding.Right := FPadding.AbsoluteRight;
 

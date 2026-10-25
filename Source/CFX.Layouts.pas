@@ -378,10 +378,10 @@ begin
   inherited;
 
   // This is called AdjustClientRect() btw, so adjust the Rect var
-  // do NOT assign Rect to a brand new value bruv
+  // do NOT assign Rect to a brand new value bruv.
 
   // Result Rect - the virtual (scrolled) content area
-    Rect.Left := Rect.Left - FHorzScroll.Value;
+  Rect.Left := Rect.Left - FHorzScroll.Value;
   Rect.Top := Rect.Top - FVertScroll.Value;
   Rect.Width := Max(
     FHorzScroll.Max + Padding.Left + Padding.Right,
