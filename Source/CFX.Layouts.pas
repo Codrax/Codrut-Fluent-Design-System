@@ -377,15 +377,20 @@ procedure FXScrollLayout.AdjustClientRect(var Rect: TRect);
 begin
   inherited;
 
-  (* NOTE: this must NOT call UpdateRange. AdjustClientRect is invoked from
-     inside the alignment pass, and UpdateRange moves/resizes controls, which
-     restarts alignment. The range is refreshed from AlignControls, Resize,
-     Sized and ComponentCreated instead. *)
+  // This is called AdjustClientRect() btw, so adjust the Rect var
+  // do NOT assign Rect to a brand new value bruv
 
   // Result Rect - the virtual (scrolled) content area
-  Rect := Bounds(-FHorzScroll.Value + Padding.Left, -FVertScroll.Value + Padding.Top,
-    Max(FHorzScroll.Max + Padding.Left + Padding.Right, ClientWidth - Padding.Left - Padding.Right),
-    Max(ClientHeight - Padding.Top - Padding.Bottom, FVertScroll.Max + Padding.Top + Padding.Bottom));
+    Rect.Left := Rect.Left - FHorzScroll.Value;
+  Rect.Top := Rect.Top - FVertScroll.Value;
+  Rect.Width := Max(
+    FHorzScroll.Max + Padding.Left + Padding.Right,
+    Rect.Width
+  );
+  Rect.Height := Max(
+    FVertScroll.Max + Padding.Top + Padding.Bottom,
+    Rect.Height
+  );
 
   // Reserve the space of a hidden scrollbar, if requested
   if not FVertScroll.Visible and FKeepScrollClientWhenBarHidden and FEnableVertical then
